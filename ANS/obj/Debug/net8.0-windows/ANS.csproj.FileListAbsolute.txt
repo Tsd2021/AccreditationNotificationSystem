@@ -54,6 +54,7 @@ C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.GeneratedMS
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.AssemblyInfoInputs.cache
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.AssemblyInfo.cs
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.csproj.CoreCompileInputs.cache
+C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.sourcelink.json
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.csproj.Up2Date
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\refint\ANS.dll
