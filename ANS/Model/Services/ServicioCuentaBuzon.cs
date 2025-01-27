@@ -76,7 +76,7 @@ namespace ANS.Model.Services
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL " +
+                string query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, cb.TANDA " +
                                "FROM ConfiguracionAcreditacion config " +
                                "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
                                "INNER JOIN CC c ON config.NC = c.NC " +
@@ -103,6 +103,7 @@ namespace ANS.Model.Services
                     int tipoAcreditacionOrdinal = reader.GetOrdinal("TipoAcreditacion");
                     int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
                     int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
+                    int tandaOrdinal = reader.GetOrdinal("TANDA");
 
                     while (reader.Read())
                     {
@@ -116,7 +117,8 @@ namespace ANS.Model.Services
                             Moneda = reader.GetString(monedaOrdinal),
                             Empresa = reader.GetString(empresaOrdinal),
                             SucursalCuenta = reader.GetString(sucursalOrdinal),
-                            Ciudad = reader.GetString(ciudadOrdinal)
+                            Ciudad = reader.GetString(ciudadOrdinal),
+                            Producto = reader.GetInt32(tandaOrdinal)
                         };
 
                         cuentaBuzon.setDivisa();

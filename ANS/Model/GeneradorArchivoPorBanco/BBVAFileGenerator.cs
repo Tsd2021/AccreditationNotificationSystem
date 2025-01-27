@@ -13,7 +13,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
     public class BBVAFileGenerator : IBancoModoAcreditacion
     {
         private readonly string CuentaTransportadora = "007584652";
-        private readonly string Producto = "1";
         private string Remito = DateTime.Now.TimeOfDay.ToString();
         private string ruta = @"C:\Users\dchiquiar\Desktop\pruebas txt punto a punto BBVA";
         public List<CuentaBuzon> buzonesMontevideo = new List<CuentaBuzon>();
@@ -109,6 +108,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                 string cuenta = FormatString(splitParts[0].Trim(), 9);
                                 string subcuenta = FormatString(splitParts[1].Trim(), 3);
                                 string moneda = unaCuentaBuzon.Divisa;
+                                string Producto = FormatString(unaCuentaBuzon.Producto.ToString(), 3);
                                 string cuentaTransportadora = FormatString(CuentaTransportadora, 9);
                                 string horaActual = DateTime.Now.ToString("HHmmssff");
                                 string remito = FormatString(unaCuentaBuzon.IdReferenciaAlCliente + "X" + unDeposito.IdOperacion, 12);
@@ -214,6 +214,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             string cuentaTransportadora = CleanString(CuentaTransportadora);
 
                             string horaActual = DateTime.Now.ToString("HHmmssff");
+
+                            string Producto = FormatString(unaCuenta.Producto.ToString(), 3);
 
                             string remito = horaActual;
 

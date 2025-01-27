@@ -22,6 +22,7 @@ namespace ANS.Model
         public ConfiguracionAcreditacion Config { get; set; }
         public List<Deposito> Depositos { get; set; } = new List<Deposito>();
         public string Divisa { get; set; }
+        public int Producto { get; set; }
         public void setDivisa()
         {
             if (Moneda == "PESOS")
