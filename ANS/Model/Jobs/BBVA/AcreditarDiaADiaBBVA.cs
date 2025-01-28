@@ -22,7 +22,7 @@ namespace ANS.Model.Jobs.BBVA
         {
             try
             {
-                _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.bbva);
+                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.bbva);
 
                 Console.WriteLine("Tarea de BBVA ejecutada con éxito.");
 

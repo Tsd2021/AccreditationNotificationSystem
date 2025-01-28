@@ -23,6 +23,7 @@ namespace ANS.Model
         public List<Deposito> Depositos { get; set; } = new List<Deposito>();
         public string Divisa { get; set; }
         public int Producto { get; set; }
+        public int IdCuenta { get; set; }
         public void setDivisa()
         {
             if (Moneda == "PESOS")

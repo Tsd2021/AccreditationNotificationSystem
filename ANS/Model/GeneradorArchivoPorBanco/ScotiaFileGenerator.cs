@@ -9,7 +9,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 {
     public class ScotiaFileGenerator : IBancoModoAcreditacion
     {
-        public void GenerarArchivo(List<CuentaBuzon> cb)
+        public async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
             throw new NotImplementedException();
         }

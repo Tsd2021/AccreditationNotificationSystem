@@ -14,7 +14,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
     {
         private readonly string CuentaTransportadora = "007584652";
         private string Remito = DateTime.Now.TimeOfDay.ToString();
-        private string ruta = @"C:\Users\dchiquiar\Desktop\pruebas txt punto a punto BBVA";
+        private string ruta = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\BBVA";
         public List<CuentaBuzon> buzonesMontevideo = new List<CuentaBuzon>();
         public List<CuentaBuzon> buzonesMaldonado = new List<CuentaBuzon>();
         public ConfiguracionAcreditacion configActual;
@@ -22,7 +22,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         {
             this.configActual = config;
         }
-        public void GenerarArchivo(List<CuentaBuzon> cb)
+        public async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
             //primero: ordenar las listas por ciudad
             OrdenarListasPorCiudad(cb);
@@ -39,12 +39,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 {
                     if (configActual.TipoAcreditacion == VariablesGlobales.p2p)
                     {
-                        Exporta_Reme(ruta, DateTime.Now, correlativoMontevideo, buzonesMontevideo, "MONTEVIDEO");
+                       await Exporta_Reme(ruta, DateTime.Now, correlativoMontevideo, buzonesMontevideo, "MONTEVIDEO");
 
                     }
                     else if (configActual.TipoAcreditacion == VariablesGlobales.diaxdia)
                     {
-                        Exporta_Reme_Agrupado(ruta, DateTime.Now, correlativoMontevideo, buzonesMontevideo, "MONTEVIDEO");
+                        await Exporta_Reme_Agrupado(ruta, DateTime.Now, correlativoMontevideo, buzonesMontevideo, "MONTEVIDEO");
                     }
 
                 }
@@ -55,17 +55,17 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 {
                     if (configActual.TipoAcreditacion == VariablesGlobales.p2p)
                     {
-                        Exporta_Reme(ruta, DateTime.Now, correlativoMontevideo, buzonesMaldonado, "MALDONADO");
+                        await Exporta_Reme(ruta, DateTime.Now, correlativoMontevideo, buzonesMaldonado, "MALDONADO");
                     }
                     else if (configActual.TipoAcreditacion == VariablesGlobales.diaxdia)
                     {
-                        Exporta_Reme_Agrupado(ruta, DateTime.Now, correlativoMontevideo, buzonesMontevideo, "MADLONADO");
+                        await Exporta_Reme_Agrupado(ruta, DateTime.Now, correlativoMontevideo, buzonesMontevideo, "MADLONADO");
                     }
                 }
             }
         }
         //EXPORTA_REME ES PARA PUNTO A PUNTO
-        public void Exporta_Reme(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
+        public async Task Exporta_Reme(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
         {
 
             try
@@ -162,7 +162,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         }
         //EXPORTA_REME_AGRUPADO ES PARA DIA A DIA BBVA!
-        public bool Exporta_Reme_Agrupado(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
+        public async Task<bool> Exporta_Reme_Agrupado(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
         {
 
             ruta = @"C:\Users\dchiquiar\Desktop\pruebas txt dia a dia BBVA\DIAADIA";

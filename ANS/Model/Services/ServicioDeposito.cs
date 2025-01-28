@@ -20,29 +20,48 @@ namespace ANS.Model.Services
             }
             return instancia;
         }
-        public void asignarDepositosAlBuzon(CuentaBuzon b,int ultIdOperacion)
+        public async Task asignarDepositosAlBuzon(CuentaBuzon b, int ultIdOperacion)
         {
             if (b != null)
             {
 
                 ultIdOperacion -= 3;
+                if (b.Config.TipoAcreditacion == VariablesGlobales.tanda)
+                {
+                    Console.WriteLine("es tanda");
+                }
                 using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
                 {
 
-                    string query = "select d.iddeposito, d.idoperacion, d.codigo, " +
-                        "CASE " +
-                        "  WHEN CHARINDEX('-', d.empresa) > 0 THEN " +
-                        "    SUBSTRING(d.empresa, CHARINDEX('-', d.empresa) + 1, LEN(d.empresa)) " +
-                        "  ELSE " +
-                        "    d.empresa " +
-                        "END AS empresa, " +
-                        "d.fechadep " +
-                        "from Depositos d " +
-                        "inner join relaciondeposito rd " +
-                        "on d.IdDeposito = rd.IdDeposito " +
-                        "where d.codigo = @nc " +
-                        "and d.empresa = @empresa " +
-                        "and d.idoperacion > @ultimaOperacion";
+                string query = @"
+                        SELECT 
+                        d.iddeposito, 
+                        d.idoperacion, 
+                        d.codigo, 
+                        CASE 
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
+                        END AS empresa, 
+                        d.fechadep 
+                        FROM 
+                        Depositos d
+                        INNER JOIN 
+                        relaciondeposito rd 
+                        ON 
+                        d.IdDeposito = rd.IdDeposito 
+                        WHERE 
+                        d.codigo = @nc 
+                        AND 
+                        (
+                        CASE 
+                            WHEN CHARINDEX('-', d.empresa) > 0 
+                            THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                            ELSE LTRIM(RTRIM(d.empresa))
+                        END
+                        ) = @empresa
+                        AND d.idoperacion > @ultimaOperacion;";
+
 
                     //LA EMPRESA SI TIENE GUION - HAY QUE TOMAR LO QUE ESTA DESPUES DEL GUION.
 
@@ -74,7 +93,7 @@ namespace ANS.Model.Services
                                 FechaDep = reader.GetDateTime(4)
                             };
 
-                            buscaYAsignarTotalesPorDepositoYDivisa(deposito, b.Moneda, _conexionWebBuzones);
+                            await buscaYAsignarTotalesPorDepositoYDivisa(deposito, b.Divisa, _conexionWebBuzones);
 
                             b.Depositos.Add(deposito);
 
@@ -88,21 +107,11 @@ namespace ANS.Model.Services
 
             }
         }
-        private void buscaYAsignarTotalesPorDepositoYDivisa(Deposito deposito, string divisa, string connectionString)
+        private async Task buscaYAsignarTotalesPorDepositoYDivisa(Deposito deposito, string divisa, string connectionString)
         {
             if (deposito == null)
             {
                 throw new Exception("Error en método buscaYAsignarTotalesPorDepositoYDivisa: deposito es null");
-            }
-
-            if (divisa == "PESOS")
-            {
-                divisa = "UYU";
-            }
-
-            if(divisa == "DOLARES")
-            {
-                divisa = "USD";
             }
 
             int idTotalesFound = 0;
@@ -148,6 +157,7 @@ namespace ANS.Model.Services
                             deposito.Totales.Add(nuevoTotal);
                         }
                     }
+                    await Task.Delay(500);
                 }
                 else
                 {

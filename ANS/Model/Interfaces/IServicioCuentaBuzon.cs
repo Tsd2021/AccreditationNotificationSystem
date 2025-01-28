@@ -12,9 +12,9 @@ namespace ANS.Model.Interfaces
         List<CuentaBuzon> getAll();
         List<CuentaBuzon> getAllByTipoAcreditacion(string tipoAcreditacion);
         List<CuentaBuzon> getAllByTipoAcreditacionYBanco(string tipoAcreditacion, string banco);
-        void acreditarPuntoAPuntoPorBanco(string bank);
-        void acreditarTandaHendersonYRelacionados(TimeSpan tanda);
-        void acreditarDiaADiaPorBanco(string bank);
-        void acreditarTandaPorBanco(string bank);
+        Task acreditarPuntoAPuntoPorBanco(string bank);
+        Task acreditarTandaHendersonYRelacionados(TimeSpan tanda);
+        Task acreditarDiaADiaPorBanco(string bank);
+        Task acreditarTandaPorBanco(string bank);
     }
 }
