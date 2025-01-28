@@ -21,7 +21,7 @@ namespace ANS.Model.Jobs.BBVA
         {
             try
             {
-                _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.bbva);
+                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.bbva);
 
                 Console.WriteLine("Tarea de BBVA ejecutada con éxito.");
 

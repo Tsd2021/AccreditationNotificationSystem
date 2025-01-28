@@ -32,7 +32,7 @@ namespace ANS.Model.Services
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
 
-                string query = "SELECT buzon.NC,buzon.BANCO,buzon.CIERRE,buzon.IDCLIENTE,cuentabuzon.CUENTA,cuentabuzon.MONEDA,cuentabuzon.EMPRESA,config.TipoAcreditacion,config.ParametroDiaADia,config.ParametroPuntoAPunto,config.ParametroTanda1,config.ParametroTanda2 " +
+                string query = "SELECT buzon.NC,buzon.BANCO,buzon.CIERRE,buzon.IDCLIENTE,cuentabuzon.CUENTA,cuentabuzon.MONEDA,cuentabuzon.EMPRESA,config.TipoAcreditacion, config.ParametroDiaADia, config.ParametroPuntoAPunto, config.ParametroTanda1, config.ParametroTanda2 " +
                     "FROM CC buzon INNER JOIN CUENTASBUZONES cuentabuzon ON buzon.IDCLIENTE = cuentabuzon.IDCLIENTE " +
                     "INNER JOIN ConfiguracionAcreditacion config ON cuentabuzon.ID = config.CuentasBuzonesId " +
                     "WHERE buzon.BANCO IS NOT NULL " +
@@ -143,15 +143,16 @@ namespace ANS.Model.Services
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC " +
-                               "FROM ConfiguracionAcreditacion config " +
-                               "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
-                               "INNER JOIN CC c ON config.NC = c.NC " +
-                               "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
-                               "AND cb.BANCO = @bank " +
-                               "AND config.CuentasBuzonesId IS NOT NULL " +
-                               "AND config.ConfigId IS NOT NULL " +
-                               "ORDER BY c.NC";
+                string query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID " +
+                             "FROM ConfiguracionAcreditacion config " +
+                             "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
+                             "INNER JOIN CC c ON config.NC = c.NC " +
+                             "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
+                             "AND cb.BANCO = @bank " +
+                             "AND config.CuentasBuzonesId IS NOT NULL " +
+                             "AND config.ConfigId IS NOT NULL " +
+                             "ORDER BY c.NC";
+
 
                 conn.Open();
 
@@ -175,6 +176,7 @@ namespace ANS.Model.Services
                     int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
                     int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
                     int idReferenciaAlCliente = reader.GetOrdinal("IDCC");
+                    int idCuenta = reader.GetOrdinal("ID");
 
                     while (reader.Read())
                     {
@@ -189,13 +191,12 @@ namespace ANS.Model.Services
                             Empresa = reader.GetString(empresaOrdinal),
                             SucursalCuenta = reader.GetString(sucursalOrdinal),
                             Ciudad = reader.GetString(ciudadOrdinal),
-                            IdReferenciaAlCliente = reader.GetString(idReferenciaAlCliente)
+                            IdReferenciaAlCliente = reader.GetString(idReferenciaAlCliente),
+                            IdCuenta = reader.GetInt32(idCuenta)
                         };
-
 
                         cuentaBuzon.setDivisa();
 
-                        // Verificar y asignar la configuración
                         if (!reader.IsDBNull(tipoAcreditacionOrdinal))
                         {
                             cuentaBuzon.Config = new ConfiguracionAcreditacion(reader.GetString(tipoAcreditacionOrdinal));
@@ -209,7 +210,7 @@ namespace ANS.Model.Services
             return buzonesFound;
         }
 
-        private void generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, string banco, string tipoAcreditacion)
+        private async Task generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, string banco, string tipoAcreditacion)
         {
             if (listaCuentaBuzones == null)
             {
@@ -226,7 +227,7 @@ namespace ANS.Model.Services
             if (bank != null)
             {
 
-                bank.GenerarArchivo(listaCuentaBuzones);
+                await bank.GenerarArchivo(listaCuentaBuzones);
 
                 return;
 
@@ -239,7 +240,7 @@ namespace ANS.Model.Services
         //METODO PROCESAR DEPOSITOS DE CUENTAS PUNTO A PUNTO BBVA(TODA HORA 15 Y 45) Y SANTANDER(5MIN)
         //Método Acreditar punto a punto para Santander (5 mins)
         #region MÉTODOS ACREDITAR POR CONFIGURACIÓN!
-        public void acreditarPuntoAPuntoPorBanco(string bank)
+        public async Task acreditarPuntoAPuntoPorBanco(string bank)
         {
             int ultIdOperacionPorBuzon = 0;
             List<CuentaBuzon> buzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.p2p, bank);
@@ -249,15 +250,15 @@ namespace ANS.Model.Services
 
                 foreach (CuentaBuzon unBuzon in buzones)
                 {
-                    ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC);
+                    ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC,unBuzon.IdCuenta);
 
                     if (ultIdOperacionPorBuzon > 0)
                     {
-                        ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon);
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon);
                     }
 
                 }
-                generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
+                await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
 
                 //luego de generar, tiene que insertar en ACREDITACIONESDEPOSITO los depositos que fueron insertados ok
 
@@ -268,7 +269,7 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones punto a punto");
 
         }
-        public void acreditarDiaADiaPorBanco(string banco)
+        public async Task acreditarDiaADiaPorBanco(string banco)
         {
 
             List<CuentaBuzon> cuentaBuzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.diaxdia, banco);
@@ -278,14 +279,14 @@ namespace ANS.Model.Services
                 foreach (var unaCuentaBuzon in cuentaBuzones)
                 {
 
-                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(unaCuentaBuzon.NC);
+                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(unaCuentaBuzon.NC, unaCuentaBuzon.IdCuenta);
 
                     if (ultIdOperacion > 0)
                     {
-                        ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion);
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion);
                     }
 
-                    generarArchivoPorBanco(cuentaBuzones, banco, VariablesGlobales.diaxdia);
+                    await generarArchivoPorBanco(cuentaBuzones, banco, VariablesGlobales.diaxdia);
                     //luego de generar, tiene que insertar en ACREDITACIONESDEPOSITO los depositos que fueron insertados ok
                     return;
                 }
@@ -293,7 +294,7 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones día a día");
 
         }
-        public void acreditarTandaPorBanco(string bank)
+        public async Task acreditarTandaPorBanco(string bank)
         {
             List<CuentaBuzon> cuentaBuzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.tanda, bank);
 
@@ -302,14 +303,17 @@ namespace ANS.Model.Services
                 foreach (var unaCuentaBuzon in cuentaBuzones)
                 {
 
-                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(unaCuentaBuzon.NC);
+                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(unaCuentaBuzon.NC, unaCuentaBuzon.IdCuenta);
 
                     if (ultIdOperacion > 0)
                     {
-                        ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion);
+
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion);
                     }
 
-                    generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
+                    else return; //abandona. no genera nada.
+
+                    await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
 
                     //luego de generar, tiene que insertar en ACREDITACIONESDEPOSITO los depositos que fueron insertados ok
 
@@ -319,11 +323,11 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones tanda");
         }
         #endregion
-        private int obtenerUltimaOperacionByNC(string nc)
+        private int obtenerUltimaOperacionByNC(string nc,int idCuenta)
         {
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = "select max(idoperacion) from ACREDITACIONESDEPOSITOS where IDBUZON = @ncFound";
+                string query = "select max(idoperacion) from ACREDITACIONESDEPOSITOS where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
 
                 conn.Open();
 
@@ -331,14 +335,16 @@ namespace ANS.Model.Services
 
                 cmd.Parameters.AddWithValue("@ncFound", nc);
 
+                cmd.Parameters.AddWithValue("@idCuenta", idCuenta);
+
                 object result = cmd.ExecuteScalar();
+
                 return result != DBNull.Value && result != null ? Convert.ToInt32(result) : 0;
-            }
-            return 0;
+            }   
         }
         //Henderson y relacionados TANDA 1 07:30
         //Henderson y relacionados TANDA 2 14:30
-        public void acreditarTandaHendersonYRelacionados(TimeSpan tanda)
+        public async Task acreditarTandaHendersonYRelacionados(TimeSpan tanda)
         {
             //va a recibir un timespan, que luego hay que buscar desde ese para atrás.
 

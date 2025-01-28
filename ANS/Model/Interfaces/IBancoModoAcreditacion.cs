@@ -8,6 +8,6 @@ namespace ANS.Model.Interfaces
 {
     public interface IBancoModoAcreditacion
     {
-        void GenerarArchivo(List<CuentaBuzon> cb);
+        Task GenerarArchivo(List<CuentaBuzon> cb);
     }
 }

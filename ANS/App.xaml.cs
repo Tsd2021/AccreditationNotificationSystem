@@ -35,7 +35,12 @@ namespace ANS
 
             await crearJobsSantander(_scheduler);
 
-            await _scheduler.Start();
+            if (!_scheduler.IsStarted)
+            {
+                await _scheduler.Start();
+
+                Console.WriteLine("Scheduler iniciado correctamente.");
+            }
 
         }
         private async Task crearJobsSantander(IScheduler scheduler)
@@ -48,7 +53,7 @@ namespace ANS
                                                     .WithIdentity("SantanderTriggerP2P", "GrupoTrabajoSantander")
                                                     .WithDailyTimeIntervalSchedule(x => x
                                                     .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0))
-                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(15, 30))
+                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(18, 30))
                                                     .OnDaysOfTheWeek(new[]
                                                     {
                                                         DayOfWeek.Monday,
@@ -57,7 +62,7 @@ namespace ANS
                                                         DayOfWeek.Thursday,
                                                         DayOfWeek.Friday
                                                     })
-                                                    .WithIntervalInMinutes(5))
+                                                    .WithIntervalInMinutes(1))
                                                     .Build();
 
             IJobDetail jobDiaADiaSantander = JobBuilder.Create<AcreditarDiaADiaSantander>().WithIdentity("SantanderJobDAD", "GrupoTrabajoSantander")
@@ -71,7 +76,7 @@ namespace ANS
             IJobDetail jobTandaSantander = JobBuilder.Create<AcreditarTandaSantander>()
                 .WithIdentity("SantanderJobTAN", "GrupoTrabajoSantander")
                 .Build();
-
+            /*
             ITrigger triggerTanda1Santander = TriggerBuilder.Create()
                 .WithIdentity("SantanderTriggerTAN1", "GrupoTrabajoSantander")
                 .WithCronSchedule("0 0 7 ? * MON-FRI") // 7:00 de lunes a viernes
@@ -81,7 +86,19 @@ namespace ANS
                 .WithIdentity("SantanderTriggerTAN2", "GrupoTrabajoSantander")
                 .WithCronSchedule("0 45 15 ? * MON-FRI") // 15:45 de lunes a viernes
                 .Build();
+            */
 
+
+            // JOBS TEST: //
+            ITrigger triggerTanda1Santander = TriggerBuilder.Create()
+                    .WithIdentity("SantanderTriggerTAN1", "GrupoTrabajoSantander")
+                    .WithCronSchedule("0 26 17 ? * MON-FRI") // 7:00 de lunes a viernes
+                    .Build();
+
+            ITrigger triggerTanda2Santander = TriggerBuilder.Create()
+                    .WithIdentity("SantanderTriggerTAN2", "GrupoTrabajoSantander")
+                    .WithCronSchedule("0 27 17 ? * MON-FRI") // 15:45 de lunes a viernes
+                    .Build();
             try
             {
 
@@ -97,8 +114,6 @@ namespace ANS
                 Console.WriteLine($"Error al ejecutar la tarea de SANTANDER: {ex.Message}");
 
             }
-
-
         }
         private async Task crearJobsBBVA(IScheduler scheduler)
         {
@@ -110,11 +125,8 @@ namespace ANS
             ITrigger triggerBBVAPuntoAPunto = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerP2P", "GrupoTrabajoBBVA")
                 .WithDailyTimeIntervalSchedule(x => x
-
-                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(11, 15))
-
-                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(20, 30))
-
+                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0)) // Hora de inicio: 8:00 AM
+                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(18, 30)) // Hora de fin: 15:30 PM
                     .OnDaysOfTheWeek(new[]
                     {
                         DayOfWeek.Monday,
@@ -123,9 +135,16 @@ namespace ANS
                         DayOfWeek.Thursday,
                         DayOfWeek.Friday
                     })
-                    .WithIntervalInMinutes(30)
-                )
-                .Build();
+                    .WithIntervalInMinutes(1)).Build(); // Intervalo de 1 minuto
+
+            //IJobDetail jobBBVADiaADia = JobBuilder.Create<AcreditarDiaADiaBBVAJob>()
+            //    .WithIdentity("BBVAJobDAD", "GrupoTrabajoBBVA")
+            //    .Build();
+
+            //ITrigger triggerBBVADiaADia = TriggerBuilder.Create()
+            //    .WithIdentity("BBVATriggerDAD", "GrupoTrabajoBBVA")
+            //    .WithCronSchedule("0 35 16 ? * MON-FRI")
+            //    .Build();
 
             IJobDetail jobBBVADiaADia = JobBuilder.Create<AcreditarDiaADiaBBVAJob>()
                 .WithIdentity("BBVAJobDAD", "GrupoTrabajoBBVA")
@@ -133,7 +152,7 @@ namespace ANS
 
             ITrigger triggerBBVADiaADia = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerDAD", "GrupoTrabajoBBVA")
-                .WithCronSchedule("0 35 16 ? * MON-FRI")
+                .WithCronSchedule("0 40 12 ? * MON-FRI")
                 .Build();
 
             await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA, triggerBBVAPuntoAPunto);

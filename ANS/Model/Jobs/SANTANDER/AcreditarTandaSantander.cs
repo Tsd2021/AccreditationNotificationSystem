@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace ANS.Model.Jobs.SANTANDER
 {
+    [DisallowConcurrentExecution]
     public class AcreditarTandaSantander : IJob
     {
 
@@ -21,7 +22,7 @@ namespace ANS.Model.Jobs.SANTANDER
         {
             try
             {
-                _servicioCuentaBuzon.acreditarTandaPorBanco(VariablesGlobales.santander);
+                await _servicioCuentaBuzon.acreditarTandaPorBanco(VariablesGlobales.santander);
 
                 Console.WriteLine("Tarea de SANTANDER ejecutada con éxito.");
 

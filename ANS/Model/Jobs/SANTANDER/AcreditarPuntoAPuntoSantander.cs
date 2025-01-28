@@ -8,6 +8,7 @@ using Quartz;
 
 namespace ANS.Model.Jobs.SANTANDER
 {
+    [DisallowConcurrentExecution]
     public class AcreditarPuntoAPuntoSantander : IJob
     {
         private readonly IServicioCuentaBuzon _servicioCuentaBuzon;
@@ -21,7 +22,7 @@ namespace ANS.Model.Jobs.SANTANDER
         {
             try
             {
-                _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.santander);
+                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.santander);
 
                 Console.WriteLine("Tarea de SANTANDER ejecutada con éxito.");
 
