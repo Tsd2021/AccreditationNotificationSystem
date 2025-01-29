@@ -28,8 +28,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         */
         private string _cashOfficeRutaDolaresP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\cashoffice$\CashSantander\DOLARES";
         private string _cashOfficeRutaPesosP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\cashoffice$\CashSantander\PESOS";
-        private string _rutaDolaresP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\DOLARES";
-        private string _rutaPesosP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\PESOS";
+        private string _rutaDolaresP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\DOLARES\";
+        private string _rutaPesosP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\PESOS\";
         private Dictionary<int, int> CuentasTata = new Dictionary<int, int>
                 {
                 { 67, 1 },
@@ -82,10 +82,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MONTEVIDEO\PESOS\" + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
-                else
+                else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.dolares)
+                {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MONTEVIDEO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
+                }
             }
-
             else if (this._config.TipoAcreditacion == VariablesGlobales.tanda)
             {
                 if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.pesos)
@@ -103,33 +104,27 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 else
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\tanda$\MONTEVIDEO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
             }
-            else return "hola";
-
+            return "hola";
         }
         public async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
-
             if (_config.TipoAcreditacion == VariablesGlobales.p2p)
             {
                 //Generar archivo P2P
                 await GenerarLineasPorTotales(cb);
             }
-
             else if (_config.TipoAcreditacion == VariablesGlobales.tanda)
             {
                 await GenerarLineasPorCuentasBuzones(cb);
             }
-
             else if (_config.TipoAcreditacion == VariablesGlobales.diaxdia)
             {
                 await GenerarLineasPorCuentasBuzones(cb);
             }
-
             else
             {
                 throw new Exception("Tipo de acreditación no soportado");
             }
-
         }
         private async Task GenerarLineasPorTotales(List<CuentaBuzon> cb)
         {
@@ -137,6 +132,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             StringBuilder maldonadoDolares = new StringBuilder();
             StringBuilder montevideoPesos = new StringBuilder();
             StringBuilder montevideoDolares = new StringBuilder();
+            StringBuilder cashOfficePesos = new StringBuilder();
+            StringBuilder cashOfficeDolares = new StringBuilder();
 
             if (cb != null && cb.Count > 0)
             {
@@ -148,8 +145,22 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         {
                             if (unDeposito.Totales != null && unDeposito.Totales.Count > 0)
                             {
+
                                 foreach (Total unTotal in unDeposito.Totales)
                                 {
+                                    if (unaCuenta.esCashOffice())
+                                    {
+
+                                        if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                        {
+
+                                            agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
+                                        }
+                                        else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                        {
+                                            agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
+                                        }
+                                    }
                                     if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
                                     {
                                         if (unaCuenta.Divisa == VariablesGlobales.pesos)
@@ -178,7 +189,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     }
                 }
             }
-            await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares);
+            await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
         }
         private async Task GenerarLineasPorCuentasBuzones(List<CuentaBuzon> cb)
         {
@@ -186,6 +197,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             StringBuilder maldonadoDolares = new StringBuilder();
             StringBuilder montevideoPesos = new StringBuilder();
             StringBuilder montevideoDolares = new StringBuilder();
+            StringBuilder cashOfficePesos = new StringBuilder();
+            StringBuilder cashOfficeDolares = new StringBuilder();
 
             if (cb != null && cb.Count > 0)
             {
@@ -197,6 +210,18 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                         if (sumaMontos > 0)
                         {
+                            if (unaCuenta.esCashOffice())
+                            {
+                                if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                {
+                                    agregarLineaAlStringBuilder_Agrupado(cashOfficePesos, unaCuenta, sumaMontos);
+                                }
+                                else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                {
+                                    agregarLineaAlStringBuilder_Agrupado(cashOfficeDolares, unaCuenta, sumaMontos);
+                                }
+                            }
+                            else
                             if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
                             {
                                 if (unaCuenta.Divisa == VariablesGlobales.pesos)
@@ -224,25 +249,33 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 }
             }
 
-            await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares);
+            await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
         }
-        private async Task CrearArchivo(StringBuilder maldonadoPesos, StringBuilder maldonadoDolares, StringBuilder montevideoPesos, StringBuilder montevideoDolares)
+        private async Task CrearArchivo(StringBuilder maldonadoPesos, StringBuilder maldonadoDolares, StringBuilder montevideoPesos, StringBuilder montevideoDolares, StringBuilder cashOfficePesos, StringBuilder cashOfficeDolares)
         {
             if (maldonadoPesos.Length > 0)
             {
                 await CrearArchivoPorCiudadYDivisa(maldonadoPesos, VariablesGlobales.maldonado, VariablesGlobales.pesos);
             }
-            if(maldonadoDolares.Length > 0)
+            if (maldonadoDolares.Length > 0)
             {
                 await CrearArchivoPorCiudadYDivisa(maldonadoDolares, VariablesGlobales.maldonado, VariablesGlobales.dolares);
             }
-            if(montevideoPesos.Length > 0)
+            if (montevideoPesos.Length > 0)
             {
                 await CrearArchivoPorCiudadYDivisa(montevideoPesos, VariablesGlobales.montevideo, VariablesGlobales.pesos);
             }
-            if(montevideoDolares.Length > 0)
+            if (montevideoDolares.Length > 0)
             {
                 await CrearArchivoPorCiudadYDivisa(montevideoDolares, VariablesGlobales.montevideo, VariablesGlobales.dolares);
+            }
+            if (cashOfficePesos.Length > 0)
+            {
+                await CrearArchivoCashOffice(cashOfficePesos, VariablesGlobales.pesos);
+            }
+            if (cashOfficeDolares.Length > 0)
+            {
+                await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.dolares);
             }
         }
         private async Task CrearArchivoPorCiudadYDivisa(StringBuilder contenido, string ciudad, string divisa)
@@ -261,8 +294,36 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             File.WriteAllText(ruta, contenido.ToString());
 
-            await Task.Delay(500);
+            await Task.Delay(250);
 
+        }
+        // CREACION ARCHIVOS ESPECIFICAMENTE DE CASHOFFICE
+        private async Task CrearArchivoCashOffice(StringBuilder content, string divisa)
+        {
+            if (content.Length == 0) return; // No crear archivos vacíos
+
+            string ruta = "";
+
+            if (divisa == VariablesGlobales.pesos)
+            {
+                ruta = _cashOfficeRutaPesosP2P + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
+            }
+
+            if (divisa == VariablesGlobales.dolares)
+            {
+                ruta = _cashOfficeRutaDolaresP2P + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
+            }
+
+            string directorio = Path.GetDirectoryName(ruta);
+
+            if (!Directory.Exists(directorio))
+            {
+                Directory.CreateDirectory(directorio);
+            }
+
+            File.WriteAllText(ruta, content.ToString());
+
+            await Task.Delay(150);
         }
         //METODO PARA CREAR LINEAS EN ARCHIVOS DIA A DIA Y TANDA!
         private void agregarLineaAlStringBuilder_Agrupado(StringBuilder lineas, CuentaBuzon unaCuenta, double totalPorCuenta)

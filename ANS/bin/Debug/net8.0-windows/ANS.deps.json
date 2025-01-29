@@ -9,6 +9,7 @@
       "ANS/1.0.0": {
         "dependencies": {
           "MaterialDesignColors": "5.2.1",
+          "MaterialDesignInXamlToolkitAddOns": "0.0.63",
           "MaterialDesignThemes": "5.2.1",
           "Microsoft.Data.SqlClient": "5.2.2",
           "Quartz": "3.13.1"
@@ -52,11 +53,56 @@
           }
         }
       },
+      "Dynamitey/2.0.10.189": {
+        "dependencies": {
+          "Microsoft.CSharp": "4.6.0",
+          "System.ComponentModel": "4.3.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Dynamitey.dll": {
+            "assemblyVersion": "2.0.10.189",
+            "fileVersion": "2.0.10.189"
+          }
+        }
+      },
+      "ExtendedWPFConverters/2.0.4": {
+        "dependencies": {
+          "System.Drawing.Common": "9.0.0"
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/ExtendedWPFConverters.dll": {
+            "assemblyVersion": "2.0.4.0",
+            "fileVersion": "2.0.4.0"
+          }
+        }
+      },
+      "ExtendedWPFVisualTreeHelper/2.0.3": {
+        "runtime": {
+          "lib/net8.0-windows7.0/ExtendedWPFVisualTreeHelper.dll": {
+            "assemblyVersion": "2.0.3.0",
+            "fileVersion": "2.0.3.0"
+          }
+        }
+      },
       "MaterialDesignColors/5.2.1": {
         "runtime": {
           "lib/net8.0/MaterialDesignColors.dll": {
             "assemblyVersion": "5.2.1.0",
             "fileVersion": "5.2.1.0"
+          }
+        }
+      },
+      "MaterialDesignInXamlToolkitAddOns/0.0.63": {
+        "dependencies": {
+          "Dynamitey": "2.0.10.189",
+          "ExtendedWPFConverters": "2.0.4",
+          "ExtendedWPFVisualTreeHelper": "2.0.3",
+          "MaterialDesignThemes": "5.2.1"
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/MaterialDesignThemes.Wpf.AddOns.dll": {
+            "assemblyVersion": "0.0.63.0",
+            "fileVersion": "0.0.63.0"
           }
         }
       },
@@ -80,7 +126,7 @@
           }
         }
       },
-      "Microsoft.CSharp/4.5.0": {},
+      "Microsoft.CSharp/4.6.0": {},
       "Microsoft.Data.SqlClient/5.2.2": {
         "dependencies": {
           "Azure.Identity": "1.11.4",
@@ -260,7 +306,7 @@
       },
       "Microsoft.IdentityModel.Tokens/6.35.0": {
         "dependencies": {
-          "Microsoft.CSharp": "4.5.0",
+          "Microsoft.CSharp": "4.6.0",
           "Microsoft.IdentityModel.Logging": "6.35.0",
           "System.Security.Cryptography.Cng": "4.5.0"
         },
@@ -278,6 +324,22 @@
           "lib/netstandard2.0/Microsoft.SqlServer.Server.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Microsoft.Win32.SystemEvents/9.0.0": {
+        "runtime": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52809"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52809"
           }
         }
       },
@@ -312,6 +374,11 @@
           }
         }
       },
+      "System.ComponentModel/4.3.0": {
+        "dependencies": {
+          "System.Runtime": "4.3.0"
+        }
+      },
       "System.Configuration.ConfigurationManager/8.0.0": {
         "dependencies": {
           "System.Diagnostics.EventLog": "8.0.0",
@@ -324,6 +391,21 @@
         }
       },
       "System.Diagnostics.EventLog/8.0.0": {},
+      "System.Drawing.Common/9.0.0": {
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "9.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52901"
+          },
+          "lib/net8.0/System.Private.Windows.Core.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52901"
+          }
+        }
+      },
       "System.IdentityModel.Tokens.Jwt/6.35.0": {
         "dependencies": {
           "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
@@ -410,12 +492,40 @@
       "path": "azure.identity/1.11.4",
       "hashPath": "azure.identity.1.11.4.nupkg.sha512"
     },
+    "Dynamitey/2.0.10.189": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-sKo8BlCgQTOSFFK4RlMvC8abp0NqZrTd017fishVrkoqggNBpwa4RGq88wPjyedk5GjTWeB8/kGrbXES+Rcl7Q==",
+      "path": "dynamitey/2.0.10.189",
+      "hashPath": "dynamitey.2.0.10.189.nupkg.sha512"
+    },
+    "ExtendedWPFConverters/2.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-0PVuEdnTWFNt3Srs9N4erZRf/9NBVRkuXi80CA83dE3AZ6cbsC+fv29MDShR1B6YkjUJPHNz7t5/0HJpWWlACg==",
+      "path": "extendedwpfconverters/2.0.4",
+      "hashPath": "extendedwpfconverters.2.0.4.nupkg.sha512"
+    },
+    "ExtendedWPFVisualTreeHelper/2.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3E4TJkFDpTFCpBHfQa7HQS1uyLBwpSlZMYCU1im1AnQLbYZIEmhnlulvlYezS8k3sY31f0uWHwuQBeEPle3kEQ==",
+      "path": "extendedwpfvisualtreehelper/2.0.3",
+      "hashPath": "extendedwpfvisualtreehelper.2.0.3.nupkg.sha512"
+    },
     "MaterialDesignColors/5.2.1": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-D0HW6E2/kzsnEWCh1KDG/K09Fpkvs9mR3n91Y8YSOsEAoQmGZbVAj58ssyAxGTiIPj2zB4ZVnwxkizwO35/v8A==",
       "path": "materialdesigncolors/5.2.1",
       "hashPath": "materialdesigncolors.5.2.1.nupkg.sha512"
+    },
+    "MaterialDesignInXamlToolkitAddOns/0.0.63": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-vFI+IYMuxfJf5qW8BK7XUcmtugn8nGvwqL1QxVTzAoBxdxa+aWXOJwpqLXo9DCEvJ5jiKKijzYXT9We8Ds9FdA==",
+      "path": "materialdesigninxamltoolkitaddons/0.0.63",
+      "hashPath": "materialdesigninxamltoolkitaddons.0.0.63.nupkg.sha512"
     },
     "MaterialDesignThemes/5.2.1": {
       "type": "package",
@@ -431,12 +541,12 @@
       "path": "microsoft.bcl.asyncinterfaces/1.1.1",
       "hashPath": "microsoft.bcl.asyncinterfaces.1.1.1.nupkg.sha512"
     },
-    "Microsoft.CSharp/4.5.0": {
+    "Microsoft.CSharp/4.6.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-kaj6Wb4qoMuH3HySFJhxwQfe8R/sJsNJnANrvv8WdFPMoNbKY5htfNscv+LHCu5ipz+49m2e+WQXpLXr9XYemQ==",
-      "path": "microsoft.csharp/4.5.0",
-      "hashPath": "microsoft.csharp.4.5.0.nupkg.sha512"
+      "sha512": "sha512-kxn3M2rnAGy5N5DgcIwcE8QTePWU/XiYcQVzn9HqTls2NKluVzVSmVWRjK7OUPWbljCXuZxHyhEz9kPRIQeXow==",
+      "path": "microsoft.csharp/4.6.0",
+      "hashPath": "microsoft.csharp.4.6.0.nupkg.sha512"
     },
     "Microsoft.Data.SqlClient/5.2.2": {
       "type": "package",
@@ -536,6 +646,13 @@
       "path": "microsoft.sqlserver.server/1.0.0",
       "hashPath": "microsoft.sqlserver.server.1.0.0.nupkg.sha512"
     },
+    "Microsoft.Win32.SystemEvents/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-z8FfGIaoeALdD+KF44A2uP8PZIQQtDGiXsOLuN8nohbKhkyKt7zGaZb+fKiCxTuBqG22Q7myIAioSWaIcOOrOw==",
+      "path": "microsoft.win32.systemevents/9.0.0",
+      "hashPath": "microsoft.win32.systemevents.9.0.0.nupkg.sha512"
+    },
     "Microsoft.Xaml.Behaviors.Wpf/1.1.39": {
       "type": "package",
       "serviceable": true,
@@ -557,6 +674,13 @@
       "path": "system.clientmodel/1.0.0",
       "hashPath": "system.clientmodel.1.0.0.nupkg.sha512"
     },
+    "System.ComponentModel/4.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-VyGn1jGRZVfxnh8EdvDCi71v3bMXrsu8aYJOwoV7SNDLVhiEqwP86pPMyRGsDsxhXAm2b3o9OIqeETfN5qfezw==",
+      "path": "system.componentmodel/4.3.0",
+      "hashPath": "system.componentmodel.4.3.0.nupkg.sha512"
+    },
     "System.Configuration.ConfigurationManager/8.0.0": {
       "type": "package",
       "serviceable": true,
@@ -577,6 +701,13 @@
       "sha512": "sha512-fdYxcRjQqTTacKId/2IECojlDSFvp7LP5N78+0z/xH7v/Tuw5ZAxu23Y6PTCRinqyu2ePx+Gn1098NC6jM6d+A==",
       "path": "system.diagnostics.eventlog/8.0.0",
       "hashPath": "system.diagnostics.eventlog.8.0.0.nupkg.sha512"
+    },
+    "System.Drawing.Common/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-uoozjI3+dlgKh2onFJcz8aNLh6TRCPlLSh8Dbuljc8CdvqXrxHOVysJlrHvlsOCqceqGBR1wrMPxlnzzhynktw==",
+      "path": "system.drawing.common/9.0.0",
+      "hashPath": "system.drawing.common.9.0.0.nupkg.sha512"
     },
     "System.IdentityModel.Tokens.Jwt/6.35.0": {
       "type": "package",
