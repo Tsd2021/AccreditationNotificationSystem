@@ -1,5 +1,11 @@
-﻿using System;
+﻿using ANS.Model;
+using MaterialDesignThemes.Wpf;
+using System;
+using System.Drawing;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace ANS
@@ -10,8 +16,11 @@ namespace ANS
         public MainWindow()
         {
             InitializeComponent();
+
+            JobSnackbar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromSeconds(3));
+
             ConfigurarRelojes();
-        }  
+        }
         private void ConfigurarRelojes()
         {
             _timer = new DispatcherTimer
@@ -60,5 +69,15 @@ namespace ANS
             SecondHand.X2 = centerX + secondLength * Math.Sin(secondAngle);
             SecondHand.Y2 = centerY - secondLength * Math.Cos(secondAngle);
         }
+        public void MostrarAviso(string msg, System.Windows.Media.Color color)
+        {
+            var model = new SnackbarMsg
+            {
+                Texto = msg,
+                Fondo = new SolidColorBrush(color)
+            };
+            JobSnackbar.MessageQueue?.Enqueue(model);
+        }
+
     }
 }

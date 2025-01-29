@@ -55,6 +55,10 @@
               "target": "Package",
               "version": "[5.2.1, )"
             },
+            "MaterialDesignInXamlToolkitAddOns": {
+              "target": "Package",
+              "version": "[0.0.63, )"
+            },
             "MaterialDesignThemes": {
               "target": "Package",
               "version": "[5.2.1, )"

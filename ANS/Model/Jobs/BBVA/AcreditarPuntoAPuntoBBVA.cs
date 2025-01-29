@@ -1,10 +1,7 @@
 ﻿using ANS.Model.Interfaces;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
 
 namespace ANS.Model.Jobs.BBVA
 {
@@ -19,19 +16,46 @@ namespace ANS.Model.Jobs.BBVA
         }
         public async Task Execute(IJobExecutionContext context)
         {
+
+
+            Exception e = null;
             try
             {
-                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.bbva);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    main.MostrarAviso("Ejecutando tarea P2P ~BBVA~", Color.FromRgb(0, 68, 129));
+                });
 
-                Console.WriteLine("Tarea de BBVA ejecutada con éxito.");
+                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.bbva);
 
             }
             catch (Exception ex)
             {
+                e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea de BBVA: {ex.Message}");
+                //ACA GUARDAR EN UN LOG
+            }
+            finally
+            {
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    if (e != null)
+                    {
+                        main.MostrarAviso("ERROR - JOB P2P ~SANTANDER~", Colors.Red);
+                    }
+                    else
+                    {
+                        main.MostrarAviso("SUCCESS - JOB P2P ~SANTANDER~", Colors.Green);
+                    }
+                });
+
             }
 
             await Task.CompletedTask;
+
         }
     }
 }

@@ -126,7 +126,7 @@ namespace ANS
                 .WithIdentity("BBVATriggerP2P", "GrupoTrabajoBBVA")
                 .WithDailyTimeIntervalSchedule(x => x
                     .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0)) // Hora de inicio: 8:00 AM
-                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(18, 30)) // Hora de fin: 15:30 PM
+                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 30)) // Hora de fin: 15:30 PM
                     .OnDaysOfTheWeek(new[]
                     {
                         DayOfWeek.Monday,

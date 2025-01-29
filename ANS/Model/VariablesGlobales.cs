@@ -23,5 +23,6 @@ namespace ANS.Model
         public const string dolares = "USD";
         public const string montevideo = "MONTEVIDEO";
         public const string maldonado = "MALDONADO";
+        public const string cashoffice = "CASHOFFICE";
     }
 }

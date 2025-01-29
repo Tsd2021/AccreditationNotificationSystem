@@ -136,7 +136,6 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
-
         public List<CuentaBuzon> getAllByTipoAcreditacionYBanco(string tipoAcreditacion, string banco)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
@@ -178,6 +177,7 @@ namespace ANS.Model.Services
                     int idReferenciaAlCliente = reader.GetOrdinal("IDCC");
                     int idCuenta = reader.GetOrdinal("ID");
 
+
                     while (reader.Read())
                     {
                         CuentaBuzon cuentaBuzon = new CuentaBuzon
@@ -192,10 +192,13 @@ namespace ANS.Model.Services
                             SucursalCuenta = reader.GetString(sucursalOrdinal),
                             Ciudad = reader.GetString(ciudadOrdinal),
                             IdReferenciaAlCliente = reader.GetString(idReferenciaAlCliente),
-                            IdCuenta = reader.GetInt32(idCuenta)
+                            IdCuenta = reader.GetInt32(idCuenta),
+
                         };
 
                         cuentaBuzon.setDivisa();
+
+                        cuentaBuzon.setCashOffice();
 
                         if (!reader.IsDBNull(tipoAcreditacionOrdinal))
                         {
@@ -250,7 +253,7 @@ namespace ANS.Model.Services
 
                 foreach (CuentaBuzon unBuzon in buzones)
                 {
-                    ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC,unBuzon.IdCuenta);
+                    ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC, unBuzon.IdCuenta);
 
                     if (ultIdOperacionPorBuzon > 0)
                     {
@@ -323,7 +326,7 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones tanda");
         }
         #endregion
-        private int obtenerUltimaOperacionByNC(string nc,int idCuenta)
+        private int obtenerUltimaOperacionByNC(string nc, int idCuenta)
         {
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
@@ -340,7 +343,7 @@ namespace ANS.Model.Services
                 object result = cmd.ExecuteScalar();
 
                 return result != DBNull.Value && result != null ? Convert.ToInt32(result) : 0;
-            }   
+            }
         }
         //Henderson y relacionados TANDA 1 07:30
         //Henderson y relacionados TANDA 2 14:30

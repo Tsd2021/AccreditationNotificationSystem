@@ -24,20 +24,33 @@ namespace ANS.Model
         public string Divisa { get; set; }
         public int Producto { get; set; }
         public int IdCuenta { get; set; }
+        public bool CashOffice { get; set; }
         public void setDivisa()
         {
             if (Moneda == "PESOS")
             {
                 Divisa = "UYU";
             }
-            if(Moneda == "DOLARES")
+            if (Moneda == "DOLARES")
             {
                 Divisa = "USD";
             }
         }
+        public bool esCashOffice()
+        {
+            return CashOffice;
+        }
 
-
-
-
+        public void setCashOffice()
+        {
+            if (Banco == VariablesGlobales.cashoffice)
+            {
+                CashOffice = true;
+            }
+            else
+            {
+                CashOffice = false;
+            }
+        }
     }
 }

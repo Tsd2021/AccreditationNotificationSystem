@@ -47,6 +47,54 @@
           }
         }
       },
+      "Dynamitey/2.0.10.189": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.CSharp": "4.6.0",
+          "System.ComponentModel": "4.3.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Dynamitey.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Dynamitey.dll": {}
+        }
+      },
+      "ExtendedWPFConverters/2.0.4": {
+        "type": "package",
+        "dependencies": {
+          "System.Drawing.Common": "9.0.0"
+        },
+        "compile": {
+          "lib/net8.0-windows7.0/ExtendedWPFConverters.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/ExtendedWPFConverters.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.WindowsDesktop.App.WPF"
+        ]
+      },
+      "ExtendedWPFVisualTreeHelper/2.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0-windows7.0/ExtendedWPFVisualTreeHelper.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/ExtendedWPFVisualTreeHelper.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.WindowsDesktop.App.WPF"
+        ]
+      },
       "MaterialDesignColors/5.2.1": {
         "type": "package",
         "compile": {
@@ -59,6 +107,28 @@
             "related": ".pdb"
           }
         }
+      },
+      "MaterialDesignInXamlToolkitAddOns/0.0.63": {
+        "type": "package",
+        "dependencies": {
+          "Dynamitey": "2.0.10.189",
+          "ExtendedWPFConverters": "2.0.4",
+          "ExtendedWPFVisualTreeHelper": "2.0.3",
+          "MaterialDesignThemes": "4.5.0"
+        },
+        "compile": {
+          "lib/net8.0-windows7.0/MaterialDesignThemes.Wpf.AddOns.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-windows7.0/MaterialDesignThemes.Wpf.AddOns.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.WindowsDesktop.App.WPF"
+        ]
       },
       "MaterialDesignThemes/5.2.1": {
         "type": "package",
@@ -91,7 +161,7 @@
           }
         }
       },
-      "Microsoft.CSharp/4.5.0": {
+      "Microsoft.CSharp/4.6.0": {
         "type": "package",
         "compile": {
           "ref/netcoreapp2.0/_._": {}
@@ -364,6 +434,28 @@
           }
         }
       },
+      "Microsoft.Win32.SystemEvents/9.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "assetType": "runtime",
+            "rid": "win"
+          }
+        }
+      },
       "Microsoft.Xaml.Behaviors.Wpf/1.1.39": {
         "type": "package",
         "compile": {
@@ -411,6 +503,20 @@
           "lib/net6.0/System.ClientModel.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "System.ComponentModel/4.3.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Runtime": "4.3.0"
+        },
+        "compile": {
+          "ref/netstandard1.0/System.ComponentModel.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard1.3/System.ComponentModel.dll": {}
         }
       },
       "System.Configuration.ConfigurationManager/8.0.0": {
@@ -476,6 +582,31 @@
             "assetType": "runtime",
             "rid": "win"
           }
+        }
+      },
+      "System.Drawing.Common/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "9.0.0"
+        },
+        "compile": {
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/System.Private.Windows.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/System.Private.Windows.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
         }
       },
       "System.IdentityModel.Tokens.Jwt/6.35.0": {
@@ -705,6 +836,55 @@
         "lib/netstandard2.0/Azure.Identity.xml"
       ]
     },
+    "Dynamitey/2.0.10.189": {
+      "sha512": "sKo8BlCgQTOSFFK4RlMvC8abp0NqZrTd017fishVrkoqggNBpwa4RGq88wPjyedk5GjTWeB8/kGrbXES+Rcl7Q==",
+      "type": "package",
+      "path": "dynamitey/2.0.10.189",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "dynamitey.2.0.10.189.nupkg.sha512",
+        "dynamitey.nuspec",
+        "lib/net40/Dynamitey.dll",
+        "lib/netstandard1.5/Dynamitey.dll",
+        "lib/netstandard2.0/Dynamitey.dll",
+        "lib/portable-net45+sl5+win8+wp8/Dynamitey.dll"
+      ]
+    },
+    "ExtendedWPFConverters/2.0.4": {
+      "sha512": "0PVuEdnTWFNt3Srs9N4erZRf/9NBVRkuXi80CA83dE3AZ6cbsC+fv29MDShR1B6YkjUJPHNz7t5/0HJpWWlACg==",
+      "type": "package",
+      "path": "extendedwpfconverters/2.0.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "extendedwpfconverters.2.0.4.nupkg.sha512",
+        "extendedwpfconverters.nuspec",
+        "lib/net471/ExtendedWPFConverters.dll",
+        "lib/net471/ExtendedWPFConverters.xml",
+        "lib/net8.0-windows7.0/ExtendedWPFConverters.dll",
+        "lib/net8.0-windows7.0/ExtendedWPFConverters.xml",
+        "lib/net9.0-windows7.0/ExtendedWPFConverters.dll",
+        "lib/net9.0-windows7.0/ExtendedWPFConverters.xml"
+      ]
+    },
+    "ExtendedWPFVisualTreeHelper/2.0.3": {
+      "sha512": "3E4TJkFDpTFCpBHfQa7HQS1uyLBwpSlZMYCU1im1AnQLbYZIEmhnlulvlYezS8k3sY31f0uWHwuQBeEPle3kEQ==",
+      "type": "package",
+      "path": "extendedwpfvisualtreehelper/2.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "extendedwpfvisualtreehelper.2.0.3.nupkg.sha512",
+        "extendedwpfvisualtreehelper.nuspec",
+        "lib/net451/ExtendedWPFVisualTreeHelper.dll",
+        "lib/net451/ExtendedWPFVisualTreeHelper.xml",
+        "lib/net8.0-windows7.0/ExtendedWPFVisualTreeHelper.dll",
+        "lib/net8.0-windows7.0/ExtendedWPFVisualTreeHelper.xml",
+        "lib/net9.0-windows7.0/ExtendedWPFVisualTreeHelper.dll",
+        "lib/net9.0-windows7.0/ExtendedWPFVisualTreeHelper.xml"
+      ]
+    },
     "MaterialDesignColors/5.2.1": {
       "sha512": "D0HW6E2/kzsnEWCh1KDG/K09Fpkvs9mR3n91Y8YSOsEAoQmGZbVAj58ssyAxGTiIPj2zB4ZVnwxkizwO35/v8A==",
       "type": "package",
@@ -722,6 +902,23 @@
         "lib/net8.0/MaterialDesignColors.pdb",
         "materialdesigncolors.5.2.1.nupkg.sha512",
         "materialdesigncolors.nuspec"
+      ]
+    },
+    "MaterialDesignInXamlToolkitAddOns/0.0.63": {
+      "sha512": "vFI+IYMuxfJf5qW8BK7XUcmtugn8nGvwqL1QxVTzAoBxdxa+aWXOJwpqLXo9DCEvJ5jiKKijzYXT9We8Ds9FdA==",
+      "type": "package",
+      "path": "materialdesigninxamltoolkitaddons/0.0.63",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net471/MaterialDesignThemes.Wpf.AddOns.dll",
+        "lib/net471/MaterialDesignThemes.Wpf.AddOns.xml",
+        "lib/net8.0-windows7.0/MaterialDesignThemes.Wpf.AddOns.dll",
+        "lib/net8.0-windows7.0/MaterialDesignThemes.Wpf.AddOns.xml",
+        "lib/net9.0-windows7.0/MaterialDesignThemes.Wpf.AddOns.dll",
+        "lib/net9.0-windows7.0/MaterialDesignThemes.Wpf.AddOns.xml",
+        "materialdesigninxamltoolkitaddons.0.0.63.nupkg.sha512",
+        "materialdesigninxamltoolkitaddons.nuspec"
       ]
     },
     "MaterialDesignThemes/5.2.1": {
@@ -792,10 +989,10 @@
         "version.txt"
       ]
     },
-    "Microsoft.CSharp/4.5.0": {
-      "sha512": "kaj6Wb4qoMuH3HySFJhxwQfe8R/sJsNJnANrvv8WdFPMoNbKY5htfNscv+LHCu5ipz+49m2e+WQXpLXr9XYemQ==",
+    "Microsoft.CSharp/4.6.0": {
+      "sha512": "kxn3M2rnAGy5N5DgcIwcE8QTePWU/XiYcQVzn9HqTls2NKluVzVSmVWRjK7OUPWbljCXuZxHyhEz9kPRIQeXow==",
       "type": "package",
-      "path": "microsoft.csharp/4.5.0",
+      "path": "microsoft.csharp/4.6.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -808,6 +1005,7 @@
         "lib/netcoreapp2.0/_._",
         "lib/netstandard1.3/Microsoft.CSharp.dll",
         "lib/netstandard2.0/Microsoft.CSharp.dll",
+        "lib/netstandard2.0/Microsoft.CSharp.xml",
         "lib/portable-net45+win8+wp8+wpa81/_._",
         "lib/uap10.0.16299/_._",
         "lib/win8/_._",
@@ -817,7 +1015,7 @@
         "lib/xamarinmac20/_._",
         "lib/xamarintvos10/_._",
         "lib/xamarinwatchos10/_._",
-        "microsoft.csharp.4.5.0.nupkg.sha512",
+        "microsoft.csharp.4.6.0.nupkg.sha512",
         "microsoft.csharp.nuspec",
         "ref/MonoAndroid10/_._",
         "ref/MonoTouch10/_._",
@@ -1204,6 +1402,38 @@
         "microsoft.sqlserver.server.nuspec"
       ]
     },
+    "Microsoft.Win32.SystemEvents/9.0.0": {
+      "sha512": "z8FfGIaoeALdD+KF44A2uP8PZIQQtDGiXsOLuN8nohbKhkyKt7zGaZb+fKiCxTuBqG22Q7myIAioSWaIcOOrOw==",
+      "type": "package",
+      "path": "microsoft.win32.systemevents/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Win32.SystemEvents.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Win32.SystemEvents.targets",
+        "lib/net462/Microsoft.Win32.SystemEvents.dll",
+        "lib/net462/Microsoft.Win32.SystemEvents.xml",
+        "lib/net8.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net8.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/net9.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net9.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/netstandard2.0/Microsoft.Win32.SystemEvents.xml",
+        "microsoft.win32.systemevents.9.0.0.nupkg.sha512",
+        "microsoft.win32.systemevents.nuspec",
+        "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.xml",
+        "runtimes/win/lib/net9.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net9.0/Microsoft.Win32.SystemEvents.xml",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "Microsoft.Xaml.Behaviors.Wpf/1.1.39": {
       "sha512": "8PZKqw9QOcu42xk8puY4P1+EXHL9YGOR9b7qhaYx5cILHul456H073tj99vyPcCt0W0781T9RwHqkx507ZyUpQ==",
       "type": "package",
@@ -1266,6 +1496,65 @@
         "lib/netstandard2.0/System.ClientModel.xml",
         "system.clientmodel.1.0.0.nupkg.sha512",
         "system.clientmodel.nuspec"
+      ]
+    },
+    "System.ComponentModel/4.3.0": {
+      "sha512": "VyGn1jGRZVfxnh8EdvDCi71v3bMXrsu8aYJOwoV7SNDLVhiEqwP86pPMyRGsDsxhXAm2b3o9OIqeETfN5qfezw==",
+      "type": "package",
+      "path": "system.componentmodel/4.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "ThirdPartyNotices.txt",
+        "dotnet_library_license.txt",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net45/_._",
+        "lib/netcore50/System.ComponentModel.dll",
+        "lib/netstandard1.3/System.ComponentModel.dll",
+        "lib/portable-net45+win8+wp8+wpa81/_._",
+        "lib/win8/_._",
+        "lib/wp80/_._",
+        "lib/wpa81/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net45/_._",
+        "ref/netcore50/System.ComponentModel.dll",
+        "ref/netcore50/System.ComponentModel.xml",
+        "ref/netcore50/de/System.ComponentModel.xml",
+        "ref/netcore50/es/System.ComponentModel.xml",
+        "ref/netcore50/fr/System.ComponentModel.xml",
+        "ref/netcore50/it/System.ComponentModel.xml",
+        "ref/netcore50/ja/System.ComponentModel.xml",
+        "ref/netcore50/ko/System.ComponentModel.xml",
+        "ref/netcore50/ru/System.ComponentModel.xml",
+        "ref/netcore50/zh-hans/System.ComponentModel.xml",
+        "ref/netcore50/zh-hant/System.ComponentModel.xml",
+        "ref/netstandard1.0/System.ComponentModel.dll",
+        "ref/netstandard1.0/System.ComponentModel.xml",
+        "ref/netstandard1.0/de/System.ComponentModel.xml",
+        "ref/netstandard1.0/es/System.ComponentModel.xml",
+        "ref/netstandard1.0/fr/System.ComponentModel.xml",
+        "ref/netstandard1.0/it/System.ComponentModel.xml",
+        "ref/netstandard1.0/ja/System.ComponentModel.xml",
+        "ref/netstandard1.0/ko/System.ComponentModel.xml",
+        "ref/netstandard1.0/ru/System.ComponentModel.xml",
+        "ref/netstandard1.0/zh-hans/System.ComponentModel.xml",
+        "ref/netstandard1.0/zh-hant/System.ComponentModel.xml",
+        "ref/portable-net45+win8+wp8+wpa81/_._",
+        "ref/win8/_._",
+        "ref/wp80/_._",
+        "ref/wpa81/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "system.componentmodel.4.3.0.nupkg.sha512",
+        "system.componentmodel.nuspec"
       ]
     },
     "System.Configuration.ConfigurationManager/8.0.0": {
@@ -1359,6 +1648,48 @@
         "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.xml",
         "system.diagnostics.eventlog.8.0.0.nupkg.sha512",
         "system.diagnostics.eventlog.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "System.Drawing.Common/9.0.0": {
+      "sha512": "uoozjI3+dlgKh2onFJcz8aNLh6TRCPlLSh8Dbuljc8CdvqXrxHOVysJlrHvlsOCqceqGBR1wrMPxlnzzhynktw==",
+      "type": "package",
+      "path": "system.drawing.common/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.Drawing.Common.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Drawing.Common.targets",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net462/System.Drawing.Common.dll",
+        "lib/net462/System.Drawing.Common.pdb",
+        "lib/net462/System.Drawing.Common.xml",
+        "lib/net8.0/System.Drawing.Common.dll",
+        "lib/net8.0/System.Drawing.Common.pdb",
+        "lib/net8.0/System.Drawing.Common.xml",
+        "lib/net8.0/System.Private.Windows.Core.dll",
+        "lib/net8.0/System.Private.Windows.Core.xml",
+        "lib/net9.0/System.Drawing.Common.dll",
+        "lib/net9.0/System.Drawing.Common.pdb",
+        "lib/net9.0/System.Drawing.Common.xml",
+        "lib/net9.0/System.Private.Windows.Core.dll",
+        "lib/net9.0/System.Private.Windows.Core.xml",
+        "lib/netstandard2.0/System.Drawing.Common.dll",
+        "lib/netstandard2.0/System.Drawing.Common.pdb",
+        "lib/netstandard2.0/System.Drawing.Common.xml",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "system.drawing.common.9.0.0.nupkg.sha512",
+        "system.drawing.common.nuspec",
         "useSharedDesignerContext.txt"
       ]
     },
@@ -1883,6 +2214,7 @@
   "projectFileDependencyGroups": {
     "net8.0-windows7.0": [
       "MaterialDesignColors >= 5.2.1",
+      "MaterialDesignInXamlToolkitAddOns >= 0.0.63",
       "MaterialDesignThemes >= 5.2.1",
       "Microsoft.Data.SqlClient >= 5.2.2",
       "Quartz >= 3.13.1"
@@ -1942,6 +2274,10 @@
           "MaterialDesignColors": {
             "target": "Package",
             "version": "[5.2.1, )"
+          },
+          "MaterialDesignInXamlToolkitAddOns": {
+            "target": "Package",
+            "version": "[0.0.63, )"
           },
           "MaterialDesignThemes": {
             "target": "Package",
