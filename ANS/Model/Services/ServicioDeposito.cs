@@ -26,10 +26,7 @@ namespace ANS.Model.Services
             {
 
                 ultIdOperacion -= 3;
-                if (b.Config.TipoAcreditacion == VariablesGlobales.tanda)
-                {
-                    Console.WriteLine("es tanda");
-                }
+
                 using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
                 {
 

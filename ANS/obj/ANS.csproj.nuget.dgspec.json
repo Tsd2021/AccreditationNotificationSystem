@@ -67,9 +67,37 @@
               "target": "Package",
               "version": "[5.2.2, )"
             },
+            "Microsoft.Web.Services3": {
+              "target": "Package",
+              "version": "[3.0.0, )"
+            },
             "Quartz": {
               "target": "Package",
               "version": "[3.13.1, )"
+            },
+            "System.ServiceModel.Duplex": {
+              "target": "Package",
+              "version": "[6.0.*, )"
+            },
+            "System.ServiceModel.Federation": {
+              "target": "Package",
+              "version": "[6.0.*, )"
+            },
+            "System.ServiceModel.Http": {
+              "target": "Package",
+              "version": "[6.0.*, )"
+            },
+            "System.ServiceModel.NetNamedPipe": {
+              "target": "Package",
+              "version": "[6.0.*, )"
+            },
+            "System.ServiceModel.NetTcp": {
+              "target": "Package",
+              "version": "[6.0.*, )"
+            },
+            "System.ServiceModel.Security": {
+              "target": "Package",
+              "version": "[6.0.*, )"
             }
           },
           "imports": [

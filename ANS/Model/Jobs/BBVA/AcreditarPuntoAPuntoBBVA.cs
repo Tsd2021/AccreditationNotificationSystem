@@ -24,6 +24,7 @@ namespace ANS.Model.Jobs.BBVA
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
+
                     main.MostrarAviso("Ejecutando tarea P2P ~BBVA~", Color.FromRgb(0, 68, 129));
                 });
 
@@ -44,11 +45,11 @@ namespace ANS.Model.Jobs.BBVA
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
                     if (e != null)
                     {
-                        main.MostrarAviso("ERROR - JOB P2P ~SANTANDER~", Colors.Red);
+                        main.MostrarAviso("ERROR - JOB P2P ~BBVA~", Colors.Red);
                     }
                     else
                     {
-                        main.MostrarAviso("SUCCESS - JOB P2P ~SANTANDER~", Colors.Green);
+                        main.MostrarAviso("SUCCESS - JOB P2P ~BBVA~", Colors.Green);
                     }
                 });
 

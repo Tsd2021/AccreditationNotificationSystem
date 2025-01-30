@@ -28,7 +28,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
-                    main.MostrarAviso("Ejecutando tarea P2P ~SANTANDER~", Color.FromRgb(0, 68, 129));
+                    main.MostrarAviso("Ejecutando tarea P2P ~SANTANDER~", Color.FromRgb(255, 102, 102));  // rojo claro
                 });
 
                 await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.santander);

@@ -13,7 +13,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
     public class BBVAFileGenerator : IBancoModoAcreditacion
     {
         private readonly string CuentaTransportadora = "007584652";
-        private string Remito = DateTime.Now.TimeOfDay.ToString();
         private string ruta = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\BBVA";
         public List<CuentaBuzon> buzonesMontevideo = new List<CuentaBuzon>();
         public List<CuentaBuzon> buzonesMaldonado = new List<CuentaBuzon>();
