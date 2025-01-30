@@ -53,7 +53,7 @@ namespace ANS
                                                     .WithIdentity("SantanderTriggerP2P", "GrupoTrabajoSantander")
                                                     .WithDailyTimeIntervalSchedule(x => x
                                                     .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0))
-                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(18, 30))
+                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 30))
                                                     .OnDaysOfTheWeek(new[]
                                                     {
                                                         DayOfWeek.Monday,
@@ -92,12 +92,12 @@ namespace ANS
             // JOBS TEST: //
             ITrigger triggerTanda1Santander = TriggerBuilder.Create()
                     .WithIdentity("SantanderTriggerTAN1", "GrupoTrabajoSantander")
-                    .WithCronSchedule("0 26 17 ? * MON-FRI") // 7:00 de lunes a viernes
+                    .WithCronSchedule("0 25 11 ? * MON-FRI") // 7:00 de lunes a viernes
                     .Build();
 
             ITrigger triggerTanda2Santander = TriggerBuilder.Create()
                     .WithIdentity("SantanderTriggerTAN2", "GrupoTrabajoSantander")
-                    .WithCronSchedule("0 27 17 ? * MON-FRI") // 15:45 de lunes a viernes
+                    .WithCronSchedule("0 35 14 ? * MON-FRI") // 15:45 de lunes a viernes
                     .Build();
             try
             {
@@ -152,7 +152,7 @@ namespace ANS
 
             ITrigger triggerBBVADiaADia = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerDAD", "GrupoTrabajoBBVA")
-                .WithCronSchedule("0 40 12 ? * MON-FRI")
+                .WithCronSchedule("0 0 17 ? * MON-FRI")
                 .Build();
 
             await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA, triggerBBVAPuntoAPunto);

@@ -1,0 +1,19 @@
+{
+  "ExtendedData": {
+    "inputs": [
+      "https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn?wsdl"
+    ],
+    "collectionTypes": [
+      "System.Array",
+      "System.Collections.Generic.Dictionary`2"
+    ],
+    "enableDataBinding": true,
+    "messageContract": true,
+    "namespaceMappings": [
+      "*, TensStdr"
+    ],
+    "sync": true,
+    "targetFramework": "net8.0",
+    "typeReuseMode": "None"
+  }
+}

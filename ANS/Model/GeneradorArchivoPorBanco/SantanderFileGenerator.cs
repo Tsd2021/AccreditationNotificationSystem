@@ -1,4 +1,5 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -26,8 +27,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         private string _rutaDolaresP2P = @"\\172.16.10.20\puntoapuntocsvstdr$\DOLARES\";
         private string _rutaPesosP2P = @"\\172.16.10.20\puntoapuntocsvstdr$\PESOS\";
         */
-        private string _cashOfficeRutaDolaresP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\cashoffice$\CashSantander\DOLARES";
-        private string _cashOfficeRutaPesosP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\cashoffice$\CashSantander\PESOS";
+        private string _cashOfficeRutaDolaresP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\cashoffice$\CashSantander\DOLARES\";
+        private string _cashOfficeRutaPesosP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\cashoffice$\CashSantander\PESOS\";
         private string _rutaDolaresP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\DOLARES\";
         private string _rutaPesosP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\PESOS\";
         private Dictionary<int, int> CuentasTata = new Dictionary<int, int>
@@ -283,26 +284,75 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             if (contenido.Length == 0) return; // No crear archivos vacíos
 
-            string ruta = getRutaArchivoDAD(ciudad, divisa);
+            int numeroLineasContenido = LineCount(contenido.ToString());
+            string numRegistro = numeroLineasContenido.ToString();
 
-            string directorio = Path.GetDirectoryName(ruta);
+            contenido.Insert(0, "H;1\n");
+            contenido.AppendLine("F;" + numRegistro);
 
-            if (!Directory.Exists(directorio))
+            // Enviar archivo al servicio y obtener respuesta
+            bool responseTens = generarYEnviarArchivoTens(contenido, ciudad, divisa);
+
+            // Obtener la ruta base (que ya contiene la estructura de ciudad/divisa)
+            string rutaArchivoBase = getRutaArchivoDAD(ciudad, divisa);
+            string directorioBase = Path.GetDirectoryName(rutaArchivoBase); // Obtiene solo el directorio
+            string fecha = DateTime.Now.ToString("ddMMyyyy"); // Fecha en formato ddMMyyyy
+
+            // Determinar si se guarda en "APPROVED" o "NOT_APPROVED"
+            string subcarpetaEstado = responseTens ? $"{fecha}_NO_ENVIADOS" : $"{fecha}_APPROVED";
+
+            string directorioFinal = Path.Combine(directorioBase, subcarpetaEstado); // Ruta completa
+
+            // Crear la carpeta si no existe
+            if (!Directory.Exists(directorioFinal))
             {
-                Directory.CreateDirectory(directorio); // Crear directorio si no existe
+                Directory.CreateDirectory(directorioFinal);
             }
 
-            File.WriteAllText(ruta, contenido.ToString());
+            // Generar nuevo nombre de archivo sin sobrescribir el original
+
+            string nombreArchivo = Path.GetFileName(rutaArchivoBase); 
+
+            string rutaFinal = Path.Combine(directorioFinal, nombreArchivo); // Ruta donde se guardará
+
+            // Guardar archivo en la ubicación correcta
+            File.WriteAllText(rutaFinal, contenido.ToString());
 
             await Task.Delay(250);
 
         }
+
+        private bool generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)
+        {
+            DateTime fecha = DateTime.Now;
+
+            string rutaArchivo = getRutaArchivoDAD(ciudad, divisa);
+
+            byte[] archivo = Encoding.UTF8.GetBytes(contenido.ToString());
+
+            string nombreCSV = Path.GetFileName(rutaArchivo);
+
+            TensStdr.transactionResponse tensResponse = ServicioSantander.getInstancia().EnviarArchivoConClienteWS(nombreCSV, archivo);
+
+            return tensResponse == null;
+        }
+
         // CREACION ARCHIVOS ESPECIFICAMENTE DE CASHOFFICE
         private async Task CrearArchivoCashOffice(StringBuilder content, string divisa)
         {
             if (content.Length == 0) return; // No crear archivos vacíos
 
             string ruta = "";
+            int numeroLineasPesos = LineCount(content.ToString());
+
+            string numRegistro = numeroLineasPesos.ToString();
+
+            content.Insert(0, "H;1\n");
+
+            content.AppendLine("F;" + numRegistro);
+
+            bool responseTens = generarYEnviarArchivoTens(content, VariablesGlobales.cashoffice, divisa);
+
 
             if (divisa == VariablesGlobales.pesos)
             {
@@ -368,6 +418,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             }
 
             return newNumber.ToString() + input.Substring(1);
+        }
+        private int LineCount(string str)
+        {
+            return str.Split('\n').Length - 1;
+            //el menos uno es para no contar el ultimo salto de linea.
         }
     }
 }
