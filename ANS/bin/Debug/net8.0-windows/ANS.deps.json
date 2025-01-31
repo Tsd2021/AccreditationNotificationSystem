@@ -16,9 +16,10 @@
           "Quartz": "3.13.1",
           "System.ServiceModel.Duplex": "6.0.0",
           "System.ServiceModel.Federation": "6.0.0",
-          "System.ServiceModel.Http": "6.0.0",
+          "System.ServiceModel.Http": "8.1.1",
           "System.ServiceModel.NetNamedPipe": "6.0.0",
           "System.ServiceModel.NetTcp": "6.0.0",
+          "System.ServiceModel.Primitives": "8.1.1",
           "System.ServiceModel.Security": "6.0.0"
         },
         "runtime": {
@@ -230,11 +231,11 @@
           }
         }
       },
-      "Microsoft.Extensions.ObjectPool/6.0.16": {
+      "Microsoft.Extensions.ObjectPool/8.0.10": {
         "runtime": {
-          "lib/net6.0/Microsoft.Extensions.ObjectPool.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.1623.17406"
+          "lib/net8.0/Microsoft.Extensions.ObjectPool.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1024.46804"
           }
         }
       },
@@ -479,7 +480,6 @@
           }
         }
       },
-      "System.Formats.Asn1/6.0.0": {},
       "System.Globalization/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "1.1.0",
@@ -548,7 +548,6 @@
           "System.Runtime": "4.3.0"
         }
       },
-      "System.Reflection.DispatchProxy/4.7.1": {},
       "System.Reflection.Primitives/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "1.1.0",
@@ -615,37 +614,46 @@
           "System.Runtime.Handles": "4.3.0"
         }
       },
-      "System.Security.AccessControl/6.0.0": {},
       "System.Security.Cryptography.Cng/4.5.0": {},
-      "System.Security.Cryptography.Pkcs/6.0.1": {
-        "dependencies": {
-          "System.Formats.Asn1": "6.0.0"
+      "System.Security.Cryptography.Pkcs/8.0.1": {
+        "runtime": {
+          "lib/net8.0/System.Security.Cryptography.Pkcs.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1024.46610"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1024.46610"
+          }
         }
       },
       "System.Security.Cryptography.ProtectedData/8.0.0": {},
-      "System.Security.Cryptography.Xml/6.0.1": {
+      "System.Security.Cryptography.Xml/8.0.2": {
         "dependencies": {
-          "System.Security.AccessControl": "6.0.0",
-          "System.Security.Cryptography.Pkcs": "6.0.1"
+          "System.Security.Cryptography.Pkcs": "8.0.1"
+        },
+        "runtime": {
+          "lib/net8.0/System.Security.Cryptography.Xml.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1024.46610"
+          }
         }
       },
       "System.Security.Principal.Windows/5.0.0": {},
       "System.ServiceModel.Duplex/6.0.0": {
         "dependencies": {
-          "System.ServiceModel.Primitives": "6.0.0"
-        },
-        "runtime": {
-          "lib/net6.0/System.ServiceModel.Duplex.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.23.25304"
-          }
+          "System.ServiceModel.Primitives": "8.1.1"
         }
       },
       "System.ServiceModel.Federation/6.0.0": {
         "dependencies": {
           "Microsoft.IdentityModel.Protocols.WsTrust": "6.8.0",
-          "System.ServiceModel.Http": "6.0.0",
-          "System.ServiceModel.Primitives": "6.0.0"
+          "System.ServiceModel.Http": "8.1.1",
+          "System.ServiceModel.Primitives": "8.1.1"
         },
         "runtime": {
           "lib/net6.0/System.ServiceModel.Federation.dll": {
@@ -695,54 +703,54 @@
           }
         }
       },
-      "System.ServiceModel.Http/6.0.0": {
+      "System.ServiceModel.Http/8.1.1": {
         "dependencies": {
-          "System.ServiceModel.Primitives": "6.0.0"
+          "System.ServiceModel.Primitives": "8.1.1"
         },
         "runtime": {
-          "lib/net6.0/System.ServiceModel.Http.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.23.25304"
+          "lib/net8.0/System.ServiceModel.Http.dll": {
+            "assemblyVersion": "8.1.1.0",
+            "fileVersion": "8.100.124.61002"
           }
         },
         "resources": {
-          "lib/net6.0/cs/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/cs/System.ServiceModel.Http.resources.dll": {
             "locale": "cs"
           },
-          "lib/net6.0/de/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/de/System.ServiceModel.Http.resources.dll": {
             "locale": "de"
           },
-          "lib/net6.0/es/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/es/System.ServiceModel.Http.resources.dll": {
             "locale": "es"
           },
-          "lib/net6.0/fr/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/fr/System.ServiceModel.Http.resources.dll": {
             "locale": "fr"
           },
-          "lib/net6.0/it/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/it/System.ServiceModel.Http.resources.dll": {
             "locale": "it"
           },
-          "lib/net6.0/ja/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/ja/System.ServiceModel.Http.resources.dll": {
             "locale": "ja"
           },
-          "lib/net6.0/ko/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/ko/System.ServiceModel.Http.resources.dll": {
             "locale": "ko"
           },
-          "lib/net6.0/pl/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/pl/System.ServiceModel.Http.resources.dll": {
             "locale": "pl"
           },
-          "lib/net6.0/pt-BR/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/pt-BR/System.ServiceModel.Http.resources.dll": {
             "locale": "pt-BR"
           },
-          "lib/net6.0/ru/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/ru/System.ServiceModel.Http.resources.dll": {
             "locale": "ru"
           },
-          "lib/net6.0/tr/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/tr/System.ServiceModel.Http.resources.dll": {
             "locale": "tr"
           },
-          "lib/net6.0/zh-Hans/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/zh-Hans/System.ServiceModel.Http.resources.dll": {
             "locale": "zh-Hans"
           },
-          "lib/net6.0/zh-Hant/System.ServiceModel.Http.resources.dll": {
+          "lib/net8.0/zh-Hant/System.ServiceModel.Http.resources.dll": {
             "locale": "zh-Hant"
           }
         }
@@ -750,7 +758,7 @@
       "System.ServiceModel.NetFramingBase/6.0.0": {
         "dependencies": {
           "System.Security.Principal.Windows": "5.0.0",
-          "System.ServiceModel.Primitives": "6.0.0"
+          "System.ServiceModel.Primitives": "8.1.1"
         },
         "runtime": {
           "lib/net6.0/System.ServiceModel.NetFramingBase.dll": {
@@ -803,7 +811,7 @@
       "System.ServiceModel.NetNamedPipe/6.0.0": {
         "dependencies": {
           "System.ServiceModel.NetFramingBase": "6.0.0",
-          "System.ServiceModel.Primitives": "6.0.0"
+          "System.ServiceModel.Primitives": "8.1.1"
         },
         "runtime": {
           "lib/net6.0/System.ServiceModel.NetNamedPipe.dll": {
@@ -856,7 +864,7 @@
       "System.ServiceModel.NetTcp/6.0.0": {
         "dependencies": {
           "System.ServiceModel.NetFramingBase": "6.0.0",
-          "System.ServiceModel.Primitives": "6.0.0"
+          "System.ServiceModel.Primitives": "8.1.1"
         },
         "runtime": {
           "lib/net6.0/System.ServiceModel.NetTcp.dll": {
@@ -906,69 +914,74 @@
           }
         }
       },
-      "System.ServiceModel.Primitives/6.0.0": {
+      "System.ServiceModel.Primitives/8.1.1": {
         "dependencies": {
-          "Microsoft.Extensions.ObjectPool": "6.0.16",
-          "System.Reflection.DispatchProxy": "4.7.1",
-          "System.Security.Cryptography.Xml": "6.0.1"
+          "Microsoft.Extensions.ObjectPool": "8.0.10",
+          "System.Security.Cryptography.Xml": "8.0.2"
         },
         "runtime": {
-          "lib/net6.0/System.ServiceModel.Primitives.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.23.25304"
+          "lib/net8.0/System.ServiceModel.Duplex.dll": {
+            "assemblyVersion": "8.1.1.0",
+            "fileVersion": "8.100.124.61002"
+          },
+          "lib/net8.0/System.ServiceModel.Primitives.dll": {
+            "assemblyVersion": "8.1.1.0",
+            "fileVersion": "8.100.124.61002"
+          },
+          "lib/net8.0/System.ServiceModel.Security.dll": {
+            "assemblyVersion": "8.1.1.0",
+            "fileVersion": "8.100.124.61002"
+          },
+          "lib/net8.0/System.ServiceModel.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "8.100.124.61002"
           }
         },
         "resources": {
-          "lib/net6.0/cs/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/cs/System.ServiceModel.Primitives.resources.dll": {
             "locale": "cs"
           },
-          "lib/net6.0/de/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/de/System.ServiceModel.Primitives.resources.dll": {
             "locale": "de"
           },
-          "lib/net6.0/es/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/es/System.ServiceModel.Primitives.resources.dll": {
             "locale": "es"
           },
-          "lib/net6.0/fr/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/fr/System.ServiceModel.Primitives.resources.dll": {
             "locale": "fr"
           },
-          "lib/net6.0/it/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/it/System.ServiceModel.Primitives.resources.dll": {
             "locale": "it"
           },
-          "lib/net6.0/ja/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/ja/System.ServiceModel.Primitives.resources.dll": {
             "locale": "ja"
           },
-          "lib/net6.0/ko/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/ko/System.ServiceModel.Primitives.resources.dll": {
             "locale": "ko"
           },
-          "lib/net6.0/pl/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/pl/System.ServiceModel.Primitives.resources.dll": {
             "locale": "pl"
           },
-          "lib/net6.0/pt-BR/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/pt-BR/System.ServiceModel.Primitives.resources.dll": {
             "locale": "pt-BR"
           },
-          "lib/net6.0/ru/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/ru/System.ServiceModel.Primitives.resources.dll": {
             "locale": "ru"
           },
-          "lib/net6.0/tr/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/tr/System.ServiceModel.Primitives.resources.dll": {
             "locale": "tr"
           },
-          "lib/net6.0/zh-Hans/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/zh-Hans/System.ServiceModel.Primitives.resources.dll": {
             "locale": "zh-Hans"
           },
-          "lib/net6.0/zh-Hant/System.ServiceModel.Primitives.resources.dll": {
+          "lib/net8.0/zh-Hant/System.ServiceModel.Primitives.resources.dll": {
             "locale": "zh-Hant"
           }
         }
       },
       "System.ServiceModel.Security/6.0.0": {
         "dependencies": {
-          "System.ServiceModel.Primitives": "6.0.0"
-        },
-        "runtime": {
-          "lib/net6.0/System.ServiceModel.Security.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.23.25304"
-          }
+          "System.ServiceModel.Primitives": "8.1.1"
         }
       },
       "System.Text.Encoding/4.3.0": {
@@ -1139,12 +1152,12 @@
       "path": "microsoft.extensions.logging.abstractions/2.1.1",
       "hashPath": "microsoft.extensions.logging.abstractions.2.1.1.nupkg.sha512"
     },
-    "Microsoft.Extensions.ObjectPool/6.0.16": {
+    "Microsoft.Extensions.ObjectPool/8.0.10": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-OVX5tlKg6LY+XKqlUn7i9KY+6Liut0iewWff2DNr7129i/NJ8rpUzbmxavPydZgcLREEWHklXZiPKCS895tNIQ==",
-      "path": "microsoft.extensions.objectpool/6.0.16",
-      "hashPath": "microsoft.extensions.objectpool.6.0.16.nupkg.sha512"
+      "sha512": "sha512-u7gAG7JgxF8VSJUGPSudAcPxOt+ymJKQCSxNRxiuKV+klCQbHljQR75SilpedCTfhPWDhtUwIJpnDVtspr9nMg==",
+      "path": "microsoft.extensions.objectpool/8.0.10",
+      "hashPath": "microsoft.extensions.objectpool.8.0.10.nupkg.sha512"
     },
     "Microsoft.Identity.Client/4.61.3": {
       "type": "package",
@@ -1328,13 +1341,6 @@
       "path": "system.drawing.common/9.0.0",
       "hashPath": "system.drawing.common.9.0.0.nupkg.sha512"
     },
-    "System.Formats.Asn1/6.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-T6fD00dQ3NTbPDy31m4eQUwKW84s03z0N2C8HpOklyeaDgaJPa/TexP4/SkORMSOwc7WhKifnA6Ya33AkzmafA==",
-      "path": "system.formats.asn1/6.0.0",
-      "hashPath": "system.formats.asn1.6.0.0.nupkg.sha512"
-    },
     "System.Globalization/4.3.0": {
       "type": "package",
       "serviceable": true,
@@ -1398,13 +1404,6 @@
       "path": "system.reflection/4.3.0",
       "hashPath": "system.reflection.4.3.0.nupkg.sha512"
     },
-    "System.Reflection.DispatchProxy/4.7.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-C1sMLwIG6ILQ2bmOT4gh62V6oJlyF4BlHcVMrOoor49p0Ji2tA8QAoqyMcIhAdH6OHKJ8m7BU+r4LK2CUEOKqw==",
-      "path": "system.reflection.dispatchproxy/4.7.1",
-      "hashPath": "system.reflection.dispatchproxy.4.7.1.nupkg.sha512"
-    },
     "System.Reflection.Primitives/4.3.0": {
       "type": "package",
       "serviceable": true,
@@ -1461,13 +1460,6 @@
       "path": "system.runtime.interopservices/4.3.0",
       "hashPath": "system.runtime.interopservices.4.3.0.nupkg.sha512"
     },
-    "System.Security.AccessControl/6.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-AUADIc0LIEQe7MzC+I0cl0rAT8RrTAKFHl53yHjEUzNVIaUlhFY11vc2ebiVJzVBuOzun6F7FBA+8KAbGTTedQ==",
-      "path": "system.security.accesscontrol/6.0.0",
-      "hashPath": "system.security.accesscontrol.6.0.0.nupkg.sha512"
-    },
     "System.Security.Cryptography.Cng/4.5.0": {
       "type": "package",
       "serviceable": true,
@@ -1475,12 +1467,12 @@
       "path": "system.security.cryptography.cng/4.5.0",
       "hashPath": "system.security.cryptography.cng.4.5.0.nupkg.sha512"
     },
-    "System.Security.Cryptography.Pkcs/6.0.1": {
+    "System.Security.Cryptography.Pkcs/8.0.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-ynmbW2GjIGg9K1wXmVIRs4IlyDolf0JXNpzFQ8JCVgwM+myUC2JeUggl2PwQig2PNVMegKmN1aAx7WPQ8tI3vA==",
-      "path": "system.security.cryptography.pkcs/6.0.1",
-      "hashPath": "system.security.cryptography.pkcs.6.0.1.nupkg.sha512"
+      "sha512": "sha512-CoCRHFym33aUSf/NtWSVSZa99dkd0Hm7OCZUxORBjRB16LNhIEOf8THPqzIYlvKM0nNDAPTRBa1FxEECrgaxxA==",
+      "path": "system.security.cryptography.pkcs/8.0.1",
+      "hashPath": "system.security.cryptography.pkcs.8.0.1.nupkg.sha512"
     },
     "System.Security.Cryptography.ProtectedData/8.0.0": {
       "type": "package",
@@ -1489,12 +1481,12 @@
       "path": "system.security.cryptography.protecteddata/8.0.0",
       "hashPath": "system.security.cryptography.protecteddata.8.0.0.nupkg.sha512"
     },
-    "System.Security.Cryptography.Xml/6.0.1": {
+    "System.Security.Cryptography.Xml/8.0.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-5e5bI28T0x73AwTsbuFP4qSRzthmU2C0Gqgg3AZ3KTxmSyA+Uhk31puA3srdaeWaacVnHhLdJywCzqOiEpbO/w==",
-      "path": "system.security.cryptography.xml/6.0.1",
-      "hashPath": "system.security.cryptography.xml.6.0.1.nupkg.sha512"
+      "sha512": "sha512-aDM/wm0ZGEZ6ZYJLzgqjp2FZdHbDHh6/OmpGfb7AdZ105zYmPn/83JRU2xLIbwgoNz9U1SLUTJN0v5th3qmvjA==",
+      "path": "system.security.cryptography.xml/8.0.2",
+      "hashPath": "system.security.cryptography.xml.8.0.2.nupkg.sha512"
     },
     "System.Security.Principal.Windows/5.0.0": {
       "type": "package",
@@ -1517,12 +1509,12 @@
       "path": "system.servicemodel.federation/6.0.0",
       "hashPath": "system.servicemodel.federation.6.0.0.nupkg.sha512"
     },
-    "System.ServiceModel.Http/6.0.0": {
+    "System.ServiceModel.Http/8.1.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-hHIv339ehbkFMkZROzSxL9IdG5prE/M1BMQaqBNsFfVOlPVo7prhG/v0G+YKebw2jTp5vJv+JRuzsTQqLmcC7g==",
-      "path": "system.servicemodel.http/6.0.0",
-      "hashPath": "system.servicemodel.http.6.0.0.nupkg.sha512"
+      "sha512": "sha512-OArC2JVvd4bOzWaBBcEy6RnLdeH+DaOJ5wzbZc5DpSSpwMmgADIEkP6bDjJEVfGVuNjlgvI08GsRpSO6Q+9Jmg==",
+      "path": "system.servicemodel.http/8.1.1",
+      "hashPath": "system.servicemodel.http.8.1.1.nupkg.sha512"
     },
     "System.ServiceModel.NetFramingBase/6.0.0": {
       "type": "package",
@@ -1545,12 +1537,12 @@
       "path": "system.servicemodel.nettcp/6.0.0",
       "hashPath": "system.servicemodel.nettcp.6.0.0.nupkg.sha512"
     },
-    "System.ServiceModel.Primitives/6.0.0": {
+    "System.ServiceModel.Primitives/8.1.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-uGyB5FMdwiBmSgJtB0x9mWUuGYj/RbXjh8I6FtsZmUAVcFc6qjOasHPHnflHUk+Qqbx7cAFugDUa2HFRtDe1QA==",
-      "path": "system.servicemodel.primitives/6.0.0",
-      "hashPath": "system.servicemodel.primitives.6.0.0.nupkg.sha512"
+      "sha512": "sha512-v+jwURtpzg1eI5RDARP9AAQg5GmtNu6rWAOVTauL74cB8jcuP6DB8PVpz1IPTRavX6qlFAKkS+X+9QR5S84QyA==",
+      "path": "system.servicemodel.primitives/8.1.1",
+      "hashPath": "system.servicemodel.primitives.8.1.1.nupkg.sha512"
     },
     "System.ServiceModel.Security/6.0.0": {
       "type": "package",

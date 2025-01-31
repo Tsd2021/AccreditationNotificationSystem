@@ -38,14 +38,17 @@ C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.Private.
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.Memory.Data.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.Runtime.Caching.dll
-C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.Duplex.dll
+C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.Security.Cryptography.Pkcs.dll
+C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.Security.Cryptography.Xml.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.Federation.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.Http.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.NetFramingBase.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.NetNamedPipe.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.NetTcp.dll
+C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.Duplex.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.Primitives.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.Security.dll
+C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\System.ServiceModel.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\de\Microsoft.Data.SqlClient.resources.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\es\Microsoft.Data.SqlClient.resources.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\fr\Microsoft.Data.SqlClient.resources.dll
@@ -142,6 +145,7 @@ C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\runtimes\win-x6
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Runtime.Caching.dll
+C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\ANS.csproj.AssemblyReference.cache
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\App.baml
 C:\Users\dchiquiar\source\repos\ANS\ANS\obj\Debug\net8.0-windows\MainWindow.g.cs

@@ -291,7 +291,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             contenido.AppendLine("F;" + numRegistro);
 
             // Enviar archivo al servicio y obtener respuesta
-            bool responseTens = generarYEnviarArchivoTens(contenido, ciudad, divisa);
+            bool responseTens = await generarYEnviarArchivoTens(contenido, ciudad, divisa);
 
             // Obtener la ruta base (que ya contiene la estructura de ciudad/divisa)
             string rutaArchivoBase = getRutaArchivoDAD(ciudad, divisa);
@@ -322,7 +322,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         }
 
-        private bool generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)
+        private async Task<bool> generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)
         {
             DateTime fecha = DateTime.Now;
 
@@ -332,9 +332,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             string nombreCSV = Path.GetFileName(rutaArchivo);
 
-            TensStdr.transactionResponse tensResponse = ServicioSantander.getInstancia().EnviarArchivoConClienteWS(nombreCSV, archivo);
-
-            return tensResponse == null;
+            // TensStdr.transactionResponse tensResponse = ServicioSantander.getInstancia().EnviarArchivoConClienteWS(nombreCSV, archivo);
+            // return tensResponse == null;
+            await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
+            return false;
+           
         }
 
         // CREACION ARCHIVOS ESPECIFICAMENTE DE CASHOFFICE
@@ -351,7 +353,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             content.AppendLine("F;" + numRegistro);
 
-            bool responseTens = generarYEnviarArchivoTens(content, VariablesGlobales.cashoffice, divisa);
+            bool responseTens = await generarYEnviarArchivoTens(content, VariablesGlobales.cashoffice, divisa);
 
 
             if (divisa == VariablesGlobales.pesos)
