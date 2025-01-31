@@ -7,12 +7,10 @@
       "System.Array",
       "System.Collections.Generic.Dictionary`2"
     ],
-    "enableDataBinding": true,
     "messageContract": true,
     "namespaceMappings": [
       "*, TensStdr"
     ],
-    "sync": true,
     "targetFramework": "net8.0",
     "typeReuseMode": "None"
   }

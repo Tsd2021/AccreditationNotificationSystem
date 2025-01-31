@@ -24,5 +24,6 @@ namespace ANS.Model
         public const string montevideo = "MONTEVIDEO";
         public const string maldonado = "MALDONADO";
         public const string cashoffice = "CASHOFFICE";
+        public const string endPointTens = "https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn";
     }
 }
