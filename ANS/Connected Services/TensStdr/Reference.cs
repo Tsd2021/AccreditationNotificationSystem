@@ -2995,7 +2995,7 @@ namespace TensStdr
         {
             if ((endpointConfiguration == EndpointConfiguration.TenSOnlineTxnServicePort))
             {
-                return new System.ServiceModel.EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn?wsdl");
+                return new System.ServiceModel.EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn");
             }
             throw new System.InvalidOperationException(string.Format("No se pudo encontrar un punto de conexión con el nombre \"{0}\".", endpointConfiguration));
         }
@@ -3007,7 +3007,7 @@ namespace TensStdr
         
         private static System.ServiceModel.EndpointAddress GetDefaultEndpointAddress()
         {
-            return new System.ServiceModel.EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn?wsdl");
+            return new System.ServiceModel.EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn");
         }
         
         public enum EndpointConfiguration
