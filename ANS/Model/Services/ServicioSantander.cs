@@ -15,6 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel.Security;
 using System.Security.Principal;
 using System.Text;
+using System.Net.Http;
 
 
 namespace ANS.Model.Services
@@ -37,61 +38,50 @@ namespace ANS.Model.Services
         public async Task EnviarArchivoVacioConCliente()
         {
 
-             var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ");
+            var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ");
 
-            // Definir el binding HTTPS con seguridad de transporte
-            var binding = new CustomBinding(
-                   new TextMessageEncodingBindingElement(MessageVersion.Soap12, Encoding.UTF8),  // Mensajes SOAP 1.2 con UTF-8
-                   new HttpsTransportBindingElement  // Transporte HTTPS con autenticación básica
-                   {
-                       AuthenticationScheme = AuthenticationSchemes.Basic,
-                       RequireClientCertificate = false,  // No requiere certificado de cliente
-                       MaxReceivedMessageSize = 20000000  // Ajusta el tamaño de mensaje según necesidad
-                   }
-               );
-
-
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
+            // ✅ Binding corregido para autenticación básica
+            var binding = new BasicHttpsBinding
             {
-                if (sslPolicyErrors == System.Net.Security.SslPolicyErrors.None)
-                    return true;
-
-                Console.WriteLine($"⚠️ Error en el certificado: {sslPolicyErrors}");
-
-                
-                if (certificate != null)
+                Security = new BasicHttpsSecurity
                 {
-                    X509Certificate2 cert2 = new X509Certificate2(certificate);
-                    Console.WriteLine($"Certificado recibido: {cert2.Subject}");
-                    return true; 
-                }
-
-                return false; 
+                    Mode = BasicHttpsSecurityMode.Transport,
+                  
+                    Message = new BasicHttpMessageSecurity
+                    {
+                        ClientCredentialType = BasicHttpMessageCredentialType.UserName
+                    }
+                },
+                MaxReceivedMessageSize = 20000000,
+                ReaderQuotas = System.Xml.XmlDictionaryReaderQuotas.Max
             };
 
-            // Definir el endpoint correcto
+            // ✅ Configurar TLS 1.2
+           
+          
+
+            // ✅ Definir el endpoint correcto
             var endpoint = new EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn");
 
             try
             {
-                // Crear el cliente con el binding y endpoint especificados
                 using (var client = new TensStdr.TenSOnlineTxnServiceClient(binding, endpoint))
                 {
-
+                    // ✅ Configurar credenciales sin PasswordDigestBehavior
                     client.ClientCredentials.UserName.UserName = credenciales.UserName;
-
                     client.ClientCredentials.UserName.Password = credenciales.Password;
 
+                    // ✅ Leer archivo
                     string filePath = @"C:\TEC_005_20230303021903.dat";
+                    if (!File.Exists(filePath))
+                    {
+                        Console.WriteLine("❌ El archivo no existe.");
+                        return;
+                    }
 
                     byte[] archivo = File.ReadAllBytes(filePath);
 
-                    // Crear el objeto de servicio con el archivo a enviar
-
+                    // ✅ Crear la solicitud SOAP
                     var txService = new TensStdr.txservice
                     {
                         lotFile = new TensStdr.lotFile
@@ -103,50 +93,53 @@ namespace ANS.Model.Services
                         waitProcess = true,
                         method = "uploadLotFile"
                     };
-                    
-                    // Crear la solicitud
 
-                   
-   
                     var request = new TensStdr.execute(txService);
 
-                    Console.WriteLine("Enviando solicitud al servicio...");
+                    Console.WriteLine("📤 Enviando solicitud al servicio...");
+
+                    // ✅ Enviar solicitud
+                    AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                    HttpClientHandler handler = new HttpClientHandler();
+                    handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+
+                    HttpClient client2 = new HttpClient(handler);
 
                     var response = await client.executeAsync(request);
-               
-                    // Procesar la respuesta
+
+                    // ✅ Procesar la respuesta
                     if (response?.result != null)
                     {
-                        Console.WriteLine($"Código de respuesta: {response.result.code}");
-
-                        Console.WriteLine($"Descripción: {response.result.description}");
+                        Console.WriteLine($"✅ Código de respuesta: {response.result.code}");
+                        Console.WriteLine($"✅ Descripción: {response.result.description}");
 
                         if (response.result.code == "0")
                         {
-                            Console.WriteLine("El archivo vacío se envió correctamente.");
+                            Console.WriteLine("✅ El archivo vacío se envió correctamente.");
                         }
                         else
                         {
-                            Console.WriteLine("Hubo un problema al enviar el archivo vacío.");
+                            Console.WriteLine("⚠️ Hubo un problema al enviar el archivo vacío.");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("La respuesta del servicio fue nula.");
+                        Console.WriteLine("❌ La respuesta del servicio fue nula.");
                     }
                 }
             }
             catch (TimeoutException tex)
             {
-                Console.WriteLine($"Error de tiempo de espera: {tex.Message}");
+                Console.WriteLine($"⏳ Error de tiempo de espera: {tex.Message}");
             }
             catch (CommunicationException cex)
             {
-                Console.WriteLine($"Error de comunicación: {cex.Message}");
+                Console.WriteLine($"📡 Error de comunicación: {cex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al enviar el archivo vacío: {ex.Message}");
+                Console.WriteLine($"❌ Error al enviar el archivo vacío: {ex.Message}");
             }
         }
 
