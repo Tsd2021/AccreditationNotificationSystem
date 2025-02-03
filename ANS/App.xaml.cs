@@ -9,6 +9,11 @@ using ANS.Model.Services;
 using ANS.Model.Jobs.BBVA;
 using ANS.Model.Jobs.SANTANDER;
 using static Quartz.Logging.OperationName;
+using System.ServiceModel;
+using CoreWCF;
+using CoreWCF.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ANS
 {
@@ -18,6 +23,7 @@ namespace ANS
     public partial class App : Application
     {
         private IScheduler _scheduler;
+   
         protected override async void OnStartup(StartupEventArgs e)
         {
 

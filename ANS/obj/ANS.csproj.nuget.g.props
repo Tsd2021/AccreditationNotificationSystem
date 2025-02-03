@@ -13,6 +13,9 @@
     <SourceRoot Include="C:\Users\dchiquiar\.nuget\packages\" />
     <SourceRoot Include="C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\" />
   </ItemGroup>
+  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Import Project="$(NuGetPackageRoot)corewcf.primitives\1.6.0\buildTransitive\CoreWCF.Primitives.props" Condition="Exists('$(NuGetPackageRoot)corewcf.primitives\1.6.0\buildTransitive\CoreWCF.Primitives.props')" />
+  </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <PkgMicrosoft_Xaml_Behaviors_Wpf Condition=" '$(PkgMicrosoft_Xaml_Behaviors_Wpf)' == '' ">C:\Users\dchiquiar\.nuget\packages\microsoft.xaml.behaviors.wpf\1.1.39</PkgMicrosoft_Xaml_Behaviors_Wpf>
     <PkgMaterialDesignThemes Condition=" '$(PkgMaterialDesignThemes)' == '' ">C:\Users\dchiquiar\.nuget\packages\materialdesignthemes\5.2.1</PkgMaterialDesignThemes>
