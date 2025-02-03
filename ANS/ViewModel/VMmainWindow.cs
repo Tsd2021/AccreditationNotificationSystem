@@ -1,23 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ANS.Model;
+using ANS.Model.Services;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace ANS.ViewModel
 {
     public class VMmainWindow : INotifyPropertyChanged
     {
-        private DateTime _currentTime;
+        private string _currentTime;
+
         private DispatcherTimer _timer;
+
+        private ObservableCollection<TuplaMensaje> _listaMensajes;
 
         public VMmainWindow()
         {
 
-            _currentTime = DateTime.Now;
+            _currentTime = DateTime.Now.ToString("HH:mm:ss");
 
             _timer = new DispatcherTimer();
 
@@ -25,19 +26,54 @@ namespace ANS.ViewModel
 
             _timer.Tick += (s, e) =>
             {
-                CurrentTime = DateTime.Now;
+                CurrentTime = DateTime.Now.ToString("HH:mm:ss"); 
             };
 
             _timer.Start();
 
+            _listaMensajes = new ObservableCollection<TuplaMensaje>();
+
+            CargarMensajes();
+
         }
 
-        public DateTime CurrentTime
+        public string CurrentTime
         {
             get => _currentTime;
+
             set
             {
-                _currentTime = value;
+
+                _currentTime = DateTime.Now.ToString("HH:mm:ss");
+
+                OnPropertyChanged();
+
+            }
+        }
+
+
+        public void CargarMensajes()
+        {
+
+            List<TuplaMensaje> aux = ServicioMensajeria.getInstancia().getMensajes()
+                .OrderByDescending(m => m.Fecha) 
+                .ToList();
+
+            _listaMensajes.Clear();
+
+            foreach (var mensaje in aux)
+            {
+                _listaMensajes.Add(mensaje);
+            }
+
+        }
+
+        public ObservableCollection<TuplaMensaje> TuplaMensajes
+        {
+            get => _listaMensajes;
+            set
+            {
+                _listaMensajes = value;
                 OnPropertyChanged();
             }
         }

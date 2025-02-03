@@ -35,8 +35,6 @@ namespace ANS.Model.Jobs.BBVA
                 });
 
                 await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.bbva);
-
-
             }
             catch (Exception ex)
             {
@@ -65,7 +63,6 @@ namespace ANS.Model.Jobs.BBVA
                 //    MainWindow main = (MainWindow)Application.Current.MainWindow;
 
                 //    main.OcultarAviso(msgRetorno, colorRetorno);
-                //});
 
             }
 
