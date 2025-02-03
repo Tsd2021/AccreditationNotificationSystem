@@ -1,20 +1,13 @@
 ﻿using ANS.Model.Interfaces;
-using System.Net.Security;
 using System.Net;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel;
-using System.Windows;
 using System.Xml;
 using System.IO;
-using Microsoft.Web.Services3.Security.Tokens;
-using System.Xml.Serialization;
-
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel.Security;
-using System.Security.Principal;
-using System.Text;
 using System.Net.Http;
 
 
@@ -22,8 +15,7 @@ namespace ANS.Model.Services
 {
     public class ServicioSantander : IServicioSantanderTens
     {
-        public static ServicioSantander Instance { get; set; }
-       
+        public static ServicioSantander Instance { get; set; }   
         public static ServicioSantander getInstancia()
         {
             if (Instance == null)
@@ -32,21 +24,16 @@ namespace ANS.Model.Services
             }
             return Instance;
         }
-
-
-
         public async Task EnviarArchivoVacioConCliente()
         {
-
             var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ");
 
-            // ✅ Binding corregido para autenticación básica
-            var binding = new BasicHttpsBinding
+                // ✅ Binding corregido para autenticación básica
+                var binding = new BasicHttpsBinding
             {
                 Security = new BasicHttpsSecurity
                 {
                     Mode = BasicHttpsSecurityMode.Transport,
-                  
                     Message = new BasicHttpMessageSecurity
                     {
                         ClientCredentialType = BasicHttpMessageCredentialType.UserName
@@ -56,10 +43,6 @@ namespace ANS.Model.Services
                 ReaderQuotas = System.Xml.XmlDictionaryReaderQuotas.Max
             };
 
-            // ✅ Configurar TLS 1.2
-           
-          
-
             // ✅ Definir el endpoint correcto
             var endpoint = new EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn");
 
@@ -67,9 +50,19 @@ namespace ANS.Model.Services
             {
                 using (var client = new TensStdr.TenSOnlineTxnServiceClient(binding, endpoint))
                 {
-                    // ✅ Configurar credenciales sin PasswordDigestBehavior
+                    // ✅ Configurar credenciales de usuario
                     client.ClientCredentials.UserName.UserName = credenciales.UserName;
                     client.ClientCredentials.UserName.Password = credenciales.Password;
+
+                    var pwdBehavior = new PasswordDigestBehavior(credenciales.UserName, credenciales.Password);
+                    client.Endpoint.EndpointBehaviors.Add(pwdBehavior);
+
+                    // ✅ Ignorar la validación del certificado del servicio
+                    client.ClientCredentials.ServiceCertificate.SslCertificateAuthentication = new X509ServiceCertificateAuthentication()
+                    {
+                        CertificateValidationMode = X509CertificateValidationMode.None,
+                        RevocationMode = X509RevocationMode.NoCheck
+                    };
 
                     // ✅ Leer archivo
                     string filePath = @"C:\TEC_005_20230303021903.dat";
@@ -81,14 +74,18 @@ namespace ANS.Model.Services
 
                     byte[] archivo = File.ReadAllBytes(filePath);
 
+
+                    TensStdr.lotFile newLotFile = new TensStdr.lotFile()
+                    {
+                        fileName = "TEC_005_20230303021903.dat",
+                        fileBytes = archivo
+                    };
+
+
                     // ✅ Crear la solicitud SOAP
                     var txService = new TensStdr.txservice
                     {
-                        lotFile = new TensStdr.lotFile
-                        {
-                            fileName = "TEC_005_20230303021903.dat",
-                            fileBytes = archivo
-                        },
+                        lotFile = newLotFile,
                         refNumber = "1",
                         waitProcess = true,
                         method = "uploadLotFile"
@@ -101,10 +98,11 @@ namespace ANS.Model.Services
                     // ✅ Enviar solicitud
                     AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
                     HttpClientHandler handler = new HttpClientHandler();
                     handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
-
                     HttpClient client2 = new HttpClient(handler);
+
 
                     var response = await client.executeAsync(request);
 
@@ -133,6 +131,17 @@ namespace ANS.Model.Services
             {
                 Console.WriteLine($"⏳ Error de tiempo de espera: {tex.Message}");
             }
+            catch (FaultException faultEx)
+            {
+                Console.WriteLine("❌ Se produjo un FaultException en el servicio.");
+                Console.WriteLine($"Mensaje: {faultEx.Message}");
+                if (faultEx.Code != null)
+                {
+                    Console.WriteLine($"Código del Fault: {faultEx.Code.Name}");
+                }
+                // Si existe información adicional en el detail, se puede intentar mostrar
+                // Nota: Si se utiliza FaultException<T> se puede extraer el detail de forma tipada.
+            }
             catch (CommunicationException cex)
             {
                 Console.WriteLine($"📡 Error de comunicación: {cex.Message}");
@@ -142,9 +151,6 @@ namespace ANS.Model.Services
                 Console.WriteLine($"❌ Error al enviar el archivo vacío: {ex.Message}");
             }
         }
-
-
-
 
         //public TensStdr.transactionResponse EnviarArchivoConClienteWS(string NombreCSV, byte[] Archivo)
         //{
@@ -181,12 +187,6 @@ namespace ANS.Model.Services
         //        return null;
         //    }
         //}
-
-        public static TensStdr.transactionResponse TESTEnviarArchivoConClienteWS(string NombreCSV, byte[] Archivo)
-        {
-            return new TensStdr.transactionResponse();
-        }
-
         public class PasswordDigestMessageInspector : IClientMessageInspector
         {
             public string Username { get; set; }
@@ -198,27 +198,39 @@ namespace ANS.Model.Services
                 Password = password;
             }
 
-            public object BeforeSendRequest(ref System.ServiceModel.Channels.Message request, IClientChannel channel)
+            public object BeforeSendRequest(ref Message request, IClientChannel channel)
             {
                 XmlDocument doc = new XmlDocument();
 
+                // Crear el elemento Security con el espacio de nombres WS-Security
                 XmlElement security = doc.CreateElement("wsse", "Security", "http://schemas.xmlsoap.org/ws/2002/12/secext");
+                // Declarar los espacios de nombres para wsse y wsu
                 security.SetAttribute("xmlns:wsse", "http://schemas.xmlsoap.org/ws/2002/12/secext");
+                security.SetAttribute("xmlns:wsu", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
 
+                // Crear el UsernameToken
                 XmlElement usernameToken = doc.CreateElement("wsse", "UsernameToken", "http://schemas.xmlsoap.org/ws/2002/12/secext");
-                usernameToken.SetAttribute("wsu:Id", "UsernameToken-1");
 
+                // En lugar de SetAttribute con prefijo, creamos el atributo con CreateAttribute:
+                XmlAttribute idAttr = doc.CreateAttribute("wsu", "Id", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
+                idAttr.Value = "UsernameToken-1";
+                usernameToken.Attributes.Append(idAttr);
+
+                // Crear el elemento Username
                 XmlElement usernameElement = doc.CreateElement("wsse", "Username", "http://schemas.xmlsoap.org/ws/2002/12/secext");
                 usernameElement.InnerText = this.Username;
 
+                // Crear el elemento Password
                 XmlElement passwordElement = doc.CreateElement("wsse", "Password", "http://schemas.xmlsoap.org/ws/2002/12/secext");
                 passwordElement.SetAttribute("Type", "http://schemas.xmlsoap.org/ws/2002/12/secext#PasswordText");
                 passwordElement.InnerText = this.Password;
 
+                // Construir la estructura
                 usernameToken.AppendChild(usernameElement);
                 usernameToken.AppendChild(passwordElement);
                 security.AppendChild(usernameToken);
 
+                // Crear el header de seguridad y agregarlo al mensaje
                 MessageHeader securityHeader = MessageHeader.CreateHeader(
                     "Security",
                     "http://schemas.xmlsoap.org/ws/2002/12/secext",
@@ -231,9 +243,9 @@ namespace ANS.Model.Services
             }
 
 
+
             public void AfterReceiveReply(ref System.ServiceModel.Channels.Message reply, object correlationState) { }
         }
-
         public class PasswordDigestBehavior : IEndpointBehavior
         {
             public string Username { get; set; }

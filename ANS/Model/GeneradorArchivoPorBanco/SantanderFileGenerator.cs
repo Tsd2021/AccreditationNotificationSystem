@@ -299,7 +299,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             string fecha = DateTime.Now.ToString("ddMMyyyy"); // Fecha en formato ddMMyyyy
 
             // Determinar si se guarda en "APPROVED" o "NOT_APPROVED"
-            string subcarpetaEstado = responseTens ? $"{fecha}_NO_ENVIADOS" : $"{fecha}_APPROVED";
+            string subcarpetaEstado = responseTens ? $"{fecha}_APPROVED" : $"{fecha}_NO_ENVIADOS";
 
             string directorioFinal = Path.Combine(directorioBase, subcarpetaEstado); // Ruta completa
 
@@ -321,7 +321,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             await Task.Delay(250);
 
         }
-
         private async Task<bool> generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)
         {
             DateTime fecha = DateTime.Now;
