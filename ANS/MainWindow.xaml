@@ -6,54 +6,134 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="Accreditation Notification System" 
         Height="600" Width="800">
+
     <Window.Resources>
         <DataTemplate DataType="{x:Type local:SnackbarMsg}">
-            <Border Background="{Binding Fondo}" Padding="10">
-                <TextBlock Text="{Binding Texto}" 
-                       Foreground="White"
-                       FontSize="16"
-                       FontWeight="Bold"/>
+            <Border Background="{Binding Fondo}"
+            Padding="6"
+            CornerRadius="8">
+                <TextBlock  Text="{Binding Texto}" 
+                   Foreground="White"
+                   FontSize="18"
+                   FontWeight="Normal"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center" />
             </Border>
         </DataTemplate>
     </Window.Resources>
 
-    <materialDesign:ColorZone Mode="Dark">
+    <materialDesign:ColorZone Mode="Dark"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
         <Grid>
-
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="350" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*"/>
+
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="94*"></RowDefinition>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="93*" ></RowDefinition>
+                <RowDefinition/>
 
-            <Grid HorizontalAlignment="Left" Margin="111,-30,0,29">
+            </Grid.RowDefinitions>
+
+            <!-- Columna izquierda y Fila 0 , solo la hora. -->
+            <Grid Grid.Column="0">
+                <!-- Aquí se muestra la hora (u otro contenido) en el centro -->
+                <TextBlock Text="{Binding CurrentTime, StringFormat=yyyy-MM-dd HH:mm:ss}"
+           FontSize="48"
+           FontWeight="Bold"
+           Foreground="White"
+           HorizontalAlignment="Center"
+           VerticalAlignment="Center"
+           Grid.Row="0"/>
+            </Grid>
+
+
+            <!-- SNACKBAR -->
+            <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0" Grid.RowSpan="3">
                 <materialDesign:Snackbar
-        x:Name="JobSnackbar"
-        MessageQueue="{materialDesign:MessageQueue}"
-        Background="Transparent"
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        Panel.ZIndex="999"
-        Width="400"/>
+                 x:Name="JobSnackbar"
+                 MessageQueue="{materialDesign:MessageQueue}"
+                 Background="Transparent"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 Panel.ZIndex="999"
+                 Width="300"
+                 Height="300"/>
             </Grid>
 
-
-            <Grid Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="{Binding CurrentTime}"
-                           FontSize="48"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-            </Grid>
-
-
+            <!-- Columna derecha fila -->
             <Grid Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="Accreditation Notification System" 
-                           Foreground="White"
-                           FontSize="24"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
+                   Foreground="White"
+                   FontSize="24"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
             </Grid>
+            <Border Grid.Row="1" Grid.Column="1"
+        Width="600"   
+        Height="300"
+        Padding="10"
+        BorderBrush="Gray"
+        BorderThickness="2"
+        Background="{DynamicResource MaterialDesignPaper}"
+        CornerRadius="8" Margin="0,20,-200,-18" Grid.RowSpan="3">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ListView ItemsSource="{Binding TuplaMensajes}" 
+                  Background="Transparent"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  BorderThickness="0">
+
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="10" Margin="4"
+                            Background="LightGray"
+                            CornerRadius="6"
+                            HorizontalAlignment="Stretch">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="2*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Text="{Binding Estado}" 
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="Black"
+                                       Margin="10"
+                                       Grid.Column="0"/>
+                                        <TextBlock Text="{Binding Tipo}" 
+                                       FontSize="14"
+                                       Foreground="DarkGray"
+                                       Margin="10"
+                                       Grid.Column="1"/>
+                                        <TextBlock Text="{Binding Banco}" 
+                                       FontSize="14"
+                                       Foreground="{Binding Color, Converter={StaticResource ColorToBrushConverter}}"
+                                       Margin="10"
+                                       Grid.Column="2"/>
+                                        <TextBlock Text="{Binding Fecha, StringFormat=yyyy-MM-dd HH:mm:ss}" 
+                                       FontSize="12"
+                                       Foreground="Gray"
+                                       Margin="10"
+                                       Grid.Column="3"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </ScrollViewer>
+            </Border>
+
         </Grid>
+
     </materialDesign:ColorZone>
 </Window>
