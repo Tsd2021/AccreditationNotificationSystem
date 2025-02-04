@@ -27,6 +27,12 @@ namespace ANS.Model.Services
 
                 ultIdOperacion -= 3;
 
+
+                if(b.Banco == VariablesGlobales.scotiabank)
+                {
+                    Console.WriteLine("puto");
+                }
+
                 using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
                 {
 

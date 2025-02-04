@@ -66,7 +66,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         //EXPORTA_REME ES PARA PUNTO A PUNTO
         public async Task Exporta_Reme(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
         {
-
             try
             {
 
@@ -88,7 +87,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 string filePath2 = Path.Combine(ruta, nombreArchivo2);
 
                 TextWriter sw2 = new StreamWriter(filePath2);
-
 
                 using (TextWriter sw = new StreamWriter(filePath))
                 {

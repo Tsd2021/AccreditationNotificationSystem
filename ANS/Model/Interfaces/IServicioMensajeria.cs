@@ -9,7 +9,7 @@ namespace ANS.Model.Interfaces
     public interface IServicioMensajeria
     {
 
-        public void agregar(TuplaMensaje msj);
-        public void quitar(TuplaMensaje msj);
+        public void agregar(Mensaje msj);
+        public void quitar(Mensaje msj);
     }
 }

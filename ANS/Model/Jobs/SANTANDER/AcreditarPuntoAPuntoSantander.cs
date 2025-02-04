@@ -3,6 +3,7 @@ using System.Windows.Media;
 using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 using Quartz;
 
 namespace ANS.Model.Jobs.SANTANDER
@@ -26,7 +27,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
-                    main.MostrarAviso("Ejecutando P2P-Santander", Color.FromRgb(255, 102, 102));  // rojo claro
+                    main.MostrarAviso("Ejecutando P2P Santander", Color.FromRgb(255, 102, 102));  // rojo claro
                 });
 
                 await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.santander);
@@ -45,7 +46,7 @@ namespace ANS.Model.Jobs.SANTANDER
             finally
             {
 
-                TuplaMensaje mensaje = new TuplaMensaje();
+                Mensaje mensaje = new Mensaje();
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
@@ -53,7 +54,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Tipo = "P2P";
 
-                //mensaje.Color = new SolidColorBrush(Color.FromRgb(255, 102, 102));
+                mensaje.Icon = PackIconKind.Bank;
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -72,7 +73,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job P2P-SANTANDER", Colors.Red);
+                        main.MostrarAviso("Error Job P2P SANTANDER", Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -83,10 +84,9 @@ namespace ANS.Model.Jobs.SANTANDER
                     else
                     {
 
-                        main.MostrarAviso("Success Job P2P-SANTANDER", Colors.Green);
+                        main.MostrarAviso("Success Job P2P SANTANDER", Colors.Green);
 
                         mensaje.Estado = "Success";
-
 
                     }
 

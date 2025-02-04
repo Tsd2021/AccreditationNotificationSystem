@@ -15,7 +15,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             return banco.ToLower() switch
             {
 
-                VariablesGlobales.scotiabank => new ScotiaFileGenerator(),
+                VariablesGlobales.scotiabank => new ScotiaFileGenerator(new ConfiguracionAcreditacion(tipoAcreditacion)),
 
                 VariablesGlobales.santander => new SantanderFileGenerator(new ConfiguracionAcreditacion(tipoAcreditacion)),
 

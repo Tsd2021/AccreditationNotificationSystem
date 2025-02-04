@@ -1,6 +1,7 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -57,8 +58,7 @@ namespace ANS.Model.Jobs.BBVA
                     main.DataContext = vm; // 🚀 Asignar el ViewModel si no estaba
                 }
 
-
-                    TuplaMensaje mensaje = new TuplaMensaje();
+                    Mensaje mensaje = new Mensaje();
 
                     mensaje.Color = Color.FromRgb(0, 68, 129);
 
@@ -66,7 +66,9 @@ namespace ANS.Model.Jobs.BBVA
 
                     mensaje.Tipo = "P2P";
 
-                if (e != null)
+                    mensaje.Icon = PackIconKind.Bank;
+
+                    if (e != null)
 
                 {
 

@@ -3,39 +3,27 @@
   "WorkspaceRootPath": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\jobs\\santander\\acreditarpuntoapuntosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\santander\\acreditarpuntoapuntosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\generadorarchivoporbanco\\scotiafilegenerator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\generadorarchivoporbanco\\scotiafilegenerator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\jobs\\bbva\\acreditarpuntoapuntobbva.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\bbva\\acreditarpuntoapuntobbva.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\tuplamensaje.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\tuplamensaje.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\jobs\\scotiabank\\acreditarpuntoapuntoscotiabank.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\scotiabank\\acreditarpuntoapuntoscotiabank.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\services\\serviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\interfaces\\iserviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\interfaces\\iserviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\ans.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\ans.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\.vsdbgsrc\\ee5cecc93d553594bcdd27f7f78ec4c027d563536bb5d0f2c4359be1479d5362\\XamlReader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\services\\serviciomensajeria.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciomensajeria.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\viewmodel\\vmmainwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\viewmodel\\vmmainwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\SourceServer\\ae09d9d0fc65cac61f7f223b8ce3ef28f1f7bb9ce9ffcf5318408c6f2dd17b95\\ANS\\Model\\Services\\ServicioDeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -45,7 +33,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 207,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -53,119 +41,80 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "ANS",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\ANS.csproj",
-              "RelativeDocumentMoniker": "ANS\\ANS.csproj",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\ANS.csproj",
-              "RelativeToolTip": "ANS\\ANS.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-02-03T19:39:18.113Z",
+              "DocumentIndex": 1,
+              "Title": "ServicioCuentaBuzon.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "RelativeToolTip": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "ViewState": "AgIAAEEBAAAAAAAAAIAwwFABAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-04T20:39:08.558Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "IServicioDeposito.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Interfaces\\IServicioDeposito.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Interfaces\\IServicioDeposito.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Interfaces\\IServicioDeposito.cs",
-              "RelativeToolTip": "ANS\\Model\\Interfaces\\IServicioDeposito.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\App.xaml.cs",
+              "RelativeDocumentMoniker": "ANS\\App.xaml.cs",
+              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\App.xaml.cs",
+              "RelativeToolTip": "ANS\\App.xaml.cs",
+              "ViewState": "AgIAAEUAAAAAAAAAAAAMwDYAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T19:20:55.714Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "XamlReader.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\.vsdbgsrc\\ee5cecc93d553594bcdd27f7f78ec4c027d563536bb5d0f2c4359be1479d5362\\XamlReader.cs",
-              "RelativeDocumentMoniker": "..\\..\\..\\AppData\\Local\\Temp\\.vsdbgsrc\\ee5cecc93d553594bcdd27f7f78ec4c027d563536bb5d0f2c4359be1479d5362\\XamlReader.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\.vsdbgsrc\\ee5cecc93d553594bcdd27f7f78ec4c027d563536bb5d0f2c4359be1479d5362\\XamlReader.cs [Solo lectura]",
-              "RelativeToolTip": "..\\..\\..\\AppData\\Local\\Temp\\.vsdbgsrc\\ee5cecc93d553594bcdd27f7f78ec4c027d563536bb5d0f2c4359be1479d5362\\XamlReader.cs [Solo lectura]",
-              "ViewState": "AgIAAO8BAAAAAAAAAAAqwP4BAAACAAAAAQAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T19:16:04.915Z",
-              "EditorCaption": " [Solo lectura]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "ServicioMensajeria.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Services\\ServicioMensajeria.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioMensajeria.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Services\\ServicioMensajeria.cs",
-              "RelativeToolTip": "ANS\\Model\\Services\\ServicioMensajeria.cs",
-              "ViewState": "AgIAAAsAAAAAAAAAAAAwwBkAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T18:57:34.084Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "TuplaMensaje.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\TuplaMensaje.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\TuplaMensaje.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\TuplaMensaje.cs",
-              "RelativeToolTip": "ANS\\Model\\TuplaMensaje.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAqwA0AAAAqAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T17:38:51.371Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AcreditarPuntoAPuntoSantander.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "RelativeToolTip": "ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAAAUwDEAAAA9AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T17:28:53.812Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "AcreditarPuntoAPuntoBBVA.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\BBVA\\AcreditarPuntoAPuntoBBVA.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\BBVA\\AcreditarPuntoAPuntoBBVA.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\BBVA\\AcreditarPuntoAPuntoBBVA.cs",
-              "RelativeToolTip": "ANS\\Model\\Jobs\\BBVA\\AcreditarPuntoAPuntoBBVA.cs",
-              "ViewState": "AgIAACAAAAAAAAAAAIAwwEEAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T17:28:42.919Z",
+              "WhenOpened": "2025-02-04T20:38:47.565Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "ANS\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\MainWindow.xaml.cs",
-              "RelativeToolTip": "ANS\\MainWindow.xaml.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAIAwwCUAAAAyAAAAAAAAAA==",
+              "Title": "ServicioDeposito.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Services\\ServicioDeposito.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioDeposito.cs",
+              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Services\\ServicioDeposito.cs",
+              "RelativeToolTip": "ANS\\Model\\Services\\ServicioDeposito.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAIAwwCAAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T17:28:10.526Z",
+              "WhenOpened": "2025-02-04T20:29:58.683Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "VMmainWindow.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\ViewModel\\VMmainWindow.cs",
-              "RelativeDocumentMoniker": "ANS\\ViewModel\\VMmainWindow.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\ViewModel\\VMmainWindow.cs",
-              "RelativeToolTip": "ANS\\ViewModel\\VMmainWindow.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAIAwwBwAAAAQAAAAAAAAAA==",
+              "DocumentIndex": 5,
+              "Title": "ServicioDeposito.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\AppData\\Local\\SourceServer\\ae09d9d0fc65cac61f7f223b8ce3ef28f1f7bb9ce9ffcf5318408c6f2dd17b95\\ANS\\Model\\Services\\ServicioDeposito.cs",
+              "RelativeDocumentMoniker": "..\\..\\..\\AppData\\Local\\SourceServer\\ae09d9d0fc65cac61f7f223b8ce3ef28f1f7bb9ce9ffcf5318408c6f2dd17b95\\ANS\\Model\\Services\\ServicioDeposito.cs",
+              "ToolTip": "C:\\Users\\dchiquiar\\AppData\\Local\\SourceServer\\ae09d9d0fc65cac61f7f223b8ce3ef28f1f7bb9ce9ffcf5318408c6f2dd17b95\\ANS\\Model\\Services\\ServicioDeposito.cs",
+              "RelativeToolTip": "..\\..\\..\\AppData\\Local\\SourceServer\\ae09d9d0fc65cac61f7f223b8ce3ef28f1f7bb9ce9ffcf5318408c6f2dd17b95\\ANS\\Model\\Services\\ServicioDeposito.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T17:05:14.932Z",
+              "WhenOpened": "2025-02-04T20:29:40.48Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ScotiaFileGenerator.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\GeneradorArchivoPorBanco\\ScotiaFileGenerator.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\GeneradorArchivoPorBanco\\ScotiaFileGenerator.cs",
+              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\GeneradorArchivoPorBanco\\ScotiaFileGenerator.cs",
+              "RelativeToolTip": "ANS\\Model\\GeneradorArchivoPorBanco\\ScotiaFileGenerator.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAzwPYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-04T20:26:24.712Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AcreditarPuntoAPuntoScotiabank.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\SCOTIABANK\\AcreditarPuntoAPuntoScotiabank.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\SCOTIABANK\\AcreditarPuntoAPuntoScotiabank.cs",
+              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\SCOTIABANK\\AcreditarPuntoAPuntoScotiabank.cs",
+              "RelativeToolTip": "ANS\\Model\\Jobs\\SCOTIABANK\\AcreditarPuntoAPuntoScotiabank.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAgwCAAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-04T20:24:47.057Z",
               "EditorCaption": ""
             }
           ]

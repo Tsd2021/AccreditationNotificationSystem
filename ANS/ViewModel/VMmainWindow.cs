@@ -13,7 +13,7 @@ namespace ANS.ViewModel
 
         private DispatcherTimer _timer;
 
-        private ObservableCollection<TuplaMensaje> _listaMensajes;
+        private ObservableCollection<Mensaje> _listaMensajes;
 
         public VMmainWindow()
         {
@@ -31,7 +31,7 @@ namespace ANS.ViewModel
 
             _timer.Start();
 
-            _listaMensajes = new ObservableCollection<TuplaMensaje>();
+            _listaMensajes = new ObservableCollection<Mensaje>();
 
             CargarMensajes();
 
@@ -55,7 +55,7 @@ namespace ANS.ViewModel
         public void CargarMensajes()
         {
 
-            List<TuplaMensaje> aux = ServicioMensajeria.getInstancia().getMensajes()
+            List<Mensaje> aux = ServicioMensajeria.getInstancia().getMensajes()
                 .OrderByDescending(m => m.Fecha) 
                 .ToList();
 
@@ -68,7 +68,7 @@ namespace ANS.ViewModel
 
         }
 
-        public ObservableCollection<TuplaMensaje> TuplaMensajes
+        public ObservableCollection<Mensaje> TuplaMensajes
         {
             get => _listaMensajes;
             set
