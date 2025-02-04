@@ -23,7 +23,7 @@ namespace ANS
     public partial class App : Application
     {
         private IScheduler _scheduler;
-   
+
         protected override async void OnStartup(StartupEventArgs e)
         {
 
@@ -41,6 +41,8 @@ namespace ANS
 
             await crearJobsSantander(_scheduler);
 
+            await crearJobsScotiabank(_scheduler);
+
             if (!_scheduler.IsStarted)
             {
                 await _scheduler.Start();
@@ -48,6 +50,43 @@ namespace ANS
                 Console.WriteLine("Scheduler iniciado correctamente.");
             }
 
+        }
+
+        private async Task crearJobsScotiabank(IScheduler scheduler)
+        {
+            if (scheduler != null)
+            {
+                IJobDetail jobPuntoAPuntoScotiabank = JobBuilder
+                                                      .Create<AcreditarPuntoAPuntoScotiabank>().WithIdentity("ScotiabankJobP2P", "GrupoTrabajoScotiabank")
+                                                      .Build();
+
+                ITrigger triggerPuntoAPuntoScotiabank = TriggerBuilder.Create().WithIdentity("ScotiabankTriggerP2P", "GrupoTrabajoScotiabank")
+                                                        .WithDailyTimeIntervalSchedule(x => x
+                                                        .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0))
+                                                        .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 30))
+                                                        .OnDaysOfTheWeek(new[]
+                                                        {
+                                                            DayOfWeek.Monday,
+                                                            DayOfWeek.Tuesday,
+                                                            DayOfWeek.Wednesday,
+                                                            DayOfWeek.Thursday,
+                                                            DayOfWeek.Friday
+                                                        })
+                                                        .WithIntervalInMinutes(1))
+                                                        .Build();
+
+                try
+                {
+
+                    await _scheduler.ScheduleJob(jobPuntoAPuntoScotiabank, triggerPuntoAPuntoScotiabank);
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al ejecutar la tarea de SANTANDER: {ex.Message}");
+
+                }
+            }
         }
         private async Task crearJobsSantander(IScheduler scheduler)
         {

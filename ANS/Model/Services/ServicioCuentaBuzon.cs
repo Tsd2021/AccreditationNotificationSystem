@@ -198,7 +198,7 @@ namespace ANS.Model.Services
 
                         cuentaBuzon.setDivisa();
 
-                        cuentaBuzon.setCashOffice();
+                        cuentaBuzon.setCashOffice(); // El nombre del Banco define si es CashOffice o no!
 
                         if (!reader.IsDBNull(tipoAcreditacionOrdinal))
                         {
@@ -331,6 +331,11 @@ namespace ANS.Model.Services
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
                 string query = "select max(idoperacion) from ACREDITACIONESDEPOSITOS where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
+
+                if(nc == "GRAMAR")
+                {
+                    Console.Write("ESTA ES!");
+                }
 
                 conn.Open();
 
