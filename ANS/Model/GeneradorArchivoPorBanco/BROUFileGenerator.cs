@@ -9,6 +9,19 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 {
     public class BROUFileGenerator : IBancoModoAcreditacion
     {
+
+        private ConfiguracionAcreditacion _config { get; set; }
+
+        public BROUFileGenerator()
+        {
+
+        }
+
+        public BROUFileGenerator(ConfiguracionAcreditacion config)
+        {
+            _config = config;
+        }
+
         public  async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
             throw new NotImplementedException();

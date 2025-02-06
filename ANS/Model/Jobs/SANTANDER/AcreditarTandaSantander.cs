@@ -1,4 +1,5 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -25,11 +26,12 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea TANDA ~SANTANDER~", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando tarea Tanda Santander", Color.FromRgb(255, 102, 102));
 
                 });
+                Banco santander = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                await _servicioCuentaBuzon.acreditarTandaPorBanco(VariablesGlobales.santander);
+                await _servicioCuentaBuzon.acreditarTandaPorBanco(santander);
 
 
             }
