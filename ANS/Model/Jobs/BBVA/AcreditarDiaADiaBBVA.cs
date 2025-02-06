@@ -34,7 +34,10 @@ namespace ANS.Model.Jobs.BBVA
 
                 });
 
-                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.bbva);
+
+                Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
+
+                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(bbva);
             }
             catch (Exception ex)
             {

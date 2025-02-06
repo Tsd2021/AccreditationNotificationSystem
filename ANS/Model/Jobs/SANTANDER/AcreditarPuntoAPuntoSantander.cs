@@ -30,7 +30,10 @@ namespace ANS.Model.Jobs.SANTANDER
                     main.MostrarAviso("Ejecutando P2P Santander", Color.FromRgb(255, 102, 102));  // rojo claro
                 });
 
-                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.santander);
+
+                Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
+
+                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(bank);
 
 
             }

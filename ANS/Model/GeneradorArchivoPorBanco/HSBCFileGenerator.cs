@@ -9,6 +9,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 {
     public class HSBCFileGenerator : IBancoModoAcreditacion
     {
+        private ConfiguracionAcreditacion _config { get; set; }
+
+        public HSBCFileGenerator(ConfiguracionAcreditacion cfg)
+        {
+            _config = cfg;
+        }
         public async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
             throw new NotImplementedException();

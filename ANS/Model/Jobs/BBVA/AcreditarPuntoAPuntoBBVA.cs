@@ -31,7 +31,10 @@ namespace ANS.Model.Jobs.BBVA
                     main.MostrarAviso("Ejecutando tarea P2P ~BBVA~", Color.FromRgb(0, 68, 129));
                 });
 
-                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.bbva);
+
+                Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
+
+                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(bbva);
 
             }
             catch (Exception ex)

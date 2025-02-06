@@ -8,7 +8,7 @@ namespace ANS.Model.Interfaces
 {
     public interface IServicioDeposito
     {
-        Task asignarDepositosAlBuzon(CuentaBuzon b, int ultIdOperacion);
+        Task asignarDepositosAlBuzon(CuentaBuzon b, int ultIdOperacion,TimeSpan hc);
 
     }
 }

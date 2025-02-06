@@ -60,6 +60,21 @@ namespace ANS.Model.Jobs
             {
                 return new AcreditarPuntoAPuntoScotiabank(_servicioCuentaBuzon);
             }
+
+            if(jobType == typeof(AcreditarDiaADiaSantanderDeLasSierras))
+            {
+                return new AcreditarDiaADiaSantanderDeLasSierras(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(ExcelHendersonTanda1))
+            {
+                return new ExcelHendersonTanda1(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(ExcelHendersonTanda2))
+            {
+                return new ExcelHendersonTanda2(_servicioCuentaBuzon);
+            }
             // Para otros jobs, si los hay:
             return (IJob)Activator.CreateInstance(jobType);
         }

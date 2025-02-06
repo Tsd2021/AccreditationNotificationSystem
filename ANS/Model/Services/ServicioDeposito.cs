@@ -20,23 +20,20 @@ namespace ANS.Model.Services
             }
             return instancia;
         }
-        public async Task asignarDepositosAlBuzon(CuentaBuzon b, int ultIdOperacion)
+        public async Task asignarDepositosAlBuzon(CuentaBuzon b, int ultIdOperacion, TimeSpan horaCierre)
         {
             if (b != null)
             {
-
                 ultIdOperacion -= 3;
-
-
-                if(b.Banco == VariablesGlobales.scotiabank)
-                {
-                    Console.WriteLine("puto");
-                }
 
                 using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
                 {
+                    string query;
 
-                string query = @"
+                    if (horaCierre != TimeSpan.Zero)
+                    {
+
+                        query = @"
                         SELECT 
                         d.iddeposito, 
                         d.idoperacion, 
@@ -64,6 +61,44 @@ namespace ANS.Model.Services
                         END
                         ) = @empresa
                         AND d.idoperacion > @ultimaOperacion;";
+                    }
+
+                    else
+                    {
+                        // Si hc es TimeSpan.Zero, se usa la consulta sin el filtro adicional por FechaDep.
+
+                        //-- Filtramos por la hora de cierre: solo se traen depósitos cuya hora (parte de FechaDep) sea menor o igual a @hc
+                        query = @"
+                SELECT 
+                    d.iddeposito, 
+                    d.idoperacion, 
+                    d.codigo, 
+                    CASE 
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                            THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
+                    END AS empresa, 
+                    d.fechadep 
+                FROM 
+                    Depositos d
+                INNER JOIN 
+                    relaciondeposito rd 
+                        ON d.IdDeposito = rd.IdDeposito 
+                WHERE 
+                    d.codigo = @nc 
+                    AND (
+                        CASE 
+                            WHEN CHARINDEX('-', d.empresa) > 0 
+                                THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                            ELSE LTRIM(RTRIM(d.empresa))
+                        END
+                    ) = @empresa
+                    AND d.idoperacion > @ultimaOperacion
+                    
+                    AND CAST(d.FechaDep AS time) <= @hc;";
+                    }
+
+
 
 
                     //LA EMPRESA SI TIENE GUION - HAY QUE TOMAR LO QUE ESTA DESPUES DEL GUION.

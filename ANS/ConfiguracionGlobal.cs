@@ -18,6 +18,15 @@ namespace ANS
             }
         }
 
+        public static string ConexionEncuesta
+        {
+            get
+            {
+                return ConfigurationManager.ConnectionStrings["conexionENCUESTA"]?.ConnectionString
+                       ?? throw new ConfigurationErrorsException("La cadena de conexión 'ConexionEncuesta' no está configurada en App.config.");
+            }
+        }
+
         public static string ConexionWebBuzones
         {
             get

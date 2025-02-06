@@ -1,4 +1,5 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -28,11 +29,13 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea DIAXDIA ~SANTANDER~", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando tarea Día a día SANTANDER", Color.FromRgb(255, 102, 102));
 
                 });
 
-                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.santander);
+                Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
+
+                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(bank);
 
 
             }

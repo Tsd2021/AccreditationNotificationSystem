@@ -1,14 +1,8 @@
 ﻿using ANS.Model.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Http.HttpClient;
-using System.Data.SqlClient;
 using Microsoft.Data.SqlClient;
 using ANS.Model.GeneradorArchivoPorBanco;
-using Quartz.Util;
+using System;
+
 
 namespace ANS.Model.Services
 {
@@ -136,21 +130,42 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
-        public List<CuentaBuzon> getAllByTipoAcreditacionYBanco(string tipoAcreditacion, string banco)
+        public List<CuentaBuzon> getAllByTipoAcreditacionYBanco(string tipoAcreditacion, Banco banco)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID " +
-                             "FROM ConfiguracionAcreditacion config " +
-                             "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
-                             "INNER JOIN CC c ON config.NC = c.NC " +
-                             "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
-                             "AND cb.BANCO = @bank " +
-                             "AND config.CuentasBuzonesId IS NOT NULL " +
-                             "AND config.ConfigId IS NOT NULL " +
-                             "ORDER BY c.NC";
+
+                string query;
+
+                // Si es banco santander , debe excluir a Henderson y De las sierras, (ID:164,268) 
+                // porque estos fueron acreditados en tanda y en dia a dia a las 7am
+                if (banco.NombreBanco == VariablesGlobales.santander)
+                {
+                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID " +
+                            "FROM ConfiguracionAcreditacion config " +
+                            "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
+                            "INNER JOIN CC c ON config.NC = c.NC " +
+                            "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
+                            "AND cb.BANCO = @bank " +
+                            "AND config.CuentasBuzonesId IS NOT NULL " +
+                            "AND config.ConfigId IS NOT NULL " +
+                            "AND cb.EMPRESA NOT IN (164, 268) " +
+                            "ORDER BY c.NC";
+                }
+                else
+                {
+                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID " +
+                            "FROM ConfiguracionAcreditacion config " +
+                            "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
+                            "INNER JOIN CC c ON config.NC = c.NC " +
+                            "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
+                            "AND cb.BANCO = @bank " +
+                            "AND config.CuentasBuzonesId IS NOT NULL " +
+                            "AND config.ConfigId IS NOT NULL " +
+                            "ORDER BY c.NC";
+                }
 
 
                 conn.Open();
@@ -159,7 +174,7 @@ namespace ANS.Model.Services
 
                 cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion);
 
-                cmd.Parameters.AddWithValue("@bank", banco);
+                cmd.Parameters.AddWithValue("@bank", banco.NombreBanco);
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -212,8 +227,158 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
+        public List<CuentaBuzon> getAllByBanco(Banco banco)
+        {
+            List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
-        private async Task generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, string banco, string tipoAcreditacion)
+            using (SqlConnection conn = new SqlConnection(_conexionTSD))
+            {
+                string query = @"
+            SELECT 
+                c.NC, 
+                cb.BANCO, 
+                c.CIERRE, 
+                c.IDCLIENTE, 
+                cb.CUENTA, 
+                cb.MONEDA, 
+                cb.EMPRESA, 
+                c.SUCURSAL AS CIUDAD, 
+                cb.SUCURSAL, 
+                c.IDCC, 
+                cb.ID 
+            FROM CUENTASBUZONES cb
+            INNER JOIN CC c ON cb.NC = c.NC
+            WHERE cb.BANCO = @bank
+            ORDER BY c.NC";
+
+                conn.Open();
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@bank", banco.NombreBanco);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        // Obtener los índices de las columnas
+                        int ncOrdinal = reader.GetOrdinal("NC");
+                        int bancoOrdinal = reader.GetOrdinal("BANCO");
+                        int cierreOrdinal = reader.GetOrdinal("CIERRE");
+                        int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
+                        int cuentaOrdinal = reader.GetOrdinal("CUENTA");
+                        int monedaOrdinal = reader.GetOrdinal("MONEDA");
+                        int empresaOrdinal = reader.GetOrdinal("EMPRESA");
+                        int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
+                        int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
+                        int idReferenciaOrdinal = reader.GetOrdinal("IDCC");
+                        int idCuentaOrdinal = reader.GetOrdinal("ID");
+
+                        while (reader.Read())
+                        {
+                            CuentaBuzon cuentaBuzon = new CuentaBuzon
+                            {
+                                NC = reader.GetString(ncOrdinal),
+                                Banco = reader.GetString(bancoOrdinal),
+                                Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
+                                IdCliente = reader.GetInt32(idClienteOrdinal),
+                                Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""), // Limpia \r\n
+                                Moneda = reader.GetString(monedaOrdinal),
+                                Empresa = reader.GetString(empresaOrdinal),
+                                Ciudad = reader.GetString(ciudadOrdinal),
+                                SucursalCuenta = reader.GetString(sucursalOrdinal),
+                                IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
+                                IdCuenta = reader.GetInt32(idCuentaOrdinal)
+                            };
+
+                            cuentaBuzon.setDivisa();
+
+                            cuentaBuzon.setCashOffice();
+
+                            buzonesFound.Add(cuentaBuzon);
+                        }
+                    }
+                }
+            }
+
+            return buzonesFound;
+        }
+        public List<CuentaBuzon> getCuentaBuzonesByCliente(int cli)
+        {
+            List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
+
+            using (SqlConnection conn = new SqlConnection(_conexionTSD))
+            {
+
+                string query;
+
+                    query = @"SELECT 
+                                    c.NC, 
+                                    cb.BANCO, 
+                                    c.CIERRE, 
+                                    c.IDCLIENTE, 
+                                    cb.CUENTA, 
+                                    cb.MONEDA, 
+                                    cb.EMPRESA, 
+                                    c.SUCURSAL AS CIUDAD, 
+                                    cb.SUCURSAL, 
+                                    c.IDCC, 
+                                    cb.ID 
+                                    FROM CUENTASBUZONES cb
+                                    INNER JOIN CC c ON cb.NC = c.NC
+                                    WHERE cb.IDCLIENTE = @id
+                                    ORDER BY c.NC";
+               
+
+                conn.Open();
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", cli);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        // Obtener los índices de las columnas
+                        int ncOrdinal = reader.GetOrdinal("NC");
+                        int bancoOrdinal = reader.GetOrdinal("BANCO");
+                        int cierreOrdinal = reader.GetOrdinal("CIERRE");
+                        int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
+                        int cuentaOrdinal = reader.GetOrdinal("CUENTA");
+                        int monedaOrdinal = reader.GetOrdinal("MONEDA");
+                        int empresaOrdinal = reader.GetOrdinal("EMPRESA");
+                        int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
+                        int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
+                        int idReferenciaOrdinal = reader.GetOrdinal("IDCC");
+                        int idCuentaOrdinal = reader.GetOrdinal("ID");
+
+                        while (reader.Read())
+                        {
+                            CuentaBuzon cuentaBuzon = new CuentaBuzon
+                            {
+                                NC = reader.GetString(ncOrdinal),
+                                Banco = reader.GetString(bancoOrdinal),
+                                Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
+                                IdCliente = reader.GetInt32(idClienteOrdinal),
+                                Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""), // Limpia \r\n
+                                Moneda = reader.GetString(monedaOrdinal),
+                                Empresa = reader.GetString(empresaOrdinal),
+                                Ciudad = reader.GetString(ciudadOrdinal),
+                                SucursalCuenta = reader.GetString(sucursalOrdinal),
+                                IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
+                                IdCuenta = reader.GetInt32(idCuentaOrdinal)
+                            };
+
+                            cuentaBuzon.setDivisa();
+
+                            cuentaBuzon.setCashOffice();
+
+                            buzonesFound.Add(cuentaBuzon);
+                        }
+                    }
+                }
+            }
+
+            return buzonesFound;
+        }
+        private async Task generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, Banco banco, string tipoAcreditacion)
         {
             if (listaCuentaBuzones == null)
             {
@@ -225,7 +390,7 @@ namespace ANS.Model.Services
                 throw new Exception("Error en método generarArchivoPorBanco: Lista Buzones tiene 0 elementos");
             }
 
-            IBancoModoAcreditacion bank = BankFactory.GetModoAcreditacionByBanco(banco, tipoAcreditacion);
+            IBancoModoAcreditacion bank = BankFactory.GetModoAcreditacionByBanco(banco.NombreBanco, tipoAcreditacion);
 
             if (bank != null)
             {
@@ -243,7 +408,7 @@ namespace ANS.Model.Services
         //METODO PROCESAR DEPOSITOS DE CUENTAS PUNTO A PUNTO BBVA(TODA HORA 15 Y 45) Y SANTANDER(5MIN)
         //Método Acreditar punto a punto para Santander (5 mins)
         #region MÉTODOS ACREDITAR POR CONFIGURACIÓN!
-        public async Task acreditarPuntoAPuntoPorBanco(string bank)
+        public async Task acreditarPuntoAPuntoPorBanco(Banco bank)
         {
             int ultIdOperacionPorBuzon = 0;
             List<CuentaBuzon> buzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.p2p, bank);
@@ -257,7 +422,7 @@ namespace ANS.Model.Services
 
                     if (ultIdOperacionPorBuzon > 0)
                     {
-                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon);
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, TimeSpan.Zero);
                     }
 
                 }
@@ -272,7 +437,7 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones punto a punto");
 
         }
-        public async Task acreditarDiaADiaPorBanco(string banco)
+        public async Task acreditarDiaADiaPorBanco(Banco banco)
         {
 
             List<CuentaBuzon> cuentaBuzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.diaxdia, banco);
@@ -286,7 +451,7 @@ namespace ANS.Model.Services
 
                     if (ultIdOperacion > 0)
                     {
-                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion);
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion, TimeSpan.Zero);
                     }
 
                     await generarArchivoPorBanco(cuentaBuzones, banco, VariablesGlobales.diaxdia);
@@ -297,7 +462,7 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones día a día");
 
         }
-        public async Task acreditarTandaPorBanco(string bank)
+        public async Task acreditarTandaPorBanco(Banco bank)
         {
             List<CuentaBuzon> cuentaBuzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.tanda, bank);
 
@@ -311,7 +476,7 @@ namespace ANS.Model.Services
                     if (ultIdOperacion > 0)
                     {
 
-                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion);
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion, TimeSpan.Zero);
                     }
 
                     else return; //abandona. no genera nada.
@@ -332,7 +497,7 @@ namespace ANS.Model.Services
             {
                 string query = "select max(idoperacion) from ACREDITACIONESDEPOSITOS where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
 
-                if(nc == "GRAMAR")
+                if (nc == "GRAMAR")
                 {
                     Console.Write("ESTA ES!");
                 }
@@ -350,13 +515,125 @@ namespace ANS.Model.Services
                 return result != DBNull.Value && result != null ? Convert.ToInt32(result) : 0;
             }
         }
-        //Henderson y relacionados TANDA 1 07:30
-        //Henderson y relacionados TANDA 2 14:30
-        public async Task acreditarTandaHendersonYRelacionados(TimeSpan tanda)
+        public async Task acreditarTanda1HendersonSantander(TimeSpan horaCierreActual)
         {
-            //va a recibir un timespan, que luego hay que buscar desde ese para atrás.
 
         }
+        public async Task acreditarTanda2HendersonSantander(TimeSpan horaCierreActual)
+        {
 
+        }
+        public async Task acretidarPorBanco(Banco bank, TimeSpan horaCierre)
+        {
+
+            //Este metodo por lo general acredita a la hora del cierre del banco parámetro.
+
+            List<CuentaBuzon> buzonesPorBanco = getAllByBanco(bank);
+
+            if (buzonesPorBanco != null && buzonesPorBanco.Count > 0)
+            {
+
+                foreach (CuentaBuzon _buzon in buzonesPorBanco)
+                {
+                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(_buzon.NC, _buzon.IdCuenta);
+
+                    if (ultIdOperacion > 0)
+                    {
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(_buzon, ultIdOperacion, horaCierre);
+                    }
+                }
+
+                await generarArchivoPorBanco(buzonesPorBanco, bank, VariablesGlobales.diaxdia);
+
+                return;
+            }
+
+            throw new Exception("No se encontaron buzones para el banco : " + bank);
+
+        }
+        public async Task acreditarDiaADiaPorCliente(string nombreCliente, Banco bank, TimeSpan horaCierreActual)
+        {
+            if (string.IsNullOrEmpty(nombreCliente))
+            {
+                throw new Exception("Error en método acreditarDiaADiaPorCliente . Nombre Cliente vacío");
+            }
+
+
+            int idClienteFound = getIdClienteByNombre(nombreCliente);
+
+            if (idClienteFound > 0)
+            {
+
+                List<CuentaBuzon> cuentaBuzones = getCuentaBuzonesByCliente(idClienteFound);
+
+                if (cuentaBuzones != null && cuentaBuzones.Count > 0)
+                {
+                    foreach (CuentaBuzon cu in cuentaBuzones)
+                    {
+
+                        int ultIdOperacion = this.obtenerUltimaOperacionByNC(cu.NC, cu.IdCuenta);
+
+                        if (ultIdOperacion > 0)
+                        {
+
+                            await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
+
+                        }
+
+                    }
+                    await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.diaxdia);
+                }
+
+                //obtener cuentabuzones del cliente obtenido y buscar depositos
+
+            }
+            else throw new Exception("Error en acreditarDiaADiaPorCliente: No se encontró idcliente para el nombre: " + nombreCliente);
+        }
+        private int getIdClienteByNombre(string nombreCliente)
+        {
+            if (nombreCliente != null)
+            {
+
+                using (SqlConnection conn = new SqlConnection(_conexionTSD))
+
+                {
+
+                    string query = @"select IDCLIENTE
+                                     from clientes
+                                     where nombre like '%@nombreCliente%'";
+
+                    conn.Open();
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+
+                    return cmd.ExecuteNonQuery();
+                }
+
+            }
+            return 0;
+        }
+        public async Task enviarExcel(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank)
+        {
+
+            List<CuentaBuzon> listaCuentasBuzones = new List<CuentaBuzon>();
+
+            if (bank.NombreBanco.ToUpper() == VariablesGlobales.santander)
+            {
+
+                if (cli.Nombre.Contains("HENDERS")) // Henderson
+                {
+                    //obtener los buzones de henderson y luego ir a la tabhla ACREDITACIONESDEPOSITOS por ese id. traer todos 
+                    // filtrar por fecha desde hasta , y bank.
+                    listaCuentasBuzones = getCuentaBuzonesByCliente(cli.IdCliente);
+                   
+                    return;
+
+                }
+
+                listaCuentasBuzones = getAllByBanco(bank);
+
+            }
+
+        }
     }
 }
