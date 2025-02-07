@@ -1,4 +1,6 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
+using MaterialDesignColors.ColorManipulation;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -30,10 +32,12 @@ namespace ANS.Model.Jobs.ITAU
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
                     main.MostrarAviso("Acreditando por banco ITAU", Color.FromRgb(255, 102, 102));
-
                 });
 
-                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.santander);
+
+                Banco itau =  ServicioBanco.getInstancia().getByNombre(VariablesGlobales.itau);
+
+                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(itau);
 
 
             }

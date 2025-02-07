@@ -1,4 +1,5 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -27,7 +28,10 @@ namespace ANS.Model.Jobs.HSBC
 
                 });
 
-                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.santander);
+
+                Banco hsbc = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.hsbc);
+
+                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(hsbc);
 
 
             }

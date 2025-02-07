@@ -1,10 +1,5 @@
 ﻿using ANS.Model.Interfaces;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ANS.Model.Services
 {
@@ -20,7 +15,7 @@ namespace ANS.Model.Services
             }
             return instancia;
         }
-        public async Task asignarDepositosAlBuzon(CuentaBuzon b, int ultIdOperacion, TimeSpan horaCierre)
+        public async Task asignarDepositosAlBuzon(CuentaBuzon b, int ultIdOperacion, TimeSpan horaDeCierre)
         {
             if (b != null)
             {
@@ -30,7 +25,7 @@ namespace ANS.Model.Services
                 {
                     string query;
 
-                    if (horaCierre != TimeSpan.Zero)
+                    if (horaDeCierre != TimeSpan.Zero)
                     {
 
                         query = @"
@@ -38,6 +33,7 @@ namespace ANS.Model.Services
                         d.iddeposito, 
                         d.idoperacion, 
                         d.codigo, 
+                        d.tipo, 
                         CASE 
                         WHEN CHARINDEX('-', d.empresa) > 0 
                         THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
@@ -73,6 +69,7 @@ namespace ANS.Model.Services
                     d.iddeposito, 
                     d.idoperacion, 
                     d.codigo, 
+                    d.tipo, 
                     CASE 
                         WHEN CHARINDEX('-', d.empresa) > 0 
                             THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
@@ -95,11 +92,8 @@ namespace ANS.Model.Services
                     ) = @empresa
                     AND d.idoperacion > @ultimaOperacion
                     
-                    AND CAST(d.FechaDep AS time) <= @hc;";
+                    AND CAST(d.FechaDep AS time) <= @horaDeCierre;";
                     }
-
-
-
 
                     //LA EMPRESA SI TIENE GUION - HAY QUE TOMAR LO QUE ESTA DESPUES DEL GUION.
 
@@ -112,6 +106,8 @@ namespace ANS.Model.Services
                     cmd.Parameters.AddWithValue("@ultimaOperacion", ultIdOperacion);
 
                     cmd.Parameters.AddWithValue("@empresa", b.Empresa);
+
+                    cmd.Parameters.AddWithValue("@horaDeCierre", horaDeCierre);
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -128,21 +124,22 @@ namespace ANS.Model.Services
 
                                 Empresa = reader.GetString(3),
 
-                                FechaDep = reader.GetDateTime(4)
+                                FechaDep = reader.GetDateTime(4),
+
+                                Tipo = reader.GetString(5)
                             };
 
-                            await buscaYAsignarTotalesPorDepositoYDivisa(deposito, b.Divisa, _conexionWebBuzones);
+                            if (deposito.Tipo == "Validado")
+                            {
+                                await buscaYAsignarTotalesPorDepositoYDivisa(deposito, b.Divisa, _conexionWebBuzones);
 
-                            b.Depositos.Add(deposito);
-
+                                b.Depositos.Add(deposito);
+                            }
                         }
                     }
                     return;
-
                 }
-
                 throw new Exception("Error en método asignarDepositosAlBuzon : CuentaBuzon is null");
-
             }
         }
         private async Task buscaYAsignarTotalesPorDepositoYDivisa(Deposito deposito, string divisa, string connectionString)

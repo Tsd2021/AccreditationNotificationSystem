@@ -54,17 +54,16 @@ namespace ANS
         {
             ServicioCliente.getInstancia().getAllClientes();
         }
-
         private void preCargarBancos()
         {
-            Banco santander = new Banco(1, VariablesGlobales.santander);
-            Banco scotiabank = new Banco(2, VariablesGlobales.scotiabank);
-            Banco hsbc = new Banco(3, VariablesGlobales.hsbc);
-            Banco bbva = new Banco(4, VariablesGlobales.bbva);
-            Banco heritage = new Banco(5, VariablesGlobales.heritage);
-            Banco brou = new Banco(6, VariablesGlobales.brou);
-            Banco itau = new Banco(7, VariablesGlobales.itau);
-            Banco bandes = new Banco(8, VariablesGlobales.bandes);
+            Banco santander = new Banco(1, VariablesGlobales.santander.ToUpper());
+            Banco scotiabank = new Banco(2, VariablesGlobales.scotiabank.ToUpper());
+            Banco hsbc = new Banco(3, VariablesGlobales.hsbc.ToUpper());
+            Banco bbva = new Banco(4, VariablesGlobales.bbva.ToUpper());
+            Banco heritage = new Banco(5, VariablesGlobales.heritage.ToUpper());
+            Banco brou = new Banco(6, VariablesGlobales.brou.ToUpper());
+            Banco itau = new Banco(7, VariablesGlobales.itau.ToUpper());
+            Banco bandes = new Banco(8, VariablesGlobales.bandes.ToUpper());
 
             ServicioBanco.getInstancia().agregar(santander);
             ServicioBanco.getInstancia().agregar(scotiabank);
@@ -175,7 +174,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda1 = TriggerBuilder.Create()
                                                    .WithIdentity("ExcelHendersonTan1", "GrupoTrabajoSantander")
-                                                   .WithCronSchedule("0 10 7 ? * MON-FRI")
+                                                   .WithCronSchedule("0 26 17 ? * MON-FRI")
                                                    .Build();
 
 

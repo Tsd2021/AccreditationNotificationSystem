@@ -5,7 +5,7 @@ namespace ANS.Model.Services
     public class ServicioBanco
     {
         public static ServicioBanco instancia { get; set; }
-        public List<Banco> ListaBancos { get; set; }
+        public List<Banco> ListaBancos { get; set; } = new List<Banco>();
         public static ServicioBanco getInstancia()
         {
             if (instancia == null)
@@ -33,7 +33,7 @@ namespace ANS.Model.Services
         {
             foreach (Banco b in ListaBancos)
             {
-                if (b.NombreBanco == nombre.ToUpper())
+                if (b.NombreBanco.ToUpper() == nombre.ToUpper())
                 {
                     return b;
                 }

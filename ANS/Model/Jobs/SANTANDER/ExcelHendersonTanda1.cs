@@ -1,6 +1,5 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -39,7 +38,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 
-                await _servicioCuentaBuzon.enviarExcel(desde,hasta,henderson,santander);
+                await _servicioCuentaBuzon.enviarExcelHenderson(desde,hasta,henderson,santander);
 
             }
             catch (Exception ex)
@@ -76,4 +75,7 @@ namespace ANS.Model.Jobs.SANTANDER
             await Task.CompletedTask;
         }
     }
+
+
+
 }
