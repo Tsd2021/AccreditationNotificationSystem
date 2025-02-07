@@ -6,7 +6,7 @@ namespace ANS.Model.Services
     {
         private string _conexionENCUESTA = ConfiguracionGlobal.ConexionEncuesta;
         public static ServicioCliente instancia { get; set; }
-        public List<Cliente> ListaClientes { get; set; }
+        public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
         public static ServicioCliente getInstancia()
         {
             if (instancia == null)
@@ -34,7 +34,7 @@ namespace ANS.Model.Services
         {
             foreach (Cliente cli in ListaClientes)
             {
-                if (cli.Nombre.ToUpper().Contains(nombre))
+                if (cli.Nombre.ToUpper().Contains(nombre.ToUpper()))
                 {
                     return cli;
                 }
@@ -45,15 +45,12 @@ namespace ANS.Model.Services
         {
             using (SqlConnection conn = new SqlConnection(_conexionENCUESTA))
             {
-
-                string query = @"Select IDCLIENTE,NOMBRE From CLIENTES Where Facturacion IN(1,3)";
-
+                string query = @"SELECT IDCLIENTE, NOMBRE FROM CLIENTES WHERE Facturacion IN(1,3)";
                 SqlCommand cmd = new SqlCommand(query, conn);
+                conn.Open();
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
-
                 {
-
                     while (reader.Read())
                     {
                         Cliente cli = new Cliente
@@ -64,46 +61,48 @@ namespace ANS.Model.Services
 
                         if (cli.IdCliente == 164)
                         {
-                            cli.ClientesRelacionados = getClientesRelacionados(cli, conn);
+                            // Aquí se abre una nueva conexión para obtener los clientes relacionados.
+                            cli.ClientesRelacionados = getClientesRelacionados(cli);
                         }
                         ListaClientes.Add(cli);
                     }
                 }
-
-
             }
         }
-        private List<Cliente> getClientesRelacionados(Cliente cli, SqlConnection cnn)
+
+        private List<Cliente> getClientesRelacionados(Cliente cli)
         {
-
             List<Cliente> retorno = new List<Cliente>();
-
             string query = @"
-                            SELECT 
-                                cr.idrazonsocial,
-                                c.NOMBRE
-                            FROM 
-                                clientesrelacionados cr
-                            INNER JOIN 
-                                clientes c ON cr.idrazonsocial = c.idcliente
-                            WHERE 
-                                cr.IDCLIENTE = @idcli";
+        SELECT 
+            cr.idrazonsocial,
+            c.NOMBRE
+        FROM 
+            clientesrelacionados cr
+        INNER JOIN 
+            clientes c ON cr.idrazonsocial = c.idcliente
+        WHERE 
+            cr.IDCLIENTE = @idcli";
 
-            SqlCommand cmd = new SqlCommand(query, cnn);
-
-            using (SqlDataReader rdr = cmd.ExecuteReader())
+            // Se crea una nueva conexión para esta consulta.
+            using (SqlConnection cnn = new SqlConnection(_conexionENCUESTA))
             {
+                cnn.Open();
+                SqlCommand cmd = new SqlCommand(query, cnn);
+                cmd.Parameters.AddWithValue("@idcli", cli.IdCliente);
 
-                while (rdr.Read())
+                using (SqlDataReader rdr = cmd.ExecuteReader())
                 {
-                    Cliente cliente = new Cliente
+                    while (rdr.Read())
                     {
-                        IdCliente = rdr.GetInt32(0),
-                        Nombre = rdr.GetString(1),
-                    };
-                    retorno.Add(cliente);
+                        Cliente cliente = new Cliente
+                        {
+                            IdCliente = rdr.GetInt32(0),
+                            Nombre = rdr.GetString(1),
+                        };
+                        retorno.Add(cliente);
+                    }
                 }
-
             }
             return retorno;
         }

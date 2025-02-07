@@ -15,6 +15,7 @@ namespace ANS.Model
         public string Moneda { get; set; }
         public string Empresa { get; set; }
         public string NC { get; set; }
+        public string NN { get; set; }
         public string Ciudad { get; set; }
         public DateTime? Cierre { get; set; }
         public int IdCliente { get; set; }
@@ -25,6 +26,7 @@ namespace ANS.Model
         public int Producto { get; set; }
         public int IdCuenta { get; set; }
         public bool CashOffice { get; set; }
+        public List<Acreditacion> ListaAcreditaciones { get; set; } = new List<Acreditacion>();
         public void setDivisa()
         {
             if (Moneda == "PESOS")
@@ -40,7 +42,6 @@ namespace ANS.Model
         {
             return CashOffice;
         }
-
         public void setCashOffice()
         {
             if (Banco == VariablesGlobales.cashoffice)

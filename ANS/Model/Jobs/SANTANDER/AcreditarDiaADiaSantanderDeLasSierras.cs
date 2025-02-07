@@ -41,7 +41,9 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                await _servicioCuentaBuzon.acreditarDiaADiaPorCliente("DE LAS SIERRAS", bank , VariablesGlobales.horaCierreSantanderDeLaSierras_TXT); // es ID 268
+                Cliente cli = ServicioCliente.getInstancia().getByNombre("DE LAS SIERRAS");
+
+                await _servicioCuentaBuzon.acreditarDiaADiaPorCliente(cli, bank , VariablesGlobales.horaCierreSantanderDeLaSierras_TXT); // es ID 268
 
             }
             catch (Exception ex)

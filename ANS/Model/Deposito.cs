@@ -13,6 +13,7 @@ namespace ANS.Model
         public string Codigo { get; set; } //Esto es NC de CuentaBuzon
         public string Empresa { get; set; }
         public DateTime FechaDep { get; set; }
+        public string Tipo { get; set; }
         public List<Total> Totales { get; set; } = new List<Total>();
     }
 }

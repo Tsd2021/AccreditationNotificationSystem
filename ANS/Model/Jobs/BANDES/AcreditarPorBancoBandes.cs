@@ -1,4 +1,5 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -28,8 +29,10 @@ namespace ANS.Model.Jobs.BANDES
 
                 });
 
-                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(VariablesGlobales.santander);
 
+                Banco bandes = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bandes);
+
+                await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(bandes);
 
             }
             catch (Exception ex)

@@ -2,6 +2,9 @@
 using Microsoft.Data.SqlClient;
 using ANS.Model.GeneradorArchivoPorBanco;
 using System;
+using Microsoft.Web.Services3.Referral;
+using ClosedXML.Excel;
+using System.IO;
 
 
 namespace ANS.Model.Services
@@ -70,7 +73,7 @@ namespace ANS.Model.Services
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, cb.TANDA " +
+                string query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, cb.TANDA, c.NN " +
                                "FROM ConfiguracionAcreditacion config " +
                                "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
                                "INNER JOIN CC c ON config.NC = c.NC " +
@@ -98,6 +101,7 @@ namespace ANS.Model.Services
                     int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
                     int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
                     int tandaOrdinal = reader.GetOrdinal("TANDA");
+                    int nnOrdinal = reader.GetOrdinal("NN");
 
                     while (reader.Read())
                     {
@@ -112,7 +116,8 @@ namespace ANS.Model.Services
                             Empresa = reader.GetString(empresaOrdinal),
                             SucursalCuenta = reader.GetString(sucursalOrdinal),
                             Ciudad = reader.GetString(ciudadOrdinal),
-                            Producto = reader.GetInt32(tandaOrdinal)
+                            Producto = reader.GetInt32(tandaOrdinal),
+                            NN = reader.GetString(nnOrdinal)
                         };
 
                         cuentaBuzon.setDivisa();
@@ -143,7 +148,7 @@ namespace ANS.Model.Services
                 // porque estos fueron acreditados en tanda y en dia a dia a las 7am
                 if (banco.NombreBanco == VariablesGlobales.santander)
                 {
-                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID " +
+                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID, c.NN  " +
                             "FROM ConfiguracionAcreditacion config " +
                             "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
                             "INNER JOIN CC c ON config.NC = c.NC " +
@@ -156,7 +161,7 @@ namespace ANS.Model.Services
                 }
                 else
                 {
-                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID " +
+                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID, c.NN  " +
                             "FROM ConfiguracionAcreditacion config " +
                             "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
                             "INNER JOIN CC c ON config.NC = c.NC " +
@@ -191,6 +196,7 @@ namespace ANS.Model.Services
                     int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
                     int idReferenciaAlCliente = reader.GetOrdinal("IDCC");
                     int idCuenta = reader.GetOrdinal("ID");
+                    int nnOrdinal = reader.GetOrdinal("NN");
 
 
                     while (reader.Read())
@@ -208,6 +214,7 @@ namespace ANS.Model.Services
                             Ciudad = reader.GetString(ciudadOrdinal),
                             IdReferenciaAlCliente = reader.GetString(idReferenciaAlCliente),
                             IdCuenta = reader.GetInt32(idCuenta),
+                            NN = reader.GetString(nnOrdinal)
 
                         };
 
@@ -271,6 +278,7 @@ namespace ANS.Model.Services
                         int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
                         int idReferenciaOrdinal = reader.GetOrdinal("IDCC");
                         int idCuentaOrdinal = reader.GetOrdinal("ID");
+                        int nnOrdinal = reader.GetOrdinal("NN");
 
                         while (reader.Read())
                         {
@@ -286,7 +294,8 @@ namespace ANS.Model.Services
                                 Ciudad = reader.GetString(ciudadOrdinal),
                                 SucursalCuenta = reader.GetString(sucursalOrdinal),
                                 IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
-                                IdCuenta = reader.GetInt32(idCuentaOrdinal)
+                                IdCuenta = reader.GetInt32(idCuentaOrdinal),
+                                NN = reader.GetString(nnOrdinal)
                             };
 
                             cuentaBuzon.setDivisa();
@@ -301,7 +310,7 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
-        public List<CuentaBuzon> getCuentaBuzonesByCliente(int cli)
+        public List<CuentaBuzon> getCuentaBuzonesByClienteYBanco(int idcliente,Banco bank)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
@@ -310,44 +319,48 @@ namespace ANS.Model.Services
 
                 string query;
 
-                    query = @"SELECT 
-                                    c.NC, 
-                                    cb.BANCO, 
-                                    c.CIERRE, 
-                                    c.IDCLIENTE, 
-                                    cb.CUENTA, 
-                                    cb.MONEDA, 
-                                    cb.EMPRESA, 
-                                    c.SUCURSAL AS CIUDAD, 
-                                    cb.SUCURSAL, 
-                                    c.IDCC, 
-                                    cb.ID 
-                                    FROM CUENTASBUZONES cb
-                                    INNER JOIN CC c ON cb.NC = c.NC
-                                    WHERE cb.IDCLIENTE = @id
-                                    ORDER BY c.NC";
-               
+                query = @"SELECT 
+                        c.NC AS NC_CC,
+                        cb.BANCO, 
+                        c.CIERRE, 
+                        c.IDCLIENTE, 
+                        cb.CUENTA, 
+                        cb.MONEDA, 
+                        cb.EMPRESA, 
+                        c.SUCURSAL as CIUDAD, 
+                        cb.SUCURSAL, 
+                        c.NN, 
+                        c.IDCC AS IDCC, 
+                        cb.ID AS ID 
+                        FROM CUENTASBUZONES cb
+                        INNER JOIN CC c ON cb.IDCLIENTE = c.IDCLIENTE
+                        WHERE cb.IDCLIENTE = @idcli
+                        AND cb.BANCO = @bank
+                        ;";
+
 
                 conn.Open();
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@id", cli);
+                    cmd.Parameters.AddWithValue("@idcli", idcliente);
+                    cmd.Parameters.AddWithValue("@bank", bank.NombreBanco);
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         // Obtener los índices de las columnas
-                        int ncOrdinal = reader.GetOrdinal("NC");
+                        int ncOrdinal = reader.GetOrdinal("NC_CC");
                         int bancoOrdinal = reader.GetOrdinal("BANCO");
                         int cierreOrdinal = reader.GetOrdinal("CIERRE");
                         int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                         int cuentaOrdinal = reader.GetOrdinal("CUENTA");
                         int monedaOrdinal = reader.GetOrdinal("MONEDA");
                         int empresaOrdinal = reader.GetOrdinal("EMPRESA");
-                        int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
                         int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
+                        int sucursalCiudadOrdinal = reader.GetOrdinal("CIUDAD");
                         int idReferenciaOrdinal = reader.GetOrdinal("IDCC");
                         int idCuentaOrdinal = reader.GetOrdinal("ID");
+                        int nnOrdinal = reader.GetOrdinal("NN");
 
                         while (reader.Read())
                         {
@@ -360,10 +373,11 @@ namespace ANS.Model.Services
                                 Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""), // Limpia \r\n
                                 Moneda = reader.GetString(monedaOrdinal),
                                 Empresa = reader.GetString(empresaOrdinal),
-                                Ciudad = reader.GetString(ciudadOrdinal),
                                 SucursalCuenta = reader.GetString(sucursalOrdinal),
                                 IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
-                                IdCuenta = reader.GetInt32(idCuentaOrdinal)
+                                IdCuenta = reader.GetInt32(idCuentaOrdinal),
+                                NN = reader.GetString(nnOrdinal),
+                                Ciudad = reader.GetString(sucursalCiudadOrdinal)
                             };
 
                             cuentaBuzon.setDivisa();
@@ -551,89 +565,254 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones para el banco : " + bank);
 
         }
-        public async Task acreditarDiaADiaPorCliente(string nombreCliente, Banco bank, TimeSpan horaCierreActual)
+        public async Task acreditarDiaADiaPorCliente(Cliente cli, Banco bank, TimeSpan horaCierreActual)
         {
-            if (string.IsNullOrEmpty(nombreCliente))
+            if (cli == null)
             {
-                throw new Exception("Error en método acreditarDiaADiaPorCliente . Nombre Cliente vacío");
+                throw new Exception("Error en método acreditarDiaADiaPorCliente. Cliente null");
             }
 
+            List<CuentaBuzon> cuentaBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente,bank);
 
-            int idClienteFound = getIdClienteByNombre(nombreCliente);
-
-            if (idClienteFound > 0)
+            if (cuentaBuzones != null && cuentaBuzones.Count > 0)
             {
-
-                List<CuentaBuzon> cuentaBuzones = getCuentaBuzonesByCliente(idClienteFound);
-
-                if (cuentaBuzones != null && cuentaBuzones.Count > 0)
+                foreach (CuentaBuzon cu in cuentaBuzones)
                 {
-                    foreach (CuentaBuzon cu in cuentaBuzones)
+
+                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(cu.NC, cu.IdCuenta);
+
+                    if (ultIdOperacion > 0)
                     {
 
-                        int ultIdOperacion = this.obtenerUltimaOperacionByNC(cu.NC, cu.IdCuenta);
-
-                        if (ultIdOperacion > 0)
-                        {
-
-                            await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
-
-                        }
+                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
 
                     }
-                    await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.diaxdia);
+
                 }
-
-                //obtener cuentabuzones del cliente obtenido y buscar depositos
-
+                await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.diaxdia);
             }
-            else throw new Exception("Error en acreditarDiaADiaPorCliente: No se encontró idcliente para el nombre: " + nombreCliente);
+
+            //obtener cuentabuzones del cliente obtenido y buscar depositos
+
         }
-        private int getIdClienteByNombre(string nombreCliente)
-        {
-            if (nombreCliente != null)
-            {
-
-                using (SqlConnection conn = new SqlConnection(_conexionTSD))
-
-                {
-
-                    string query = @"select IDCLIENTE
-                                     from clientes
-                                     where nombre like '%@nombreCliente%'";
-
-                    conn.Open();
-
-                    SqlCommand cmd = new SqlCommand(query, conn);
-
-                    return cmd.ExecuteNonQuery();
-                }
-
-            }
-            return 0;
-        }
+        //Enviar Excel genérico.
         public async Task enviarExcel(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank)
         {
 
-            List<CuentaBuzon> listaCuentasBuzones = new List<CuentaBuzon>();
 
-            if (bank.NombreBanco.ToUpper() == VariablesGlobales.santander)
+        }
+        //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
+        public async Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank)
+        {
+            if (cli.Nombre.ToUpper().Contains("HENDER") && cli.IdCliente == 164)
             {
-
-                if (cli.Nombre.Contains("HENDERS")) // Henderson
+                if (bank.NombreBanco.ToUpper().Contains(VariablesGlobales.santander.ToUpper()))
                 {
-                    //obtener los buzones de henderson y luego ir a la tabhla ACREDITACIONESDEPOSITOS por ese id. traer todos 
-                    // filtrar por fecha desde hasta , y bank.
-                    listaCuentasBuzones = getCuentaBuzonesByCliente(cli.IdCliente);
-                   
-                    return;
+                    List<CuentaBuzon> listaCuentasBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente,bank);
+
+                    getAcreditacionesPorBuzones(listaCuentasBuzones, desde, hasta, bank);
+
+                    generarExcelPorCuentas(listaCuentasBuzones);
 
                 }
+            }
+        }
+        //METODO PARA OBTENER ACREDITACIONES(EXCEL , VA POR FECHA)
+        private void getAcreditacionesPorBuzones(List<CuentaBuzon> listaCuentasBuzones, TimeSpan desde, TimeSpan hasta, Banco bank)
+        {
+            if (listaCuentasBuzones != null && listaCuentasBuzones.Count > 0)
+            {
 
-                listaCuentasBuzones = getAllByBanco(bank);
+                // Convertimos los TimeSpan en un rango DateTime efectivo según la lógica definida.
+                (DateTime effectiveDesde, DateTime effectiveHasta) = ObtenerDateTimeEfectivos(desde, hasta);
 
+                using (SqlConnection conn = new SqlConnection(_conexionTSD))
+                {
+
+                    conn.Open();
+
+                    string query;
+
+                    foreach (CuentaBuzon account in listaCuentasBuzones)
+                    {
+
+                        query = "select * " +
+                                "from acreditacionesdepositos " +
+                                "where idbuzon = @accNC " +
+                                "and fecha between @desde and @hasta " +
+                                "and idbanco = @bankId " +
+                                "and idcuenta = @accId";
+
+                        SqlCommand cmd = new SqlCommand(query, conn);
+
+                        cmd.Parameters.AddWithValue("@accNC", account.NC);
+                        cmd.Parameters.AddWithValue("@desde", effectiveDesde);
+                        cmd.Parameters.AddWithValue("@hasta", effectiveHasta);
+                        cmd.Parameters.AddWithValue("@bankId", bank.BancoId);
+                        cmd.Parameters.AddWithValue("@accId", account.IdCuenta);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                Acreditacion accreditation = new Acreditacion
+                                {
+                                    Id = reader.GetInt32(0),
+                                    IdBuzon = reader.GetString(1),
+                                    IdOperacion = reader.GetInt64(2),
+                                    Fecha = reader.GetDateTime(3),
+                                    IdBanco = reader.GetInt32(4),
+                                    IdCuenta = reader.GetInt32(5),
+                                    Moneda = reader.GetInt32(6),
+                                    No_Enviado = reader.GetBoolean(7),
+                                    Monto = (float)reader.GetDouble(8) // Se lee como double y se convierte a float.
+                                };
+                                account.ListaAcreditaciones.Add(accreditation);
+                            }
+                        }
+
+
+                    }
+
+                }
+                return;
+            }
+            else
+            {
+                throw new Exception("Error en getAcreditacionesPorBuzones: ListaCuentaBuzones vacia o nula.");
+            }
+        }
+        private void generarExcelPorCuentas(List<CuentaBuzon> listaCuentasBuzones)
+        {
+            // Filtrar cuentas según la divisa
+            List<CuentaBuzon> listaPesos = listaCuentasBuzones
+                                            .Where(cb => cb.Divisa == VariablesGlobales.pesos)
+                                            .ToList();
+            List<CuentaBuzon> listaDolares = listaCuentasBuzones
+                                            .Where(cb => cb.Divisa == VariablesGlobales.dolares)
+                                            .ToList();
+
+            // Crear un nuevo libro de Excel y agregar una hoja
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Acreditaciones");
+
+                int currentRow = 1;
+
+                // Escribir la fila de encabezados (por ejemplo, para ambas secciones)
+                worksheet.Cell(currentRow, 1).Value = "Cliente";
+                worksheet.Cell(currentRow, 2).Value = "Sucursal";
+                worksheet.Cell(currentRow, 3).Value = "Cuenta";
+                worksheet.Cell(currentRow, 4).Value = "Moneda";
+                worksheet.Cell(currentRow, 5).Value = "Monto";
+                worksheet.Cell(currentRow, 6).Value = "Fecha";
+
+                // Estilos para el encabezado
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 6);
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+                double totalPesos = 0;
+
+                // Escribir las filas de cuentas en pesos
+                foreach (var cuenta in listaPesos)
+                {
+                    foreach (var acreditacion in cuenta.ListaAcreditaciones)
+                    {
+                        currentRow++;
+                        worksheet.Cell(currentRow, 1).Value = cuenta.NN;
+                        worksheet.Cell(currentRow, 2).Value = cuenta.SucursalCuenta;
+                        worksheet.Cell(currentRow, 3).Value = cuenta.Cuenta;
+                        worksheet.Cell(currentRow, 4).Value = cuenta.Divisa;
+                        worksheet.Cell(currentRow, 5).Value = acreditacion.Monto;
+                        worksheet.Cell(currentRow, 6).Value = acreditacion.Fecha;
+                        totalPesos += acreditacion.Monto;
+                    }
+                }
+
+                // Agregar fila de total para pesos
+                currentRow++;
+                worksheet.Cell(currentRow, 4).Value = "Total Pesos:";
+                worksheet.Cell(currentRow, 5).Value = totalPesos;
+
+                // Agregar una fila vacía para separar las secciones
+                currentRow++;
+
+                double totalDolares = 0;
+
+                // Escribir las filas de cuentas en dólares
+                foreach (var cuenta in listaDolares)
+                {
+                    foreach (var acreditacion in cuenta.ListaAcreditaciones)
+                    {
+                        currentRow++;
+                        worksheet.Cell(currentRow, 1).Value = cuenta.NN;
+                        worksheet.Cell(currentRow, 2).Value = cuenta.SucursalCuenta;
+                        worksheet.Cell(currentRow, 3).Value = cuenta.Cuenta;
+                        worksheet.Cell(currentRow, 4).Value = cuenta.Divisa;
+                        worksheet.Cell(currentRow, 5).Value = acreditacion.Monto;
+                        worksheet.Cell(currentRow, 6).Value = acreditacion.Fecha;
+                        totalDolares += acreditacion.Monto;
+                    }
+                }
+
+                // Agregar fila de total para dólares
+                currentRow++;
+                worksheet.Cell(currentRow, 4).Value = "Total USD:";
+                worksheet.Cell(currentRow, 5).Value = totalDolares;
+
+                // Ajustar el ancho de las columnas para que se vean los datos
+                worksheet.Columns().AdjustToContents();
+
+                string filePath = @"C:\Users\dchiquiar\Desktop\EXCEL TEST\EXCEL_TESTacreditaciones.xlsx";
+                workbook.SaveAs(filePath);
+
+                Console.WriteLine($"Excel generado: {filePath}");
+            }
+        }
+        private (DateTime effectiveDesde, DateTime effectiveHasta) ObtenerDateTimeEfectivos(TimeSpan desde, TimeSpan hasta)
+        {
+
+            // Obtenemos la fecha de hoy sin la hora.
+            DateTime today = DateTime.Today;
+
+            // Caso especial: Job diario, donde la hora de corte es la misma (por ejemplo, 16:30).
+            // Entonces se debe acreditar desde:
+            //    - Si hoy es lunes: desde el viernes a las 16:30
+            //    - Si no es lunes: desde el día anterior a las 16:30
+            // Hasta: hoy a las 16:30.
+            if (desde == hasta)
+            {
+                DateTime effectiveDesde = (today.DayOfWeek == DayOfWeek.Monday
+                                           ? today.AddDays(-3)
+                                           : today.AddDays(-1)).Add(desde);
+                DateTime effectiveHasta = today.Add(desde);
+                return (effectiveDesde, effectiveHasta);
+            }
+            // Caso 1: Rango sin cruce de medianoche (Tanda 2)
+            // Ejemplo: desde = 07:00 y hasta = 15:30.
+            // Se toma el rango del día actual.
+            else if (desde < hasta)
+            {
+                DateTime effectiveDesde = today.Add(desde);
+                DateTime effectiveHasta = today.Add(hasta);
+                return (effectiveDesde, effectiveHasta);
+            }
+            // Caso 2: Rango que cruza la medianoche (Tanda 1)
+            // Ejemplo: desde = 15:30 y hasta = 07:00.
+            // Se toma:
+            //    - effectiveDesde: día anterior (o viernes si hoy es lunes) a las 15:30.
+            //    - effectiveHasta: hoy a las 07:00.
+            else
+            {
+                DateTime effectiveDesde = (today.DayOfWeek == DayOfWeek.Monday
+                                           ? today.AddDays(-3)
+                                           : today.AddDays(-1)).Add(desde);
+                DateTime effectiveHasta = today.Add(hasta);
+                return (effectiveDesde, effectiveHasta);
             }
 
         }
+
     }
 }

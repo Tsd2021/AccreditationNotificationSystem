@@ -30,7 +30,10 @@ namespace ANS.Model.Jobs.SANTANDER
                     main.MostrarAviso("Ejecutando P2P Scotiabank", Color.FromRgb(255, 102, 102));  // rojo claro
                 });
 
-                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(VariablesGlobales.scotiabank);
+
+                Banco scotiabank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.scotiabank);
+
+                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(scotiabank);
 
 
             }
