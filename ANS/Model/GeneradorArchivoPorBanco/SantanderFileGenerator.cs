@@ -47,15 +47,15 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         public string getRutaArchivoDAD(string ciudad, string divisa)
         {
 
-            if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.pesos)
+            if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.uyu)
             {
                 return @"D:\CSVSANTANDER\" + "TEC_" + _sucTecnisegurPesosMald + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
             }
-            else if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.dolares)
+            else if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.usd)
             {
                 return @"D:\CSVSANTANDER\" + "TEC_" + _sucTecnisegurDolaresMald + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
             }
-            else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.pesos)
+            else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.uyu)
             {
                 return @"D:\CSVSANTANDER\" + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
             }
@@ -71,34 +71,34 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             if (this._config.TipoAcreditacion == VariablesGlobales.p2p)
             {
-                if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.pesos)
+                if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.uyu)
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MALDONADO\PESOS\" + "TEC_" + _sucTecnisegurPesosMald + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
-                else if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.dolares)
+                else if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.usd)
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MALDONADO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMald + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
-                else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.pesos)
+                else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.uyu)
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MONTEVIDEO\PESOS\" + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
-                else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.dolares)
+                else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.usd)
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MONTEVIDEO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
             }
             else if (this._config.TipoAcreditacion == VariablesGlobales.tanda)
             {
-                if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.pesos)
+                if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.uyu)
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\tanda$\MALDONADO\PESOS\" + "TEC_" + _sucTecnisegurPesosMald + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
-                else if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.dolares)
+                else if (ciudad.ToUpper() == VariablesGlobales.maldonado && divisa == VariablesGlobales.usd)
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\tanda$\MALDONADO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMald + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
-                else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.pesos)
+                else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.uyu)
                 {
                     return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\tanda$\MONTEVIDEO\PESOS\" + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
@@ -152,34 +152,34 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                     if (unaCuenta.esCashOffice())
                                     {
 
-                                        if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                        if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                         {
 
                                             agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
                                         }
-                                        else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                        else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
                                             agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
                                         }
                                     }
                                     if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
                                     {
-                                        if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                        if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                         {
                                             agregarLineaAlStringBuilder_Individual(maldonadoPesos, unaCuenta, unDeposito, unTotal);
                                         }
-                                        else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                        else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
                                             agregarLineaAlStringBuilder_Individual(maldonadoDolares, unaCuenta, unDeposito, unTotal);
                                         }
                                     }
                                     else if (unaCuenta.Ciudad == VariablesGlobales.montevideo)
                                     {
-                                        if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                        if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                         {
                                             agregarLineaAlStringBuilder_Individual(montevideoPesos, unaCuenta, unDeposito, unTotal);
                                         }
-                                        else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                        else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
                                             agregarLineaAlStringBuilder_Individual(montevideoDolares, unaCuenta, unDeposito, unTotal);
                                         }
@@ -213,11 +213,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         {
                             if (unaCuenta.esCashOffice())
                             {
-                                if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(cashOfficePesos, unaCuenta, sumaMontos);
                                 }
-                                else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(cashOfficeDolares, unaCuenta, sumaMontos);
                                 }
@@ -225,22 +225,22 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             else
                             if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
                             {
-                                if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(maldonadoPesos, unaCuenta, sumaMontos);
                                 }
-                                else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(maldonadoDolares, unaCuenta, sumaMontos);
                                 }
                             }
                             else if (unaCuenta.Ciudad == VariablesGlobales.montevideo)
                             {
-                                if (unaCuenta.Divisa == VariablesGlobales.pesos)
+                                if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(montevideoPesos, unaCuenta, sumaMontos);
                                 }
-                                else if (unaCuenta.Divisa == VariablesGlobales.dolares)
+                                else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(montevideoDolares, unaCuenta, sumaMontos);
                                 }
@@ -256,27 +256,27 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         {
             if (maldonadoPesos.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(maldonadoPesos, VariablesGlobales.maldonado, VariablesGlobales.pesos);
+                await CrearArchivoPorCiudadYDivisa(maldonadoPesos, VariablesGlobales.maldonado, VariablesGlobales.uyu);
             }
             if (maldonadoDolares.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(maldonadoDolares, VariablesGlobales.maldonado, VariablesGlobales.dolares);
+                await CrearArchivoPorCiudadYDivisa(maldonadoDolares, VariablesGlobales.maldonado, VariablesGlobales.usd);
             }
             if (montevideoPesos.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(montevideoPesos, VariablesGlobales.montevideo, VariablesGlobales.pesos);
+                await CrearArchivoPorCiudadYDivisa(montevideoPesos, VariablesGlobales.montevideo, VariablesGlobales.uyu);
             }
             if (montevideoDolares.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(montevideoDolares, VariablesGlobales.montevideo, VariablesGlobales.dolares);
+                await CrearArchivoPorCiudadYDivisa(montevideoDolares, VariablesGlobales.montevideo, VariablesGlobales.usd);
             }
             if (cashOfficePesos.Length > 0)
             {
-                await CrearArchivoCashOffice(cashOfficePesos, VariablesGlobales.pesos);
+                await CrearArchivoCashOffice(cashOfficePesos, VariablesGlobales.uyu);
             }
             if (cashOfficeDolares.Length > 0)
             {
-                await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.dolares);
+                await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.usd);
             }
         }
         private async Task CrearArchivoPorCiudadYDivisa(StringBuilder contenido, string ciudad, string divisa)
@@ -355,12 +355,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             bool responseTens = await generarYEnviarArchivoTens(content, VariablesGlobales.cashoffice, divisa);
 
 
-            if (divisa == VariablesGlobales.pesos)
+            if (divisa == VariablesGlobales.uyu)
             {
                 ruta = _cashOfficeRutaPesosP2P + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
             }
 
-            if (divisa == VariablesGlobales.dolares)
+            if (divisa == VariablesGlobales.usd)
             {
                 ruta = _cashOfficeRutaDolaresP2P + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
             }

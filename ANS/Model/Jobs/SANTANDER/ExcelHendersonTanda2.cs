@@ -47,7 +47,9 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, santander,_city);
+                int numTanda2 = 2;
+
+                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, santander, _city , numTanda2);
 
             }
 

@@ -599,7 +599,7 @@ namespace ANS.Model.Services
 
         }
         //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
-        public async Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city)
+        public async Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda)
         {
 
             List<CuentaBuzon> listaFiltradaPorCiudad = new List<CuentaBuzon>();
@@ -631,7 +631,7 @@ namespace ANS.Model.Services
                         }
                     }
 
-                    generarExcelPorCuentas(listaFiltradaPorCiudadYPorAcreditaciones);
+                    generarExcelPorCuentas(listaFiltradaPorCiudadYPorAcreditaciones,numTanda,city);
 
                 }
             }
@@ -700,7 +700,7 @@ namespace ANS.Model.Services
                 throw new Exception("Error en getAcreditacionesPorBuzones: ListaCuentaBuzones vacia o nula.");
             }
         }
-        private void generarExcelPorCuentas(List<CuentaBuzon> listaCuentasBuzones)
+        private void generarExcelPorCuentas(List<CuentaBuzon> listaCuentasBuzones,int numTanda,string city)
         {
             using (var workbook = new XLWorkbook())
             {
@@ -815,7 +815,7 @@ namespace ANS.Model.Services
                 // ==============================
                 // NOMBRE DEL ARCHIVO SIN CARACTERES INVÁLIDOS
                 // ==============================
-                string nombreArchivo = "Henderson_Tanda" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
+                string nombreArchivo = "Henderson_Tanda_" + numTanda + "_" + city + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
 
                 // Guardar el archivo
                 string filePath = @"C:\Users\dchiquiar\Desktop\EXCEL TEST\" + nombreArchivo;
