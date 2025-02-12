@@ -1,10 +1,8 @@
 ﻿using ANS.Model.Interfaces;
 using Microsoft.Data.SqlClient;
 using ANS.Model.GeneradorArchivoPorBanco;
-using System;
-using Microsoft.Web.Services3.Referral;
 using ClosedXML.Excel;
-using System.IO;
+using System.Collections.Generic;
 
 
 namespace ANS.Model.Services
@@ -310,7 +308,7 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
-        public List<CuentaBuzon> getCuentaBuzonesByClienteYBanco(int idcliente,Banco bank)
+        public List<CuentaBuzon> getCuentaBuzonesByClienteYBanco(int idcliente, Banco bank)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
@@ -335,8 +333,7 @@ namespace ANS.Model.Services
                         FROM CUENTASBUZONES cb
                         INNER JOIN CC c ON cb.IDCLIENTE = c.IDCLIENTE
                         WHERE cb.IDCLIENTE = @idcli
-                        AND cb.BANCO = @bank
-                        ;";
+                        AND cb.BANCO = @bank;";
 
 
                 conn.Open();
@@ -572,7 +569,7 @@ namespace ANS.Model.Services
                 throw new Exception("Error en método acreditarDiaADiaPorCliente. Cliente null");
             }
 
-            List<CuentaBuzon> cuentaBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente,bank);
+            List<CuentaBuzon> cuentaBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente, bank);
 
             if (cuentaBuzones != null && cuentaBuzones.Count > 0)
             {
@@ -602,17 +599,39 @@ namespace ANS.Model.Services
 
         }
         //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
-        public async Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank)
+        public async Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city)
         {
+
+            List<CuentaBuzon> listaFiltradaPorCiudad = new List<CuentaBuzon>();
+
+            List<CuentaBuzon> listaFiltradaPorCiudadYPorAcreditaciones = new List<CuentaBuzon>();
+
             if (cli.Nombre.ToUpper().Contains("HENDER") && cli.IdCliente == 164)
             {
                 if (bank.NombreBanco.ToUpper().Contains(VariablesGlobales.santander.ToUpper()))
                 {
-                    List<CuentaBuzon> listaCuentasBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente,bank);
+                    List<CuentaBuzon> listaCuentasBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente, bank);
 
-                    getAcreditacionesPorBuzones(listaCuentasBuzones, desde, hasta, bank);
+                    foreach (var unaCuenta in listaCuentasBuzones)
+                    {
+                        if (unaCuenta.Ciudad.ToUpper() == city.ToUpper())
+                        {
+                            listaFiltradaPorCiudad.Add(unaCuenta);
+                        }
+                    }
 
-                    generarExcelPorCuentas(listaCuentasBuzones);
+                    getAcreditacionesPorBuzones(listaFiltradaPorCiudad, desde, hasta, bank);
+
+
+                    foreach (var unaCuentaFiltradaPorCiudad in listaFiltradaPorCiudad)
+                    {
+                        if (unaCuentaFiltradaPorCiudad.ListaAcreditaciones != null && unaCuentaFiltradaPorCiudad.ListaAcreditaciones.Count > 0)
+                        {
+                            listaFiltradaPorCiudadYPorAcreditaciones.Add(unaCuentaFiltradaPorCiudad);
+                        }
+                    }
+
+                    generarExcelPorCuentas(listaFiltradaPorCiudadYPorAcreditaciones);
 
                 }
             }
@@ -639,7 +658,7 @@ namespace ANS.Model.Services
                         query = "select * " +
                                 "from acreditacionesdepositos " +
                                 "where idbuzon = @accNC " +
-                                "and fecha between @desde and @hasta " +
+                                "and fecha >= @desde and fecha <= @hasta " +
                                 "and idbanco = @bankId " +
                                 "and idcuenta = @accId";
 
@@ -671,7 +690,6 @@ namespace ANS.Model.Services
                             }
                         }
 
-
                     }
 
                 }
@@ -684,92 +702,135 @@ namespace ANS.Model.Services
         }
         private void generarExcelPorCuentas(List<CuentaBuzon> listaCuentasBuzones)
         {
-            // Filtrar cuentas según la divisa
-            List<CuentaBuzon> listaPesos = listaCuentasBuzones
-                                            .Where(cb => cb.Divisa == VariablesGlobales.pesos)
-                                            .ToList();
-            List<CuentaBuzon> listaDolares = listaCuentasBuzones
-                                            .Where(cb => cb.Divisa == VariablesGlobales.dolares)
-                                            .ToList();
-
-            // Crear un nuevo libro de Excel y agregar una hoja
             using (var workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("Acreditaciones");
-
                 int currentRow = 1;
 
-                // Escribir la fila de encabezados (por ejemplo, para ambas secciones)
+                // Escribir la fila de encabezados
                 worksheet.Cell(currentRow, 1).Value = "Cliente";
                 worksheet.Cell(currentRow, 2).Value = "Sucursal";
-                worksheet.Cell(currentRow, 3).Value = "Cuenta";
+                worksheet.Cell(currentRow, 3).Value = "N° Cuenta";
                 worksheet.Cell(currentRow, 4).Value = "Moneda";
                 worksheet.Cell(currentRow, 5).Value = "Monto";
-                worksheet.Cell(currentRow, 6).Value = "Fecha";
 
                 // Estilos para el encabezado
-                var headerRange = worksheet.Range(currentRow, 1, currentRow, 6);
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 5);
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
+                currentRow++;
+
+                // Separar listas por divisa
+                var listaPesos = listaCuentasBuzones.Where(cb => cb.Moneda == "PESOS").ToList();
+                var listaDolares = listaCuentasBuzones.Where(cb => cb.Moneda == "DOLARES").ToList();
+
+                // ==============================
+                // PASO 1 y 2: AGRUPAR POR EMPRESA Y LUEGO POR NN
+                // ==============================
+                var agrupadoPesos = listaPesos
+                    .GroupBy(cb => cb.Empresa) // Agrupar primero por Empresa
+                    .SelectMany(empresa => empresa
+                        .GroupBy(cb => cb.NN) // Luego agrupar por NN
+                        .Select(grupo => new
+                        {
+
+                            NN = grupo.Key,
+                            Sucursal = grupo.First().SucursalCuenta,
+                            Cuenta = grupo.First().Cuenta, // Obtener la cuenta
+                            Moneda = grupo.First().Moneda, // Obtener la moneda
+                            TotalMonto = grupo.Sum(cuenta => cuenta.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0)
+                        })
+                    ).OrderBy(g => g.NN).ToList(); // PASO 3: Guardar en una lista ordenada alfabéticamente por NN
+
+                var agrupadoDolares = listaDolares
+                    .GroupBy(cb => cb.Empresa) // Agrupar primero por Empresa
+                    .SelectMany(empresa => empresa
+                        .GroupBy(cb => cb.NN) // Luego agrupar por NN
+                        .Select(grupo => new
+                        {
+                            NN = grupo.Key,
+                            Sucursal = grupo.First().SucursalCuenta,
+                            Cuenta = grupo.First().Cuenta, // Obtener la cuenta
+                            Moneda = grupo.First().Moneda, // Obtener la moneda
+                            TotalMonto = grupo.Sum(cuenta => cuenta.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0)
+                        })
+                    ).OrderBy(g => g.NN).ToList(); // Ordenado por NN
+
+                // ==============================
+                // PASO 4: CREAR EL EXCEL PARA PESOS
+                // ==============================
                 double totalPesos = 0;
 
-                // Escribir las filas de cuentas en pesos
-                foreach (var cuenta in listaPesos)
+                foreach (var grupo in agrupadoPesos)
                 {
-                    foreach (var acreditacion in cuenta.ListaAcreditaciones)
-                    {
-                        currentRow++;
-                        worksheet.Cell(currentRow, 1).Value = cuenta.NN;
-                        worksheet.Cell(currentRow, 2).Value = cuenta.SucursalCuenta;
-                        worksheet.Cell(currentRow, 3).Value = cuenta.Cuenta;
-                        worksheet.Cell(currentRow, 4).Value = cuenta.Divisa;
-                        worksheet.Cell(currentRow, 5).Value = acreditacion.Monto;
-                        worksheet.Cell(currentRow, 6).Value = acreditacion.Fecha;
-                        totalPesos += acreditacion.Monto;
-                    }
+                    worksheet.Cell(currentRow, 1).Value = grupo.NN; 
+                    worksheet.Cell(currentRow, 2).Value = grupo.Sucursal; 
+                    worksheet.Cell(currentRow, 3).Value = grupo.Cuenta;
+                    worksheet.Cell(currentRow, 4).Value = grupo.Moneda; 
+                    worksheet.Cell(currentRow, 5).Value = grupo.TotalMonto; 
+                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Font.Bold = true;
+                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Fill.BackgroundColor = XLColor.WhiteSmoke;
+
+                    totalPesos += grupo.TotalMonto;
+                    currentRow++;
                 }
 
-                // Agregar fila de total para pesos
-                currentRow++;
-                worksheet.Cell(currentRow, 4).Value = "Total Pesos:";
+                // AGREGAR TOTAL DE UYU
+                worksheet.Cell(currentRow, 4).Value = "Total UYU:";
                 worksheet.Cell(currentRow, 5).Value = totalPesos;
+                worksheet.Range(currentRow, 5, currentRow, 5).Style.Font.Bold = true;
+                worksheet.Range(currentRow, 4, currentRow, 5).Style.Fill.BackgroundColor = XLColor.OrangePeel;
+                currentRow += 2; // Separador entre PESOS y DÓLARES
 
-                // Agregar una fila vacía para separar las secciones
-                currentRow++;
-
+                // ==============================
+                // CREAR EL EXCEL PARA DÓLARES
+                // ==============================
                 double totalDolares = 0;
 
-                // Escribir las filas de cuentas en dólares
-                foreach (var cuenta in listaDolares)
+                foreach (var grupo in agrupadoDolares)
                 {
-                    foreach (var acreditacion in cuenta.ListaAcreditaciones)
-                    {
-                        currentRow++;
-                        worksheet.Cell(currentRow, 1).Value = cuenta.NN;
-                        worksheet.Cell(currentRow, 2).Value = cuenta.SucursalCuenta;
-                        worksheet.Cell(currentRow, 3).Value = cuenta.Cuenta;
-                        worksheet.Cell(currentRow, 4).Value = cuenta.Divisa;
-                        worksheet.Cell(currentRow, 5).Value = acreditacion.Monto;
-                        worksheet.Cell(currentRow, 6).Value = acreditacion.Fecha;
-                        totalDolares += acreditacion.Monto;
-                    }
+                    worksheet.Cell(currentRow, 1).Value = grupo.NN;
+                    worksheet.Cell(currentRow, 2).Value = grupo.Sucursal;
+                    worksheet.Cell(currentRow, 3).Value = grupo.Cuenta;
+                    worksheet.Cell(currentRow, 4).Value = grupo.Moneda;
+                    worksheet.Cell(currentRow, 5).Value = grupo.TotalMonto;
+                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Font.Bold = true;
+                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Fill.BackgroundColor = XLColor.WhiteSmoke;
+
+                    totalDolares += grupo.TotalMonto;
+                    currentRow++;
                 }
 
-                // Agregar fila de total para dólares
-                currentRow++;
+                // AGREGAR TOTAL DE USD
                 worksheet.Cell(currentRow, 4).Value = "Total USD:";
                 worksheet.Cell(currentRow, 5).Value = totalDolares;
+                worksheet.Range(currentRow, 4, currentRow, 5).Style.Font.Bold = true;
+                worksheet.Range(currentRow, 4, currentRow, 5).Style.Fill.BackgroundColor = XLColor.OrangePeel;
 
-                // Ajustar el ancho de las columnas para que se vean los datos
+                // Ajustar el ancho de las columnas
                 worksheet.Columns().AdjustToContents();
 
-                string filePath = @"C:\Users\dchiquiar\Desktop\EXCEL TEST\EXCEL_TESTacreditaciones.xlsx";
+                // ==============================
+                // NOMBRE DEL ARCHIVO SIN CARACTERES INVÁLIDOS
+                // ==============================
+                string nombreArchivo = "Henderson_Tanda" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
+
+                // Guardar el archivo
+                string filePath = @"C:\Users\dchiquiar\Desktop\EXCEL TEST\" + nombreArchivo;
                 workbook.SaveAs(filePath);
 
                 Console.WriteLine($"Excel generado: {filePath}");
             }
         }
+
+
+
+
+
+
+
         private (DateTime effectiveDesde, DateTime effectiveHasta) ObtenerDateTimeEfectivos(TimeSpan desde, TimeSpan hasta)
         {
 
