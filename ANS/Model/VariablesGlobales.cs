@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace ANS.Model
 {
     public static class VariablesGlobales
@@ -19,8 +14,10 @@ namespace ANS.Model
         public const string bandes = "bandes";
         public const string brou = "brou";
         public const string scotiabank = "scotiabank";
-        public const string pesos = "UYU";
-        public const string dolares = "USD";
+        public const string uyu = "UYU";
+        public const string usd = "USD";
+        public const string pesos = "PESOS";
+        public const string dolares = "DOLARES";
         public const string montevideo = "MONTEVIDEO";
         public const string maldonado = "MALDONADO";
         public const string cashoffice = "CASHOFFICE";
@@ -42,8 +39,6 @@ namespace ANS.Model
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // ITAU //
-
-
 
         ///////////////////////////////////
 

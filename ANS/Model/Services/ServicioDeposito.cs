@@ -56,7 +56,8 @@ namespace ANS.Model.Services
                             ELSE LTRIM(RTRIM(d.empresa))
                         END
                         ) = @empresa
-                        AND d.idoperacion > @ultimaOperacion;";
+                        AND d.idoperacion > @ultimaOperacion
+                        AND CAST(d.FechaDep AS time) <= @horaDeCierre;;";
                     }
 
                     else
@@ -90,9 +91,7 @@ namespace ANS.Model.Services
                             ELSE LTRIM(RTRIM(d.empresa))
                         END
                     ) = @empresa
-                    AND d.idoperacion > @ultimaOperacion
-                    
-                    AND CAST(d.FechaDep AS time) <= @horaDeCierre;";
+                    AND d.idoperacion > @ultimaOperacion;";
                     }
 
                     //LA EMPRESA SI TIENE GUION - HAY QUE TOMAR LO QUE ESTA DESPUES DEL GUION.
@@ -116,17 +115,12 @@ namespace ANS.Model.Services
 
                             Deposito deposito = new Deposito()
                             {
-                                IdDeposito = reader.GetInt32(0),
-
-                                IdOperacion = reader.GetInt32(1),
-
-                                Codigo = reader.GetString(2),
-
-                                Empresa = reader.GetString(3),
-
-                                FechaDep = reader.GetDateTime(4),
-
-                                Tipo = reader.GetString(5)
+                                IdDeposito = reader.GetInt32(0),    // d.iddeposito
+                                IdOperacion = reader.GetInt32(1),   // d.idoperacion
+                                Codigo = reader.GetString(2),       // d.codigo
+                                Tipo = reader.GetString(3),         // d.tipo
+                                Empresa = reader.GetString(4),      // alias empresa (resultado del CASE)
+                                FechaDep = reader.GetDateTime(5)    // d.fechadep
                             };
 
                             if (deposito.Tipo == "Validado")

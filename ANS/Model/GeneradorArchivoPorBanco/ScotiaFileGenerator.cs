@@ -60,11 +60,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         _importe = _unDeposito.Totales.Sum(i => i.ImporteTotal).ToString("F2");
 
                         // Definir la moneda según la divisa de la cuenta
-                        if (_unaCuenta.Divisa == VariablesGlobales.pesos)
+                        if (_unaCuenta.Divisa == VariablesGlobales.uyu)
                         {
                             _moneda = "00";
                         }
-                        else if (_unaCuenta.Divisa == VariablesGlobales.dolares)
+                        else if (_unaCuenta.Divisa == VariablesGlobales.usd)
                         {
                             _moneda = "01";
                         }
@@ -111,11 +111,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                 // Determinar la ruta en base a la divisa (grupo.Key)
                 string directory = "";
-                if (grupo.Key == VariablesGlobales.pesos)
+                if (grupo.Key == VariablesGlobales.uyu)
                 {
                     directory = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SCOTIABANK\puntoapunto\PESOS\";
                 }
-                else if (grupo.Key == VariablesGlobales.dolares)
+                else if (grupo.Key == VariablesGlobales.usd)
                 {
                     directory = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SCOTIABANK\puntoapunto\DOLARES\";
                 }
@@ -162,11 +162,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     _importe = ((long)(totalImporteCuenta * 10000000)).ToString().PadLeft(15, '0');
 
                     // Definir la moneda según la divisa de la cuenta
-                    if (_unaCuenta.Divisa == VariablesGlobales.pesos)
+                    if (_unaCuenta.Divisa == VariablesGlobales.uyu)
                     {
                         _moneda = "00";
                     }
-                    else if (_unaCuenta.Divisa == VariablesGlobales.dolares)
+                    else if (_unaCuenta.Divisa == VariablesGlobales.usd)
                     {
                         _moneda = "01";
                     }
@@ -223,16 +223,16 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 // Ejemplo: "04-07-2024-16-01-UYU4386500-AcreditacionBuzonesTecnisegurMont.txt"
                 string dateTimePart = DateTime.Now.ToString("dd-MM-yyyy-HH-mm");
                 // Para la divisa, si es pesos se usa "UYU"; para dólares, se usa "USD" (ajusta según corresponda)
-                string currencyCode = (grupo.Key == VariablesGlobales.pesos) ? "UYU" : "USD";
+                string currencyCode = (grupo.Key == VariablesGlobales.uyu) ? "UYU" : "USD";
                 string fileName = $"{dateTimePart}-{currencyCode}{totalImportesString}-AcreditacionBuzonesTecnisegurMont.txt";
 
                 // Determinar el directorio de salida según la divisa
                 string directory = "";
-                if (grupo.Key == VariablesGlobales.pesos)
+                if (grupo.Key == VariablesGlobales.uyu)
                 {
                     directory = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SCOTIABANK\puntoapunto\PESOS\";
                 }
-                else if (grupo.Key == VariablesGlobales.dolares)
+                else if (grupo.Key == VariablesGlobales.usd)
                 {
                     directory = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SCOTIABANK\puntoapunto\DOLARES\";
                 }
