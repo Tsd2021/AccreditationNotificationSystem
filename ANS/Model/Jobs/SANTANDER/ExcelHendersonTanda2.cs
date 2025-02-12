@@ -11,13 +11,19 @@ namespace ANS.Model.Jobs.SANTANDER
     {
 
         private readonly IServicioCuentaBuzon _servicioCuentaBuzon;
+     
 
         public ExcelHendersonTanda2(IServicioCuentaBuzon servicioCuentaBuzon)
         {
             _servicioCuentaBuzon = servicioCuentaBuzon;
         }
+
+
+
         public async Task Execute(IJobExecutionContext context)
         {
+
+            string _city = context.JobDetail.JobDataMap.GetString("city") ?? string.Empty;
 
             Exception e = null;
 
@@ -41,7 +47,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 
-                await _servicioCuentaBuzon.enviarExcel(desde, hasta, henderson, santander);
+                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, santander,_city);
 
             }
 

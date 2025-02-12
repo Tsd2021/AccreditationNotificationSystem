@@ -26,37 +26,36 @@ namespace ANS.Model.Jobs
 
             if (jobType == typeof(AcreditarPuntoAPuntoBBVAJob))
             {
-                // Aquí inyectas la dependencia
+          
                 return new AcreditarPuntoAPuntoBBVAJob(_servicioCuentaBuzon);
             }
 
             if (jobType == typeof(AcreditarDiaADiaBBVAJob))
             {
-                // Aquí inyectas la dependencia
+            
                 return new AcreditarDiaADiaBBVAJob(_servicioCuentaBuzon);
             }
 
 
             if (jobType == typeof(AcreditarDiaADiaSantander))
             {
-                // Aquí inyectas la dependencia
+              
                 return new AcreditarDiaADiaSantander(_servicioCuentaBuzon);
             }
 
             if (jobType == typeof(AcreditarPuntoAPuntoSantander))
             {
-                // Aquí inyectas la dependencia
+      
                 return new AcreditarPuntoAPuntoSantander(_servicioCuentaBuzon);
             }
 
             if (jobType == typeof(AcreditarTandaSantander))
             {
-                // Aquí inyectas la dependencia
+         
                 return new AcreditarTandaSantander(_servicioCuentaBuzon);
-            }
+            }      
 
-
-            if(jobType == typeof(AcreditarPuntoAPuntoScotiabank))
+            if (jobType == typeof(AcreditarPuntoAPuntoScotiabank))
             {
                 return new AcreditarPuntoAPuntoScotiabank(_servicioCuentaBuzon);
             }
@@ -64,6 +63,16 @@ namespace ANS.Model.Jobs
             if(jobType == typeof(AcreditarDiaADiaSantanderDeLasSierras))
             {
                 return new AcreditarDiaADiaSantanderDeLasSierras(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(AcreditarTanda1SantanderHenderson))
+            {
+                return new AcreditarTanda1SantanderHenderson(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(AcreditarTanda2SantanderHenderson))
+            {
+                return new AcreditarTanda2SantanderHenderson(_servicioCuentaBuzon);
             }
 
             if (jobType == typeof(ExcelHendersonTanda1))

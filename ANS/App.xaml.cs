@@ -1,12 +1,12 @@
 ﻿using ANS.Model.Jobs;
 using Quartz.Impl;
 using Quartz;
-
 using System.Windows;
 using ANS.Model.Services;
 using ANS.Model.Jobs.BBVA;
 using ANS.Model.Jobs.SANTANDER;
 using ANS.Model;
+using ANS.ViewModel;
 
 
 namespace ANS
@@ -17,7 +17,6 @@ namespace ANS
     public partial class App : Application
     {
         private IScheduler _scheduler;
-
         protected override async void OnStartup(StartupEventArgs e)
         {
 
@@ -45,11 +44,21 @@ namespace ANS
             {
                 await _scheduler.Start();
 
+                ServicioMensajeria.getInstancia().agregar(new Mensaje
+                {
+                    Estado = "Success",
+                    Tipo = "Schedule",
+                    Fecha = DateTime.Now
+                });
+
+                VMmainWindow vMmain = new VMmainWindow();
+
+                vMmain.CargarMensajes();
+
                 Console.WriteLine("Scheduler iniciado correctamente.");
             }
 
         }
-
         private void cargarClientes()
         {
             ServicioCliente.getInstancia().getAllClientes();
@@ -167,25 +176,35 @@ namespace ANS
                     .Build();
 
 
-            IJobDetail jobExcelHendersonTanda1 = JobBuilder
-                                                .Create<ExcelHendersonTanda1>()
-                                                .WithIdentity("ExcelHendersonTanda1", "GrupoTrabajoSantander")
-                                                .Build();
+            IJobDetail jobExcelHendersonTanda1Montevideo = JobBuilder.Create<ExcelHendersonTanda1>()
+                                                    .WithIdentity("JobExcelHendersonTanda1Montevideo", "GrupoTrabajoSantander")
+                                                    .UsingJobData("city", "MONTEVIDEO")
+                                                    .Build();
 
-            ITrigger triggerExcelHendersonTanda1 = TriggerBuilder.Create()
-                                                   .WithIdentity("ExcelHendersonTan1", "GrupoTrabajoSantander")
-                                                   .WithCronSchedule("0 26 17 ? * MON-FRI")
+            IJobDetail jobExcelHendersonTanda1Maldonado = JobBuilder.Create<ExcelHendersonTanda1>()
+                                                    .WithIdentity("JobExcelHendersonTanda1Maldonado", "GrupoTrabajoSantander")
+                                                    .UsingJobData("city", "MALDONADO")
+                                                    .Build();
+
+            ITrigger triggerExcelHendersonTanda1Montevideo = TriggerBuilder.Create()
+                                                   .WithIdentity("TriggerExcelHendersonTan1Montevideo", "GrupoTrabajoSantander")
+                                                   .WithCronSchedule("0 8 17 ? * MON-FRI")
                                                    .Build();
+
+            ITrigger triggerExcelHendersonTanda1Maldonado = TriggerBuilder.Create()
+                                       .WithIdentity("TriggerExcelHendersonTan1Maldonado", "GrupoTrabajoSantander")
+                                       .WithCronSchedule("0 26 12 ? * MON-FRI")
+                                       .Build();
 
 
             IJobDetail jobExcelHendersonTanda2 = JobBuilder
-                                    .Create<ExcelHendersonTanda1>()
-                                    .WithIdentity("ExcelHendersonTanda2", "GrupoTrabajoSantander")
-                                    .Build();
+                                                   .Create<ExcelHendersonTanda2>()
+                                                   .WithIdentity("ExcelHendersonTanda2", "GrupoTrabajoSantander")
+                                                   .Build();
 
             ITrigger triggerExcelHendersonTanda2 = TriggerBuilder.Create()
                                                    .WithIdentity("ExcelHendersonTan2", "GrupoTrabajoSantander")
-                                                   .WithCronSchedule("0 40 14 ? * MON-FRI")
+                                                   .WithCronSchedule("0 36 18 ? * MON-FRI")
                                                    .Build();
 
             try
@@ -199,7 +218,9 @@ namespace ANS
 
                 await _scheduler.ScheduleJob(jobTanda2Santander, triggerTanda2Santander);
 
-                await _scheduler.ScheduleJob(jobExcelHendersonTanda1, triggerExcelHendersonTanda1);
+                await _scheduler.ScheduleJob(jobExcelHendersonTanda1Montevideo, triggerExcelHendersonTanda1Montevideo);
+
+                await _scheduler.ScheduleJob(jobExcelHendersonTanda1Maldonado, triggerExcelHendersonTanda1Maldonado);
 
                 await _scheduler.ScheduleJob(jobExcelHendersonTanda2, triggerExcelHendersonTanda2);
 
