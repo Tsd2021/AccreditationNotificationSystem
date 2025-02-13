@@ -49,17 +49,17 @@ namespace ANS.Model.Jobs.BBVA
                 Application.Current.Dispatcher.Invoke(() =>
                 {
 
-                MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                // ✅ Recuperar el ViewModel del DataContext, si es null, asignarlo manualmente
+                    // ✅ Recuperar el ViewModel del DataContext, si es null, asignarlo manualmente
 
-                VMmainWindow vm = main.DataContext as VMmainWindow;
-                if (vm == null)
-                {
-                    vm = new VMmainWindow();
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
 
-                    main.DataContext = vm; // 🚀 Asignar el ViewModel si no estaba
-                }
+                        main.DataContext = vm; // 🚀 Asignar el ViewModel si no estaba
+                    }
 
                     Mensaje mensaje = new Mensaje();
 
@@ -72,28 +72,27 @@ namespace ANS.Model.Jobs.BBVA
                     mensaje.Icon = PackIconKind.Bank;
 
                     if (e != null)
+                    {
 
-                {
+                        main.MostrarAviso("Error Job P2P - BBVA", Colors.Red);
 
-                    main.MostrarAviso("Error Job P2P - BBVA", Colors.Red);
+                        mensaje.Estado = "Error";
 
-                    mensaje.Estado = "Error";
+                    }
 
-                }
+                    else
+                    {
 
-                else
-                {
+                        main.MostrarAviso("Success Job P2P - BBVA", Colors.Green);
 
-                    main.MostrarAviso("Success Job P2P - BBVA", Colors.Green);
+                        mensaje.Estado = "Success";
 
-                    mensaje.Estado = "Success";
+                    }
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
 
-                }
-                ServicioMensajeria.getInstancia().agregar(mensaje);
+                    vm.CargarMensajes();
 
-                vm.CargarMensajes();
-
-            } );
+                });
 
 
             }

@@ -424,29 +424,34 @@ namespace ANS.Model.Services
             int ultIdOperacionPorBuzon = 0;
             List<CuentaBuzon> buzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.p2p, bank);
 
-            if (buzones != null && buzones.Count > 0)
+            if (buzones == null || buzones.Count == 0)
+                throw new Exception("No se encontraron buzones punto a punto");
+
+            // Procesamos cada buzón
+            foreach (CuentaBuzon unBuzon in buzones)
             {
+                // Obtiene la última operación de forma sincrónica (podrías convertirla a async si fuera posible)
+                ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC, unBuzon.IdCuenta);
 
-                foreach (CuentaBuzon unBuzon in buzones)
+                // Procesa los depósitos para el buzón (este método usa operaciones async)
+                try
                 {
-                    ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC, unBuzon.IdCuenta);
-
-                    if (ultIdOperacionPorBuzon > 0)
-                    {
-                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, TimeSpan.Zero);
-                    }
-
+                    await ServicioDeposito.getInstancia()
+                        .asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, TimeSpan.Zero);
                 }
-                await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
-
-                //luego de generar, tiene que insertar en ACREDITACIONESDEPOSITO los depositos que fueron insertados ok
-
-                return;
-
+                catch (Exception ex)
+                {
+                    // Si un buzón tiene un depósito con error, se registra y se continúa con el siguiente
+                    Console.WriteLine($"Error asignando depósitos para buzón {unBuzon.NC}: {ex.Message}");
+                    // Opcional: podrías agregar un log o actualizar un estado en el objeto
+                }
             }
 
-            throw new Exception("No se encontaron buzones punto a punto");
+            // Genera el archivo si se procesaron buzones (incluso si algún buzón tuvo problemas, los demás se procesaron)
+            await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
 
+            // Luego, inserta las acreditaciones para los depósitos que se asignaron correctamente
+            await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(buzones);
         }
         public async Task acreditarDiaADiaPorBanco(Banco banco)
         {
@@ -506,7 +511,8 @@ namespace ANS.Model.Services
         {
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = "select max(idoperacion) from ACREDITACIONESDEPOSITOS where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
+                //string query = "select max(idoperacion) from ACREDITACIONESDEPOSITOS where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
+                string query = "select max(idoperacion) from AcreditacionDepositoDiegoTest where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
 
                 if (nc == "GRAMAR")
                 {

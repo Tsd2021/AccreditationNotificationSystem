@@ -128,8 +128,8 @@ namespace ANS
             ITrigger triggerPuntoAPuntoSantander = TriggerBuilder.Create()
                                                     .WithIdentity("SantanderTriggerP2P", "GrupoTrabajoSantander")
                                                     .WithDailyTimeIntervalSchedule(x => x
-                                                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0))
-                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(15, 29))
+                                                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(11, 0))
+                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(20, 30))
                                                     .OnDaysOfTheWeek(new[]
                                                     {
                                                         DayOfWeek.Monday,
@@ -189,7 +189,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda1Montevideo = TriggerBuilder.Create()
                                                    .WithIdentity("TriggerExcelHendersonTan1Montevideo", "GrupoTrabajoSantander")
-                                                   .WithCronSchedule("0 5 18 ? * MON-FRI")
+                                                   .WithCronSchedule("0 18 11 ? * MON-FRI")
                                                    .Build();
 
             // ######### TANDA 1 HENDERSON EXCEL MALDONADO ################## //
@@ -203,7 +203,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda1Maldonado = TriggerBuilder.Create()
                                        .WithIdentity("TriggerExcelHendersonTan1Maldonado", "GrupoTrabajoSantander")
-                                       .WithCronSchedule("0 5 18 ? * MON-FRI")
+                                       .WithCronSchedule("0 18 11 ? * MON-FRI")
                                        .Build();
 
 
@@ -252,7 +252,6 @@ namespace ANS
                 await _scheduler.ScheduleJob(jobExcelHendersonTanda2Montevideo, triggerExcelHendersonTanda2Montevideo);
 
                 await _scheduler.ScheduleJob(jobExcelHendersonTanda2Maldonado, triggerExcelHendersonTanda2Maldonado);
-
 
             }
             catch (Exception ex)
