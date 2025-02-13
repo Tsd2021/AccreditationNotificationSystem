@@ -151,7 +151,6 @@ namespace ANS.Model.Services
                 Console.WriteLine($"❌ Error al enviar el archivo vacío: {ex.Message}");
             }
         }
-
         //public TensStdr.transactionResponse EnviarArchivoConClienteWS(string NombreCSV, byte[] Archivo)
         //{
         //    try
