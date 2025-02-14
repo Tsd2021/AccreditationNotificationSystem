@@ -7,39 +7,56 @@
       "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\jobs\\santander\\excelhendersontanda1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\santander\\excelhendersontanda1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\model\\interfaces\\iserviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\interfaces\\iserviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar\\source\\repos\\ans\\ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.EventosConexion.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.CUENTASBUZONES.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\24gvstmd..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.ACREDITACIONESDEPOSITOS.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.Niveles.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\ryn3wo4f..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.EstadoMovimientos.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\xyrjswmg..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.BUZONESUSUARIO.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.CASHOFFICEBUZONES.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.UltimaConexion.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.Depositos.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.CC.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\ryn3wo4f..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|CodeFrame"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\brcqa40w..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\ryn3wo4f..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|ResultFrame"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.CUENTASBUZONES.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\xyrjswmg..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|CodeFrame"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.ConfiguracionAcreditacion.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\xyrjswmg..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|ResultFrame"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\brcqa40w..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|CodeFrame"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\brcqa40w..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|ResultFrame"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\24gvstmd..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|CodeFrame"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\24gvstmd..sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}|ResultFrame"
     }
   ],
   "DocumentGroupContainers": [
@@ -49,62 +66,141 @@
       "DocumentGroups": [
         {
           "DockedHeight": 207,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 13,
           "Children": [
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "SQLQuery6.sql ",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\xyrjswmg..sql",
-              "RelativeDocumentMoniker": "..\\..\\..\\AppData\\Local\\Temp\\xyrjswmg..sql",
-              "ToolTip": "SQLQuery6.sql *",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-02-07T20:20:12.422Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "dbo.ACREDITACIONESDEPOSITOS [Datos]",
-              "DocumentMoniker": "ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.ACREDITACIONESDEPOSITOS.sql",
-              "ToolTip": "dbo.ACREDITACIONESDEPOSITOS [Datos]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-02-07T20:14:18.627Z",
+              "DocumentIndex": 1,
+              "Title": "IServicioCuentaBuzon.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Interfaces\\IServicioCuentaBuzon.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Interfaces\\IServicioCuentaBuzon.cs",
+              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Interfaces\\IServicioCuentaBuzon.cs",
+              "RelativeToolTip": "ANS\\Model\\Interfaces\\IServicioCuentaBuzon.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-14T21:12:47.059Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "dbo.CUENTASBUZONES [Datos]",
-              "DocumentMoniker": "ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.CUENTASBUZONES.sql",
-              "ToolTip": "dbo.CUENTASBUZONES [Datos]",
+              "Title": "SQLQuery2.sql ",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\24gvstmd..sql",
+              "RelativeDocumentMoniker": "..\\..\\..\\AppData\\Local\\Temp\\24gvstmd..sql",
+              "ToolTip": "SQLQuery2.sql *",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-02-07T18:45:21.574Z",
+              "WhenOpened": "2025-02-14T21:06:52.993Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "dbo.CC [Datos]",
-              "DocumentMoniker": "ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.CC.sql",
-              "ToolTip": "dbo.CC [Datos]",
+              "DocumentIndex": 4,
+              "Title": "dbo.Niveles [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.Niveles.sql",
+              "ToolTip": "dbo.Niveles [Datos]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-02-07T18:45:03.307Z",
+              "WhenOpened": "2025-02-14T21:05:57.548Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "SQLQuery5.sql ",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\ryn3wo4f..sql",
-              "RelativeDocumentMoniker": "..\\..\\..\\AppData\\Local\\Temp\\ryn3wo4f..sql",
-              "ToolTip": "SQLQuery5.sql *",
+              "Title": "dbo.EstadoMovimientos [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.EstadoMovimientos.sql",
+              "ToolTip": "dbo.EstadoMovimientos [Datos]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-02-07T18:36:16.866Z",
+              "WhenOpened": "2025-02-14T21:05:19.442Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "dbo.BUZONESUSUARIO [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.BUZONESUSUARIO.sql",
+              "ToolTip": "dbo.BUZONESUSUARIO [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T21:04:21.761Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "dbo.CASHOFFICEBUZONES [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.CASHOFFICEBUZONES.sql",
+              "ToolTip": "dbo.CASHOFFICEBUZONES [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T21:04:15.853Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "dbo.EventosConexion [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.EventosConexion.sql",
+              "ToolTip": "dbo.EventosConexion [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T21:00:04.881Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "dbo.UltimaConexion [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.UltimaConexion.sql",
+              "ToolTip": "dbo.UltimaConexion [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T20:59:26.317Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "dbo.Depositos [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/10.0.0.4/WebBuzones/tecni/SqlTable/dbo.Depositos.sql",
+              "ToolTip": "dbo.Depositos [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T20:58:50.207Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "dbo.CC [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.CC.sql",
+              "ToolTip": "dbo.CC [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T14:50:05.182Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "dbo.ConfiguracionAcreditacion [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.ConfiguracionAcreditacion.sql",
+              "ToolTip": "dbo.ConfiguracionAcreditacion [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T14:43:19.866Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "dbo.CUENTASBUZONES [Datos]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/172.16.10.20/TSD/tecni/SqlTable/dbo.CUENTASBUZONES.sql",
+              "ToolTip": "dbo.CUENTASBUZONES [Datos]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T14:18:37.324Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "SQLQuery1.sql ",
+              "DocumentMoniker": "C:\\Users\\dchiquiar\\AppData\\Local\\Temp\\brcqa40w..sql",
+              "RelativeDocumentMoniker": "..\\..\\..\\AppData\\Local\\Temp\\brcqa40w..sql",
+              "ToolTip": "SQLQuery1.sql *",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-02-14T14:07:02.232Z",
               "EditorCaption": ""
             },
             {
@@ -115,36 +211,14 @@
               "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
               "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
               "RelativeToolTip": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
-              "ViewState": "AgIAAGoCAAAAAAAAAAAuwIoCAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAACgDAAAAAAAAAAAAAHMDAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-07T18:35:17.397Z",
+              "WhenOpened": "2025-02-14T14:06:04.179Z",
               "EditorCaption": ""
             },
             {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ExcelHendersonTanda1.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\SANTANDER\\ExcelHendersonTanda1.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\SANTANDER\\ExcelHendersonTanda1.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\Model\\Jobs\\SANTANDER\\ExcelHendersonTanda1.cs",
-              "RelativeToolTip": "ANS\\Model\\Jobs\\SANTANDER\\ExcelHendersonTanda1.cs",
-              "ViewState": "AgIAAA0AAAAAAAAAAAAIwCgAAAAQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-07T18:35:17.397Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "App.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\App.xaml.cs",
-              "RelativeDocumentMoniker": "ANS\\App.xaml.cs",
-              "ToolTip": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\App.xaml.cs",
-              "RelativeToolTip": "ANS\\App.xaml.cs",
-              "ViewState": "AgIAAJsAAAAAAAAAAAAmwLAAAABNAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-07T18:35:04.947Z",
-              "EditorCaption": ""
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
             }
           ]
         }
