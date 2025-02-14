@@ -2,7 +2,6 @@
 using Microsoft.Data.SqlClient;
 using ANS.Model.GeneradorArchivoPorBanco;
 using ClosedXML.Excel;
-using System.Collections.Generic;
 
 
 namespace ANS.Model.Services
@@ -430,20 +429,21 @@ namespace ANS.Model.Services
             // Procesamos cada buzón
             foreach (CuentaBuzon unBuzon in buzones)
             {
-                // Obtiene la última operación de forma sincrónica (podrías convertirla a async si fuera posible)
+                // Obtiene la última operación 
                 ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC, unBuzon.IdCuenta);
 
-                // Procesa los depósitos para el buzón (este método usa operaciones async)
+                // Procesa los depósitos para el buzón 
                 try
                 {
                     await ServicioDeposito.getInstancia()
                         .asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, TimeSpan.Zero);
                 }
+
                 catch (Exception ex)
                 {
                     // Si un buzón tiene un depósito con error, se registra y se continúa con el siguiente
                     Console.WriteLine($"Error asignando depósitos para buzón {unBuzon.NC}: {ex.Message}");
-                    // Opcional: podrías agregar un log o actualizar un estado en el objeto
+               
                 }
             }
 
@@ -451,6 +451,7 @@ namespace ANS.Model.Services
             await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
 
             // Luego, inserta las acreditaciones para los depósitos que se asignaron correctamente
+
             await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(buzones);
         }
         public async Task acreditarDiaADiaPorBanco(Banco banco)
@@ -831,12 +832,6 @@ namespace ANS.Model.Services
             }
         }
 
-
-
-
-
-
-
         private (DateTime effectiveDesde, DateTime effectiveHasta) ObtenerDateTimeEfectivos(TimeSpan desde, TimeSpan hasta)
         {
 
@@ -881,5 +876,16 @@ namespace ANS.Model.Services
 
         }
 
+        public Task checkUltimaConexionByIdBuzon(string nc)
+        {
+
+            if (nc == null)
+            {
+                throw new Exception("Error en checkUltimaConexionByIdBuzon : 'nc' vacío.");
+            }
+            return null;
+
+            
+        }
     }
 }

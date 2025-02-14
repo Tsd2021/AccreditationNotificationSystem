@@ -15,5 +15,6 @@ namespace ANS.Model.Interfaces
         Task acreditarDiaADiaPorCliente(Cliente cli,Banco bank,TimeSpan horaCierreActual);
         Task enviarExcel(TimeSpan desde,TimeSpan hasta,Cliente cliente, Banco bank);
         Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente henderson, Banco santander,string city,int numTanda);
+        Task checkUltimaConexionByIdBuzon(string nc);
     }
 }
