@@ -1,11 +1,5 @@
 ﻿using ANS.Model.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace ANS.Model.GeneradorArchivoPorBanco
@@ -173,7 +167,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 MessageBox.Show($"ERROR, VERIFIQUE: {ex.Message}", "ERROR");
             }
         }
-
         //EXPORTA_REME_AGRUPADO ES PARA DIA A DIA BBVA!
         public async Task<bool> Exporta_Reme_Agrupado(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
         {

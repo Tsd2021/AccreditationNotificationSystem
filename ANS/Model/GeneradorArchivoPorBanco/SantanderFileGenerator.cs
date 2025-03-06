@@ -1,12 +1,7 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ANS.Model.GeneradorArchivoPorBanco
 {
@@ -64,7 +59,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         }
         */
-
         // TEST TEST TEST TEST TEST TEST //
         public string getRutaArchivoDAD(string ciudad, string divisa)
         {
@@ -311,7 +305,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             // Generar nuevo nombre de archivo sin sobrescribir el original
 
-            string nombreArchivo = Path.GetFileName(rutaArchivoBase); 
+            string nombreArchivo = Path.GetFileName(rutaArchivoBase);
 
             string rutaFinal = Path.Combine(directorioFinal, nombreArchivo); // Ruta donde se guardará
 
@@ -335,9 +329,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // return tensResponse == null;
             await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
             return false;
-           
-        }
 
+        }
         // CREACION ARCHIVOS ESPECIFICAMENTE DE CASHOFFICE
         private async Task CrearArchivoCashOffice(StringBuilder content, string divisa)
         {
