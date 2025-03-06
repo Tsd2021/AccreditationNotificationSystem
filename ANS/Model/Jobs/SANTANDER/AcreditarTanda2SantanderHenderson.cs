@@ -1,5 +1,7 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -34,7 +36,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 });
                 
 
-                await _servicioCuentaBuzon.acreditarTanda2HendersonSantander(VariablesGlobales.horaCierreSantanderHENDERSON_TANDA2_TXT);
+                await _servicioCuentaBuzon.acreditarTandaHendersonSantander(VariablesGlobales.horaCierreSantanderHENDERSON_TANDA2_TXT);
 
             }
             catch (Exception ex)
@@ -47,24 +49,58 @@ namespace ANS.Model.Jobs.SANTANDER
             finally
             {
 
-                //string msgRetorno = "SUCCESS - JOB TANDA ~SANTANDER~";
 
-                //Color colorRetorno = Color.FromRgb(76, 175, 80); // verde succcesss
+                Mensaje mensaje = new Mensaje();
 
-                //if (e != null)
-                //{
+                mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                //    msgRetorno = "ERROR - JOB TANDA ~SANTANDER~ ";
+                mensaje.Banco = "SANTANDER";
 
-                //    colorRetorno = Color.FromRgb(255, 0, 0); //ROJO 
-                //}
+                mensaje.Tipo = "TANDA2";
 
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                mensaje.Icon = PackIconKind.Bank;
 
-                //    main.OcultarAviso(msgRetorno, colorRetorno);
-                //});
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
+
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
+
+                        main.DataContext = vm;
+                    }
+
+                    if (e != null)
+                    {
+
+                        main.MostrarAviso("Error Job HENDERSON_TANDA2 SANTANDER", Colors.Red);
+
+                        mensaje.Estado = "Error";
+
+                        //escribir log error
+
+                    }
+
+                    else
+                    {
+
+                        main.MostrarAviso("Success Job HENDERSON_TANDA2 SANTANDER", Colors.Green);
+
+                        mensaje.Estado = "Success";
+
+                    }
+
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
+
+                    vm.CargarMensajes();
+
+                    // escribir log success
+
+                });
 
             }
 

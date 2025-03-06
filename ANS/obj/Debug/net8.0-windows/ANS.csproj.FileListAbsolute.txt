@@ -69,7 +69,6 @@ C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Microsoft.Ident
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Microsoft.IdentityModel.Xml.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Microsoft.Net.Http.Headers.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Microsoft.SqlServer.Server.dll
-C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Microsoft.Web.Services3.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Microsoft.Win32.SystemEvents.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Microsoft.Xaml.Behaviors.dll
 C:\Users\dchiquiar\source\repos\ANS\ANS\bin\Debug\net8.0-windows\Quartz.dll

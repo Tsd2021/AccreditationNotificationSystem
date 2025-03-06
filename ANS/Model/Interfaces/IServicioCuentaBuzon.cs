@@ -7,8 +7,7 @@ namespace ANS.Model.Interfaces
         List<CuentaBuzon> getAllByTipoAcreditacion(string tipoAcreditacion);
         List<CuentaBuzon> getAllByTipoAcreditacionYBanco(string tipoAcreditacion, Banco bank);
         Task acreditarPuntoAPuntoPorBanco(Banco bank);
-        Task acreditarTanda1HendersonSantander(TimeSpan horaCierreActual);
-        Task acreditarTanda2HendersonSantander(TimeSpan horaCierreActual);
+        Task acreditarTandaHendersonSantander(TimeSpan horaCierreActual);
         Task acreditarDiaADiaPorBanco(Banco bank);
         Task acreditarTandaPorBanco(Banco bank);
         Task acretidarPorBanco(Banco bank,TimeSpan horaCierre);

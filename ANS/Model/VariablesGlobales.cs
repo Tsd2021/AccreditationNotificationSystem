@@ -50,11 +50,11 @@ namespace ANS.Model
 
         // SANTANDER - HENDERSON - TANDAS //
 
-        public static TimeSpan horaCierreSantanderHENDERSON_TANDA1_TXT = new TimeSpan(7, 10, 0);
+        public static TimeSpan horaCierreSantanderHENDERSON_TANDA1_TXT = new TimeSpan(7, 3, 0);
 
         public static TimeSpan horaCierreSantanderHENDERSON_TANDA1_EXCEL = new TimeSpan(7,10,0);
 
-        public static TimeSpan horaCierreSantanderHENDERSON_TANDA2_TXT = new TimeSpan(14, 35, 0);
+        public static TimeSpan horaCierreSantanderHENDERSON_TANDA2_TXT = new TimeSpan(14, 33, 0);
 
         public static TimeSpan horaCierreSantanderHENDERSON_TANDA2_EXCEL = new TimeSpan(14, 40, 0);
 
