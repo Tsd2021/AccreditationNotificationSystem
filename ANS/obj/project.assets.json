@@ -1258,15 +1258,6 @@
           }
         }
       },
-      "Microsoft.Web.Services3/3.0.0": {
-        "type": "package",
-        "compile": {
-          "lib/net20/Microsoft.Web.Services3.dll": {}
-        },
-        "runtime": {
-          "lib/net20/Microsoft.Web.Services3.dll": {}
-        }
-      },
       "Microsoft.Win32.Registry/4.5.0": {
         "type": "package",
         "dependencies": {
@@ -4077,18 +4068,6 @@
         "microsoft.sqlserver.server.nuspec"
       ]
     },
-    "Microsoft.Web.Services3/3.0.0": {
-      "sha512": "f7TxDOPxdtxqgKma7PTUlpjeBVur9HFFvBR9UEhMU6qQiOOCG2RezmSdiMKuUlCpFB95AXoWB074ZpgCNbUupg==",
-      "type": "package",
-      "path": "microsoft.web.services3/3.0.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "lib/net20/Microsoft.Web.Services3.dll",
-        "microsoft.web.services3.3.0.0.nupkg.sha512",
-        "microsoft.web.services3.nuspec"
-      ]
-    },
     "Microsoft.Win32.Registry/4.5.0": {
       "sha512": "+FWlwd//+Tt56316p00hVePBCouXyEzT86Jb3+AuRotTND0IYn0OO3obs1gnQEs/txEnt+rF2JBGLItTG+Be6A==",
       "type": "package",
@@ -6865,7 +6844,6 @@
       "MaterialDesignInXamlToolkitAddOns >= 0.0.63",
       "MaterialDesignThemes >= 5.2.1",
       "Microsoft.Data.SqlClient >= 5.2.2",
-      "Microsoft.Web.Services3 >= 3.0.0",
       "Quartz >= 3.13.1",
       "System.ServiceModel.Duplex >= 6.0.*",
       "System.ServiceModel.Federation >= 6.0.*",
@@ -6921,7 +6899,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net8.0-windows7.0": {
@@ -6950,10 +6928,6 @@
           "Microsoft.Data.SqlClient": {
             "target": "Package",
             "version": "[5.2.2, )"
-          },
-          "Microsoft.Web.Services3": {
-            "target": "Package",
-            "version": "[3.0.0, )"
           },
           "Quartz": {
             "target": "Package",
@@ -7007,20 +6981,8 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1701",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "El paquete \"Microsoft.Web.Services3 3.0.0\" se restauró con \".NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1\" en lugar de la plataforma de destino del proyecto \"net8.0-windows7.0\". Puede que el paquete no sea totalmente compatible con el proyecto.",
-      "libraryId": "Microsoft.Web.Services3",
-      "targetGraphs": [
-        "net8.0-windows7.0"
-      ]
-    }
-  ]
+  }
 }

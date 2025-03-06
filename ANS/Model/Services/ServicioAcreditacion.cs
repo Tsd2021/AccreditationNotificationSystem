@@ -6,7 +6,7 @@ namespace ANS.Model.Services
     public class ServicioAcreditacion : IServicioAcreditacion
     {
         private string _conexionTSD = ConfiguracionGlobal.ConexionTSD;
-        private string _conexionWebBuzones = ConfiguracionGlobal.ConexionWebBuzones;
+       
         public static ServicioAcreditacion instance { get; set; }
         public static ServicioAcreditacion getInstancia()
         {
@@ -59,11 +59,16 @@ namespace ANS.Model.Services
 
                         double montoTotalDelDeposito = _dep.Totales.Sum(e => e.ImporteTotal);
 
+                        if(montoTotalDelDeposito == 0)
+                        {
+                            Console.WriteLine("ATENCION ES 0 ");
+                        }
+
                         Acreditacion a = new Acreditacion
                         {
                             IdBuzon = _acc.NC,
                             IdOperacion = _dep.IdOperacion,
-                            Fecha = DateTime.Now,
+                            Fecha = _dep.FechaDep,
                             IdBanco = bankId,
                             IdCuenta = _acc.IdCuenta,
                             Moneda = moneyId,

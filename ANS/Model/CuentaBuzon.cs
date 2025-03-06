@@ -53,5 +53,17 @@ namespace ANS.Model
                 CashOffice = false;
             }
         }
+        public int getIdMoneda()
+        {
+            if(this.Moneda == VariablesGlobales.pesos)
+            {
+                return 1;
+            }
+            if(this.Moneda == VariablesGlobales.dolares)
+            {
+                return 2;
+            }
+            return -1;
+        }
     }
 }

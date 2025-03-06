@@ -1,11 +1,6 @@
 ﻿using ANS.Model.Interfaces;
 using Quartz.Spi;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ANS.Model.Jobs.BBVA;
 using ANS.Model.Jobs.SANTANDER;
 
