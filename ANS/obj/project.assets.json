@@ -6855,23 +6855,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\dchiquiar\\.nuget\\packages\\": {},
+    "C:\\Users\\dchiquiar.ABUDIL\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\ANS.csproj",
+      "projectUniqueName": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\ANS.csproj",
       "projectName": "ANS",
-      "projectPath": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\ANS.csproj",
-      "packagesPath": "C:\\Users\\dchiquiar\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\dchiquiar\\source\\repos\\ANS\\ANS\\obj\\",
+      "projectPath": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\ANS.csproj",
+      "packagesPath": "C:\\Users\\dchiquiar.ABUDIL\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\dchiquiar\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\dchiquiar.ABUDIL\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -6880,7 +6880,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {

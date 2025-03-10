@@ -31,7 +31,7 @@ namespace ANS.Model.Services
                     {
                         cmd.Parameters.AddWithValue("@IDBUZON", a.IdBuzon);
                         cmd.Parameters.AddWithValue("@IDOPERACION", a.IdOperacion);
-                        cmd.Parameters.AddWithValue("@FECHA", (object)a.Fecha ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@FECHA", DateTime.Now);
                         cmd.Parameters.AddWithValue("@IDBANCO", (object)a.IdBanco ?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@IDCUENTA", (object)a.IdCuenta ?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@MONEDA", a.Moneda);
