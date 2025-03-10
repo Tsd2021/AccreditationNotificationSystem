@@ -130,8 +130,8 @@ namespace ANS
             ITrigger triggerPuntoAPuntoSantander = TriggerBuilder.Create()
                                                     .WithIdentity("SantanderTriggerP2P", "GrupoTrabajoSantander")
                                                     .WithDailyTimeIntervalSchedule(x => x
-                                                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(11, 0))
-                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(20, 30))
+                                                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0))
+                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(15, 30))
                                                     .OnDaysOfTheWeek(new[]
                                                     {
                                                         DayOfWeek.Monday,
@@ -140,7 +140,7 @@ namespace ANS
                                                         DayOfWeek.Thursday,
                                                         DayOfWeek.Friday
                                                     })
-                                                    .WithIntervalInMinutes(17))
+                                                    .WithIntervalInMinutes(18))
                                                     .Build();
 
             IJobDetail jobDiaADiaDeLasSierras = JobBuilder.Create<AcreditarDiaADiaSantanderDeLasSierras>().WithIdentity("SantanderDeLasSierrasJob", "GrupoTrabajoSantander")
@@ -168,7 +168,7 @@ namespace ANS
 
         ITrigger triggerTanda1Santander = TriggerBuilder.Create()
         .WithIdentity("SantanderTriggerTAN1", "GrupoTrabajoSantander")
-        .WithCronSchedule("0 00 7 ? * MON-FRI") // 7:00 Lun-Vie
+        .WithCronSchedule("0 0 7 ? * MON-FRI") // 7:00 Lun-Vie
         .Build();
 
 
@@ -181,7 +181,7 @@ namespace ANS
 
         ITrigger triggerTanda2Santander = TriggerBuilder.Create()
                 .WithIdentity("SantanderTriggerTAN2", "GrupoTrabajoSantander")
-                .WithCronSchedule("0 01 16 ? * MON-FRI") // 14:30 Lun-Vie
+                .WithCronSchedule("0 30 14 ? * MON-FRI") // 14:30 Lun-Vie
                 .Build();
 
 
@@ -199,7 +199,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda1Montevideo = TriggerBuilder.Create()
                                                    .WithIdentity("TriggerExcelHendersonTan1Montevideo", "GrupoTrabajoSantander")
-                                                   .WithCronSchedule("0 10 7 ? * MON-FRI")
+                                                   .WithCronSchedule("50 56 11 ? * MON-FRI")
                                                    .Build();
 
             // ################## TANDA 1 HENDERSON EXCEL MALDONADO ################## //
@@ -213,7 +213,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda1Maldonado = TriggerBuilder.Create()
                                        .WithIdentity("TriggerExcelHendersonTan1Maldonado", "GrupoTrabajoSantander")
-                                       .WithCronSchedule("0 10 7 ? * MON-FRI")
+                                       .WithCronSchedule("0 56 11 ? * MON-FRI")
                                        .Build();
 
 
@@ -227,7 +227,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda2Montevideo = TriggerBuilder.Create()
                                                     .WithIdentity("TriggerExcelHendersonTan2Montevideo", "GrupoTrabajoSantander")
-                                                    .WithCronSchedule("0 56 15 ? * MON-FRI")
+                                                    .WithCronSchedule("0 45 14 ? * MON-FRI")
                                                     .Build();
 
             // ################## TANDA 2 HENDERSON EXCEL MALDONADO ################## //
@@ -241,7 +241,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda2Maldonado = TriggerBuilder.Create()
                                        .WithIdentity("TriggerExcelHendersonTan2Maldonado", "GrupoTrabajoSantander")
-                                       .WithCronSchedule("0 56 15 ? * MON-FRI")
+                                       .WithCronSchedule("0 45 14 ? * MON-FRI")
                                        .Build();
 
             try

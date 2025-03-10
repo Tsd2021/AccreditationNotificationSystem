@@ -55,7 +55,7 @@ namespace ANS.Model.Jobs.SANTANDER
             catch (Exception ex)
             {
                 e = ex;
-                Console.WriteLine($"Error al ejecutar EXCEL HENDEROSN TANDA 1 de SANTANDER: {ex.Message}");
+                Console.WriteLine($"Error al ejecutar EXCEL HENDEROSN " + _city + " TANDA 1 de SANTANDER: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
 
             }
@@ -68,7 +68,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Banco = "SANTANDER";
 
-                mensaje.Tipo = "EXCEL TANDA1";
+                mensaje.Tipo = "EXCEL TANDA1 " + _city;
 
                 mensaje.Icon = PackIconKind.Bank;
 
@@ -89,7 +89,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job Excel HENDERSON_TANDA1 SANTANDER", Colors.Red);
+                        main.MostrarAviso("Error Job Excel HENDERSON_TANDA1 SANTANDER " + _city, Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -100,7 +100,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     else
                     {
 
-                        main.MostrarAviso("Success Job Excel HENDERSON_TANDA1 SANTANDER", Colors.Green);
+                        main.MostrarAviso("Success Job Excel HENDERSON_TANDA1 SANTANDER" + " " + _city, Colors.Green);
 
                         mensaje.Estado = "Success";
 

@@ -854,9 +854,11 @@ namespace ANS.Model.Services
 
                     string query;
 
+                    
+
                     foreach (CuentaBuzon account in listaCuentasBuzones)
                     {
-
+              
                         query = "select * " +
                                 "from acreditaciondepositodiegotest " +
                                 "where idbuzon = @accNC " +

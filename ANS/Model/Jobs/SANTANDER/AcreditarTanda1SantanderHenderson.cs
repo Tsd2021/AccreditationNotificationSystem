@@ -29,7 +29,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea Tanda Santander", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando tarea  Acreditación Tanda Santander", Color.FromRgb(255, 102, 102));
 
                 });
 
@@ -40,7 +40,7 @@ namespace ANS.Model.Jobs.SANTANDER
             catch (Exception ex)
             {
                 e = ex;
-                Console.WriteLine($"Error al ejecutar TANDA 1 de SANTANDER: {ex.Message}");
+                Console.WriteLine($"Error al ejecutar Acreditación TANDA 1 de SANTANDER: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
 
             }
@@ -74,7 +74,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job HENDERSON_TANDA1 SANTANDER", Colors.Red);
+                        main.MostrarAviso("Error Job Acreditación HENDERSON_TANDA1 SANTANDER", Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -85,7 +85,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     else
                     {
 
-                        main.MostrarAviso("Success Job HENDERSON_TANDA1 SANTANDER", Colors.Green);
+                        main.MostrarAviso("Success Job Acreditación HENDERSON_TANDA1 SANTANDER", Colors.Green);
 
                         mensaje.Estado = "Success";
 

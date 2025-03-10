@@ -312,7 +312,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // Guardar archivo en la ubicación correcta
             File.WriteAllText(rutaFinal, contenido.ToString());
 
-            await Task.Delay(250);
+            await Task.Delay(50);
 
         }
         private async Task<bool> generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)

@@ -146,8 +146,11 @@ namespace ANS.Model.Services
                 throw new Exception("Error en método asignarDepositosAlBuzon: CuentaBuzon es null");
 
             // Lista para almacenar todos los depósitos obtenidos del query
-            List<Deposito> depositosList = new List<Deposito>();
-
+             List<Deposito> depositosList = new List<Deposito>();
+            if (buzon.NN.Contains("SURFS"))
+            {
+                Console.WriteLine("Hola");
+            }
 
             // Seleccionamos el query según la hora de cierre
             string query;
@@ -222,6 +225,7 @@ namespace ANS.Model.Services
             using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
             {
                 await cnn.OpenAsync();
+
                 using (SqlCommand cmd = new SqlCommand(query, cnn))
                 {
                     cmd.Parameters.AddWithValue("@nc", buzon.NC);
@@ -263,7 +267,7 @@ namespace ANS.Model.Services
      
                 object depositosLock = new object();
 
-                // Para evitar saturar el sistema, limitamos la concurrencia (por ejemplo, 10 tareas a la vez)
+         
                 var semaphore = new SemaphoreSlim(10);
 
                 var tasks = depositosList.Select(async deposito =>
