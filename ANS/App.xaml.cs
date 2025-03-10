@@ -32,7 +32,7 @@ namespace ANS
 
             var servicioCuentaBuzon = new ServicioCuentaBuzon();
 
-           // servicioCuentaBuzon.insertarLasUltimas40Operaciones();
+            //servicioCuentaBuzon.insertarLasUltimas40Operaciones();
 
             _scheduler.JobFactory = new MyJobFactory(servicioCuentaBuzon);
 
@@ -168,7 +168,7 @@ namespace ANS
 
         ITrigger triggerTanda1Santander = TriggerBuilder.Create()
         .WithIdentity("SantanderTriggerTAN1", "GrupoTrabajoSantander")
-        .WithCronSchedule("0 00 7 ? * MON-FRI") // 7:00 Lun-Vie
+        .WithCronSchedule("0 1 7 ? * MON-FRI") // 7:00 Lun-Vie
         .Build();
 
 
@@ -181,7 +181,7 @@ namespace ANS
 
         ITrigger triggerTanda2Santander = TriggerBuilder.Create()
                 .WithIdentity("SantanderTriggerTAN2", "GrupoTrabajoSantander")
-                .WithCronSchedule("0 01 16 ? * MON-FRI") // 14:30 Lun-Vie
+                .WithCronSchedule("0 10 15 ? * MON-FRI") // 14:30 Lun-Vie
                 .Build();
 
 
@@ -227,7 +227,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda2Montevideo = TriggerBuilder.Create()
                                                     .WithIdentity("TriggerExcelHendersonTan2Montevideo", "GrupoTrabajoSantander")
-                                                    .WithCronSchedule("0 56 15 ? * MON-FRI")
+                                                    .WithCronSchedule("50 35 15 ? * MON-FRI")
                                                     .Build();
 
             // ################## TANDA 2 HENDERSON EXCEL MALDONADO ################## //
@@ -241,7 +241,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda2Maldonado = TriggerBuilder.Create()
                                        .WithIdentity("TriggerExcelHendersonTan2Maldonado", "GrupoTrabajoSantander")
-                                       .WithCronSchedule("0 56 15 ? * MON-FRI")
+                                       .WithCronSchedule("50 35 15 ? * MON-FRI")
                                        .Build();
 
             try

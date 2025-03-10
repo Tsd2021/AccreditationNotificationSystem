@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using ANS.Model.GeneradorArchivoPorBanco;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Office.Y2022.FeaturePropertyBag;
+using System.Linq.Expressions;
 
 namespace ANS.Model.Services
 {
@@ -63,7 +64,7 @@ namespace ANS.Model.Services
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                   
+
                     int ncOrdinal = reader.GetOrdinal("NC");
                     int bancoOrdinal = reader.GetOrdinal("BANCO");
                     int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
@@ -91,7 +92,7 @@ namespace ANS.Model.Services
                 return listaTotalDeCuentasBuzones;
             }
 
-           
+
         }
         public void insertarLasUltimas40Operaciones()
         {
@@ -119,9 +120,9 @@ namespace ANS.Model.Services
 
 
                 foreach (CuentaBuzon cb in listaDeTodosLosBuzonesQueTienenAcreditacionesRecientemente)
-                {            
+                {
                     foreach (Acreditacion a in cb.ListaAcreditaciones)
-                    {                
+                    {
                         SqlCommand cmd = new SqlCommand(query, conn);
                         cmd.Parameters.AddWithValue("@idBuzon", a.IdBuzon);
                         cmd.Parameters.AddWithValue("@idOperacion", a.IdOperacion);
@@ -162,7 +163,7 @@ namespace ANS.Model.Services
 
                 SqlCommand cmd = new SqlCommand(query, conn);
 
-                cmd.Parameters.AddWithValue("@nc",unBuzon.NC);
+                cmd.Parameters.AddWithValue("@nc", unBuzon.NC);
 
                 cmd.Parameters.AddWithValue("@idCuenta", unBuzon.IdCuenta);
 
@@ -192,8 +193,8 @@ namespace ANS.Model.Services
                         listaAcreditaciones.Add(acre);
                     }
 
-                }         
-                
+                }
+
             }
 
             return listaAcreditaciones;
@@ -797,7 +798,7 @@ namespace ANS.Model.Services
 
         }
         //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
-        public async Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda)
+        public async Task enviarExcelHenderson(TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda)
         {
 
             List<CuentaBuzon> listaFiltradaPorCiudadYTanda = new List<CuentaBuzon>();
@@ -822,8 +823,7 @@ namespace ANS.Model.Services
                         }
                     }
 
-                    getAcreditacionesPorBuzones(listaFiltradaPorCiudadYTanda, desde, hasta, bank);
-
+                    getAcreditacionesPorBuzones(listaFiltradaPorCiudadYTanda, hasta, bank);
 
                     foreach (var unaCuentaFiltradaPorCiudad in listaFiltradaPorCiudadYTanda)
                     {
@@ -839,69 +839,80 @@ namespace ANS.Model.Services
             }
         }
         //METODO PARA OBTENER ACREDITACIONES(EXCEL , VA POR FECHA)
-        private void getAcreditacionesPorBuzones(List<CuentaBuzon> listaCuentasBuzones, TimeSpan desde, TimeSpan hasta, Banco bank)
+        private void getAcreditacionesPorBuzones(List<CuentaBuzon> listaCuentasBuzones, TimeSpan hasta, Banco bank)
         {
             if (listaCuentasBuzones != null && listaCuentasBuzones.Count > 0)
             {
-
-                // Convertimos los TimeSpan en un rango DateTime efectivo según la lógica definida.
-                (DateTime effectiveDesde, DateTime effectiveHasta) = ObtenerDateTimeEfectivos(desde, hasta);
-
-                using (SqlConnection conn = new SqlConnection(_conexionTSD))
+                try
                 {
+                    
+                    DateTime hastaEfectivo = DateTime.Today.Add(hasta);
 
-                    conn.Open();
-
-                    string query;
-
-                    foreach (CuentaBuzon account in listaCuentasBuzones)
+                    using (SqlConnection conn = new SqlConnection(_conexionTSD))
                     {
 
-                        query = "select * " +
-                                "from acreditaciondepositodiegotest " +
-                                "where idbuzon = @accNC " +
-                                "and fecha >= @desde and fecha <= @hasta " +
-                                "and idbanco = @bankId " +
-                                "and idcuenta = @accId";
+                        conn.Open();
 
-                        SqlCommand cmd = new SqlCommand(query, conn);
+                        string query;
 
-                        cmd.Parameters.AddWithValue("@accNC", account.NC);
-                        cmd.Parameters.AddWithValue("@desde", effectiveDesde);
-                        cmd.Parameters.AddWithValue("@hasta", effectiveHasta);
-                        cmd.Parameters.AddWithValue("@bankId", bank.BancoId);
-                        cmd.Parameters.AddWithValue("@accId", account.IdCuenta);
-
-                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        foreach (CuentaBuzon account in listaCuentasBuzones)
                         {
-                            while (reader.Read())
+
+                            query = "select * " +
+                                    "from acreditaciondepositodiegotest " +
+                                    "where idbuzon = @accNC " +
+                                    "and convert(date,fecha) = convert(date,getdate()) " +
+                                    "and fecha <= @hasta " +
+                                    "and idbanco = @bankId " +
+                                    "and idcuenta = @accId";
+
+                            SqlCommand cmd = new SqlCommand(query, conn);
+
+                            cmd.Parameters.AddWithValue("@accNC", account.NC);
+
+                            cmd.Parameters.AddWithValue("@hasta", hastaEfectivo);
+
+                            cmd.Parameters.AddWithValue("@bankId", bank.BancoId);
+
+                            cmd.Parameters.AddWithValue("@accId", account.IdCuenta);
+
+                            using (SqlDataReader reader = cmd.ExecuteReader())
                             {
-                                Acreditacion accreditation = new Acreditacion
+                                while (reader.Read())
                                 {
-                                    Id = reader.GetInt32(0),
-                                    IdBuzon = reader.GetString(1),
-                                    IdOperacion = reader.GetInt64(2),
-                                    Fecha = reader.GetDateTime(3),
-                                    IdBanco = reader.GetInt32(4),
-                                    IdCuenta = reader.GetInt32(5),
-                                    Moneda = reader.GetInt32(6),
-                                    No_Enviado = reader.GetBoolean(7),
-                                    Monto = (float)reader.GetDouble(8) // Se lee como double y se convierte a float.
-                                };
-                                account.ListaAcreditaciones.Add(accreditation);
+                                    Acreditacion accreditation = new Acreditacion
+                                    {
+                                        Id = reader.GetInt32(0),
+                                        IdBuzon = reader.GetString(1),
+                                        IdOperacion = reader.GetInt64(2),
+                                        Fecha = reader.GetDateTime(3),
+                                        IdBanco = reader.GetInt32(4),
+                                        IdCuenta = reader.GetInt32(5),
+                                        Moneda = reader.GetInt32(6),
+                                        No_Enviado = reader.GetBoolean(7),
+                                        Monto = (float)reader.GetDouble(8) // Se lee como double y se convierte a float.
+                                    };
+                                    account.ListaAcreditaciones.Add(accreditation);
+                                }
                             }
+
                         }
 
                     }
-
+                    return;
                 }
-                return;
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception " + ex.Message);
+                }
             }
             else
             {
                 throw new Exception("Error en getAcreditacionesPorBuzones: ListaCuentaBuzones vacia o nula.");
             }
         }
+
+    
         private void generarExcelPorCuentas(List<CuentaBuzon> listaCuentasBuzones, int numTanda, string city)
         {
             using (var workbook = new XLWorkbook())
@@ -1022,55 +1033,13 @@ namespace ANS.Model.Services
                 string nombreArchivo = "Henderson_Tanda_" + numTanda + "_" + city + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
 
                 // Guardar el archivo
-                string filePath = @"C:\Users\dchiquiar\Desktop\EXCEL TEST\" + nombreArchivo;
+                string filePath = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\" + nombreArchivo;
                 workbook.SaveAs(filePath);
 
                 Console.WriteLine($"Excel generado: {filePath}");
             }
         }
-        private (DateTime effectiveDesde, DateTime effectiveHasta) ObtenerDateTimeEfectivos(TimeSpan desde, TimeSpan hasta)
-        {
 
-            // Obtenemos la fecha de hoy sin la hora.
-            DateTime today = DateTime.Today;
-
-            // Caso especial: Job diario, donde la hora de corte es la misma (por ejemplo, 16:30).
-            // Entonces se debe acreditar desde:
-            //    - Si hoy es lunes: desde el viernes a las 16:30
-            //    - Si no es lunes: desde el día anterior a las 16:30
-            // Hasta: hoy a las 16:30.
-            if (desde == hasta)
-            {
-                DateTime effectiveDesde = (today.DayOfWeek == DayOfWeek.Monday
-                                           ? today.AddDays(-3)
-                                           : today.AddDays(-1)).Add(desde);
-                DateTime effectiveHasta = today.Add(desde);
-                return (effectiveDesde, effectiveHasta);
-            }
-            // Caso 1: Rango sin cruce de medianoche (Tanda 2)
-            // Ejemplo: desde = 07:00 y hasta = 15:30.
-            // Se toma el rango del día actual.
-            else if (desde < hasta)
-            {
-                DateTime effectiveDesde = today.Add(desde);
-                DateTime effectiveHasta = today.Add(hasta);
-                return (effectiveDesde, effectiveHasta);
-            }
-            // Caso 2: Rango que cruza la medianoche (Tanda 1)
-            // Ejemplo: desde = 15:30 y hasta = 07:00.
-            // Se toma:
-            //    - effectiveDesde: día anterior (o viernes si hoy es lunes) a las 15:30.
-            //    - effectiveHasta: hoy a las 07:00.
-            else
-            {
-                DateTime effectiveDesde = (today.DayOfWeek == DayOfWeek.Monday
-                                           ? today.AddDays(-3)
-                                           : today.AddDays(-1)).Add(desde);
-                DateTime effectiveHasta = today.Add(hasta);
-                return (effectiveDesde, effectiveHasta);
-            }
-
-        }
         public Task checkUltimaConexionByIdBuzon(string nc)
         {
 
