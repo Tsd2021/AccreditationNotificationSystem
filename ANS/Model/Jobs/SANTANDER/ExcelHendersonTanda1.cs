@@ -41,13 +41,15 @@ namespace ANS.Model.Jobs.SANTANDER
                 });
                 Banco santander = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                TimeSpan hasta = new TimeSpan(7, 5, 0);
+                TimeSpan hasta = new TimeSpan(7, 6, 0);
+
+                TimeSpan desde = new TimeSpan(7,0, 0);
 
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(hasta,henderson,santander, _city,numTanda);
+                await _servicioCuentaBuzon.enviarExcelHenderson(desde,hasta,henderson,santander, _city,numTanda);
 
             }
             catch (Exception ex)
@@ -66,7 +68,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Banco = "SANTANDER";
 
-                mensaje.Tipo = "EXCEL TANDA1";
+                mensaje.Tipo = "Excel Henderson Tanda 1 " + _city;
 
                 mensaje.Icon = PackIconKind.Bank;
 

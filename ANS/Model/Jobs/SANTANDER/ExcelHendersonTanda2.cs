@@ -43,13 +43,15 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Banco santander = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                TimeSpan hasta = new TimeSpan(14, 30, 0);
+                TimeSpan desde = new TimeSpan(14, 30, 0);
+
+                TimeSpan hasta = new TimeSpan(14, 50,0);
 
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 
                 int numTanda2 = 2;
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(hasta, henderson, santander, _city , numTanda2);
+                await _servicioCuentaBuzon.enviarExcelHenderson(desde,hasta, henderson, santander, _city , numTanda2);
 
             }
 

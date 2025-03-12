@@ -1,11 +1,8 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
@@ -29,7 +26,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea Día a día SANTANDER", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando tarea Día a día de SANTANDER", Color.FromRgb(255, 102, 102));
 
                 });
 
@@ -42,31 +39,64 @@ namespace ANS.Model.Jobs.SANTANDER
             catch (Exception ex)
             {
                 e = ex;
-                Console.WriteLine($"Error al ejecutar la tarea de SANTANDER: {ex.Message}");
+                Console.WriteLine($"Error al ejecutar la tarea Día a día de SANTANDER: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
 
             }
             finally
             {
 
-                //string msgRetorno = "SUCCESS - JOB DIAXDIA ~SANTANDER~";
+                Mensaje mensaje = new Mensaje();
 
-                //Color colorRetorno = Color.FromRgb(76, 175, 80); // verde succcesss
+                mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                //if (e != null)
-                //{
+                mensaje.Banco = "SANTANDER";
 
-                //    msgRetorno = "ERROR - JOB DIAXDIA ~SANTANDER~ ";
+                mensaje.Tipo = "DÍA A DÍA";
 
-                //    colorRetorno = Color.FromRgb(255, 0, 0); //ROJO 
-                //}
+                mensaje.Icon = PackIconKind.Bank;
 
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
 
-                //    main.OcultarAviso(msgRetorno, colorRetorno);
-                //});
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
+
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
+
+                        main.DataContext = vm;
+                    }
+
+                    if (e != null)
+                    {
+
+                        main.MostrarAviso("Error Job Día a día SANTANDER", Colors.Red);
+
+                        mensaje.Estado = "Error";
+
+                        //escribir log error
+
+                    }
+
+                    else
+                    {
+
+                        main.MostrarAviso("Success Job DXD SANTANDER", Colors.Green);
+
+                        mensaje.Estado = "Success";
+
+                    }
+
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
+
+                    vm.CargarMensajes();
+
+                    // escribir log success
+
+                });
 
             }
 

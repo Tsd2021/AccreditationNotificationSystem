@@ -1,6 +1,5 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
 using System.IO;
 using System.Text;
 
@@ -86,7 +85,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 else if (ciudad.ToUpper() == VariablesGlobales.montevideo && divisa == VariablesGlobales.usd)
                 {
                  //   return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MONTEVIDEO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
-                    return @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\MONTEVIDEO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
+                    return @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\SANTANDER\puntoapuntocsvtdr$\MONTEVIDEO\DOLARES\" + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
                 }
             }
             else if (this._config.TipoAcreditacion == VariablesGlobales.tanda)
