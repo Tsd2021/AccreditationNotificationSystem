@@ -2,8 +2,7 @@
 using Microsoft.Data.SqlClient;
 using ANS.Model.GeneradorArchivoPorBanco;
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Office.Y2022.FeaturePropertyBag;
-using System.Linq.Expressions;
+
 
 namespace ANS.Model.Services
 {
@@ -281,32 +280,38 @@ namespace ANS.Model.Services
 
                 // Si es banco santander , debe excluir a Henderson y De las sierras, (ID:164,268) 
                 // porque estos fueron acreditados en tanda y en dia a dia a las 7am
-                if (banco.NombreBanco == VariablesGlobales.santander)
+
+                // ERROR , NO HACE FALTA,YA QUE FILTRO POR PUNTO A PUNTO.
+
+                // SI ES DIA A DIA SOLAMENTE DEBE EXCLUIR A DELASSIERRAS ( ID 268 )
+                if (banco.BancoId == 1 && tipoAcreditacion == VariablesGlobales.diaxdia)
+
                 {
-                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID, c.NN  " +
-                            "FROM ConfiguracionAcreditacion config " +
-                            "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
-                            "INNER JOIN CC c ON config.NC = c.NC " +
-                            "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
-                            "AND cb.BANCO = @bank " +
-                            "AND config.CuentasBuzonesId IS NOT NULL " +
-                            "AND config.ConfigId IS NOT NULL " +
-                            "AND cb.EMPRESA NOT IN (164, 268) " +
-                            "ORDER BY c.NC";
-                }
-                else
-                {
-                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID, c.NN  " +
-                            "FROM ConfiguracionAcreditacion config " +
-                            "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
-                            "INNER JOIN CC c ON config.NC = c.NC " +
-                            "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
-                            "AND cb.BANCO = @bank " +
-                            "AND config.CuentasBuzonesId IS NOT NULL " +
-                            "AND config.ConfigId IS NOT NULL " +
-                            "ORDER BY c.NC";
+                    query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID, c.NN " +
+                               "FROM " +
+                               "ConfiguracionAcreditacion CONFIG" +
+                               "INNER JOIN " +
+                               "CUENTASBUZONES CB " +
+                               "ON CB.ID = CONFIG.CuentasBuzonesId " +
+                               "INNER JOIN " +
+                               "CC C " +
+                               "ON CB.IDCLIENTE = C.IDCLIENTE " +
+                               "WHERE " +
+                               "CONFIG.TipoAcreditacion = 'DiaADia' " +
+                               "AND " +
+                               "C.IDCLIENTE NOT IN('268') " +
+                               "AND CB.banco = @bank ";
                 }
 
+                query = "SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion, c.SUCURSAL as CIUDAD, cb.SUCURSAL, c.IDCC, cb.ID, c.NN  " +
+                                "FROM ConfiguracionAcreditacion config " +
+                                "INNER JOIN CUENTASBUZONES cb ON config.CuentasBuzonesId = cb.ID " +
+                                "INNER JOIN CC c ON config.NC = c.NC " +
+                                "WHERE config.TipoAcreditacion = @tipoAcreditacion " +
+                                "AND cb.BANCO = @bank " +
+                                "AND config.CuentasBuzonesId IS NOT NULL " +
+                                "AND config.ConfigId IS NOT NULL " +
+                                "ORDER BY c.NC";
 
                 conn.Open();
 
@@ -366,9 +371,9 @@ namespace ANS.Model.Services
                     }
                 }
             }
-
             return buzonesFound;
         }
+
         public List<CuentaBuzon> getAllByBanco(Banco banco)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
@@ -445,49 +450,46 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
-        public List<CuentaBuzon> getCuentaBuzonesByClienteYBanco(int idcliente, Banco bank)
+        public async Task<List<CuentaBuzon>> getCuentaBuzonesByClienteYBanco(int idcliente, Banco bank)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
+            string query = @"SELECT
+                                    c.NC AS NC_CC,
+                                    cb.BANCO, 
+                                    c.CIERRE, 
+                                    c.IDCLIENTE, 
+                                    cb.CUENTA, 
+                                    cb.MONEDA, 
+                                    cb.EMPRESA, 
+                                    c.SUCURSAL as CIUDAD, 
+                                    cb.SUCURSAL, 
+                                    c.NN, 
+                                    c.IDCC AS IDCC, 
+                                    cb.ID AS ID, 
+                                    config.TipoAcreditacion as CONFIGURACION 
+                                FROM 
+                                    ConfiguracionAcreditacion config 
+                                INNER JOIN 
+                                    CUENTASBUZONES cb on config.CuentasBuzonesId = cb.ID 
+                                INNER JOIN 
+                                    CC c ON config.NC = c.NC 
+                                WHERE 
+                                    cb.IDCLIENTE = @idcli 
+                                AND 
+                                    cb.BANCO = @bank;";
+
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
+                await conn.OpenAsync();
 
-                string query;
-
-                query = @"SELECT
-                            c.NC AS NC_CC,
-                            cb.BANCO, 
-                            c.CIERRE, 
-                            c.IDCLIENTE, 
-                            cb.CUENTA, 
-                            cb.MONEDA, 
-                            cb.EMPRESA, 
-                            c.SUCURSAL as CIUDAD, 
-                            cb.SUCURSAL, 
-                            c.NN, 
-                            c.IDCC AS IDCC, 
-                            cb.ID AS ID, 
-                            config.TipoAcreditacion as CONFIGURACION 
-                        FROM 
-                            ConfiguracionAcreditacion config 
-                        INNER JOIN 
-                            CUENTASBUZONES cb on config.CuentasBuzonesId = cb.ID 
-                        INNER JOIN 
-                            CC c ON config.NC = c.NC 
-                        WHERE 
-                            cb.IDCLIENTE = @idcli 
-                        AND 
-                            cb.BANCO = @bank;";
-
-
-                conn.Open();
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (var cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@idcli", idcliente);
+
                     cmd.Parameters.AddWithValue("@bank", bank.NombreBanco);
 
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
 
                         int ncOrdinal = reader.GetOrdinal("NC_CC");
@@ -504,7 +506,7 @@ namespace ANS.Model.Services
                         int nnOrdinal = reader.GetOrdinal("NN");
                         int configOrdinal = reader.GetOrdinal("CONFIGURACION");
 
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             CuentaBuzon cuentaBuzon = new CuentaBuzon
                             {
@@ -570,6 +572,7 @@ namespace ANS.Model.Services
         public async Task acreditarPuntoAPuntoPorBanco(Banco bank)
         {
             int ultIdOperacionPorBuzon = 0;
+
             List<CuentaBuzon> buzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.p2p, bank);
 
             if (buzones == null || buzones.Count == 0)
@@ -578,14 +581,18 @@ namespace ANS.Model.Services
             // Procesamos cada buzón
             foreach (CuentaBuzon unBuzon in buzones)
             {
+
                 // Obtiene la última operación 
-                ultIdOperacionPorBuzon = obtenerUltimaOperacionByNC(unBuzon.NC, unBuzon.IdCuenta);
+                ultIdOperacionPorBuzon = await obtenerUltimaOperacionByNC(unBuzon);
 
                 // Procesa los depósitos para el buzón 
                 try
                 {
-                    await ServicioDeposito.getInstancia()
-                        .asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, TimeSpan.Zero);
+                    if (ultIdOperacionPorBuzon > 0)
+                    {
+                        await ServicioDeposito.getInstancia()
+                            .asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, TimeSpan.Zero);
+                    }
                 }
 
                 catch (Exception ex)
@@ -613,7 +620,7 @@ namespace ANS.Model.Services
                 foreach (var unaCuentaBuzon in cuentaBuzones)
                 {
 
-                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(unaCuentaBuzon.NC, unaCuentaBuzon.IdCuenta);
+                    int ultIdOperacion = await obtenerUltimaOperacionByNC(unaCuentaBuzon);
 
                     if (ultIdOperacion > 0)
                     {
@@ -626,7 +633,6 @@ namespace ANS.Model.Services
                 }
             }
             throw new Exception("No se encontaron buzones día a día");
-
         }
         public async Task acreditarTandaPorBanco(Banco bank)
         {
@@ -637,7 +643,7 @@ namespace ANS.Model.Services
                 foreach (var unaCuentaBuzon in cuentaBuzones)
                 {
 
-                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(unaCuentaBuzon.NC, unaCuentaBuzon.IdCuenta);
+                    int ultIdOperacion = await obtenerUltimaOperacionByNC(unaCuentaBuzon);
 
                     if (ultIdOperacion > 0)
                     {
@@ -657,31 +663,29 @@ namespace ANS.Model.Services
             throw new Exception("No se encontaron buzones tanda");
         }
         #endregion
-        private int obtenerUltimaOperacionByNC(string nc, int idCuenta)
+        private async Task<int> obtenerUltimaOperacionByNC(CuentaBuzon cuenta)
         {
+
+            int idmoneda = cuenta.getIdMoneda();
+
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                //string query = "select max(idoperacion) from ACREDITACIONESDEPOSITOS where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
-                string query = "select max(idoperacion) from AcreditacionDepositoDiegoTest where IDBUZON = @ncFound and IDCUENTA = @idCuenta";
+                string query = "select max(idoperacion) from AcreditacionDepositoDiegoTest where IDBUZON = @ncFound and IDCUENTA = @idCuenta and MONEDA = @idMoneda";
 
-                if (nc == "GRAMAR")
+                await conn.OpenAsync();
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    Console.Write("ESTA ES!");
+                    cmd.Parameters.AddWithValue("@ncFound", cuenta.NC);
+                    cmd.Parameters.AddWithValue("@idCuenta", cuenta.IdCuenta);
+                    cmd.Parameters.AddWithValue("@idMoneda", idmoneda);
+
+                    object result = await cmd.ExecuteScalarAsync();
+                    return result != DBNull.Value && result != null ? Convert.ToInt32(result) : 0;
                 }
-
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-
-                cmd.Parameters.AddWithValue("@ncFound", nc);
-
-                cmd.Parameters.AddWithValue("@idCuenta", idCuenta);
-
-                object result = cmd.ExecuteScalar();
-
-                return result != DBNull.Value && result != null ? Convert.ToInt32(result) : 0;
             }
         }
+
         public async Task acreditarTandaHendersonSantander(TimeSpan horaCierreActual)
         {
             if (horaCierreActual == TimeSpan.Zero)
@@ -692,7 +696,7 @@ namespace ANS.Model.Services
 
             Cliente henderson = ServicioCliente.getInstancia().getById(164);
 
-            List<CuentaBuzon> cuentaBuzonesHendersonSantander = getCuentaBuzonesByClienteYBanco(henderson.IdCliente, santander);
+            List<CuentaBuzon> cuentaBuzonesHendersonSantander = await getCuentaBuzonesByClienteYBanco(henderson.IdCliente, santander);
 
             List<CuentaBuzon> listaCuentasFiltradasPorTipoAcreditacion = new List<CuentaBuzon>();
 
@@ -710,11 +714,16 @@ namespace ANS.Model.Services
                                 listaCuentasFiltradasPorTipoAcreditacion.Add(unaCuenta);
                             }
                         }
-                        foreach (CuentaBuzon _acc in listaCuentasFiltradasPorTipoAcreditacion)
-                        {
-                            int ultOperacion = obtenerUltimaOperacionByNC(_acc.NC, _acc.IdCuenta);
 
-                            await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(_acc, ultOperacion, horaCierreActual);
+                        foreach (CuentaBuzon unaCuentaYaFiltrada in listaCuentasFiltradasPorTipoAcreditacion)
+                        {
+                            int ultimoIdOperacion = await obtenerUltimaOperacionByNC(unaCuentaYaFiltrada);
+
+                            if (ultimoIdOperacion > 0)
+                            {
+                                await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaYaFiltrada, ultimoIdOperacion, TimeSpan.Zero);
+                            }
+
                         }
 
                         if (listaCuentasFiltradasPorTipoAcreditacion.Count > 0)
@@ -733,6 +742,7 @@ namespace ANS.Model.Services
                 }
             }
         }
+
         public async Task acretidarPorBanco(Banco bank, TimeSpan horaCierre)
         {
 
@@ -745,7 +755,7 @@ namespace ANS.Model.Services
 
                 foreach (CuentaBuzon _buzon in buzonesPorBanco)
                 {
-                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(_buzon.NC, _buzon.IdCuenta);
+                    int ultIdOperacion = await obtenerUltimaOperacionByNC(_buzon);
 
                     if (ultIdOperacion > 0)
                     {
@@ -763,19 +773,36 @@ namespace ANS.Model.Services
         }
         public async Task acreditarDiaADiaPorCliente(Cliente cli, Banco bank, TimeSpan horaCierreActual)
         {
+
             if (cli == null)
             {
                 throw new Exception("Error en método acreditarDiaADiaPorCliente. Cliente null");
             }
 
-            List<CuentaBuzon> cuentaBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente, bank);
+            List<CuentaBuzon> cuentaBuzones = await getCuentaBuzonesByClienteYBanco(cli.IdCliente, bank);
+
+            List<CuentaBuzon> cuentasFiltradasPorIdCliente = new List<CuentaBuzon>();
 
             if (cuentaBuzones != null && cuentaBuzones.Count > 0)
             {
-                foreach (CuentaBuzon cu in cuentaBuzones)
+
+                foreach (CuentaBuzon _oneAccount in cuentaBuzones)
+                {
+                    if (_oneAccount.IdCliente == cli.IdCliente)
+                    {
+                        cuentasFiltradasPorIdCliente.Add(_oneAccount);
+                    }
+                }
+
+            }
+
+            if (cuentasFiltradasPorIdCliente != null && cuentasFiltradasPorIdCliente.Count > 0)
+            {
+
+                foreach (CuentaBuzon cu in cuentasFiltradasPorIdCliente)
                 {
 
-                    int ultIdOperacion = this.obtenerUltimaOperacionByNC(cu.NC, cu.IdCuenta);
+                    int ultIdOperacion = await obtenerUltimaOperacionByNC(cu);
 
                     if (ultIdOperacion > 0)
                     {
@@ -785,10 +812,14 @@ namespace ANS.Model.Services
                     }
 
                 }
-                await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.diaxdia);
-            }
 
-            //obtener cuentabuzones del cliente obtenido y buscar depositos
+
+
+                await generarArchivoPorBanco(cuentasFiltradasPorIdCliente, bank, VariablesGlobales.tanda);
+
+                await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentasFiltradasPorIdCliente);
+
+            }
 
         }
         //Enviar Excel genérico.
@@ -798,7 +829,7 @@ namespace ANS.Model.Services
 
         }
         //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
-        public async Task enviarExcelHenderson(TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda)
+        public async Task enviarExcelHenderson(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda)
         {
 
             List<CuentaBuzon> listaFiltradaPorCiudadYTanda = new List<CuentaBuzon>();
@@ -809,7 +840,7 @@ namespace ANS.Model.Services
             {
                 if (bank.NombreBanco.ToUpper().Contains(VariablesGlobales.santander.ToUpper()))
                 {
-                    List<CuentaBuzon> listaCuentasBuzones = getCuentaBuzonesByClienteYBanco(cli.IdCliente, bank);
+                    List<CuentaBuzon> listaCuentasBuzones = await getCuentaBuzonesByClienteYBanco(cli.IdCliente, bank);
 
                     foreach (var unaCuenta in listaCuentasBuzones)
                     {
@@ -822,8 +853,7 @@ namespace ANS.Model.Services
 
                         }
                     }
-
-                    getAcreditacionesPorBuzones(listaFiltradaPorCiudadYTanda, hasta, bank);
+                    getAcreditacionesPorBuzones(listaFiltradaPorCiudadYTanda, hasta, desde, bank);
 
                     foreach (var unaCuentaFiltradaPorCiudad in listaFiltradaPorCiudadYTanda)
                     {
@@ -839,14 +869,16 @@ namespace ANS.Model.Services
             }
         }
         //METODO PARA OBTENER ACREDITACIONES(EXCEL , VA POR FECHA)
-        private void getAcreditacionesPorBuzones(List<CuentaBuzon> listaCuentasBuzones, TimeSpan hasta, Banco bank)
+        private void getAcreditacionesPorBuzones(List<CuentaBuzon> listaCuentasBuzones, TimeSpan hasta, TimeSpan desde, Banco bank)
         {
             if (listaCuentasBuzones != null && listaCuentasBuzones.Count > 0)
             {
                 try
                 {
-                    
+
                     DateTime hastaEfectivo = DateTime.Today.Add(hasta);
+
+                    DateTime desdeEfectivo = DateTime.Today.Add(desde);
 
                     using (SqlConnection conn = new SqlConnection(_conexionTSD))
                     {
@@ -862,6 +894,7 @@ namespace ANS.Model.Services
                                     "from acreditaciondepositodiegotest " +
                                     "where idbuzon = @accNC " +
                                     "and convert(date,fecha) = convert(date,getdate()) " +
+                                    "and fecha >= @desde " +
                                     "and fecha <= @hasta " +
                                     "and idbanco = @bankId " +
                                     "and idcuenta = @accId";
@@ -875,6 +908,8 @@ namespace ANS.Model.Services
                             cmd.Parameters.AddWithValue("@bankId", bank.BancoId);
 
                             cmd.Parameters.AddWithValue("@accId", account.IdCuenta);
+
+                            cmd.Parameters.AddWithValue("@desde", desdeEfectivo);
 
                             using (SqlDataReader reader = cmd.ExecuteReader())
                             {
@@ -911,8 +946,6 @@ namespace ANS.Model.Services
                 throw new Exception("Error en getAcreditacionesPorBuzones: ListaCuentaBuzones vacia o nula.");
             }
         }
-
-    
         private void generarExcelPorCuentas(List<CuentaBuzon> listaCuentasBuzones, int numTanda, string city)
         {
             using (var workbook = new XLWorkbook())
@@ -1039,7 +1072,6 @@ namespace ANS.Model.Services
                 Console.WriteLine($"Excel generado: {filePath}");
             }
         }
-
         public Task checkUltimaConexionByIdBuzon(string nc)
         {
 
@@ -1049,6 +1081,123 @@ namespace ANS.Model.Services
             }
             return null;
 
+
+        }
+        public async Task enviarExcelTesoreria(Banco santander, List<Cliente> clientes, string city, int numTanda, TimeSpan hasta, TimeSpan desde)
+        {
+
+            List<CuentaBuzon> listaFiltradaPorCiudadYTanda = new List<CuentaBuzon>();
+
+            List<CuentaBuzon> listaFiltradaPorCiudadYPorAcreditaciones = new List<CuentaBuzon>();
+
+            List<CuentaBuzon> listaCuentasBuzones = new List<CuentaBuzon>();
+
+            foreach (Cliente unCliente in clientes)
+            {
+                listaCuentasBuzones = await getCuentaBuzonesByClienteYBanco(unCliente.IdCliente, santander);
+            }
+
+            foreach (var unaCuenta in listaCuentasBuzones)
+            {
+                if (unaCuenta.Ciudad.ToUpper() == city.ToUpper())
+                {
+                    if (unaCuenta.Config.TipoAcreditacion == VariablesGlobales.tanda || unaCuenta.Config.TipoAcreditacion == VariablesGlobales.diaxdia)
+                    {
+                        listaFiltradaPorCiudadYTanda.Add(unaCuenta);
+                    }
+
+                }
+            }
+
+            getAcreditacionesPorBuzones(listaFiltradaPorCiudadYTanda, hasta, desde, santander);
+
+            foreach (var unaCuentaFiltradaPorCiudad in listaFiltradaPorCiudadYTanda)
+            {
+                if (unaCuentaFiltradaPorCiudad.ListaAcreditaciones != null && unaCuentaFiltradaPorCiudad.ListaAcreditaciones.Count > 0)
+                {
+                    listaFiltradaPorCiudadYPorAcreditaciones.Add(unaCuentaFiltradaPorCiudad);
+                }
+            }
+
+            generarExcelPorEmpresas(listaFiltradaPorCiudadYPorAcreditaciones, numTanda, city);
+
+        }
+        private void generarExcelPorEmpresas(List<CuentaBuzon> cuentas, int numTanda, string city)
+        {
+            // Agrupar por empresa y sumar los montos por moneda
+            var agrupadoTesoreria = cuentas
+                 .GroupBy(cb => cb.Empresa)
+                 .Select(g => new
+                 {
+                     Empresa = g.Key,
+                     TotalPesos = g.Where(cb => cb.Moneda.Equals("PESOS", StringComparison.OrdinalIgnoreCase))
+                                   .Sum(cb => cb.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0),
+                     TotalUSD = g.Where(cb => cb.Moneda.Equals("DOLARES", StringComparison.OrdinalIgnoreCase))
+                                 .Sum(cb => cb.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0)
+                 })
+                 .OrderBy(x => x.Empresa)
+                 .ToList();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Santander 15:30 Día a Día");
+                int currentRow = 1;
+
+                // Escribir encabezados
+                worksheet.Cell(currentRow, 1).Value = "Empresa";
+                worksheet.Cell(currentRow, 2).Value = "Total PESOS";
+                worksheet.Cell(currentRow, 3).Value = "Total USD";
+
+                // Estilos para encabezado
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 3);
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                currentRow++;
+
+                // Rellenar la información agrupada
+                foreach (var grupo in agrupadoTesoreria)
+                {
+                    worksheet.Cell(currentRow, 1).Value = grupo.Empresa;
+                    // Se asume que el método FormatearDoubleConPuntosYComas formatea el monto a string
+                    worksheet.Cell(currentRow, 2).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(grupo.TotalPesos);
+                    worksheet.Cell(currentRow, 3).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(grupo.TotalUSD);
+                    currentRow++;
+                }
+
+                // Ajustar ancho de columnas para mejor visualización
+                worksheet.Columns().AdjustToContents();
+
+                // Construir el nombre del archivo y ruta de guardado
+                string nombreArchivo = "Tesoreria_Tanda_" + numTanda + "_" + city + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
+                string filePath = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\" + nombreArchivo;
+
+                workbook.SaveAs(filePath);
+                Console.WriteLine($"Excel de Tesorería generado: {filePath}");
+            }
+        }
+        public async Task enviarExcelSantanderDiaADia(string city, Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
+        {
+
+            List<CuentaBuzon> cuentasFiltradasPorTipoAcreditacionYBanco = getAllByTipoAcreditacionYBanco(tipoAcreditacion.TipoAcreditacion, banco);
+
+            List<CuentaBuzon> cuentasFiltradasTambienPorCiudad = new List<CuentaBuzon>();
+
+            if (cuentasFiltradasPorTipoAcreditacionYBanco != null && cuentasFiltradasPorTipoAcreditacionYBanco.Count > 0)
+            {
+                foreach (CuentaBuzon cuentaBuzon in cuentasFiltradasPorTipoAcreditacionYBanco)
+                {
+                    if (cuentaBuzon.Ciudad.ToUpper().Equals(city.ToUpper()))
+                    {
+
+                        cuentasFiltradasTambienPorCiudad.Add(cuentaBuzon);
+
+                    }
+                }
+            }
+
+            generarExcelPorEmpresas(cuentasFiltradasTambienPorCiudad, 0, city);
 
         }
     }

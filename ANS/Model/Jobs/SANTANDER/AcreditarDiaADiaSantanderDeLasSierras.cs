@@ -1,23 +1,17 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
 namespace ANS.Model.Jobs.SANTANDER
 {
-
     [DisallowConcurrentExecution]
     public class AcreditarDiaADiaSantanderDeLasSierras : IJob
     {
-
         private IServicioCuentaBuzon _servicioCuentaBuzon { get; set; }
-
         public AcreditarDiaADiaSantanderDeLasSierras(IServicioCuentaBuzon servicioCuentaBuzon)
         {
             _servicioCuentaBuzon = servicioCuentaBuzon;
@@ -34,7 +28,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea Tanda Santander", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando tarea DXD DE LAS SIERRAS", Color.FromRgb(255, 102, 102));
 
                 });
 
@@ -51,31 +45,64 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 e = ex;
 
-                Console.WriteLine($"Error al ejecutar TANDA 1 de SANTANDER: {ex.Message}");
+                Console.WriteLine($"Error al ejecutar DXD DE LAS SIERRAS: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
 
             }
             finally
             {
 
-                //string msgRetorno = "SUCCESS - JOB TANDA ~SANTANDER~";
+                Mensaje mensaje = new Mensaje();
 
-                //Color colorRetorno = Color.FromRgb(76, 175, 80); // verde succcesss
+                mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                //if (e != null)
-                //{
+                mensaje.Banco = "SANTANDER";
 
-                //    msgRetorno = "ERROR - JOB TANDA ~SANTANDER~ ";
+                mensaje.Tipo = "DXD DE LAS SIERRAS";
 
-                //    colorRetorno = Color.FromRgb(255, 0, 0); //ROJO 
-                //}
+                mensaje.Icon = PackIconKind.Bank;
 
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
 
-                //    main.OcultarAviso(msgRetorno, colorRetorno);
-                //});
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
+
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
+
+                        main.DataContext = vm;
+                    }
+
+                    if (e != null)
+                    {
+
+                        main.MostrarAviso("Error Job DXD DE LAS SIERRAS", Colors.Red);
+
+                        mensaje.Estado = "Error";
+
+                        //escribir log error
+
+                    }
+
+                    else
+                    {
+
+                        main.MostrarAviso("Success Job DXD DE LAS SIERRAS", Colors.Green);
+
+                        mensaje.Estado = "Success";
+
+                    }
+
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
+
+                    vm.CargarMensajes();
+
+                    // escribir log success
+
+                });
 
             }
 

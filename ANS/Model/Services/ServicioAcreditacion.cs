@@ -59,7 +59,7 @@ namespace ANS.Model.Services
 
                         double montoTotalDelDeposito = _dep.Totales.Sum(e => e.ImporteTotal);
 
-                        if(montoTotalDelDeposito == 0)
+                        if(_acc.NC == "TECNI101" && _dep.IdOperacion == 8645)
                         {
                             Console.WriteLine("ATENCION ES 0 ");
                         }
