@@ -37,11 +37,17 @@ namespace ANS.Model.Jobs.SANTANDER
                     main.MostrarAviso("Ejecutando tarea EXCEL 1  SANTANDER para TESORERIA", Color.FromRgb(255, 102, 102));
 
                 });
-                Banco santander = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                TimeSpan hasta = new TimeSpan(12, 40, 0);
 
-              //  await _servicioCuentaBuzon.enviarExcelHenderson(hasta,henderson,santander, numTanda);
+                TimeSpan desde = new TimeSpan(6, 59, 0);
+
+                TimeSpan hasta = new TimeSpan(7, 1, 0);
+
+                Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
+   
+                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, hasta, desde);
+
+                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MALDONADO", 1, hasta, desde);            
 
             }
             catch (Exception ex)

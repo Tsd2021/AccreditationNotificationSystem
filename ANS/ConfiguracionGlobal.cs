@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Configuration;
 
 namespace ANS
 {
@@ -33,6 +28,15 @@ namespace ANS
             {
                 return ConfigurationManager.ConnectionStrings["conexionWebBuzones"]?.ConnectionString
                        ?? throw new ConfigurationErrorsException("La cadena de conexión 'ConexionWebBuzones' no está configurada en App.config.");
+            }
+        }
+
+        public static string Conexion22
+        {
+            get
+            {
+                return ConfigurationManager.ConnectionStrings["conexionTSD22"]?.ConnectionString
+                       ?? throw new ConfigurationErrorsException("La cadena de conexión 'Conexion22' no está configurada en App.config.");
             }
         }
     }

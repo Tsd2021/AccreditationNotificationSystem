@@ -34,9 +34,10 @@ namespace ANS.Model.Jobs.SANTANDER
                     main.MostrarAviso("Ejecutando tarea Tanda Santander", Color.FromRgb(255, 102, 102));
 
                 });
-                
 
-                await _servicioCuentaBuzon.acreditarTandaHendersonSantander(VariablesGlobales.horaCierreSantanderHENDERSON_TANDA2_TXT);
+                int numTanda = 2;
+
+                await _servicioCuentaBuzon.acreditarTandaHendersonSantander(VariablesGlobales.horaCierreSantanderHENDERSON_TANDA2_TXT,numTanda);
 
             }
             catch (Exception ex)

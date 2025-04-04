@@ -45,7 +45,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 TimeSpan desde = new TimeSpan(14, 30, 0);
 
-                TimeSpan hasta = new TimeSpan(14, 50,0);
+                TimeSpan hasta = new TimeSpan(14, 32,0);
 
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 

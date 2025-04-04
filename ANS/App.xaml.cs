@@ -48,8 +48,8 @@ namespace ANS
 
                 ServicioMensajeria.getInstancia().agregar(new Mensaje
                 {
-                    Estado = "Success",
-                    Tipo = "Schedule",
+                    Estado = "Éxito",
+                    Tipo = "Agenda",
                     Fecha = DateTime.Now
                 });
 
@@ -141,7 +141,7 @@ namespace ANS
                                                         DayOfWeek.Thursday,
                                                         DayOfWeek.Friday
                                                     })
-                                                    .WithIntervalInMinutes(17))
+                                                    .WithIntervalInMinutes(18))
                                                     .Build();
             #endregion P2P SANTANDER
 
@@ -159,19 +159,11 @@ namespace ANS
 
             // MONTEVIDEO
 
-            IJobDetail jobDiaADiaSantanderExcelMontevideo = JobBuilder.Create<ExcelSantanderDiaADia>().WithIdentity("SantanderJobDAD", "GrupoTrabajoSantander").UsingJobData("city", "MONTEVIDEO").Build();
+            IJobDetail jobDiaADiaSantanderExcelMontevideo = JobBuilder.Create<ExcelSantanderDiaADia>().WithIdentity("SantanderJobExcelDAD1", "GrupoTrabajoSantander").Build();
 
             ITrigger triggerDiaADiaSantanderExcelMontevideo = TriggerBuilder.Create()
-                .WithIdentity("SantanderTriggerDAD", "GrupoTrabajoSantander")
-                .WithCronSchedule("0 35 15 ? * MON-FRI")
-                .Build();
-
-            // MALDONADO
-            IJobDetail jobDiaADiaSantanderExcelMaldonado = JobBuilder.Create<ExcelSantanderDiaADia>().WithIdentity("SantanderJobDAD", "GrupoTrabajoSantander").UsingJobData("city", "MALDONADO").Build();
-
-            ITrigger triggerDiaADiaSantanderExcelMaldonado = TriggerBuilder.Create()
-                .WithIdentity("SantanderTriggerDAD", "GrupoTrabajoSantander")
-                .WithCronSchedule("0 35 15 ? * MON-FRI")
+                .WithIdentity("SantanderTriggerExcelDAD1", "GrupoTrabajoSantander")
+                .WithCronSchedule("0 37 15 ? * MON-FRI")
                 .Build();
 
             #endregion DXD Santander
@@ -214,7 +206,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda1Maldonado = TriggerBuilder.Create()
                                        .WithIdentity("TriggerExcelHendersonTan1Maldonado", "GrupoTrabajoSantander")
-                                       .WithCronSchedule("0 10 7 ? * MON-FRI")
+                                       .WithCronSchedule("15 10 7 ? * MON-FRI")
                                        .Build();
             #endregion TANDA1_HENDERSON
 
@@ -242,7 +234,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda2Montevideo = TriggerBuilder.Create()
                                                     .WithIdentity("TriggerExcelHendersonTan2Montevideo", "GrupoTrabajoSantander")
-                                                    .WithCronSchedule("30 34 14 ? * MON-FRI")
+                                                    .WithCronSchedule("0 33 14 ? * MON-FRI")
                                                     .Build();
 
             // ##################  EXCEL MALDONADO ################## //
@@ -255,7 +247,7 @@ namespace ANS
 
             ITrigger triggerExcelHendersonTanda2Maldonado = TriggerBuilder.Create()
                                        .WithIdentity("TriggerExcelHendersonTan2Maldonado", "GrupoTrabajoSantander")
-                                       .WithCronSchedule("30 34 14 ? * MON-FRI")
+                                       .WithCronSchedule("15 33 14 ? * MON-FRI")
                                        .Build();
             #endregion TANDA2_HENDERSON
 
@@ -265,9 +257,48 @@ namespace ANS
 
             ITrigger triggerDiaADiaDeLasSierras = TriggerBuilder.Create()
                                                   .WithIdentity("SantanderDeLasSierrasTrigger", "GrupoTrabajoSantander")
-                                                  .WithSchedule(CronScheduleBuilder.CronSchedule("0 24 13 ? * MON-FRI"))
+                                                  .WithSchedule(CronScheduleBuilder.CronSchedule("0 59 6 ? * MON-FRI"))
                                                   .Build();
             #endregion DXD DeLasSierras
+
+            #region TANDA1_TESORERIA
+            IJobDetail jobTanda1ExcelTesoreria = JobBuilder.Create<ExcelSantanderTesoreria1>()
+            .WithIdentity("SantanderJobTan1Tesoreria", "GrupoTrabajoSantander")
+            .Build();
+
+
+            ITrigger triggerTanda1ExcelTesoreria = TriggerBuilder.Create()
+                    .WithIdentity("SantanderTriggerTAN1", "GrupoTrabajoSantander")
+                    .WithCronSchedule("0 5 7 ? * MON-FRI") // 7:05 L-V
+                    .Build();
+            #endregion
+
+            #region TANDA2_TESORERIA
+            IJobDetail jobTanda2ExcelTesoreria = JobBuilder.Create<ExcelSantanderTesoreria1>()
+                        .WithIdentity("SantanderJobTan2Tesoreria", "GrupoTrabajoSantander")
+                        .Build();
+
+
+
+
+            ITrigger triggerTanda2ExcelTesoreria = TriggerBuilder.Create()
+                    .WithIdentity("SantanderTriggerTAN2", "GrupoTrabajoSantander")
+                    .WithCronSchedule("0 32 14 ? * MON-FRI") // 14:32 L-V
+                    .Build();
+            #endregion
+
+            #region REPORTE_DIARIO
+
+            IJobDetail jobReporteDiarioSantander = JobBuilder.Create<ExcelReporteDiarioSantander>()
+                        .WithIdentity("SantanderJobReporteDiario", "GrupoTrabajoSantander")
+                        .Build();
+
+            ITrigger triggerReporteDiarioSantander = TriggerBuilder.Create()
+                    .WithIdentity("SantanderTriggerReporteDiario", "GrupoTrabajoSantander")
+                    .WithCronSchedule("0 45 15 ? * MON-FRI") // 15:45 L-V
+                    .Build();
+
+            #endregion
 
             try
             {
@@ -280,8 +311,6 @@ namespace ANS
 
                 await _scheduler.ScheduleJob(jobDiaADiaSantanderExcelMontevideo, triggerDiaADiaSantanderExcelMontevideo);
 
-                await _scheduler.ScheduleJob(jobDiaADiaSantanderExcelMaldonado, triggerDiaADiaSantanderExcelMaldonado);
-
                 await _scheduler.ScheduleJob(jobTanda1Santander, triggerTanda1Santander);
 
                 await _scheduler.ScheduleJob(jobTanda2Santander, triggerTanda2Santander);
@@ -293,6 +322,12 @@ namespace ANS
                 await _scheduler.ScheduleJob(jobExcelHendersonTanda2Montevideo, triggerExcelHendersonTanda2Montevideo);
 
                 await _scheduler.ScheduleJob(jobExcelHendersonTanda2Maldonado, triggerExcelHendersonTanda2Maldonado);
+
+                await _scheduler.ScheduleJob(jobReporteDiarioSantander, triggerReporteDiarioSantander);
+
+                await _scheduler.ScheduleJob(jobTanda1ExcelTesoreria, triggerTanda1ExcelTesoreria);
+
+                await _scheduler.ScheduleJob(jobTanda2ExcelTesoreria, triggerTanda2ExcelTesoreria);
 
             }
             catch (Exception ex)
