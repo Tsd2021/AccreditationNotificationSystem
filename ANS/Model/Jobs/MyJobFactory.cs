@@ -84,7 +84,12 @@ namespace ANS.Model.Jobs
             {
                 return new ExcelSantanderDiaADia(_servicioCuentaBuzon);
             }
-            // Para otros jobs, si los hay:
+
+            if (jobType == typeof(ExcelReporteDiarioSantander))
+            {
+                return new ExcelReporteDiarioSantander(_servicioCuentaBuzon);
+            }
+
             return (IJob)Activator.CreateInstance(jobType);
         }
 

@@ -41,9 +41,11 @@ namespace ANS.Model.Jobs.SANTANDER
                 });
                 Banco santander = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                TimeSpan hasta = new TimeSpan(7, 6, 0);
+                TimeSpan desde = new TimeSpan(7, 0, 0);
 
-                TimeSpan desde = new TimeSpan(7,0, 0);
+                TimeSpan hasta = new TimeSpan(7, 2, 0);
+
+              
 
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 

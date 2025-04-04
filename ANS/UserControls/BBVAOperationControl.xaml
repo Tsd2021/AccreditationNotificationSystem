@@ -1,0 +1,51 @@
+﻿<UserControl  x:Class="ANS.UserControls.BBVAOperationControl"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:ANS.UserControls"
+        mc:Ignorable="d"
+        >
+    <Grid>
+        <materialDesign:ColorZone Mode="Dark"
+    HorizontalAlignment="Stretch"
+    VerticalAlignment="Stretch">
+            <Grid Margin="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <!-- Columna para el texto -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Columna para el botón -->
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Fila 1 -->
+                    <TextBlock Text="Acreditar Punto a Punto"  
+                                FontSize="20" 
+                                Margin="20" 
+                                HorizontalAlignment="Center"  Grid.Row="0" Grid.Column="0" />
+                    <Button Content="Ejecutar" Grid.Row="0" Grid.Column="1" Margin="179,20,-191,20"/>
+
+                    <!-- Fila 2 -->
+                    <TextBlock Text="Acreditar Día a Día"  
+                                FontSize="20" 
+                                Margin="20" 
+                                HorizontalAlignment="Center"  Grid.Row="1" Grid.Column="0" />
+                    <Button Content="Ejecutar" Grid.Row="1" Grid.Column="1" Margin="179,15,-191,25"/>
+
+   
+
+                </Grid>
+            </Grid>
+        </materialDesign:ColorZone>
+    </Grid>
+
+</UserControl>

@@ -4,7 +4,6 @@ namespace ANS.Model.Services
 {
     public class ServicioMensajeria : IServicioMensajeria
     {
-
         public List<Mensaje> tuplaMensajes { get; set; } = new List<Mensaje>();
         public static ServicioMensajeria Instancia { get; set; }
         public static ServicioMensajeria getInstancia()
@@ -15,7 +14,6 @@ namespace ANS.Model.Services
             }
             return Instancia;
         }
-
         public void agregar(Mensaje tupla)
         {
             if (tupla != null)
@@ -23,7 +21,6 @@ namespace ANS.Model.Services
                 tuplaMensajes.Add(tupla);
             }
         }
-
         public void quitar(Mensaje tupla)
         {
             if (tupla != null)
@@ -31,7 +28,6 @@ namespace ANS.Model.Services
                 tuplaMensajes.Remove(tupla);
             }
         }
-
         public List<Mensaje> getMensajes()
         {
             return tuplaMensajes;

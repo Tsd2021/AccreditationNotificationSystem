@@ -1,14 +1,13 @@
 ﻿using ANS.Model.Interfaces;
 using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ANS.Model.Services
 {
     public class ServicioDeposito : IServicioDeposito
     {
         private string _conexionWebBuzones = ConfiguracionGlobal.ConexionWebBuzones;
-
         private static ServicioDeposito instancia { get; set; }
-
         public static ServicioDeposito getInstancia()
         {
             if (instancia == null)
@@ -17,7 +16,6 @@ namespace ANS.Model.Services
             }
             return instancia;
         }
-
         public async Task asignarDepositosAlBuzon(CuentaBuzon buzon, int ultIdOperacion, TimeSpan horaDeCierre)
         {
             if (buzon == null)
@@ -25,12 +23,46 @@ namespace ANS.Model.Services
 
             List<Deposito> depositosList = new List<Deposito>();
 
-            if (buzon.NC == "LABARRA")
-            {
-                Console.WriteLine("lABARRA! CHECK DEPOSITOS");
-            }
+            string query;
 
-            string query = @"SELECT 
+            if (horaDeCierre != TimeSpan.Zero)
+            {
+
+                query = @"SELECT 
+                        d.iddeposito, 
+                        d.idoperacion, 
+                        d.codigo, 
+                        d.tipo, 
+                        CASE 
+                            WHEN CHARINDEX('-', d.empresa) > 0 
+                                THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                            ELSE LTRIM(RTRIM(d.empresa))
+                        END AS empresa, 
+                        d.fechadep         
+                    FROM 
+                        Depositos d
+                    INNER JOIN 
+                        relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
+                    INNER JOIN 
+                        Totales t ON rd.IdTotal = t.IdTotal
+                    WHERE 
+                        d.codigo = @nc
+                        AND (
+                            CASE 
+                                WHEN CHARINDEX('-', d.empresa) > 0 
+                                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                                ELSE LTRIM(RTRIM(d.empresa))
+                            END
+                        ) LIKE '%' + @empresa + '%'
+                        AND d.idoperacion > @ultimaOperacion                
+                        AND t.Divisas = @divisaActual 
+                        AND d.fechadep < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)) 
+                        AND d.FechaActualizacion < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)) ";
+                        
+            }
+            else
+            {
+                query = @"SELECT 
                             d.iddeposito, 
                             d.idoperacion, 
                             d.codigo, 
@@ -58,10 +90,12 @@ namespace ANS.Model.Services
                             ) LIKE '%' + @empresa + '%'
                             AND d.idoperacion > @ultimaOperacion                
                             AND t.Divisas = @divisaActual;";
+            }
 
             using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
             {
                 await cnn.OpenAsync();
+
                 using (SqlCommand cmd = new SqlCommand(query, cnn))
                 {
                     cmd.Parameters.AddWithValue("@nc", buzon.NC);
@@ -71,6 +105,11 @@ namespace ANS.Model.Services
                     cmd.Parameters.AddWithValue("@empresa", buzon.Empresa);
 
                     cmd.Parameters.AddWithValue("@divisaActual", buzon.Divisa);
+
+                    if (horaDeCierre != TimeSpan.Zero)
+                    {
+                        cmd.Parameters.Add("@horaDeCierre", SqlDbType.Time).Value = horaDeCierre;
+                    }
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
@@ -108,7 +147,7 @@ namespace ANS.Model.Services
                 {
                     await BuscaYAsignarTotalesPorDepositoYDivisa(deposito, buzon.Divisa, _conexionWebBuzones);
                     Console.WriteLine("TOTAL POR DEPOSITO ASIGNADO OK");
-                 
+
                     lock (depositosLock)
                     {
                         buzon.Depositos.Add(deposito);
@@ -127,7 +166,6 @@ namespace ANS.Model.Services
 
             await Task.WhenAll(tasks);
         }
-
         private async Task BuscaYAsignarTotalesPorDepositoYDivisa(Deposito deposito, string divisa, string connectionString)
         {
             if (deposito == null)
@@ -138,11 +176,11 @@ namespace ANS.Model.Services
                 await localCnn.OpenAsync();
 
                 string query = @"
-            select totales.divisas,totales.importetotal
-            from totales
-            inner join relaciondeposito on totales.IdTotal = relaciondeposito.IdTotal
-            where relaciondeposito.iddeposito = @idDep
-            and totales.divisas = @divisa";
+                                select totales.divisas,totales.importetotal
+                                from totales
+                                inner join relaciondeposito on totales.IdTotal = relaciondeposito.IdTotal
+                                where relaciondeposito.iddeposito = @idDep
+                                and totales.divisas = @divisa";
 
                 SqlCommand cmdTotales = new SqlCommand(query, localCnn);
 
@@ -164,6 +202,5 @@ namespace ANS.Model.Services
 
             }
         }
-
     }
 }

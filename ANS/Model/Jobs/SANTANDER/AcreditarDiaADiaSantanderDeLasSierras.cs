@@ -46,7 +46,6 @@ namespace ANS.Model.Jobs.SANTANDER
                 e = ex;
 
                 Console.WriteLine($"Error al ejecutar DXD DE LAS SIERRAS: {ex.Message}");
-                //ACA GUARDAR EN UN LOG
 
             }
             finally

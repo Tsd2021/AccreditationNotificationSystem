@@ -4,10 +4,10 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:ANS.Model"
         Title="Accreditation Notification System" 
-        Height="800" Width="1200">
+        WindowState="Maximized">
     <Window.Resources>
 
-        <!-- Estilo para un botón circular -->
+            <!-- Estilo para un botón circular -->
         <Style x:Key="CircularButtonStyle" TargetType="Button">
 
             <Setter Property="Background" Value="Transparent"/>
@@ -71,7 +71,8 @@
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
                         Margin="16"
-                        Style="{StaticResource CircularButtonStyle}">
+                        Style="{StaticResource CircularButtonStyle}"
+                        Click="SettingsButton_Click">
                         <materialDesign:PackIcon Kind="Settings" Width="28" Height="28" Foreground="LightGoldenrodYellow"/>
                     </Button>
                 </Grid>

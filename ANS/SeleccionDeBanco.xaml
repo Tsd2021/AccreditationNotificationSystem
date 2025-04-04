@@ -1,0 +1,41 @@
+﻿<Window x:Class="ANS.SeleccionDeBanco"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Selección de Banco" WindowState="Maximized">
+    <Grid>
+        <materialDesign:ColorZone Mode="Dark"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+           
+                <!-- Título -->
+                <TextBlock Text="Menú administrativo" 
+                       FontSize="24"  
+                       Margin="0,0,0,20"
+                       HorizontalAlignment="Center"/>
+
+                <TextBlock Text="Elegí un banco" 
+                       FontSize="18"  
+                       Margin="0,0,0,20"
+                       HorizontalAlignment="Center"/>
+                <!-- UniformGrid para colocar 3 botones de imagen -->
+                <UniformGrid Columns="3" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50">
+                    <!-- Primer banco -->
+                    <Button Click="BankButton_Click" Tag="BBVA" BorderThickness="0" Background="Transparent" Margin="30">
+                        <Image Source="Images/bbva.png" Width="150" Height="150"/>
+                    </Button>
+                    <!-- Segundo banco -->
+                    <Button Click="BankButton_Click" Tag="Santander" BorderThickness="0" Background="Transparent" Margin="30">
+                        <Image Source="Images/santander.png" Width="150" Height="150"/>
+                    </Button>
+                    <!-- Tercer banco -->
+                    <Button Click="BankButton_Click" Tag="Scotiabank" BorderThickness="0" Background="Transparent" Margin="30">
+                        <Image Source="Images/scotiabank.png" Width="150" Height="150"/>
+                    </Button>
+                </UniformGrid>
+         
+        </StackPanel>
+        </materialDesign:ColorZone>
+    </Grid>
+</Window>

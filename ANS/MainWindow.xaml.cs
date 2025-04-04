@@ -43,7 +43,13 @@ namespace ANS
             JobSnackbar.MessageQueue?.Enqueue(model);
 
         }
- 
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var seleccionDeBanco = new SeleccionDeBanco();
+
+            seleccionDeBanco.ShowDialog();
+        }
 
         // Implementación de INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
@@ -51,5 +57,8 @@ namespace ANS
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+
+
+
     }
 }

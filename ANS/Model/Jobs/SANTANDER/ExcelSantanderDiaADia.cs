@@ -44,7 +44,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion("DiaADia");
 
-                await _servicioCuentaBuzon.enviarExcelSantanderDiaADia(_city,santander,config);
+                await _servicioCuentaBuzon.enviarExcelSantanderDiaADia(santander,config);
 
             }
 
