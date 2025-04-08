@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\App.xaml
-5341640385
+61277142598
 21839720286
-701050507948
+781960670965
 301-1553107125
-BancoModal.xaml;MainWindow.xaml;SeleccionDeBanco.xaml;UserControls\BBVAOperationControl.xaml;UserControls\SantanderOperationControl.xaml;
+BancoModal.xaml;MainWindow.xaml;SeleccionDeBanco.xaml;UserControls\BBVAOperationControl.xaml;UserControls\SantanderOperationControl.xaml;UserControls\ScotiabankOperationControl.xaml;
 
 False
 

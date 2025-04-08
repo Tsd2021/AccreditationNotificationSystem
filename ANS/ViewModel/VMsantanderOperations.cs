@@ -145,9 +145,9 @@ namespace ANS.ViewModel
 
                 await Task.Run(async () =>
                 {
+
                     await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda);
 
-                    await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
 
             }
@@ -269,7 +269,28 @@ namespace ANS.ViewModel
         {
             Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-            await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(bank);
+            ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
+
+            IsLoading = true; await Task.Yield();
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    _servicioCuentaBuzon.enviarExcelSantanderDiaADia(bank, config).Wait();
+                });
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                IsLoading = false;
+
+            }
+
 
         }
         private async Task ejecutarReporteDiarioExcel()

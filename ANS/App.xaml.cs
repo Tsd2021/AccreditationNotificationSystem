@@ -7,12 +7,12 @@ using ANS.Model.Jobs.BBVA;
 using ANS.Model.Jobs.SANTANDER;
 using ANS.Model;
 using ANS.ViewModel;
+using ANS.Model.Jobs.SCOTIABANK;
 
 
 namespace ANS
 {
     /// <summary>
-    /// Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application
     {
@@ -40,7 +40,7 @@ namespace ANS
 
             await crearJobsSantander(_scheduler);
 
-            //await crearJobsScotiabank(_scheduler);
+            await crearJobsScotiabank(_scheduler);
 
             if (!_scheduler.IsStarted)
             {
@@ -56,6 +56,8 @@ namespace ANS
                 VMmainWindow vMmain = new VMmainWindow();
 
                 vMmain.CargarMensajes();
+
+                List<Tarea> tareas = await ServicioTarea.getInstancia().obtenerTareasDelScheduler(_scheduler);
 
                 Console.WriteLine("Scheduler iniciado correctamente.");
             }
@@ -89,6 +91,7 @@ namespace ANS
         {
             if (scheduler != null)
             {
+                /*
                 IJobDetail jobPuntoAPuntoScotiabank = JobBuilder
                                                       .Create<AcreditarPuntoAPuntoScotiabank>().WithIdentity("ScotiabankJobP2P", "GrupoTrabajoScotiabank")
                                                       .Build();
@@ -107,16 +110,72 @@ namespace ANS
                                                         })
                                                         .WithIntervalInMinutes(1))
                                                         .Build();
+                */
+
+
+
+                #region ACREDITAR_SCOTIA_TANDA_HENDERSON
+                IJobDetail jobAcreditarTanda1Scotiabank = JobBuilder.Create<AcreditarTanda1HendersonScotiabank>()
+                    .WithIdentity("ScotiabankJobAcreditarTAN1", "GrupoTrabajoScotiabank")
+                    .Build();
+
+                ITrigger triggerAcreditarTanda1Scotiabank = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerAcreditarTAN1", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("0 1 7 ? * MON-FRI") // 7:00 Lun-Vie
+                    .Build();
+
+
+                IJobDetail jobAcreditarTanda2Scotiabank = JobBuilder.Create<AcreditarTanda2HendersonScotiabank>()
+                .WithIdentity("ScotiabankJobAcreditarTAN2", "GrupoTrabajoScotiabank")
+                .Build();
+
+                ITrigger triggerAcreditarTanda2Scotiabank = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerAcreditarTAN2", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("0 30 14 ? * MON-FRI") // 7:00 Lun-Vie
+                    .Build();
+                #endregion
+
+                #region EXCEL_SCOTIA_TANDA_HENDERSON
+
+                IJobDetail jobExcelTanda1Scotiabank = JobBuilder.Create<ExcelHendersonTanda1>()
+                .WithIdentity("ScotiabankJobExcelTAN1", "GrupoTrabajoScotiabank")
+                .Build();
+
+                ITrigger triggerExcelTanda1Scotiabank = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerScotiabankJobExcelTAN1", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("20 8 7 ? * MON-FRI") // 7:00 Lun-Vie
+                    .Build();
+
+
+                IJobDetail jobExcelTanda2Scotiabank = JobBuilder.Create<ExcelHendersonTanda2>()
+                .WithIdentity("ScotiabankJobExcelTAN2", "GrupoTrabajoScotiabank")
+                .Build();
+
+                ITrigger triggerExcelTanda2Scotiabank = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerScotiabankJobExcelTAN2", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("13 34 14 ? * MON-FRI") // 7:00 Lun-Vie
+                    .Build();
+
+                #endregion
 
                 try
                 {
 
-                    await _scheduler.ScheduleJob(jobPuntoAPuntoScotiabank, triggerPuntoAPuntoScotiabank);
+                    await _scheduler.ScheduleJob(jobAcreditarTanda1Scotiabank,triggerAcreditarTanda1Scotiabank);
+
+                    await _scheduler.ScheduleJob(jobAcreditarTanda2Scotiabank,triggerAcreditarTanda2Scotiabank);
+
+                    await _scheduler.ScheduleJob(jobExcelTanda1Scotiabank, triggerExcelTanda1Scotiabank);
+
+                    await _scheduler.ScheduleJob(jobExcelTanda2Scotiabank, triggerExcelTanda2Scotiabank);
+
+                    //  await _scheduler.ScheduleJob(jobPuntoAPuntoScotiabank, triggerPuntoAPuntoScotiabank);
 
                 }
+
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al ejecutar la tarea de SANTANDER: {ex.Message}");
+                    Console.WriteLine($"Error al ejecutar la tarea de SCOTIABANK: {ex.Message}");
 
                 }
             }
@@ -159,11 +218,11 @@ namespace ANS
 
             // MONTEVIDEO
 
-            IJobDetail jobDiaADiaSantanderExcelMontevideo = JobBuilder.Create<ExcelSantanderDiaADia>().WithIdentity("SantanderJobExcelDAD1", "GrupoTrabajoSantander").Build();
+            IJobDetail jobDiaADiaSantanderExcel = JobBuilder.Create<ExcelSantanderDiaADia>().WithIdentity("SantanderJobExcelDAD1", "GrupoTrabajoSantander").Build();
 
-            ITrigger triggerDiaADiaSantanderExcelMontevideo = TriggerBuilder.Create()
+            ITrigger triggerDiaADiaSantanderExcel = TriggerBuilder.Create()
                 .WithIdentity("SantanderTriggerExcelDAD1", "GrupoTrabajoSantander")
-                .WithCronSchedule("0 37 15 ? * MON-FRI")
+                .WithCronSchedule("0 33 15 ? * MON-FRI")
                 .Build();
 
             #endregion DXD Santander
@@ -268,7 +327,7 @@ namespace ANS
 
 
             ITrigger triggerTanda1ExcelTesoreria = TriggerBuilder.Create()
-                    .WithIdentity("SantanderTriggerTAN1", "GrupoTrabajoSantander")
+                    .WithIdentity("SantanderTriggerTan1Tesoreria", "GrupoTrabajoSantander")
                     .WithCronSchedule("0 5 7 ? * MON-FRI") // 7:05 L-V
                     .Build();
             #endregion
@@ -279,10 +338,8 @@ namespace ANS
                         .Build();
 
 
-
-
             ITrigger triggerTanda2ExcelTesoreria = TriggerBuilder.Create()
-                    .WithIdentity("SantanderTriggerTAN2", "GrupoTrabajoSantander")
+                    .WithIdentity("SantanderTriggerTan2Tesoreria", "GrupoTrabajoSantander")
                     .WithCronSchedule("0 32 14 ? * MON-FRI") // 14:32 L-V
                     .Build();
             #endregion
@@ -295,7 +352,7 @@ namespace ANS
 
             ITrigger triggerReporteDiarioSantander = TriggerBuilder.Create()
                     .WithIdentity("SantanderTriggerReporteDiario", "GrupoTrabajoSantander")
-                    .WithCronSchedule("0 45 15 ? * MON-FRI") // 15:45 L-V
+                    .WithCronSchedule("0 50 15 ? * MON-FRI") // 15:50 L-V
                     .Build();
 
             #endregion
@@ -309,7 +366,7 @@ namespace ANS
 
                 await _scheduler.ScheduleJob(jobDiaADiaSantander, triggerDiaADiaSantander);
 
-                await _scheduler.ScheduleJob(jobDiaADiaSantanderExcelMontevideo, triggerDiaADiaSantanderExcelMontevideo);
+                await _scheduler.ScheduleJob(jobDiaADiaSantanderExcel, triggerDiaADiaSantanderExcel);
 
                 await _scheduler.ScheduleJob(jobTanda1Santander, triggerTanda1Santander);
 
@@ -323,11 +380,11 @@ namespace ANS
 
                 await _scheduler.ScheduleJob(jobExcelHendersonTanda2Maldonado, triggerExcelHendersonTanda2Maldonado);
 
-                await _scheduler.ScheduleJob(jobReporteDiarioSantander, triggerReporteDiarioSantander);
-
                 await _scheduler.ScheduleJob(jobTanda1ExcelTesoreria, triggerTanda1ExcelTesoreria);
 
                 await _scheduler.ScheduleJob(jobTanda2ExcelTesoreria, triggerTanda2ExcelTesoreria);
+
+                await _scheduler.ScheduleJob(jobReporteDiarioSantander, triggerReporteDiarioSantander);
 
             }
             catch (Exception ex)

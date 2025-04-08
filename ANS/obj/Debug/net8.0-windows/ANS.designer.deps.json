@@ -165,11 +165,98 @@
           }
         }
       },
+      "EPPlus/8.0.1": {
+        "dependencies": {
+          "EPPlus.Interfaces": "8.0.0",
+          "Microsoft.Extensions.Configuration.Json": "8.0.1",
+          "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
+          "System.ComponentModel.Annotations": "5.0.0",
+          "System.Security.Cryptography.Pkcs": "8.0.1",
+          "System.Security.Cryptography.Xml": "8.0.2",
+          "System.Text.Encoding.CodePages": "8.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/EPPlus.dll": {
+            "assemblyVersion": "8.0.1.0",
+            "fileVersion": "8.0.1.0"
+          }
+        }
+      },
+      "EPPlus.Interfaces/8.0.0": {
+        "runtime": {
+          "lib/net8.0/EPPlus.Interfaces.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.0.0"
+          }
+        }
+      },
       "ExcelNumberFormat/1.1.0": {
         "runtime": {
           "lib/netstandard2.0/ExcelNumberFormat.dll": {
             "assemblyVersion": "1.1.0.0",
             "fileVersion": "1.1.0.0"
+          }
+        }
+      },
+      "Extended.Wpf.Toolkit/4.7.25104.5739": {
+        "runtime": {
+          "lib/net5.0/Xceed.Wpf.AvalonDock.Themes.Aero.dll": {
+            "assemblyVersion": "4.7.0.0",
+            "fileVersion": "4.7.0.0"
+          },
+          "lib/net5.0/Xceed.Wpf.AvalonDock.Themes.Metro.dll": {
+            "assemblyVersion": "4.7.0.0",
+            "fileVersion": "4.7.0.0"
+          },
+          "lib/net5.0/Xceed.Wpf.AvalonDock.Themes.VS2010.dll": {
+            "assemblyVersion": "4.7.0.0",
+            "fileVersion": "4.7.0.0"
+          },
+          "lib/net5.0/Xceed.Wpf.AvalonDock.dll": {
+            "assemblyVersion": "4.7.0.0",
+            "fileVersion": "4.7.0.0"
+          },
+          "lib/net5.0/Xceed.Wpf.Toolkit.dll": {
+            "assemblyVersion": "4.7.0.0",
+            "fileVersion": "4.7.0.0"
+          }
+        },
+        "resources": {
+          "lib/net5.0/cs-CZ/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "cs-CZ"
+          },
+          "lib/net5.0/de/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "de"
+          },
+          "lib/net5.0/es/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "es"
+          },
+          "lib/net5.0/fr/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "fr"
+          },
+          "lib/net5.0/hu/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "hu"
+          },
+          "lib/net5.0/it/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "it"
+          },
+          "lib/net5.0/ja-JP/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "ja-JP"
+          },
+          "lib/net5.0/pt-BR/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "pt-BR"
+          },
+          "lib/net5.0/ro/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "ro"
+          },
+          "lib/net5.0/ru/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "ru"
+          },
+          "lib/net5.0/sv/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "sv"
+          },
+          "lib/net5.0/zh-Hans/Xceed.Wpf.AvalonDock.resources.dll": {
+            "locale": "zh-Hans"
           }
         }
       },
@@ -379,7 +466,7 @@
       "Microsoft.AspNetCore.Hosting.Server.Abstractions/2.1.1": {
         "dependencies": {
           "Microsoft.AspNetCore.Http.Features": "2.1.1",
-          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0"
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0"
         },
         "runtime": {
           "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Server.Abstractions.dll": {
@@ -418,7 +505,7 @@
       "Microsoft.AspNetCore.Http.Extensions/2.1.1": {
         "dependencies": {
           "Microsoft.AspNetCore.Http.Abstractions": "2.1.1",
-          "Microsoft.Extensions.FileProviders.Abstractions": "2.1.1",
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
           "Microsoft.Net.Http.Headers": "2.1.1",
           "System.Buffers": "4.5.0"
         },
@@ -505,7 +592,7 @@
           "System.Security.Cryptography.Encoding": "4.0.0",
           "System.Security.Cryptography.X509Certificates": "4.1.0",
           "System.Text.Encoding": "4.3.0",
-          "System.Text.Encoding.CodePages": "4.0.1",
+          "System.Text.Encoding.CodePages": "8.0.0",
           "System.Text.Encoding.Extensions": "4.3.0",
           "System.Threading": "4.3.0",
           "System.Threading.Tasks": "4.3.0",
@@ -660,37 +747,66 @@
           }
         }
       },
-      "Microsoft.Extensions.Configuration/6.0.0": {
+      "Microsoft.Extensions.Configuration/8.0.0": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Primitives": "8.0.0"
         },
         "runtime": {
-          "lib/netstandard2.0/Microsoft.Extensions.Configuration.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.21.52210"
+          "lib/net8.0/Microsoft.Extensions.Configuration.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
           }
         }
       },
-      "Microsoft.Extensions.Configuration.Abstractions/6.0.0": {
+      "Microsoft.Extensions.Configuration.Abstractions/8.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "8.0.0"
         },
         "runtime": {
-          "lib/netstandard2.0/Microsoft.Extensions.Configuration.Abstractions.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.21.52210"
+          "lib/net8.0/Microsoft.Extensions.Configuration.Abstractions.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
           }
         }
       },
       "Microsoft.Extensions.Configuration.Binder/6.0.0": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0"
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0"
         },
         "runtime": {
           "lib/netstandard2.0/Microsoft.Extensions.Configuration.Binder.dll": {
             "assemblyVersion": "6.0.0.0",
             "fileVersion": "6.0.21.52210"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.FileExtensions/8.0.1": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "8.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
+          "Microsoft.Extensions.FileProviders.Physical": "8.0.0",
+          "Microsoft.Extensions.Primitives": "8.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Configuration.FileExtensions.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.724.31311"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.Json/8.0.1": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "8.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Configuration.FileExtensions": "8.0.1",
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Configuration.Json.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1024.46610"
           }
         }
       },
@@ -713,22 +829,43 @@
           }
         }
       },
-      "Microsoft.Extensions.FileProviders.Abstractions/2.1.1": {
+      "Microsoft.Extensions.FileProviders.Abstractions/8.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "8.0.0"
         },
         "runtime": {
-          "lib/netstandard2.0/Microsoft.Extensions.FileProviders.Abstractions.dll": {
-            "assemblyVersion": "2.1.1.0",
-            "fileVersion": "2.1.1.18157"
+          "lib/net8.0/Microsoft.Extensions.FileProviders.Abstractions.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          }
+        }
+      },
+      "Microsoft.Extensions.FileProviders.Physical/8.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
+          "Microsoft.Extensions.FileSystemGlobbing": "8.0.0",
+          "Microsoft.Extensions.Primitives": "8.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.FileProviders.Physical.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          }
+        }
+      },
+      "Microsoft.Extensions.FileSystemGlobbing/8.0.0": {
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.FileSystemGlobbing.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
           }
         }
       },
       "Microsoft.Extensions.Hosting.Abstractions/2.1.1": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.1",
-          "Microsoft.Extensions.FileProviders.Abstractions": "2.1.1",
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "6.0.4"
         },
         "runtime": {
@@ -763,8 +900,8 @@
       },
       "Microsoft.Extensions.Logging.Configuration/6.0.0": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "6.0.0",
-          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Configuration": "8.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Configuration.Binder": "6.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.1",
           "Microsoft.Extensions.Logging": "6.0.0",
@@ -830,7 +967,7 @@
       },
       "Microsoft.Extensions.Options.ConfigurationExtensions/6.0.0": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Configuration.Binder": "6.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.1",
           "Microsoft.Extensions.Options": "6.0.0",
@@ -1009,6 +1146,14 @@
           }
         }
       },
+      "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
+        "runtime": {
+          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
+            "assemblyVersion": "3.0.1.0",
+            "fileVersion": "3.0.1.0"
+          }
+        }
+      },
       "Microsoft.Net.Http.Headers/2.1.1": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "8.0.0",
@@ -1035,7 +1180,7 @@
           "System.Buffers": "4.5.0",
           "System.Collections.Immutable": "1.2.0",
           "System.ComponentModel": "4.3.0",
-          "System.ComponentModel.Annotations": "4.1.0",
+          "System.ComponentModel.Annotations": "5.0.0",
           "System.Diagnostics.DiagnosticSource": "6.0.1",
           "System.Diagnostics.Process": "4.1.0",
           "System.Dynamic.Runtime": "4.0.11",
@@ -1389,24 +1534,11 @@
           }
         }
       },
-      "System.ComponentModel.Annotations/4.1.0": {
-        "dependencies": {
-          "System.Collections": "4.3.0",
-          "System.ComponentModel": "4.3.0",
-          "System.Globalization": "4.3.0",
-          "System.Linq": "4.1.0",
-          "System.Reflection": "4.3.0",
-          "System.Reflection.Extensions": "4.0.1",
-          "System.Resources.ResourceManager": "4.3.0",
-          "System.Runtime": "4.3.0",
-          "System.Runtime.Extensions": "4.3.0",
-          "System.Text.RegularExpressions": "4.3.0",
-          "System.Threading": "4.3.0"
-        },
+      "System.ComponentModel.Annotations/5.0.0": {
         "runtime": {
-          "lib/netstandard1.4/System.ComponentModel.Annotations.dll": {
-            "assemblyVersion": "4.1.0.0",
-            "fileVersion": "1.0.24212.1"
+          "lib/netstandard2.1/System.ComponentModel.Annotations.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.51904"
           }
         }
       },
@@ -3108,33 +3240,19 @@
           "System.Runtime": "4.3.0"
         }
       },
-      "System.Text.Encoding.CodePages/4.0.1": {
-        "dependencies": {
-          "Microsoft.NETCore.Platforms": "1.1.0",
-          "System.Collections": "4.3.0",
-          "System.Globalization": "4.3.0",
-          "System.IO": "4.3.0",
-          "System.Reflection": "4.3.0",
-          "System.Resources.ResourceManager": "4.3.0",
-          "System.Runtime": "4.3.0",
-          "System.Runtime.Extensions": "4.3.0",
-          "System.Runtime.Handles": "4.3.0",
-          "System.Runtime.InteropServices": "4.3.0",
-          "System.Text.Encoding": "4.3.0",
-          "System.Threading": "4.3.0"
+      "System.Text.Encoding.CodePages/8.0.0": {
+        "runtime": {
+          "lib/net8.0/System.Text.Encoding.CodePages.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          }
         },
         "runtimeTargets": {
-          "runtimes/unix/lib/netstandard1.3/System.Text.Encoding.CodePages.dll": {
-            "rid": "unix",
-            "assetType": "runtime",
-            "assemblyVersion": "4.0.1.0",
-            "fileVersion": "1.0.24212.1"
-          },
-          "runtimes/win/lib/netstandard1.3/System.Text.Encoding.CodePages.dll": {
+          "runtimes/win/lib/net8.0/System.Text.Encoding.CodePages.dll": {
             "rid": "win",
             "assetType": "runtime",
-            "assemblyVersion": "4.0.1.0",
-            "fileVersion": "1.0.24212.1"
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
           }
         }
       },
@@ -3553,12 +3671,33 @@
       "path": "dynamitey/2.0.10.189",
       "hashPath": "dynamitey.2.0.10.189.nupkg.sha512"
     },
+    "EPPlus/8.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Lk46SFgp9P58+SB8ZHhsAmXlw3skC3+Ky2Nd3xmB+R01z7ZK8AUxivkOg20PZ/O94xMLqQxmORRH5tRr2JmKew==",
+      "path": "epplus/8.0.1",
+      "hashPath": "epplus.8.0.1.nupkg.sha512"
+    },
+    "EPPlus.Interfaces/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EFr/vUbDYK55sxjfUfLUiv7oiz1f6ZLRYMKILHyfnWS019cYX5zJaQ1U3OojRuED8tgEeXX9QeG7Kj/b0XE7hQ==",
+      "path": "epplus.interfaces/8.0.0",
+      "hashPath": "epplus.interfaces.8.0.0.nupkg.sha512"
+    },
     "ExcelNumberFormat/1.1.0": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-R3BVHPs9O+RkExbZYTGT0+9HLbi8ZrNij1Yziyw6znd3J7P3uoIR07uwTLGOogtz1p6+0sna66eBoXu7tBiVQA==",
       "path": "excelnumberformat/1.1.0",
       "hashPath": "excelnumberformat.1.1.0.nupkg.sha512"
+    },
+    "Extended.Wpf.Toolkit/4.7.25104.5739": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-x6fCMLeExVZjyPl6f9/NRITW4uzT3xBZA40CBWA9YlH4/w6rKzsIeTDwYvavdmJLrl43p0LIFSQChISCnTSR6Q==",
+      "path": "extended.wpf.toolkit/4.7.25104.5739",
+      "hashPath": "extended.wpf.toolkit.4.7.25104.5739.nupkg.sha512"
     },
     "ExtendedWPFConverters/2.0.4": {
       "type": "package",
@@ -3777,19 +3916,19 @@
       "path": "microsoft.extensions.caching.memory/6.0.1",
       "hashPath": "microsoft.extensions.caching.memory.6.0.1.nupkg.sha512"
     },
-    "Microsoft.Extensions.Configuration/6.0.0": {
+    "Microsoft.Extensions.Configuration/8.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-tq2wXyh3fL17EMF2bXgRhU7JrbO3on93MRKYxzz4JzzvuGSA1l0W3GI9/tl8EO89TH+KWEymP7bcFway6z9fXg==",
-      "path": "microsoft.extensions.configuration/6.0.0",
-      "hashPath": "microsoft.extensions.configuration.6.0.0.nupkg.sha512"
+      "sha512": "sha512-0J/9YNXTMWSZP2p2+nvl8p71zpSwokZXZuJW+VjdErkegAnFdO1XlqtA62SJtgVYHdKu3uPxJHcMR/r35HwFBA==",
+      "path": "microsoft.extensions.configuration/8.0.0",
+      "hashPath": "microsoft.extensions.configuration.8.0.0.nupkg.sha512"
     },
-    "Microsoft.Extensions.Configuration.Abstractions/6.0.0": {
+    "Microsoft.Extensions.Configuration.Abstractions/8.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-qWzV9o+ZRWq+pGm+1dF+R7qTgTYoXvbyowRoBxQJGfqTpqDun2eteerjRQhq5PQ/14S+lqto3Ft4gYaRyl4rdQ==",
-      "path": "microsoft.extensions.configuration.abstractions/6.0.0",
-      "hashPath": "microsoft.extensions.configuration.abstractions.6.0.0.nupkg.sha512"
+      "sha512": "sha512-3lE/iLSutpgX1CC0NOW70FJoGARRHbyKmG7dc0klnUZ9Dd9hS6N/POPWhKhMLCEuNN5nXEY5agmlFtH562vqhQ==",
+      "path": "microsoft.extensions.configuration.abstractions/8.0.0",
+      "hashPath": "microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512"
     },
     "Microsoft.Extensions.Configuration.Binder/6.0.0": {
       "type": "package",
@@ -3797,6 +3936,20 @@
       "sha512": "sha512-b3ErKzND8LIC7o08QAVlKfaEIYEvLJbtmVbFZVBRXeu9YkKfSSzLZfR1SUfQPBIy9mKLhEtJgGYImkcMNaKE0A==",
       "path": "microsoft.extensions.configuration.binder/6.0.0",
       "hashPath": "microsoft.extensions.configuration.binder.6.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.FileExtensions/8.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EJzSNO9oaAXnTdtdNO6npPRsIIeZCBSNmdQ091VDO7fBiOtJAAeEq6dtrVXIi3ZyjC5XRSAtVvF8SzcneRHqKQ==",
+      "path": "microsoft.extensions.configuration.fileextensions/8.0.1",
+      "hashPath": "microsoft.extensions.configuration.fileextensions.8.0.1.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.Json/8.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-L89DLNuimOghjV3tLx0ArFDwVEJD6+uGB3BMCMX01kaLzXkaXHb2021xOMl2QOxUxbdePKUZsUY7n2UUkycjRg==",
+      "path": "microsoft.extensions.configuration.json/8.0.1",
+      "hashPath": "microsoft.extensions.configuration.json.8.0.1.nupkg.sha512"
     },
     "Microsoft.Extensions.DependencyInjection/8.0.0": {
       "type": "package",
@@ -3812,12 +3965,26 @@
       "path": "microsoft.extensions.dependencyinjection.abstractions/8.0.1",
       "hashPath": "microsoft.extensions.dependencyinjection.abstractions.8.0.1.nupkg.sha512"
     },
-    "Microsoft.Extensions.FileProviders.Abstractions/2.1.1": {
+    "Microsoft.Extensions.FileProviders.Abstractions/8.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-UEQB5/QPuLYaCvScZQ9llhcks5xyEUKh41D615FoehRAF9UgGVmXHcCSOH8idHHLRoKm+OJJjEy1oywvuaL33w==",
-      "path": "microsoft.extensions.fileproviders.abstractions/2.1.1",
-      "hashPath": "microsoft.extensions.fileproviders.abstractions.2.1.1.nupkg.sha512"
+      "sha512": "sha512-ZbaMlhJlpisjuWbvXr4LdAst/1XxH3vZ6A0BsgTphZ2L4PGuxRLz7Jr/S7mkAAnOn78Vu0fKhEgNF5JO3zfjqQ==",
+      "path": "microsoft.extensions.fileproviders.abstractions/8.0.0",
+      "hashPath": "microsoft.extensions.fileproviders.abstractions.8.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileProviders.Physical/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-UboiXxpPUpwulHvIAVE36Knq0VSHaAmfrFkegLyBZeaADuKezJ/AIXYAW8F5GBlGk/VaibN2k/Zn1ca8YAfVdA==",
+      "path": "microsoft.extensions.fileproviders.physical/8.0.0",
+      "hashPath": "microsoft.extensions.fileproviders.physical.8.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileSystemGlobbing/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OK+670i7esqlQrPjdIKRbsyMCe9g5kSLpRRQGSr4Q58AOYEe/hCnfLZprh7viNisSUUQZmMrbbuDaIrP+V1ebQ==",
+      "path": "microsoft.extensions.filesystemglobbing/8.0.0",
+      "hashPath": "microsoft.extensions.filesystemglobbing.8.0.0.nupkg.sha512"
     },
     "Microsoft.Extensions.Hosting.Abstractions/2.1.1": {
       "type": "package",
@@ -3979,6 +4146,13 @@
       "sha512": "sha512-n1igxBCeOZ4VkJN3ZyndBKnDdZo65+Nl/gGDOxj9srFoNLBUUlWpHVceJAxt3BRZBxumsK6EK9iRLS9YsIKUKg==",
       "path": "microsoft.identitymodel.xml/6.35.1",
       "hashPath": "microsoft.identitymodel.xml.6.35.1.nupkg.sha512"
+    },
+    "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-s/s20YTVY9r9TPfTrN5g8zPF1YhwxyqO6PxUkrYTGI2B+OGPe9AdajWZrLhFqXIvqIW23fnUE4+ztrUWNU1+9g==",
+      "path": "microsoft.io.recyclablememorystream/3.0.1",
+      "hashPath": "microsoft.io.recyclablememorystream.3.0.1.nupkg.sha512"
     },
     "Microsoft.Net.Http.Headers/2.1.1": {
       "type": "package",
@@ -4211,12 +4385,12 @@
       "path": "system.componentmodel/4.3.0",
       "hashPath": "system.componentmodel.4.3.0.nupkg.sha512"
     },
-    "System.ComponentModel.Annotations/4.1.0": {
+    "System.ComponentModel.Annotations/5.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-rhnz80h8NnHJzoi0nbQJLRR2cJznyqG168q1bgoSpe5qpaME2SguXzuEzpY68nFCi2kBgHpbU4bRN2cP3unYRA==",
-      "path": "system.componentmodel.annotations/4.1.0",
-      "hashPath": "system.componentmodel.annotations.4.1.0.nupkg.sha512"
+      "sha512": "sha512-dMkqfy2el8A8/I76n2Hi1oBFEbG1SfxD2l5nhwXV3XjlnOmwxJlQbYpJH4W51odnU9sARCSAgv7S3CyAFMkpYg==",
+      "path": "system.componentmodel.annotations/5.0.0",
+      "hashPath": "system.componentmodel.annotations.5.0.0.nupkg.sha512"
     },
     "System.Configuration.ConfigurationManager/8.0.0": {
       "type": "package",
@@ -4827,12 +5001,12 @@
       "path": "system.text.encoding/4.3.0",
       "hashPath": "system.text.encoding.4.3.0.nupkg.sha512"
     },
-    "System.Text.Encoding.CodePages/4.0.1": {
+    "System.Text.Encoding.CodePages/8.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-h4z6rrA/hxWf4655D18IIZ0eaLRa3tQC/j+e26W+VinIHY0l07iEXaAvO0YSYq3MvCjMYy8Zs5AdC1sxNQOB7Q==",
-      "path": "system.text.encoding.codepages/4.0.1",
-      "hashPath": "system.text.encoding.codepages.4.0.1.nupkg.sha512"
+      "sha512": "sha512-OZIsVplFGaVY90G2SbpgU7EnCoOO5pw1t4ic21dBF3/1omrJFpAGoNAVpPyMVOC90/hvgkGG3VFqR13YgZMQfg==",
+      "path": "system.text.encoding.codepages/8.0.0",
+      "hashPath": "system.text.encoding.codepages.8.0.0.nupkg.sha512"
     },
     "System.Text.Encoding.Extensions/4.3.0": {
       "type": "package",

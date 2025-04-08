@@ -29,6 +29,9 @@ namespace ANS
                 case "BBVA":
                     BankOperationsContent.Content = new BBVAOperationControl();
                     break;
+                case "Scotiabank":
+                    BankOperationsContent.Content = new ScotiabankOperationControl();
+                    break;
             }
         }
 
