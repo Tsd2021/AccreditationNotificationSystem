@@ -34,6 +34,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 });
 
                 int numTanda = 1;
+
                 await _servicioCuentaBuzon.acreditarTandaHendersonSantander(VariablesGlobales.horaCierreSantanderHENDERSON_TANDA1_TXT,numTanda);
 
             }

@@ -138,12 +138,16 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         private void armarStringParaTxt_Agrupado(List<CuentaBuzon> cb)
         {
-            // Agrupar las cuentas por divisa
-            var cuentasAgrupadas = cb.GroupBy(cuenta => cuenta.Divisa);
+            // Agrupar las cuentas por Divisa y Ciudad (se asume que "Ciudad" es una propiedad de CuentaBuzon)
+            var cuentasAgrupadas = cb.GroupBy(cuenta => new { cuenta.Divisa, cuenta.Ciudad });
 
             foreach (var grupo in cuentasAgrupadas)
             {
-                // StringBuilder que contendrá todas las líneas del archivo para este grupo (por divisa)
+                // Extraer la divisa y la ciudad para el grupo actual
+                string divisa = grupo.Key.Divisa;
+                string ciudad = grupo.Key.Ciudad; // Debe ser "MONTEVIDEO" o "MALDONADO"
+
+                // StringBuilder que contendrá todas las líneas del archivo para este grupo (por divisa y ciudad)
                 StringBuilder _txt = new StringBuilder();
 
                 foreach (CuentaBuzon _unaCuenta in grupo)
@@ -156,17 +160,16 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     _signo = "+";
 
                     // Calcular el importe total de la cuenta sumando todos los importes de sus depósitos
-                    // Se asume que cada depósito tiene una colección "Totales" con la propiedad "ImporteTotal"
                     decimal totalImporteCuenta = _unaCuenta.Depositos.Sum(d => d.Totales.Sum(i => i.ImporteTotal));
                     // Para la línea del txt se formatea el importe multiplicándolo por 10^7 y rellenándolo a 15 dígitos
                     _importe = ((long)(totalImporteCuenta * 10000000)).ToString().PadLeft(15, '0');
 
                     // Definir la moneda según la divisa de la cuenta
-                    if (_unaCuenta.Divisa == VariablesGlobales.uyu)
+                    if (divisa == VariablesGlobales.uyu)
                     {
                         _moneda = "00";
                     }
-                    else if (_unaCuenta.Divisa == VariablesGlobales.usd)
+                    else if (divisa == VariablesGlobales.usd)
                     {
                         _moneda = "01";
                     }
@@ -213,38 +216,39 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     _txt.AppendLine(_unaLineaTxt.ToString());
                 }
 
-                // Ahora, en lugar de usar la cuenta representativa, calculamos el total de los importes
+                // Calcular el total de los importes para el grupo (suma de importes de cada cuenta)
                 decimal groupTotalImporte = grupo.Sum(cuenta => cuenta.Depositos.Sum(d => d.Totales.Sum(i => i.ImporteTotal)));
-                // Para el nombre del archivo usaremos la parte entera (sin decimales)
+                // Se usa la parte entera (sin decimales) para la construcción del nombre del archivo
                 string totalImportesString = ((long)groupTotalImporte).ToString();
 
-                // Generar el nombre de archivo según el formato de la app vieja:
-                // Formato: dd-MM-yyyy-HH-mm-<Divisa><TotalImportes>-AcreditacionBuzonesTecnisegurMont.txt
-                // Ejemplo: "04-07-2024-16-01-UYU4386500-AcreditacionBuzonesTecnisegurMont.txt"
+                // Generar el nombre de archivo. Se incorpora la ciudad en el nombre:
+                // Formato: dd-MM-yyyy-HH-mm-<Ciudad>-<Divisa><TotalImportes>-AcreditacionBuzonesTecnisegurMont.txt
+                // Ejemplo: "04-07-2024-16-01-MONTEVIDEO-UYU4386500-AcreditacionBuzonesTecnisegurMont.txt"
                 string dateTimePart = DateTime.Now.ToString("dd-MM-yyyy-HH-mm");
-                // Para la divisa, si es pesos se usa "UYU"; para dólares, se usa "USD" (ajusta según corresponda)
-                string currencyCode = (grupo.Key == VariablesGlobales.uyu) ? "UYU" : "USD";
-                string fileName = $"{dateTimePart}-{currencyCode}{totalImportesString}-AcreditacionBuzonesTecnisegurMont.txt";
+                string currencyCode = (divisa == VariablesGlobales.uyu) ? "UYU" : "USD";
+                string fileName = $"{dateTimePart}-{ciudad}-{currencyCode}{totalImportesString}-AcreditacionBuzonesTecnisegur.txt";
 
-                // Determinar el directorio de salida según la divisa
-                string directory = "";
-                if (grupo.Key == VariablesGlobales.uyu)
+                // Determinar el directorio de salida según la divisa y la ciudad
+                // Ejemplo de subcarpetas: "MONTEVIDEO PESOS" o "MALDONADO DOLARES"
+                string subFolder = "";
+                if (divisa == VariablesGlobales.uyu)
                 {
-                    directory = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SCOTIABANK\puntoapunto\PESOS\";
+                    subFolder = $"{ciudad} PESOS";
                 }
-                else if (grupo.Key == VariablesGlobales.usd)
+                else if (divisa == VariablesGlobales.usd)
                 {
-                    directory = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SCOTIABANK\puntoapunto\DOLARES\";
+                    subFolder = $"{ciudad} DOLARES";
                 }
-
-                // Combinar el directorio y el nombre del archivo
+                // La ruta padre
+                string baseDirectory = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\SCOTIABANK";
+                // Combinar para obtener la ruta completa
+                string directory = Path.Combine(baseDirectory, subFolder);
                 string rutaDestino = Path.Combine(directory, fileName);
 
                 // Llama al método que se encarga de crear el directorio (si no existe) y escribir el archivo
                 crearYEscribirArchivo(_txt, rutaDestino);
             }
         }
-
 
         private void crearYEscribirArchivo(StringBuilder txt, string route)
         {
@@ -260,5 +264,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // Escribir el contenido en el archivo
             File.WriteAllText(route, txt.ToString());
         }
+
     }
 }

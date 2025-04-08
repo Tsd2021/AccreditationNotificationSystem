@@ -237,7 +237,7 @@ namespace ANS.Model.Services
 
                     using (SqlConnection conn = new SqlConnection(_conexionTSD))
                     {
-
+                        //ATENTO EN EL ON DONDE SE JOINEAN LAS TABLAS POR CONFIG.NC = CC.NC PRUEBA
                       string query =    @"SELECT   
                                         cc.NN,      
                                         cb.EMPRESA,cb.cuenta,   
@@ -249,7 +249,7 @@ namespace ANS.Model.Services
                                         INNER JOIN CUENTASBUZONES AS cb  
                                         ON config.CuentasBuzonesId = cb.ID 
                                         INNER JOIN cc  
-                                        ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
+                                        ON config.NC = cc.NC 
                                         INNER JOIN AcreditacionDepositoDiegoTest AS acc  
                                         ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
                                         WHERE config.TipoAcreditacion = @tipoAcreditacion 

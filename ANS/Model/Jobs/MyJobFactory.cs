@@ -3,6 +3,7 @@ using Quartz.Spi;
 using Quartz;
 using ANS.Model.Jobs.BBVA;
 using ANS.Model.Jobs.SANTANDER;
+using ANS.Model.Jobs.SCOTIABANK;
 
 namespace ANS.Model.Jobs
 {
@@ -31,7 +32,7 @@ namespace ANS.Model.Jobs
                 return new AcreditarDiaADiaBBVAJob(_servicioCuentaBuzon);
             }
 
-
+            #region SANTANDER_JOBS
             if (jobType == typeof(AcreditarDiaADiaSantander))
             {
               
@@ -89,6 +90,41 @@ namespace ANS.Model.Jobs
             {
                 return new ExcelReporteDiarioSantander(_servicioCuentaBuzon);
             }
+
+            #endregion
+
+            #region SCOTIABANK_JOBS
+
+
+            if (jobType == typeof(AcreditarTanda1HendersonScotiabank))
+            {
+
+                return new AcreditarTanda1HendersonScotiabank(_servicioCuentaBuzon);
+            }
+
+
+            if (jobType == typeof(AcreditarTanda2HendersonScotiabank))
+            {
+
+                return new AcreditarTanda2HendersonScotiabank(_servicioCuentaBuzon);
+            }
+
+
+            if (jobType == typeof(ExcelTanda1HendersonScotiabank))
+            {
+
+                return new ExcelTanda1HendersonScotiabank(_servicioCuentaBuzon);
+            }
+
+
+            if (jobType == typeof(ExcelTanda2HendersonScotiabank))
+            {
+
+                return new ExcelTanda2HendersonScotiabank(_servicioCuentaBuzon);
+            }
+
+
+            #endregion
 
             return (IJob)Activator.CreateInstance(jobType);
         }

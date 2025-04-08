@@ -14,6 +14,7 @@ namespace ANS.ViewModel
         private DispatcherTimer _timer;
 
         private ObservableCollection<Mensaje> _listaMensajes;
+       
 
         public VMmainWindow()
         {

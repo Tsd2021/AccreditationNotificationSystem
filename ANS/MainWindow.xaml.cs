@@ -26,8 +26,6 @@ namespace ANS
             JobSnackbar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromSeconds(3));
 
         }
-
-
         public void MostrarAviso(string msg, System.Windows.Media.Color color)
         {
             var model = new SnackbarMsg
@@ -43,14 +41,12 @@ namespace ANS
             JobSnackbar.MessageQueue?.Enqueue(model);
 
         }
-
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             var seleccionDeBanco = new SeleccionDeBanco();
 
             seleccionDeBanco.ShowDialog();
         }
-
         // Implementación de INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
