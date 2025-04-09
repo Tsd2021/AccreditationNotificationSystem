@@ -90,7 +90,14 @@ namespace ANS.ViewModel
 
             try
             {
-                await _servicioCuentaBuzon.acreditarTandaHendersonScotiabank(VariablesGlobales.horaCierreScotiabankHendersonTanda2_TXT, 2);
+
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.acreditarTandaHendersonScotiabank(VariablesGlobales.horaCierreScotiabankHendersonTanda2_TXT, 2);
+
+                    // await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
+                });
+                
             }
 
             catch (Exception e)
@@ -99,7 +106,7 @@ namespace ANS.ViewModel
             }
             finally
             {
-
+                IsLoading = false;
             }
         }
         private async Task ejecutarTanda2HendersonExcel()
