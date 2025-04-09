@@ -888,6 +888,8 @@ namespace ANS.Model.Services
             Cliente henderson = ServicioCliente.getInstancia().getById(164);
 
             ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.tanda);
+
+            List<CuentaBuzon> cuentasConDepositos = new List<CuentaBuzon>();
             try
             {
                 List<CuentaBuzon> cuentas = await getCuentasPorClienteBancoYTipoAcreditacion(henderson.IdCliente, scotia, config);
@@ -899,14 +901,18 @@ namespace ANS.Model.Services
                     if (ultimoIdOperacion > 0)
                     {
                         await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(acc, ultimoIdOperacion, horaCierreActual);
+                        if (acc.Depositos.Count > 0)
+                        {
+                            cuentasConDepositos.Add(acc);
+                        }
                     }
                 }
-                if (cuentas.Count > 0)
+                if (cuentasConDepositos.Count > 0)
                 {
                     {
-                        await generarArchivoPorBanco(cuentas, scotia, VariablesGlobales.tanda);
+                        await generarArchivoPorBanco(cuentasConDepositos, scotia, VariablesGlobales.tanda);
 
-                        await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzonesTanda(cuentas, numTanda);
+                        await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzonesTanda(cuentasConDepositos, numTanda);
                     }
                 }
             }
