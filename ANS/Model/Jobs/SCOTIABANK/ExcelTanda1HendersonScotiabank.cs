@@ -1,7 +1,6 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using ANS.ViewModel;
-using DocumentFormat.OpenXml.Bibliography;
 using MaterialDesignThemes.Wpf;
 using Quartz;
 using System.Windows;
@@ -22,9 +21,9 @@ namespace ANS.Model.Jobs.SCOTIABANK
         public async Task Execute(IJobExecutionContext context)
         {
 
-            string _city = context.JobDetail.JobDataMap.GetString("city") ?? string.Empty;
 
             Exception e = null;
+
             try
             {
 
@@ -49,7 +48,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
                
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, scotiabank, _city, numTanda);
+                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, scotiabank, "noimporta", numTanda);
             }
             catch (Exception ex)
             {

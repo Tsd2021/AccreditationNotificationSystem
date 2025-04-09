@@ -33,7 +33,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                 });
 
-                int numTanda = 1;
+                int numTanda = 2;
 
                 await _servicioCuentaBuzon.acreditarTandaHendersonScotiabank(VariablesGlobales.horaCierreScotiabankHendersonTanda2_TXT,numTanda);
 
