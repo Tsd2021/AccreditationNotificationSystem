@@ -20,7 +20,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
         }
         public async Task Execute(IJobExecutionContext context)
         {
-            string _city = context.JobDetail.JobDataMap.GetString("city") ?? string.Empty;
+      
 
             Exception e = null;
             try
@@ -41,12 +41,11 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                 TimeSpan hasta = new TimeSpan(14, 31, 0);
 
-
                 Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 
                 int numTanda = 2;
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, scotiabank, _city, numTanda);
+                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, scotiabank, "noimporta", numTanda);
 
             }
             catch (Exception ex)
