@@ -80,6 +80,7 @@ namespace ANS.ViewModel
         {
 
             IsLoading = true;
+
             try
             {
                 await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(_banco);
@@ -92,9 +93,11 @@ namespace ANS.ViewModel
             {
                 IsLoading = false;
             }
+
         }
         private async Task ejecutarTanda1HendersonTXT()
         {
+
             IsLoading = true;
 
             try
@@ -110,6 +113,7 @@ namespace ANS.ViewModel
             {
                 IsLoading = false;
             }
+
         }
         private async Task ejecutarTanda2HendersonTXT()
         {
@@ -241,7 +245,6 @@ namespace ANS.ViewModel
 
             IsLoading = true;
 
-
             await Task.Yield(); // Permite que el UI actualice el progress bar
 
             TimeSpan desde = new TimeSpan(14, 30, 0);
@@ -256,14 +259,17 @@ namespace ANS.ViewModel
                 await Task.Run(() => {  _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta).Wait(); });
 
             }
+
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
+
             finally
             {
                 IsLoading = false;
             }
+
         }
         private async Task ejecutarDiaADiaExcel()
         {
@@ -277,7 +283,7 @@ namespace ANS.ViewModel
             {
                 await Task.Run(() =>
                 {
-                    _servicioCuentaBuzon.enviarExcelSantanderDiaADia(bank, config).Wait();
+                    _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bank, config).Wait();
                 });
 
             }

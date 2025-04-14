@@ -20,6 +20,9 @@ namespace ANS.Model.Jobs
         {
             Type jobType = bundle.JobDetail.JobType;
 
+            #region BBVA_JOBS
+
+            #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarPuntoAPuntoBBVAJob))
             {
           
@@ -31,8 +34,16 @@ namespace ANS.Model.Jobs
             
                 return new AcreditarDiaADiaBBVAJob(_servicioCuentaBuzon);
             }
-
+            #endregion
+            #region JOBS_QUE_ENVIAN_EXCEL
+            if (jobType == typeof(ExcelBBVAPuntoAPunto))
+            {
+                return new ExcelBBVAPuntoAPunto(_servicioCuentaBuzon);
+            }
+            #endregion
+            #endregion
             #region SANTANDER_JOBS
+            #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarDiaADiaSantander))
             {
               
@@ -71,6 +82,8 @@ namespace ANS.Model.Jobs
                 return new AcreditarTanda2SantanderHenderson(_servicioCuentaBuzon);
             }
 
+            #endregion
+            #region JOBS_QUE_ENVIAN_EXCEL
             if (jobType == typeof(ExcelHendersonTanda1))
             {
                 return new ExcelHendersonTanda1(_servicioCuentaBuzon);
@@ -91,11 +104,19 @@ namespace ANS.Model.Jobs
                 return new ExcelReporteDiarioSantander(_servicioCuentaBuzon);
             }
 
+            if(jobType == typeof(ExcelSantanderTesoreria1))
+            {
+                return new ExcelSantanderTesoreria1(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(ExcelSantanderTesoreria2))
+            {
+                return new ExcelSantanderTesoreria2(_servicioCuentaBuzon);
+            }
             #endregion
-
+            #endregion
             #region SCOTIABANK_JOBS
-
-
+            #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarTanda1HendersonScotiabank))
             {
 
@@ -109,7 +130,8 @@ namespace ANS.Model.Jobs
                 return new AcreditarTanda2HendersonScotiabank(_servicioCuentaBuzon);
             }
 
-
+            #endregion
+            #region JOBS_QUE_ENVIAN_EXCEL
             if (jobType == typeof(ExcelTanda1HendersonScotiabank))
             {
 
@@ -122,13 +144,11 @@ namespace ANS.Model.Jobs
 
                 return new ExcelTanda2HendersonScotiabank(_servicioCuentaBuzon);
             }
-
-
+            #endregion
             #endregion
 
             return (IJob)Activator.CreateInstance(jobType);
         }
-
-        public void ReturnJob(IJob job) { /* normalmente vacío o dispose*/ }
+        public void ReturnJob(IJob job) {  }
     }
 }

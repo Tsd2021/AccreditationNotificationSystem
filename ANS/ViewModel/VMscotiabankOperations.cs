@@ -28,6 +28,10 @@ namespace ANS.ViewModel
             EjecutarTanda2HendersonTXTCommand = new RelayCommand(async () => await ejecutarTanda2HendersonTXT());
 
             EjecutarTanda2HendersonExcelCommand = new RelayCommand(async () => await ejecutarTanda2HendersonExcel());
+
+            EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarAcreditacionDiaADia());
+
+            EjecutarDiaADiaExcelCommand = new RelayCommand(async () => await ejecutarExcelDiAADia());
         }
         public bool IsLoading
         {
@@ -141,11 +145,65 @@ namespace ANS.ViewModel
                 IsLoading = false;
             }
         }
+
+
+        private async Task ejecutarAcreditacionDiaADia()
+        {
+            IsLoading = true;
+
+            try
+            {
+
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(banco);
+
+                });
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task ejecutarExcelDiAADia()
+        {
+            IsLoading = true;
+
+            ConfiguracionAcreditacion configDiaADia = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
+
+            try
+            {
+
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco,configDiaADia);
+
+                });
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
         #region COMANDOS
         public ICommand EjecutarTanda1HendersonTXTCommand { get; }
         public ICommand EjecutarTanda1HendersonExcelCommand { get; }
         public ICommand EjecutarTanda2HendersonTXTCommand { get; }
         public ICommand EjecutarTanda2HendersonExcelCommand { get; }
+        public ICommand EjecutarDiaADiaTXTCommand { get; set; }
+        public ICommand EjecutarDiaADiaExcelCommand { get; set; }
         #endregion
     }
 }

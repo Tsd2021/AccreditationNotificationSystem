@@ -257,6 +257,7 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\ANS.csproj.AssemblyReference.cache
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\BancoModal.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\SeleccionDeBanco.baml
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\UserControls\BBVAOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\UserControls\SantanderOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\UserControls\ScotiabankOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\BancoModal.g.cs
@@ -272,7 +273,6 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\ANS_MarkupCompile.lref
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\App.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\MainWindow.baml
-C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\UserControls\BBVAOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\ANS.g.resources
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\ANS.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\ANS.AssemblyInfoInputs.cache

@@ -1,51 +1,219 @@
-﻿<UserControl  x:Class="ANS.UserControls.BBVAOperationControl"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:local="clr-namespace:ANS.UserControls"
-        mc:Ignorable="d"
-        >
+﻿<UserControl x:Class="ANS.UserControls.BBVAOperationControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             mc:Ignorable="d" d:DesignWidth="944.504"
+  
+             >
+    <UserControl.Resources>
+        <!-- Convertidor para visibilidad -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <!-- Estilo para botones modernos -->
+        <Style x:Key="ModernButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#FF2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="3"
+                                                  ShadowDepth="2"
+                                                  Opacity="0.2"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF64B5F6"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF0D47A1"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Grid raíz para contener el contenido y el overlay del ProgressBar -->
     <Grid>
-        <materialDesign:ColorZone Mode="Dark"
-    HorizontalAlignment="Stretch"
-    VerticalAlignment="Stretch">
-            <Grid Margin="20">
-                <Grid>
+        <xctk:BusyIndicator IsBusy="{Binding IsLoading}" 
+                            BusyContent="Cargando..."
+                            Background="#80FFFFFF">
+            <!-- Aquí va el contenido principal de la ventana -->
+            <!-- Contenido principal -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Columna Izquierda: ACREDITACIONES -->
+                <Grid Grid.Column="0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <!-- Columna para el texto -->
-                        <ColumnDefinition Width="Auto"/>
-                        <!-- Columna para el botón -->
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
 
-                    <!-- Fila 1 -->
-                    <TextBlock Text="Acreditar Punto a Punto"  
-                                FontSize="20" 
-                                Margin="20" 
-                                HorizontalAlignment="Center"  Grid.Row="0" Grid.Column="0" />
-                    <Button Content="Ejecutar" Grid.Row="0" Grid.Column="1" Margin="179,20,-191,20"/>
+                    <!-- Título -->
+                    <Border Margin="20,10,20,0">
+                        <TextBlock Text="ACREDITACIONES"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               FontFamily="HP Simplified"
+                               HorizontalAlignment="Center"/>
+                    </Border>
 
-                    <!-- Fila 2 -->
-                    <TextBlock Text="Acreditar Día a Día"  
-                                FontSize="20" 
-                                Margin="20" 
-                                HorizontalAlignment="Center"  Grid.Row="1" Grid.Column="0" />
-                    <Button Content="Ejecutar" Grid.Row="1" Grid.Column="1" Margin="179,15,-191,25"/>
+                    <!-- Contenido con scroll -->
+                    <materialDesign:ColorZone Grid.Row="1"
+                                          Mode="Dark"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Stretch"
+                                          Margin="20">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                              
+                                  
+                                  
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-   
+                                <!-- Fila 2 -->
+                                <TextBlock Text="Acreditar Punto a Punto"
+                                       FontSize="20"
+                                       FontFamily="HP Simplified"
+                                       Margin="10"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Grid.Row="0" Grid.Column="0"/>
+                                <Button x:Name="btnEjecutarPuntoAPunto"
+                                    Content="TXT P2P"
+                                    Margin="10"
+                                    Command="{Binding EjecutarPuntoAPuntoTXTCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Grid.Row="0" Grid.Column="1"/>
 
+                                <!-- Fila 3 -->
+                                <TextBlock Text="Acreditar Día a día"
+                                       FontSize="20"
+                                       FontFamily="HP Simplified"
+                                       Margin="10"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Grid.Row="1" Grid.Column="0"/>
+                                <Button x:Name="btnEjecutarTanda2Henderson"
+                                    Content="TXT DXD"
+                                    Margin="10"
+                                    Command="{Binding EjecutarDiaADiaTXTCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Grid.Row="1" Grid.Column="1"/>
+
+                              
+
+                            </Grid>
+                        </ScrollViewer>
+                    </materialDesign:ColorZone>
+                </Grid>
+
+                <!-- Columna Derecha: EXCEL -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Título -->
+                    <Border Margin="20,10,20,0">
+                        <TextBlock Text="EXCEL"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               FontFamily="HP Simplified"
+                               HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Contenido con scroll -->
+                    <materialDesign:ColorZone Grid.Row="1"
+                                          Mode="Dark"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Stretch"
+                                          Margin="20">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Fila 1 -->
+                                <TextBlock Text="Excel de todos los buzones"
+                                       FontSize="16"
+                                       FontFamily="HP Simplified"
+                                       Margin="10"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Grid.Row="0" Grid.Column="0"/>
+                                <Button Content="Generar Excel"
+                                    Margin="10"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    Command="{Binding EjecutarExcelDiaADia}"
+                                    VerticalAlignment="Center"
+                                    Grid.Row="0" Grid.Column="1"/>
+
+                                <!-- Fila 2 -->
+                                <TextBlock Text="Excel solo TATA"
+                                       FontSize="16"
+                                       FontFamily="HP Simplified"
+                                       Margin="10"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Grid.Row="1" Grid.Column="0"/>
+                                <Button Content="Generar Excel TATA"
+                                    Margin="10"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    Command="{Binding EjecutarExcelTataCommand}"
+                                    VerticalAlignment="Center"
+                                    Grid.Row="1" Grid.Column="1"/>
+
+                            </Grid>
+                        </ScrollViewer>
+                    </materialDesign:ColorZone>
                 </Grid>
             </Grid>
-        </materialDesign:ColorZone>
+        </xctk:BusyIndicator>
     </Grid>
-
 </UserControl>

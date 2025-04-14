@@ -7,10 +7,15 @@ namespace ANS.Model.GeneradorArchivoPorBanco
     public class BBVAFileGenerator : IBancoModoAcreditacion
     {
         private readonly string CuentaTransportadora = "007584652";
-        private string ruta = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\BBVA";
+
+        private string ruta = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\BBVA";
+
         public List<CuentaBuzon> buzonesMontevideo = new List<CuentaBuzon>();
+
         public List<CuentaBuzon> buzonesMaldonado = new List<CuentaBuzon>();
+
         public ConfiguracionAcreditacion configActual;
+
         public BBVAFileGenerator(ConfiguracionAcreditacion config)
         {
             this.configActual = config;
@@ -171,8 +176,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         public async Task<bool> Exporta_Reme_Agrupado(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
         {
 
-            ruta = @"C:\Users\dchiquiar\Desktop\pruebas txt dia a dia BBVA\DIAADIA";
+            ruta = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\BBVA\DIAADIA";
+
             try
+
             {
                 if (!Directory.Exists(ruta))
                 {
@@ -195,7 +202,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                 using (TextWriter sw = new StreamWriter(filePath))
                 {
+
                     double totalPesos = 0, totalDolares = 0, totalEuros = 0, totalArgentinos = 0, totalReales = 0;
+
                     int countPesos = 0, countDolares = 0, countEuros = 0, countArgentinos = 0, countReales = 0;
 
 
