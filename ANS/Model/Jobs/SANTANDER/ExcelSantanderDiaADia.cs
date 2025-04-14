@@ -26,7 +26,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
             Exception e = null;
 
-            string _city = context.JobDetail.JobDataMap.GetString("city") ?? string.Empty;
+            
 
             try
             {
@@ -44,7 +44,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion("DiaADia");
 
-                await _servicioCuentaBuzon.enviarExcelSantanderDiaADia(santander,config);
+                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(santander,config);
 
             }
 
@@ -52,7 +52,7 @@ namespace ANS.Model.Jobs.SANTANDER
             {
 
                 e = ex;
-                Console.WriteLine($"Error al ejecutar Excel Santander DiaADia " + _city +  ex.Message);
+                Console.WriteLine($"Error al ejecutar Excel Santander DiaADia " +  ex.Message);
 
                 //ACA GUARDAR EN UN LOG
 
@@ -67,7 +67,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Banco = "SANTANDER";
 
-                mensaje.Tipo = "Excel Día a Día " + _city;
+                mensaje.Tipo = "Excel Día a Día " ;
 
                 mensaje.Icon = PackIconKind.Bank;
 
@@ -88,7 +88,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job Excel Excel Santander DiaADia " + _city, Colors.Red);
+                        main.MostrarAviso("Error Job Excel Excel Santander DiaADia " , Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -99,7 +99,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     else
                     {
 
-                        main.MostrarAviso("Success Job Excel Santander DiaADia  " + _city, Colors.Green);
+                        main.MostrarAviso("Success Job Excel Santander DiaADia  " , Colors.Green);
 
                         mensaje.Estado = "Success";
 

@@ -5,14 +5,13 @@ using ClosedXML.Excel;
 using System.IO;
 using ClosedXML.Excel.Drawings;
 using System.Reflection;
-using DocumentFormat.OpenXml.Spreadsheet;
+using System.Diagnostics;
 
 namespace ANS.Model.Services
 {
     public class ServicioCuentaBuzon : IServicioCuentaBuzon
     {
         private string _conexionTSD = ConfiguracionGlobal.Conexion22;
-        private string _conexionWebBuzones = ConfiguracionGlobal.ConexionWebBuzones;
         public static ServicioCuentaBuzon instancia { get; set; }
         public ServicioEmail _emailService { get; set; } = new ServicioEmail();
         public static ServicioCuentaBuzon getInstancia()
@@ -354,11 +353,38 @@ namespace ANS.Model.Services
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
+            string query = "";
+
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                //Excluye DELASSIERRAS ya que acredita DIA A DIA pero en una hora específica.
 
-                string query = @"select c.NC,
+                // POR DEFAULT 
+                query = @"select c.NC, 
+                        cb.BANCO, 
+                        c.CIERRE, 
+                        c.IDCLIENTE, 
+                        cb.CUENTA, 
+                        cb.MONEDA, 
+                        cb.EMPRESA, 
+                        config.TipoAcreditacion, 
+                        c.SUCURSAL as CIUDAD, 
+                        cb.SUCURSAL, 
+                        c.IDCC, 
+                        cb.ID, 
+                        c.NN  
+                        from ConfiguracionAcreditacion config 
+                        inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
+                        inner join cc c on cb.idcliente = c.IDCLIENTE 
+                        and c.nc = config.nc  
+                        where cb.BANCO = @bank 
+                        and config.TipoAcreditacion = @tipoAcreditacion;";
+
+                //Excluye DELASSIERRAS ya que acredita DIA A DIA pero en una hora específica.
+                if (tipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())
+                {
+                    if (banco.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper())
+                    {
+                        query = @"select c.NC,
                             cb.BANCO,
                             c.CIERRE,
                             c.IDCLIENTE,
@@ -378,6 +404,39 @@ namespace ANS.Model.Services
                             where cb.BANCO = @bank 
                             and cb.IDCLIENTE NOT IN (268)
                             and config.TipoAcreditacion = @tipoAcreditacion;";
+
+                    }
+                }
+
+                if (tipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())
+                {
+                    if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                    {
+
+                        //Si es dia a dia Scotiabank hay que excluir todo Henderson porq ya fue acreditado.
+                        //Y tambien la consulta es especial porque no exluye RELACIONADOS!
+                        query = @"select c.NC,
+                                cb.BANCO,
+                                c.CIERRE,
+                                c.IDCLIENTE,
+                                cb.CUENTA,
+                                cb.MONEDA,
+                                cb.EMPRESA,
+                                config.TipoAcreditacion,
+                                c.SUCURSAL as CIUDAD,
+                                cb.SUCURSAL,
+                                c.IDCC,
+                                cb.ID,
+                                c.NN  
+                                from ConfiguracionAcreditacion config 
+                                inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
+                                inner join cc c on cb.idcliente = c.IDCLIENTE 
+                                and c.nc = config.nc 
+                                where cb.BANCO = @bank 
+                                and cb.idcliente not in(164)
+                                and config.TipoAcreditacion = @tipoAcreditacion;";
+                    }
+                }
 
                 conn.Open();
 
@@ -700,14 +759,11 @@ namespace ANS.Model.Services
             if (buzones == null || buzones.Count == 0)
                 throw new Exception("No se encontraron buzones punto a punto");
 
-            // Procesamos cada buzón
             foreach (CuentaBuzon unBuzon in buzones)
             {
 
-                // Obtiene la última operación 
                 ultIdOperacionPorBuzon = await obtenerUltimaOperacionByNC(unBuzon);
 
-                // Procesa los depósitos para el buzón 
                 try
                 {
                     if (ultIdOperacionPorBuzon > 0)
@@ -728,17 +784,14 @@ namespace ANS.Model.Services
 
                 catch (Exception ex)
                 {
-                    // Si un buzón tiene un depósito con error, se registra y se continúa con el siguiente
+
                     Console.WriteLine($"Error asignando depósitos para buzón {unBuzon.NC}: {ex.Message}");
 
                 }
 
             }
 
-            // Genera el archivo si se procesaron buzones (incluso si algún buzón tuvo problemas, los demás se procesaron)
             await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
-
-            // Luego, inserta las acreditaciones para los depósitos que se asignaron correctamente
 
             await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(buzones);
 
@@ -748,6 +801,8 @@ namespace ANS.Model.Services
             TimeSpan horaCierre = TimeSpan.Zero;
 
             List<CuentaBuzon> cuentaBuzones = getAllByTipoAcreditacionYBanco(VariablesGlobales.diaxdia, banco);
+
+            List<CuentaBuzon> cuentasBuzonesConDepositos = new List<CuentaBuzon>();
 
             try
             {
@@ -767,12 +822,21 @@ namespace ANS.Model.Services
                             }
 
                             await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(unaCuentaBuzon, ultIdOperacion, horaCierre);
+
+                            if (unaCuentaBuzon.Depositos.Count > 0)
+                            {
+                                cuentasBuzonesConDepositos.Add(unaCuentaBuzon);
+                            }
                         }
                     }
 
-                    await generarArchivoPorBanco(cuentaBuzones, banco, VariablesGlobales.diaxdia);
+                    if (cuentasBuzonesConDepositos.Count > 0)
+                    {
+                        await generarArchivoPorBanco(cuentasBuzonesConDepositos, banco, VariablesGlobales.diaxdia);
 
-                    await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentaBuzones);
+                        await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentasBuzonesConDepositos);
+                    }
+
 
                     return;
                 }
@@ -995,23 +1059,23 @@ namespace ANS.Model.Services
             try
             {
 
-            
-            DateTime fechaDesde = DateTime.Today.Add(desde);
 
-            DateTime fechaHasta = DateTime.Today.Add(hasta);
+                DateTime fechaDesde = DateTime.Today.Add(desde);
 
-            ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.tanda);
+                DateTime fechaHasta = DateTime.Today.Add(hasta);
 
-            List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank,config);
+                ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.tanda);
 
-            List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
+                List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank, config);
 
-            List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+                List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
 
-            generarExcelPorAcreditacionesSinArupar(listaMontevideo, listaMaldonado, numTanda, bank);
+                List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+
+                generarExcelPorAcreditacionesSinArupar(listaMontevideo, listaMaldonado, numTanda, bank);
 
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw e;
             }
@@ -1263,7 +1327,7 @@ namespace ANS.Model.Services
             generarExcelPorAcreditacionesAgrupadoPorEmpresa(listaMontevideo, listaMaldonado, numTanda, banco);
 
         }
-        private void generarExcelPorAcreditacionesSinArupar(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado,int numTanda,Banco b)
+        private void generarExcelPorAcreditacionesSinArupar(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b)
         {
             // Colores para el formato
             var pastelYellow = XLColor.LightYellow;
@@ -1302,7 +1366,7 @@ namespace ANS.Model.Services
             void GenerateExcel(List<DtoAcreditacionesPorEmpresa> lista, string ciudad)
             {
 
-          
+
                 var wb = new XLWorkbook();
                 var ws = wb.Worksheets.Add(ciudad);
                 ws.ShowGridLines = false;
@@ -1361,7 +1425,7 @@ namespace ANS.Model.Services
                     headerRangeD.Style.Font.Bold = true;
                     headerRangeD.Style.Fill.BackgroundColor = pastelYellow;
                     row++;
-                    
+
                     // Datos 
                     foreach (var item in listaDolares)
                     {
@@ -1387,7 +1451,7 @@ namespace ANS.Model.Services
 
                 // Construir nombre y ruta del archivo
                 string fileName = $"{b.NombreBanco}_Henderson_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-         
+
                 string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fileName);
 
 
@@ -1407,9 +1471,6 @@ namespace ANS.Model.Services
                     Console.WriteLine("Error al enviar el correo: " + ex.Message);
                 }
             }
-
-
-
 
             // Genera el Excel para Montevideo
             if (acreditacionesMontevideo != null && acreditacionesMontevideo.Any())
@@ -1551,123 +1612,7 @@ namespace ANS.Model.Services
 
             generarArchivoExcel(acreditacionesMaldonado, "Maldonado");
         }
-        private void generarExcelPorEmpresas(List<CuentaBuzon> cuentas, int numTanda, string city, Banco banco)
-        {
-            // Agrupar por empresa y sumar los montos por moneda
-            var agrupadoTesoreria = cuentas
-                 .GroupBy(cb => cb.Empresa)
-                 .Select(g => new
-                 {
-                     Empresa = g.Key,
-                     TotalPesos = g.Where(cb => cb.Moneda.Equals("PESOS", StringComparison.OrdinalIgnoreCase))
-                                   .Sum(cb => cb.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0),
-                     TotalUSD = g.Where(cb => cb.Moneda.Equals("DOLARES", StringComparison.OrdinalIgnoreCase))
-                                 .Sum(cb => cb.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0)
-                 })
-                 .OrderBy(x => x.Empresa)
-                 .ToList();
-
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.Worksheets.Add("SANTANDER TESORERIA");
-                int currentRow = 1;
-
-                // ****************** PARTE SUPERIOR: PESOS ******************
-                // Encabezados
-                worksheet.Cell(currentRow, 1).Value = "Empresa";
-                worksheet.Cell(currentRow, 2).Value = "Monto por empresa";
-
-                var headerRange = worksheet.Range(currentRow, 1, currentRow, 2);
-                headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
-                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                headerRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                headerRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                currentRow++;
-
-                // Datos por empresa (Pesos)
-                foreach (var grupo in agrupadoTesoreria)
-                {
-                    worksheet.Cell(currentRow, 1).Value = grupo.Empresa;
-                    worksheet.Cell(currentRow, 2).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(grupo.TotalPesos);
-                    // Aplicar bordes a la fila
-                    worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                    currentRow++;
-                }
-
-                // Total Pesos
-                double totalPesos = agrupadoTesoreria.Sum(x => x.TotalPesos);
-                worksheet.Cell(currentRow, 1).Value = "Total Pesos:";
-                worksheet.Cell(currentRow, 2).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalPesos);
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Font.Bold = true;
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Fill.BackgroundColor = XLColor.AliceBlue;
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                // Espacio entre secciones
-                currentRow += 2;
-
-                // ****************** PARTE INFERIOR: DÓLARES ******************
-                // Encabezados
-                worksheet.Cell(currentRow, 1).Value = "Empresa";
-                worksheet.Cell(currentRow, 2).Value = "Monto por empresa";
-
-                var headerRangeUSD = worksheet.Range(currentRow, 1, currentRow, 2);
-                headerRangeUSD.Style.Font.Bold = true;
-                headerRangeUSD.Style.Fill.BackgroundColor = XLColor.LightGray;
-                headerRangeUSD.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                headerRangeUSD.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                headerRangeUSD.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                currentRow++;
-
-                // Datos por empresa (Dólares)
-                foreach (var grupo in agrupadoTesoreria)
-                {
-                    worksheet.Cell(currentRow, 1).Value = grupo.Empresa;
-                    worksheet.Cell(currentRow, 2).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(grupo.TotalUSD);
-                    worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                    currentRow++;
-                }
-
-                // Total Dólares
-                double totalUSD = agrupadoTesoreria.Sum(x => x.TotalUSD);
-                worksheet.Cell(currentRow, 1).Value = "Total Dólares:";
-                worksheet.Cell(currentRow, 2).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalUSD);
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Font.Bold = true;
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Fill.BackgroundColor = XLColor.AliceBlue;
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                worksheet.Range(currentRow, 1, currentRow, 2).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                // Ajustar el ancho de las columnas para mejor visualización
-                worksheet.Columns().AdjustToContents();
-
-                // Construir el nombre del archivo y ruta de guardado
-                string nombreArchivo = "Tesoreria_Tanda_" + numTanda + "_" + city + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
-                string filePath = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\" + nombreArchivo;
-
-                workbook.SaveAs(filePath);
-
-                Console.WriteLine($"Excel de Tesorería generado: {filePath}");
-
-                try
-                {
-
-                    string asunto = "Acreditaciones para Tesorería " + banco.NombreBanco + " Tanda " + numTanda + " - " + city;
-
-                    string cuerpo = "E-Mail especifico para TESORERÍA TECNISEGUR. " +
-                        "A continuación se adjunta el archivo de acreditaciones correspondiente a la tanda " + numTanda + " de la ciudad de " + city + " para el banco " + banco.NombreBanco + ".";
-
-                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error al enviar el correo: " + ex.Message);
-                }
-            }
-        }
-        public async Task enviarExcelSantanderDiaADia(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
+        public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
         {
 
             List<DtoAcreditacionesPorEmpresa> acreditacionesPorBancoYTipoAcreditacion = getAcreditacionesPorBancoYTipoAcreditacion(banco, tipoAcreditacion);
@@ -1708,14 +1653,14 @@ namespace ANS.Model.Services
 
             }
 
-            generarExcel("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd);
+            generarExcel("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco);
 
-            generarExcel("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado);
+            generarExcel("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco);
 
             await Task.CompletedTask;
 
         }
-        private void generarExcel(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares)
+        private void generarExcel(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco)
         {
             var fechaHoy = DateTime.Now.ToString("dd - MM - yy");
             var workbook = new XLWorkbook();
@@ -1744,6 +1689,10 @@ namespace ANS.Model.Services
             double totalPesos = 0;
             foreach (var item in listaPesos)
             {
+                if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                {
+                    item.Empresa = item.NN;
+                }
                 ws.Cell(row, 1).Value = item.Empresa;
                 ws.Cell(row, 2).Value = item.Sucursal;
                 ws.Cell(row, 3).Value = item.NumeroCuenta;
@@ -1772,6 +1721,10 @@ namespace ANS.Model.Services
             double totalDolares = 0;
             foreach (var item in listaDolares)
             {
+                if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                {
+                    item.Empresa = item.NN;
+                }
                 ws.Cell(row, 1).Value = item.Empresa;
                 ws.Cell(row, 2).Value = item.Sucursal;
                 ws.Cell(row, 3).Value = item.NumeroCuenta;
@@ -1789,18 +1742,22 @@ namespace ANS.Model.Services
             ws.Columns().AdjustToContents();
 
             string nombreArchivo = $"AcreditacionesDiaADia_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-            string ruta = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), nombreArchivo);
+
+            string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+
             workbook.SaveAs(ruta);
+
 
             try
             {
-                _emailService.enviarExcelPorMail(ruta, "Acreditaciones Día a día - " + ciudad.ToUpper(),
-                    "Reporte de las acreditaciones realizadas día a día (" + ciudad.ToUpper() + ")");
+                _emailService.enviarExcelPorMail(ruta, $"Acreditaciones Día a día - ({banco.NombreBanco}) - " + ciudad.ToUpper(),
+                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")");
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+
         }
 
         private void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
@@ -1838,11 +1795,45 @@ namespace ANS.Model.Services
             List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
 
             string query = "";
+            bool isBBVA = false;
+
+            if (banco.NombreBanco == VariablesGlobales.bbva.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())
+            {
+
+                // Se supone que se obtiene acreditaciones para generar el excel, y el excel de BBVA tiene que incluir las acreditaciones de los dia a dia y los punto a punto
+                // Por lo tanto, la consulta es muy especifica.
+                isBBVA = true;
+
+                query = @"SELECT 
+                        cb.CUENTA,
+                        cb.EMPRESA,
+                        cb.SUCURSAL,
+                        acc.MONEDA,
+                        cc.SUCURSAL as CIUDAD, 
+                        SUM(acc.MONTO) AS TotalMonto 
+                        FROM ConfiguracionAcreditacion AS config 
+                        INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
+                        INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
+                        INNER JOIN AcreditacionDepositoDiegoTest AS acc  
+                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
+                        WHERE cb.BANCO = @banco 
+                        and config.TipoAcreditacion not in ('tanda') 
+                        AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE()) 
+                        GROUP BY 
+                        cb.CUENTA,
+                        cb.EMPRESA,
+                        cb.SUCURSAL,
+                        cc.SUCURSAL,
+                        acc.MONEDA
+                        ORDER BY cb.empresa asc;";
+
+            }
 
             if (banco.NombreBanco == VariablesGlobales.santander.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())
             {
                 query = @"SELECT 
                         cb.EMPRESA,
+                        cc.nn,
                         cc.SUCURSAL as CIUDAD,
                         cb.CUENTA,
                         acc.MONEDA,
@@ -1865,8 +1856,42 @@ namespace ANS.Model.Services
                         cb.SUCURSAL,
                         acc.MONEDA,
                         cc.sucursal,
+                        cc.NN,   
                         config.TipoAcreditacion
                         ORDER BY cb.EMPRESA ASC";
+            }
+
+            if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToLower() == VariablesGlobales.diaxdia.ToLower())
+            {
+                query = @"SELECT 
+                        cC.NN,
+                        CB.EMPRESA,
+                        cc.SUCURSAL as CIUDAD,
+                        cb.CUENTA,
+                        acc.MONEDA,
+                        cb.SUCURSAL,
+                        config.TipoAcreditacion,
+                        SUM(acc.MONTO) AS TOTAL 
+                        FROM ConfiguracionAcreditacion AS config 
+                        INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
+                        INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
+                        INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
+                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
+                        WHERE config.TipoAcreditacion = @tipoAcreditacion 
+                        AND cb.BANCO = @banco 
+                        AND cc.IDCLIENTE NOT IN ('268') 
+                        AND CB.IDCLIENTE NOT IN('164') 
+                        AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE()) 
+                        GROUP BY 
+                        cb.BANCO, 
+                        cb.CUENTA,
+                        cC.NN,
+                        cb.SUCURSAL,
+                        acc.MONEDA,
+                        cc.sucursal,
+                        CB.EMPRESA,
+                        config.TipoAcreditacion 
+                        ORDER BY cC.NN ASC";
             }
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
@@ -1882,39 +1907,65 @@ namespace ANS.Model.Services
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    int empresaOrdinal = reader.GetOrdinal("EMPRESA");
-
-                    int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
-
-                    int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
-
-                    int cuentaOrdinal = reader.GetOrdinal("CUENTA");
-
-                    int monedaOrdinal = reader.GetOrdinal("MONEDA");
-
-                    int totalOrdinal = reader.GetOrdinal("TOTAL");
-
-                    while (reader.Read())
+                    if (isBBVA)
                     {
-                
+                        // Para BBVA, obtenemos solo los ordinals de las columnas que devuelve su consulta.
+                       
+                        int cuentaOrdinal = reader.GetOrdinal("CUENTA");
+                        int empresaOrdinal = reader.GetOrdinal("EMPRESA");
+                        int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
+                        int monedaOrdinal = reader.GetOrdinal("MONEDA");
+                        int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
+                        int totalMontoOrdinal = reader.GetOrdinal("TotalMonto");
 
-                        DtoAcreditacionesPorEmpresa nuevoDto = new DtoAcreditacionesPorEmpresa();
+                        // Aquí se lee cada registro de la consulta de BBVA.
+                        while (reader.Read())
+                        {
+                            DtoAcreditacionesPorEmpresa nuevoDto = new DtoAcreditacionesPorEmpresa();
 
-                        nuevoDto.Empresa = reader.GetString(empresaOrdinal);
+                            // Asigna los campos específicos para BBVA. 
+                            // Ajusta los tipos de datos según corresponda.
+                       
+                            nuevoDto.NumeroCuenta = reader.GetString(cuentaOrdinal);
+                            nuevoDto.Empresa = reader.GetString(empresaOrdinal);
+                            nuevoDto.Sucursal = reader.GetString(sucursalOrdinal);
+                            nuevoDto.Divisa = reader.GetInt32(monedaOrdinal);
+                            nuevoDto.Monto = reader.GetDouble(totalMontoOrdinal);
+                            nuevoDto.Ciudad = reader.GetString(ciudadOrdinal);
 
-                        nuevoDto.Sucursal = reader.GetString(sucursalOrdinal);
+                            // Si tienes algún método para ajustar o formatear la moneda.
+                            nuevoDto.setMoneda();
 
-                        nuevoDto.Ciudad = reader.GetString(ciudadOrdinal);
+                            retorno.Add(nuevoDto);
+                        }
+                    }
+                    else
+                    {
+                        // Para Santander y Scotiabank (u otros) obtenemos los ordinals correspondientes a sus columnas.
+                        int empresaOrdinal = reader.GetOrdinal("EMPRESA");
+                        int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
+                        int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
+                        int cuentaOrdinal = reader.GetOrdinal("CUENTA");
+                        int monedaOrdinal = reader.GetOrdinal("MONEDA");
+                        int totalOrdinal = reader.GetOrdinal("TOTAL");
+                        int nnOrdinal = reader.GetOrdinal("NN");
 
-                        nuevoDto.NumeroCuenta = reader.GetString(cuentaOrdinal);
+                        while (reader.Read())
+                        {
+                            DtoAcreditacionesPorEmpresa nuevoDto = new DtoAcreditacionesPorEmpresa();
 
-                        nuevoDto.Divisa = reader.GetInt32(monedaOrdinal);
+                            nuevoDto.Empresa = reader.GetString(empresaOrdinal);
+                            nuevoDto.Sucursal = reader.GetString(sucursalOrdinal);
+                            nuevoDto.Ciudad = reader.GetString(ciudadOrdinal);
+                            nuevoDto.NumeroCuenta = reader.GetString(cuentaOrdinal);
+                            nuevoDto.Divisa = reader.GetInt32(monedaOrdinal);
+                            nuevoDto.Monto = reader.GetDouble(totalOrdinal);
+                            nuevoDto.NN = reader.GetString(nnOrdinal);
 
-                        nuevoDto.Monto = reader.GetDouble(totalOrdinal);
+                            nuevoDto.setMoneda();
 
-                        nuevoDto.setMoneda();
-
-                        retorno.Add(nuevoDto);
+                            retorno.Add(nuevoDto);
+                        }
                     }
                 }
             }

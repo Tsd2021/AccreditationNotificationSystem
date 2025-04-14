@@ -224,70 +224,25 @@
                                     Grid.Row="1" Grid.Column="1"/>
 
                                 <!-- Fila 3 -->
-                                <TextBlock Text="Tanda 1 TESORERÍA"
-                                       FontSize="16"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="2" Grid.Column="0"/>
-                                <Button Content="Generar Excel T1 TESO"
-                                    Margin="10"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarTanda1ExcelTesoreriaCommand}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="2" Grid.Column="1"/>
-
-                                <!-- Fila 4 -->
-                                <TextBlock Text="Tanda 2 TESORERÍA"
-                                       FontSize="16"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="3" Grid.Column="0"/>
-                                <Button Content="Generar Excel T2 TESO"
-                                    Margin="10"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="3" Grid.Column="1"/>
-
-                                <!-- Fila 5 -->
                                 <TextBlock Text="Día a Día"
                                        FontSize="16"
                                        FontFamily="HP Simplified"
                                        Margin="10"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
-                                       Grid.Row="4" Grid.Column="0"/>
+                                       Grid.Row="2" Grid.Column="0"/>
                                 <Button Content="Generar Excel DXD"
                                     Margin="10"
                                     Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"
+                                    Command="{Binding EjecutarDiaADiaExcelCommand}"
                                     VerticalAlignment="Center"
-                                    Grid.Row="4" Grid.Column="1"/>
+                                    Grid.Row="2" Grid.Column="1"/>
                                 <!-- Fila 6 -->
-                                <TextBlock Text="Reporte Diario"
-                                   FontSize="16"
-                                   FontFamily="HP Simplified"
-                                   Margin="10"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Grid.Row="5" Grid.Column="0"/>
-                                <Button Content="Generar Excel DXD"
-                                Margin="10"
-                                Style="{StaticResource ModernButtonStyle}"
-                                Command="{Binding EjecutarReporteDiarioCommand}"
-                                VerticalAlignment="Center"
-                                Grid.Row="5" Grid.Column="1"/>
                             </Grid>
                         </ScrollViewer>
                     </materialDesign:ColorZone>
                 </Grid>
             </Grid>
-
-
         </xctk:BusyIndicator>
     </Grid>
 </UserControl>

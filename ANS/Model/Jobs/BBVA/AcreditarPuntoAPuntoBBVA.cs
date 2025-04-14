@@ -28,7 +28,7 @@ namespace ANS.Model.Jobs.BBVA
                 {
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea P2P ~BBVA~", Color.FromRgb(0, 68, 129));
+                    main.MostrarAviso("Ejecutando tarea P2P BBVA", Color.FromRgb(0, 68, 129));
                 });
 
 
@@ -51,14 +51,12 @@ namespace ANS.Model.Jobs.BBVA
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    // ✅ Recuperar el ViewModel del DataContext, si es null, asignarlo manualmente
-
                     VMmainWindow vm = main.DataContext as VMmainWindow;
                     if (vm == null)
                     {
                         vm = new VMmainWindow();
 
-                        main.DataContext = vm; // 🚀 Asignar el ViewModel si no estaba
+                        main.DataContext = vm; 
                     }
 
                     Mensaje mensaje = new Mensaje();

@@ -38,23 +38,21 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 });
 
-
                 TimeSpan desde = new TimeSpan(6, 59, 0);
 
                 TimeSpan hasta = new TimeSpan(7, 1, 0);
 
                 Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
    
-                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, hasta, desde);
-
-                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MALDONADO", 1, hasta, desde);            
+                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, desde, hasta);      
 
             }
             catch (Exception ex)
             {
+
                 e = ex;
+
                 Console.WriteLine($"Error al ejecutar EXCEL 1  SANTANDER para TESORERIA: {ex.Message}");
-                //ACA GUARDAR EN UN LOG
 
             }
 
@@ -67,7 +65,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Banco = "SANTANDER";
 
-                mensaje.Tipo = "Excel Santander para Tesorería 1 ";
+                mensaje.Tipo = " Excel Santander para Tesorería 1 ";
 
                 mensaje.Icon = PackIconKind.Bank;
 
