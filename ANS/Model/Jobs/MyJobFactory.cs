@@ -36,9 +36,14 @@ namespace ANS.Model.Jobs
             }
             #endregion
             #region JOBS_QUE_ENVIAN_EXCEL
-            if (jobType == typeof(ExcelBBVAPuntoAPunto))
+            if (jobType == typeof(ExcelBBVAReporteDiario))
             {
-                return new ExcelBBVAPuntoAPunto(_servicioCuentaBuzon);
+                return new ExcelBBVAReporteDiario(_servicioCuentaBuzon);
+            }
+
+            if(jobType == typeof(ExcelBBVATata))
+            {
+                return new ExcelBBVATata(_servicioCuentaBuzon);
             }
             #endregion
             #endregion
