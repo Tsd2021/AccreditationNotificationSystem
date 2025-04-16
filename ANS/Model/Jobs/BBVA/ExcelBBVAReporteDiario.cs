@@ -9,18 +9,13 @@ using System.Windows.Media;
 namespace ANS.Model.Jobs.SANTANDER
 {
     [DisallowConcurrentExecution]
-    public class ExcelBBVAPuntoAPunto : IJob
+    public class ExcelBBVAReporteDiario : IJob
     {
-
         private readonly IServicioCuentaBuzon _servicioCuentaBuzon;
-   
-
-        public ExcelBBVAPuntoAPunto(IServicioCuentaBuzon servicioCuentaBuzon)
+        public ExcelBBVAReporteDiario(IServicioCuentaBuzon servicioCuentaBuzon)
         {
             _servicioCuentaBuzon = servicioCuentaBuzon;
         }
-
-
         public async Task Execute(IJobExecutionContext context)
         {
 
@@ -34,11 +29,10 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea EXCEL_P2P BBVA", Color.FromRgb(0, 68, 129));
+                    main.MostrarAviso("Ejecutando tarea Excel Resumen Diario BBVA", Color.FromRgb(0, 68, 129));
 
                 });
                 Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
-
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.p2p);
 
@@ -51,7 +45,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 e = ex;
 
-                Console.WriteLine($"Error al ejecutar Excel BBVA PuntoAPunto " +  ex.Message);
+                Console.WriteLine($"Error al ejecutar Resumen Diario BBVA " +  ex.Message);
 
             }
 
@@ -64,7 +58,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Banco = "BBVA";
 
-                mensaje.Tipo = "Excel Resumen P2P " ;
+                mensaje.Tipo = "Excel Resumen Diario " ;
 
                 mensaje.Icon = PackIconKind.Bank;
 
@@ -85,7 +79,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job Excel Excel BBVA P2P " , Colors.Red);
+                        main.MostrarAviso("Error Job Excel Resumen Diario BBVA ", Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -94,7 +88,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     else
                     {
 
-                        main.MostrarAviso("Success Job Excel BBVA P2P  " , Colors.Green);
+                        main.MostrarAviso("Success Job Resumen Diario BBVA  ", Colors.Green);
 
                         mensaje.Estado = "Success";
 

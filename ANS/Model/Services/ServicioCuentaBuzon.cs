@@ -1798,6 +1798,7 @@ namespace ANS.Model.Services
             bool isBBVA = false;
 
             if (banco.NombreBanco == VariablesGlobales.bbva.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())
+
             {
 
                 // Se supone que se obtiene acreditaciones para generar el excel, y el excel de BBVA tiene que incluir las acreditaciones de los dia a dia y los punto a punto
@@ -1826,7 +1827,6 @@ namespace ANS.Model.Services
                         cc.SUCURSAL,
                         acc.MONEDA
                         ORDER BY cb.empresa asc;";
-
             }
 
             if (banco.NombreBanco == VariablesGlobales.santander.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())

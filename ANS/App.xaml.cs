@@ -350,7 +350,7 @@ namespace ANS
         private async Task crearJobsBBVA(IScheduler scheduler)
         {
 
-            //Tarea 1: Acreditar punto a punto. de 7:30 a 19:30.
+            //Tarea 1: Acreditar punto a punto. de 6:30 a 20:30.
             #region TAREA_ACREDITAR_P2P
 
             IJobDetail jobPuntoAPuntoBBVA = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
@@ -360,8 +360,8 @@ namespace ANS
             ITrigger triggerBBVAPuntoAPunto = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerP2P", "GrupoTrabajoBBVA")
                 .WithDailyTimeIntervalSchedule(x => x
-                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(7, 30)) // Hora de inicio: 7:30 AM
-                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 30)) // Hora de fin: 19:30 PM
+                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(6, 30)) // Hora de inicio: 6:30 AM
+                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(20, 30)) // Hora de fin: 19:30 PM
                     .OnDaysOfTheWeek(new[]
                     {
                         DayOfWeek.Monday,
@@ -373,22 +373,7 @@ namespace ANS
                     .WithIntervalInMinutes(30)).Build(); // Intervalo de 30 minutos
             #endregion
 
-            //Tarea 2: Enviar excel resumen punto a punto 19:45
-
-            #region TAREA_EXCEL_P2P
-
-            IJobDetail jobBBVAEnviarExcelP2P = JobBuilder.Create<AcreditarDiaADiaBBVAJob>()
-            .WithIdentity("BBVAJobExcelP2P", "GrupoTrabajoBBVA")
-            .Build();
-
-            ITrigger triggerBBVAEnviarExcelP2P = TriggerBuilder.Create()
-            .WithIdentity("BBVAJTriggerP2P", "GrupoTrabajoBBVA")
-            .WithCronSchedule("0 45 19 ? * MON-FRI")
-            .Build();
-
-            #endregion
-
-            // Tarea 3: Acreditar dia a dia. 17:00
+            // Tarea 2: Acreditar dia a dia. 17:00
             #region TAREA_ACREDITAR_DIAADIA
 
             IJobDetail jobBBVADiaADia = JobBuilder.Create<AcreditarDiaADiaBBVAJob>()
@@ -402,11 +387,37 @@ namespace ANS
 
             #endregion
 
+            //Tarea 3: Enviar excel resumen punto a punto 21:05
+            #region TAREA_EXCEL_RESUMENDIARIO
+            IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
+            .WithIdentity("BBVAJobExcelReporteDiario", "GrupoTrabajoBBVA")
+            .Build();
+
+            ITrigger triggerBBVAEnviarExcelResumen = TriggerBuilder.Create()
+            .WithIdentity("BBVAJTriggerReporteDiario", "GrupoTrabajoBBVA")
+            .WithCronSchedule("0 0 21 ? * MON-FRI")
+            .Build();
+            #endregion
+
+            //Tarea 4: Enviar excel solo Tata formato Henderson ( por nn y empresa )
+            #region TAREA_EXCEL_TATA
+            IJobDetail jobBBVAEnviarExcelTata = JobBuilder.Create<AcreditarDiaADiaBBVAJob>()
+            .WithIdentity("BBVAJobExcelTata", "GrupoTrabajoBBVA")
+            .Build();
+
+            ITrigger triggerBBVAEnviarExcelTata = TriggerBuilder.Create()
+            .WithIdentity("BBVAJTriggerTata", "GrupoTrabajoBBVA")
+            .WithCronSchedule("0 05 21 ? * MON-FRI")
+            .Build();
+            #endregion
+
             await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA, triggerBBVAPuntoAPunto);
 
-            await _scheduler.ScheduleJob(jobBBVAEnviarExcelP2P,triggerBBVAEnviarExcelP2P);
+            await _scheduler.ScheduleJob(jobBBVAEnviarExcelResumen, triggerBBVAEnviarExcelResumen);
 
             await _scheduler.ScheduleJob(jobBBVADiaADia, triggerBBVADiaADia);
+
+            await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 
         }
         protected override async void OnExit(ExitEventArgs e)
