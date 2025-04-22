@@ -488,12 +488,14 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\BancoModal.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\SeleccionDeBanco.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\BBVAOperationControl.baml
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\EnvioMasivoOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\SantanderOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\ScotiabankOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\BancoModal.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\MainWindow.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\SeleccionDeBanco.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\BBVAOperationControl.g.cs
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\EnvioMasivoOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\SantanderOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\ScotiabankOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\App.g.cs

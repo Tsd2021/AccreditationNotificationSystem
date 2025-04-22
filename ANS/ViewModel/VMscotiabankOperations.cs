@@ -73,9 +73,9 @@ namespace ANS.ViewModel
 
                 await Task.Run(async () =>
                 {
-                    await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda);
 
-                    // await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
+                    // await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
 
             }
@@ -99,7 +99,7 @@ namespace ANS.ViewModel
                 {
                     await _servicioCuentaBuzon.acreditarTandaHendersonScotiabank(VariablesGlobales.horaCierreScotiabankHendersonTanda2_TXT, 2);
 
-                    // await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
+                    // await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
                 
             }
@@ -130,9 +130,9 @@ namespace ANS.ViewModel
 
                 await Task.Run(async () =>
                 {
-                    await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda);
 
-                    // await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
+                    // await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
 
             }

@@ -4,6 +4,8 @@ using Quartz;
 using ANS.Model.Jobs.BBVA;
 using ANS.Model.Jobs.SANTANDER;
 using ANS.Model.Jobs.SCOTIABANK;
+using ANS.Model.Jobs.ENVIO_MASIVO;
+using ANS.Model.Services;
 
 namespace ANS.Model.Jobs
 {
@@ -150,6 +152,12 @@ namespace ANS.Model.Jobs
                 return new ExcelTanda2HendersonScotiabank(_servicioCuentaBuzon);
             }
             #endregion
+            #endregion
+            #region ENVIO_MASIVO
+            if (jobType == typeof(EnvioMasivo))
+            {
+                return new EnvioMasivo(ServicioEnvioMasivo.getInstancia());
+            }
             #endregion
 
             return (IJob)Activator.CreateInstance(jobType);

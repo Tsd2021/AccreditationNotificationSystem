@@ -32,7 +32,7 @@ namespace ANS.Model.Jobs.BBVA
                     main.MostrarAviso("Ejecutando tarea EXCEL BBVA TATA", Color.FromRgb(0, 68, 129));
                 });
 
-                Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
+                Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
 
                 TimeSpan desde = new TimeSpan(6, 30, 0);
 
@@ -45,7 +45,7 @@ namespace ANS.Model.Jobs.BBVA
 
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda);
 
                 await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(bbva);
 

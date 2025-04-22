@@ -101,6 +101,21 @@ namespace ANS.ViewModel
 
             try
             {
+                Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
+
+                TimeSpan desde = new TimeSpan(6, 30, 0);
+
+                TimeSpan hasta = new TimeSpan(20, 30, 0);
+
+
+                // ID TATA : 242
+
+                Cliente tata = ServicioCliente.getInstancia().getById(242);
+
+                int numTanda = 1;
+
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda);
+
 
             }
             catch (Exception e)

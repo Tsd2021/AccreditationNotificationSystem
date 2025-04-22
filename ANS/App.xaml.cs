@@ -9,6 +9,7 @@ using ANS.Model;
 using ANS.ViewModel;
 using ANS.Model.Jobs.SCOTIABANK;
 using System.Runtime.InteropServices;
+using ANS.Model.Jobs.ENVIO_MASIVO;
 
 
 namespace ANS
@@ -43,6 +44,8 @@ namespace ANS
 
             await crearJobsScotiabank(_scheduler);
 
+            await crearJobsEnviosMasivos(_scheduler);
+
             if (!_scheduler.IsStarted)
             {
                 await _scheduler.Start();
@@ -64,6 +67,66 @@ namespace ANS
             }
 
         }
+
+        private async Task crearJobsEnviosMasivos(IScheduler scheduler)
+        {
+            #region Tarea 1: ENVIO MASIVO 1  (7:30:0)
+         
+            IJobDetail jobEnvioMasivo1 = JobBuilder.Create<EnvioMasivo>()
+                .WithIdentity("EnvioMasivo1Job", "GrupoEnvioMasivo")
+                .UsingJobData("numEnvioMasivo", 1)
+                .Build();
+
+         
+            ITrigger triggerEnvioMasivo1 = TriggerBuilder.Create()
+                .WithIdentity("EnvioMasivo1Trigger", "GrupoEnvioMasivo")
+                .WithCronSchedule("0 30 7 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
+            #region Tarea 2: ENVIO MASIVO 2 (15:00:0)
+      
+            IJobDetail jobEnvioMasivo2 = JobBuilder.Create<EnvioMasivo>()
+                .WithIdentity("EnvioMasivo2Job", "GrupoEnvioMasivo")
+                .Build();
+
+     
+            ITrigger triggerEnvioMasivo2 = TriggerBuilder.Create()
+                .WithIdentity("EnvioMasivo2Trigger", "GrupoEnvioMasivo")
+                .WithCronSchedule("0 0 15 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
+            #region Tarea 2: ENVIO MASIVO 3 (19:00:0)
+       
+            IJobDetail jobEnvioMasivo3 = JobBuilder.Create<EnvioMasivo>()
+                .WithIdentity("EnvioMasivo3Job", "GrupoEnvioMasivo")
+                .Build();
+
+            ITrigger triggerEnvioMasivo3 = TriggerBuilder.Create()
+                .WithIdentity("EnvioMasivo3Trigger", "GrupoEnvioMasivo")
+                .WithCronSchedule("0 0 19 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
+            try
+            {
+                await scheduler.ScheduleJob(jobEnvioMasivo1, triggerEnvioMasivo1);
+
+                await scheduler.ScheduleJob(jobEnvioMasivo2, triggerEnvioMasivo2);
+
+                await scheduler.ScheduleJob(jobEnvioMasivo3, triggerEnvioMasivo3);
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
         private void cargarClientes()
         {
             ServicioCliente.getInstancia().getAllClientes();
@@ -265,7 +328,7 @@ namespace ANS
                 .WithCronSchedule("0 30 15 ? * MON-FRI")
                 .Build();
 
- 
+
             #endregion
 
             // Tarea 9: 15:31:30 EXCEL DIA A DIA
