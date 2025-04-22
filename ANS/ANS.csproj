@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Remove="Images\bbva.png" />
+    <None Remove="Images\envioMasivo.png" />
     <None Remove="Images\firma.png" />
     <None Remove="Images\FirmaDiegoTecnisegur.jpeg" />
     <None Remove="Images\logoTecniExcel.png" />
@@ -51,6 +52,7 @@
 
   <ItemGroup>
     <Resource Include="Images\bbva.png" />
+    <Resource Include="Images\envioMasivo.png" />
     <Resource Include="Images\santander.png" />
     <Resource Include="Images\scotiabank.png" />
     <EmbeddedResource Include="Images\logoTecniExcel.png">

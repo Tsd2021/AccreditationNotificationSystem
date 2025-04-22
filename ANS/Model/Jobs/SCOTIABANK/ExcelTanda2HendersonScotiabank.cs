@@ -45,7 +45,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                 int numTanda = 2;
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(desde, hasta, henderson, scotiabank, "noimporta", numTanda);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, scotiabank, "noimporta", numTanda);
 
             }
             catch (Exception ex)

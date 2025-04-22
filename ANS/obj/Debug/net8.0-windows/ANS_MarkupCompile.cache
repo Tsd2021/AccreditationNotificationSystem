@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\App.xaml
-61277142598
+7-1460744702
 21839720286
-811124397558
+87-70152577
 301-1553107125
-BancoModal.xaml;MainWindow.xaml;SeleccionDeBanco.xaml;UserControls\BBVAOperationControl.xaml;UserControls\SantanderOperationControl.xaml;UserControls\ScotiabankOperationControl.xaml;
+BancoModal.xaml;MainWindow.xaml;SeleccionDeBanco.xaml;UserControls\BBVAOperationControl.xaml;UserControls\EnvioMasivoOperationControl.xaml;UserControls\SantanderOperationControl.xaml;UserControls\ScotiabankOperationControl.xaml;
 
 False
 

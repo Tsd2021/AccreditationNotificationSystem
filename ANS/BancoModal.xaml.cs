@@ -32,6 +32,9 @@ namespace ANS
                 case "Scotiabank":
                     BankOperationsContent.Content = new ScotiabankOperationControl();
                     break;
+                case "EnvioMasivo":
+                    BankOperationsContent.Content = new EnvioMasivoOperationControl();
+                    break;
             }
         }
 

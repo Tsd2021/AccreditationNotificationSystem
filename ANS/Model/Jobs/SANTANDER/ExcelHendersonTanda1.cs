@@ -51,7 +51,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelHenderson(desde,hasta,henderson,santander, _city,numTanda);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde,hasta,henderson,santander, _city,numTanda);
 
             }
             catch (Exception ex)
