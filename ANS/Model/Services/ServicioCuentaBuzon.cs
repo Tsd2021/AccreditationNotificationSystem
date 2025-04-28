@@ -1499,11 +1499,24 @@ namespace ANS.Model.Services
                                        .WithPlacement(XLPicturePlacement.FreeFloating)
                                        .Scale(0.5); // Escala ajustable
 
-                        row += 6; // espacio debajo del logo
+                        row += 1; // espacio debajo del logo
                     }
                 }
 
-                // Texto "BUZONES INTELIGENTES" centrado
+                // ——— AÑADIMOS LA FECHA AQUÍ ———
+             
+                ws.Range(row, 1, row, 5).Merge();
+                var celdaFecha = ws.Cell(row, 1);
+             
+                celdaFecha.Value = "Tesorería - " + DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy",
+                    new System.Globalization.CultureInfo("es-ES"));
+                celdaFecha.Style.Font.Italic = true;
+                celdaFecha.Style.Font.FontSize = 11;
+                celdaFecha.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                celdaFecha.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                row += 1;  // espacio tras la fecha
+
+                // ——— TITULO ———
                 ws.Range(row, 1, row, 5).Merge();
                 var celdaTitulo = ws.Cell(row, 1);
                 celdaTitulo.Value = "BUZONES INTELIGENTES";

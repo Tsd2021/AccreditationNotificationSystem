@@ -28,6 +28,10 @@ namespace ANS
 
             preCargarBancos();
 
+            preCargarListaNC();
+
+            initServicios();
+
             var factory = new StdSchedulerFactory();
 
             _scheduler = await factory.GetScheduler();
@@ -45,6 +49,8 @@ namespace ANS
             await crearJobsScotiabank(_scheduler);
 
             await crearJobsEnviosMasivos(_scheduler);
+
+            await crearJobEnviosNiveles(_scheduler);
 
             if (!_scheduler.IsStarted)
             {
@@ -68,6 +74,53 @@ namespace ANS
 
         }
 
+        private async Task crearJobEnviosNiveles(IScheduler scheduler)
+        {
+            #region Tarea 1: ENVIO NIVELES  ( STARTS 9:10:00 ENDS 22:00:00)
+
+            IJobDetail jobEnvioNiveles = JobBuilder.Create<EnvioMasivo>()
+                .WithIdentity("EnvioNivelesJob", "GrupoEnvioNiveles")
+                .Build();
+
+
+            ITrigger triggerEnvioNiveles = TriggerBuilder.Create()
+                                            .WithIdentity("EnvioNivelesTrigger", "GrupoEnvioNiveles")
+                                            .WithSchedule(DailyTimeIntervalScheduleBuilder.Create()
+                                                .WithIntervalInHours(6)                                 // intervalo de 6 horas
+                                                .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(9, 10))   // empieza a las 09:10
+                                                .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(22, 0))     // termina a las 22:00
+                                                .OnMondayThroughFriday()                                // sólo L–V
+                                            )
+                                            .Build();
+
+            #endregion
+
+            try
+            {
+                await scheduler.ScheduleJob(jobEnvioNiveles, triggerEnvioNiveles);
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        private void initServicios()
+        {
+            ServicioEmail.getInstancia();
+            ServicioNiveles.getInstancia();
+        }
+
+        private void preCargarListaNC()
+        {
+            var s = ServicioCC.getInstancia();
+            if (s != null)
+            {
+                s.loadCC();
+            }
+        }
+
         private async Task crearJobsEnviosMasivos(IScheduler scheduler)
         {
             #region Tarea 1: ENVIO MASIVO 1  (7:30:0)
@@ -89,6 +142,7 @@ namespace ANS
       
             IJobDetail jobEnvioMasivo2 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo2Job", "GrupoEnvioMasivo")
+                .UsingJobData("numEnvioMasivo", 2)  
                 .Build();
 
      
@@ -103,6 +157,7 @@ namespace ANS
        
             IJobDetail jobEnvioMasivo3 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo3Job", "GrupoEnvioMasivo")
+                .UsingJobData("numEnvioMasivo", 3)
                 .Build();
 
             ITrigger triggerEnvioMasivo3 = TriggerBuilder.Create()
@@ -194,7 +249,7 @@ namespace ANS
                     .Build();
                 #endregion
 
-                #region Tarea 4: EXCEL (14:33:33)
+                #region Tarea 4: EXCEL TANDA 2 (14:33:33)
                 // Job para generar Excel a partir de la segunda tanda (implementado en ExcelHendersonTanda2)
                 IJobDetail jobExcelTanda2Scotiabank = JobBuilder.Create<ExcelTanda2HendersonScotiabank>()
                     .WithIdentity("ScotiabankJobExcelTAN2", "GrupoTrabajoScotiabank")
@@ -206,6 +261,10 @@ namespace ANS
                     .WithCronSchedule("33 33 14 ? * MON-FRI")
                     .Build();
                 #endregion
+
+
+                //TODO: falta correo del cierre con todos los buzones incluidos reporte diario SOLO PARA TESORERIA 16HS MVD-MAL
+                //se llama TANDA 0 , por ahora va con henderson REPORTE DIARIO
 
                 try
                 {

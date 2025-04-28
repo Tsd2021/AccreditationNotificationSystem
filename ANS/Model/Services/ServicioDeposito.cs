@@ -56,9 +56,9 @@ namespace ANS.Model.Services
                         ) LIKE '%' + @empresa + '%'
                         AND d.idoperacion > @ultimaOperacion                
                         AND t.Divisas = @divisaActual 
-                        AND d.fechadep < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)) 
-                        AND d.FechaActualizacion < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)) ";
-                        
+                        AND d.fechadep < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))";
+                //   AND d.FechaActualizacion < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))
+
             }
             else
             {

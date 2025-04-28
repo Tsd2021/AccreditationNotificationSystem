@@ -1,13 +1,8 @@
-﻿using ANS.Model.Interfaces;
+﻿
 using ANS.Model.Services;
 using ANS.ViewModel;
 using MaterialDesignThemes.Wpf;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
@@ -36,7 +31,7 @@ namespace ANS.Model.Jobs.ENVIO_MASIVO
                 {
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea ENVIO MASIVO", Color.FromRgb(0, 68, 129));
+                    main.MostrarAviso("Ejecutando tarea ENVIO MASIVO", Color.FromRgb(0, 0,0));
                 });
 
 
@@ -69,7 +64,7 @@ namespace ANS.Model.Jobs.ENVIO_MASIVO
 
                     Mensaje mensaje = new Mensaje();
 
-                    mensaje.Color = Color.FromRgb(0, 68, 129);
+                    mensaje.Color = Color.FromRgb(0, 0, 0);
 
                     mensaje.Banco = "TODOS LOS BANCOS";
 

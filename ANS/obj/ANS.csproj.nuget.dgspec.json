@@ -67,6 +67,10 @@
               "target": "Package",
               "version": "[4.7.25104.5739, )"
             },
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.11.0, )"
+            },
             "MaterialDesignColors": {
               "target": "Package",
               "version": "[5.2.1, )"

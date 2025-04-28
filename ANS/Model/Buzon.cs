@@ -8,11 +8,22 @@ namespace ANS.Model
 {
     public class Buzon
     {
-        public int BuzonId { get; set; }
-        public string NombreBuzon { get; set; }
-        public string Banco { get; set; }
-        public List<CuentaBuzon> CuentasBuzones { get; set; } = new();
-       
+        public string NN { get; set; }
+        public string NC { get; set; }
+        public string Email { get; set; }       
+        public DateTime UltimaVezConectado { get; set; }
+        public double HorasDesconectado { get; set; }
         public Buzon() { }
+
+        public bool estaOnline()
+        {
+
+            TimeSpan diff = DateTime.Now -  UltimaVezConectado;
+
+            HorasDesconectado = diff.TotalHours;
+
+            return diff <= TimeSpan.FromHours(4);
+
+        }
     }
 }
