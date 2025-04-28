@@ -159,6 +159,12 @@ namespace ANS.Model.Jobs
                 return new EnvioMasivo(ServicioEnvioMasivo.getInstancia());
             }
             #endregion
+            #region ENVIO_NIVELES
+            if (jobType == typeof(EnvioNiveles))
+            {
+                return new EnvioNiveles(ServicioNiveles.getInstancia());
+            }
+            #endregion
 
             return (IJob)Activator.CreateInstance(jobType);
         }

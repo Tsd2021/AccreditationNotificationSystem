@@ -18,9 +18,9 @@ namespace ANS
         public BancoModal(string banco)
         {
             InitializeComponent();
+
             BancoTitle.Text = $"Operaciones - {banco}";
 
-            // Selecciona el contenido según el banco
             switch (banco)
             {
                 case "Santander":
@@ -34,6 +34,9 @@ namespace ANS
                     break;
                 case "EnvioMasivo":
                     BankOperationsContent.Content = new EnvioMasivoOperationControl();
+                    break;
+                case "EnvioNiveles":
+                    BankOperationsContent.Content = new EnvioNivelesOperationControl();
                     break;
             }
         }

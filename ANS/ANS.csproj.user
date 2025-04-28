@@ -19,6 +19,9 @@
     <Compile Update="UserControls\EnvioMasivoOperationControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="UserControls\EnvioNivelesOperationControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="UserControls\SantanderOperationControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

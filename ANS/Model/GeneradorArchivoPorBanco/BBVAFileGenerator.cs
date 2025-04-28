@@ -1,5 +1,6 @@
 ﻿using ANS.Model.Interfaces;
 using System.IO;
+using System.Text;
 using System.Windows;
 
 namespace ANS.Model.GeneradorArchivoPorBanco
@@ -173,10 +174,13 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             }
         }
         //EXPORTA_REME_AGRUPADO ES PARA DIA A DIA BBVA!
+
+        /*
         public async Task<bool> Exporta_Reme_Agrupado(string ruta, DateTime fecha, int correlativo, List<CuentaBuzon> cuentaBuzones, string ciudad)
         {
 
-            ruta = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\BBVA\DIAADIA";
+            var rutaFinal = Path.Combine(ruta, "DIAADIA");
+            Directory.CreateDirectory(ruta);
 
             try
 
@@ -206,7 +210,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     double totalPesos = 0, totalDolares = 0, totalEuros = 0, totalArgentinos = 0, totalReales = 0;
 
                     int countPesos = 0, countDolares = 0, countEuros = 0, countArgentinos = 0, countReales = 0;
-
 
 
                     foreach (var unaCuenta in cuentaBuzones)
@@ -283,7 +286,75 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 return false;
             }
 
+        }*/
+
+        public async Task<bool> Exporta_Reme_Agrupado(string rutaBase,DateTime fecha,int correlativo,List<CuentaBuzon> cuentaBuzones,string ciudad)
+        {
+            // 1) Prepara carpeta DIAADIA
+            var ruta = Path.Combine(rutaBase, "DIAADIA");
+            Directory.CreateDirectory(ruta);
+
+            // 2) Nombres de archivo
+            var fechaStr = fecha.ToString("yyyyMMdd");
+            var suf = ciudad.ToUpper() == "MALDONADO" ? "MAL" : "";
+            var nombreA = $"REMETANDA{fechaStr}{correlativo:D3}{suf}.txt";
+            var nombreB = $"FREMETANDA{fechaStr}{correlativo:D3}{suf}.txt";
+            var filePathA = Path.Combine(ruta, nombreA);
+            var filePathB = Path.Combine(ruta, nombreB);
+
+            // 3) Prepara contenido
+            var lineas = new List<string>();
+            double totalPesos = 0, totalUSD = 0, totalEUR = 0, totalARS = 0, totalBRL = 0;
+            int cPesos = 0, cUSD = 0, cEUR = 0, cARS = 0, cBRL = 0;
+
+            foreach (var cb in cuentaBuzones)
+            {
+                if (cb.Depositos?.Any() != true) continue;
+
+                // Sumas y formateos
+                double suma = cb.Depositos.Sum(d => d.Totales.Sum(t => t.ImporteTotal));
+                string suc = FormatString(cb.SucursalCuenta, 3);
+                var partes = cb.Cuenta.Split('-');
+                string cuenta = FormatString(partes[0].Trim(), 9);
+                string subcuenta = FormatString(partes[1].Trim(), 3);
+                string mon = cb.Divisa;
+                string prod = FormatString(cb.Producto.ToString(), 3);
+                string remito = DateTime.Now.ToString("HHmmssff");
+                remito = remito.Length > 12 ? remito.Substring(0, 12) : remito;
+                string monto = FormatAmount(suma.ToString("F2"));
+
+                lineas.Add($"{suc}{cuenta}{mon}{subcuenta}{prod}{CuentaTransportadora}{monto}{remito}{mon}");
+
+                // Acumula totales
+                switch (mon)
+                {
+                    case "UYU": totalPesos += suma; cPesos++; break;
+                    case "USD": totalUSD += suma; cUSD++; break;
+                    case "EUR": totalEUR += suma; cEUR++; break;
+                    case "ARS": totalARS += suma; cARS++; break;
+                    case "BRL": totalBRL += suma; cBRL++; break;
+                }
+            }
+
+            if (!lineas.Any())
+                return false;
+
+            // 4) Añade líneas de totales al final
+            lineas.Add(GenerateTotalLine("UYU", cPesos, totalPesos));
+            lineas.Add(GenerateTotalLine("USD", cUSD, totalUSD));
+            lineas.Add(GenerateTotalLine("EUR", cEUR, totalEUR));
+            lineas.Add(GenerateTotalLine("ARS", cARS, totalARS));
+            lineas.Add(GenerateTotalLine("BRL", cBRL, totalBRL));
+
+            // 5) Escribe ambos archivos y CIERRA siempre los streams
+            //    Usamos los métodos async estáticos para simplificar:
+            await File.WriteAllLinesAsync(filePathA, lineas, Encoding.UTF8);
+            // Si necesitas contenido distinto en el segundo:
+            await File.WriteAllTextAsync(filePathB, string.Empty /*o contenido que quieras*/, Encoding.UTF8);
+
+            return true;
         }
+
         #region Métodos privados auxiliares a los métodos importantes
         private string FormatAmount(string amount)
         {

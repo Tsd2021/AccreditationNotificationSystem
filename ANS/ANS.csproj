@@ -10,9 +10,9 @@
 
   <ItemGroup>
     <None Remove="Images\bbva.png" />
+    <None Remove="Images\disconnected.png" />
     <None Remove="Images\envioMasivo.png" />
-    <None Remove="Images\firma.png" />
-    <None Remove="Images\FirmaDiegoTecnisegur.jpeg" />
+    <None Remove="Images\FirmaDiegoMail.png" />
     <None Remove="Images\logoTecniExcel.png" />
     <None Remove="Images\logoTecniFinal.png" />
     <None Remove="Images\santander.png" />
@@ -21,10 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Images\firma.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\FirmaDiegoTecnisegur.jpeg">
+    <Content Include="Images\FirmaDiegoMail.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -34,6 +31,7 @@
     <PackageReference Include="CoreWCF.Http" Version="1.6.0" />
     <PackageReference Include="EPPlus" Version="8.0.1" />
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739" />
+    <PackageReference Include="MailKit" Version="4.11.0" />
     <PackageReference Include="MaterialDesignColors" Version="5.2.1" />
     <PackageReference Include="MaterialDesignInXamlToolkitAddOns" Version="0.0.63" />
     <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
@@ -52,6 +50,7 @@
 
   <ItemGroup>
     <Resource Include="Images\bbva.png" />
+    <Resource Include="Images\disconnected.png" />
     <Resource Include="Images\envioMasivo.png" />
     <Resource Include="Images\santander.png" />
     <Resource Include="Images\scotiabank.png" />
