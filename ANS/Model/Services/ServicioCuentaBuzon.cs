@@ -175,7 +175,7 @@ namespace ANS.Model.Services
 
 
         }
-       
+
         private List<Acreditacion>? obtenerAcreditaciones(CuentaBuzon unBuzon)
         {
             List<Acreditacion> listaAcreditaciones = new List<Acreditacion>();
@@ -1301,165 +1301,190 @@ namespace ANS.Model.Services
         {
             // Colores para el formato
             var pastelYellow = XLColor.LightYellow;
-
             var pastelCyan = XLColor.LightCyan;
+
             void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                string resourcePath = "ANS.Images.logoTecniFinal.png"; // Ajustá si tu namespace cambia
+                string resourcePath = "ANS.Images.logoTecniFinal.png";
 
                 using (Stream stream = assembly.GetManifestResourceStream(resourcePath))
                 {
                     if (stream != null)
                     {
-                        // Insertamos en celda C1 (col 3) y aplicamos un pequeño offset
-                        var imagen = ws.AddPicture(stream)
-                                       .MoveTo(ws.Cell(row, 3), 30, 5) // Offset horizontal y vertical en píxeles
-                                       .WithPlacement(XLPicturePlacement.FreeFloating)
-                                       .Scale(0.5); // Escala ajustable
-
-                        row += 3; // espacio debajo del logo
+                        ws.AddPicture(stream)
+                          .MoveTo(ws.Cell(row, 3), 30, 5)
+                          .WithPlacement(XLPicturePlacement.FreeFloating)
+                          .Scale(0.5);
+                        row += 2; // espacio debajo del logo
                     }
                 }
 
-                // Texto "BUZONES INTELIGENTES" centrado
+                // Fecha
+                ws.Range(row, 1, row, 5).Merge();
+                var celdaFecha = ws.Cell(row, 1);
+                celdaFecha.Value = $"{b.NombreBanco} - Tanda {numTanda} - {DateTime.Now}";
+                celdaFecha.Style.Font.Italic = true;
+                celdaFecha.Style.Font.FontSize = 11;
+                celdaFecha.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                celdaFecha.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                row++; // una fila en blanco
+
+                // Título
                 ws.Range(row, 1, row, 5).Merge();
                 var celdaTitulo = ws.Cell(row, 1);
-                celdaTitulo.Value = "BUZONES INTELIGENTES";
+                celdaTitulo.Value = "Buzones Inteligentes";
                 celdaTitulo.Style.Font.Bold = true;
                 celdaTitulo.Style.Font.FontSize = 16;
                 celdaTitulo.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 celdaTitulo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                row += 2;
+                row++; // una fila en blanco tras título
             }
-            // Método interno para generar un Excel para una ciudad dada
+
             void GenerateExcel(List<DtoAcreditacionesPorEmpresa> lista, string ciudad)
             {
-
-
                 var wb = new XLWorkbook();
                 var ws = wb.Worksheets.Add(ciudad);
                 ws.ShowGridLines = false;
+
                 int row = 1;
                 InsertarLogoDesdeRecurso(ws, ref row);
-                // --- Sección PESOS ---
-                // Filtramos los registros de Pesos (puedes ajustar el filtro según el contenido de Moneda)
-                var listaPesos = lista.Where(x => x.Moneda.ToUpper().Contains("PESO") || x.Moneda.ToUpper().Contains("UYU")).ToList();
 
+                int freezeRow = 0;
+
+                // Sección PESOS
+                var listaPesos = lista.Where(x => x.Moneda.ToUpper().Contains("PESO") || x.Moneda.ToUpper().Contains("UYU")).ToList();
                 if (listaPesos.Any())
                 {
-                    // Encabezados
-                    ws.Cell(row, 1).Value = "BUZON";
-                    ws.Cell(row, 2).Value = "SUCURSAL";
-                    ws.Cell(row, 3).Value = "CUENTA";
-                    ws.Cell(row, 4).Value = "MONEDA";
-                    ws.Cell(row, 5).Value = "MONTO";
-                    var headerRange = ws.Range(row, 1, row, 5);
-                    headerRange.Style.Font.Bold = true;
-                    headerRange.Style.Fill.BackgroundColor = pastelYellow;
-                    row++;
+                    int hdr = row;
+                    ws.Cell(hdr, 1).Value = "BUZON";
+                    ws.Cell(hdr, 2).Value = "SUCURSAL";
+                    ws.Cell(hdr, 3).Value = "CUENTA";
+                    ws.Cell(hdr, 4).Value = "MONEDA";
+                    ws.Cell(hdr, 5).Value = "MONTO";
+                    ws.Range(hdr, 1, hdr, 5).Style
+                        .Font.Bold = true;
+                    ws.Range(hdr, 1, hdr, 5)
+                        .Style.Fill.BackgroundColor = pastelYellow;
 
-                    // Datos
-                    foreach (var item in listaPesos)
+                    row++;
+                    int dataStart = row;
+                    foreach (var i in listaPesos)
                     {
-                        // En la columna BUZON se usa el atributo NN
-                        ws.Cell(row, 1).Value = item.NN;
-                        ws.Cell(row, 2).Value = item.Sucursal;
-                        ws.Cell(row, 3).Value = item.NumeroCuenta;
-                        ws.Cell(row, 4).Value = item.Moneda;
-                        ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
+                        ws.Cell(row, 1).Value = i.NN;
+                        ws.Cell(row, 2).Value = i.Sucursal;
+                        ws.Cell(row, 3).Value = i.NumeroCuenta;
+                        ws.Cell(row, 4).Value = i.Moneda;
+                        ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(i.Monto);
                         row++;
                     }
+                    int lastData = row - 1;
 
-                    // Fila de Total para Pesos
-                    double totalPesos = listaPesos.Sum(x => x.Monto);
+                    // Total
+                    double totP = listaPesos.Sum(x => x.Monto);
                     ws.Cell(row, 4).Value = "TOTAL PESOS:";
+                    ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totP);
+                    ws.Range(row, 4, row, 5).Style
+                        .Fill.BackgroundColor = pastelCyan;
+                    ws.Range(row, 4, row, 5).Style.Font.Bold = true;
+                    row++; // una fila en blanco entre secciones
 
-                    ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalPesos);
+                    // Tabla
+                    var tblP = ws.Range(hdr, 1, lastData, 5).CreateTable();
+                    tblP.Theme = XLTableTheme.TableStyleMedium9;
+                    tblP.ShowAutoFilter = false;
+                    tblP.ShowHeaderRow = true;
 
-                    var totalRange = ws.Range(row, 4, row, 5);
-                    totalRange.Style.Fill.BackgroundColor = pastelCyan;
-                    totalRange.Style.Font.Bold = true;
-                    row += 2; // Espacio entre secciones
+                    freezeRow = hdr;
                 }
 
-                // --- Sección DÓLARES ---
-                var listaDolares = lista.Where(x => x.Moneda.ToUpper().Contains("DOLAR") || x.Moneda.ToUpper().Contains("USD")).ToList();
-                if (listaDolares.Any())
+                // Sección DÓLARES
+                var listaDol = lista.Where(x => x.Moneda.ToUpper().Contains("DOLAR") || x.Moneda.ToUpper().Contains("USD")).ToList();
+                if (listaDol.Any())
                 {
-                    // Encabezados
-                    ws.Cell(row, 1).Value = "BUZON";
-                    ws.Cell(row, 2).Value = "SUCURSAL";
-                    ws.Cell(row, 3).Value = "CUENTA";
-                    ws.Cell(row, 4).Value = "MONEDA";
-                    ws.Cell(row, 5).Value = "MONTO";
-                    var headerRangeD = ws.Range(row, 1, row, 5);
-                    headerRangeD.Style.Font.Bold = true;
-                    headerRangeD.Style.Fill.BackgroundColor = pastelYellow;
-                    row++;
+                    int hdr2 = row;
+                    ws.Cell(hdr2, 1).Value = "BUZON";
+                    ws.Cell(hdr2, 2).Value = "SUCURSAL";
+                    ws.Cell(hdr2, 3).Value = "CUENTA";
+                    ws.Cell(hdr2, 4).Value = "MONEDA";
+                    ws.Cell(hdr2, 5).Value = "MONTO";
+                    ws.Range(hdr2, 1, hdr2, 5).Style.Font.Bold = true;
+                    ws.Range(hdr2, 1, hdr2, 5).Style.Fill.BackgroundColor = pastelYellow;
 
-                    // Datos 
-                    foreach (var item in listaDolares)
+                    row++;
+                    int data2 = row;
+                    foreach (var i in listaDol)
                     {
-                        ws.Cell(row, 1).Value = item.NN;
-                        ws.Cell(row, 2).Value = item.Sucursal;
-                        ws.Cell(row, 3).Value = item.NumeroCuenta;
-                        ws.Cell(row, 4).Value = item.Moneda;
-                        ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
+                        ws.Cell(row, 1).Value = i.NN;
+                        ws.Cell(row, 2).Value = i.Sucursal;
+                        ws.Cell(row, 3).Value = i.NumeroCuenta;
+                        ws.Cell(row, 4).Value = i.Moneda;
+                        ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(i.Monto);
                         row++;
                     }
+                    int last2 = row - 1;
 
-                    // Fila de Total para Dólares
-                    double totalDolares = listaDolares.Sum(x => x.Monto);
+                    // Total Dólares
+                    double totD = listaDol.Sum(x => x.Monto);
                     ws.Cell(row, 4).Value = "TOTAL DOLARES:";
-                    ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalDolares);
-                    var totalRangeD = ws.Range(row, 4, row, 5);
-                    totalRangeD.Style.Fill.BackgroundColor = pastelCyan;
-                    totalRangeD.Style.Font.Bold = true;
+                    ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totD);
+                    ws.Range(row, 4, row, 5).Style.Fill.BackgroundColor = pastelCyan;
+                    ws.Range(row, 4, row, 5).Style.Font.Bold = true;
                     row++;
+
+                    var tblD = ws.Range(hdr2, 1, last2, 5).CreateTable();
+                    tblD.Theme = XLTableTheme.TableStyleMedium9;
+                    tblD.ShowAutoFilter = false;
+                    tblD.ShowHeaderRow = true;
+
+                    if (freezeRow == 0) freezeRow = hdr2;
                 }
 
-                ws.Columns().AdjustToContents();
+                ws.Columns(1, 5).AdjustToContents();                       // Ajusta solo A–E
+                ws.Columns(6, ws.ColumnCount()).Hide();                     // Oculta de F en adelante
 
-                string fileName = "";
+                // Si además quieres que al imprimir no salga nada de F hacia la derecha:
+                var lastRow = ws.LastRowUsed().RowNumber();
+                ws.PageSetup.PrintAreas.Add($"A1:E{lastRow}");
+                ws.PageSetup.FitToPages(1, 0);
 
-                // Construir nombre y ruta del archivo
-                
-                if(b.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper() || b.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
-                {
-                    fileName = $"{b.NombreBanco}_Henderson_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                }
+                if (freezeRow > 0)
+                    ws.SheetView.FreezeRows(freezeRow);
 
-                else if (b.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
-                {
-                    fileName = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                }
-              
+                ws.PageSetup.Margins.Left = 0.3;
+                ws.PageSetup.Margins.Right = 0.3;
+                ws.PageSetup.CenterHorizontally = true;
+                ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
 
-                string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fileName);
+                // Guardar y enviar
+                string fn;
+                if (b.NombreBanco.Equals(VariablesGlobales.santander, StringComparison.OrdinalIgnoreCase)
+                 || b.NombreBanco.Equals(VariablesGlobales.scotiabank, StringComparison.OrdinalIgnoreCase))
+                    fn = $"{b.NombreBanco}_Henderson_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                else if (b.NombreBanco.Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase))
+                    fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                else
+                    fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
 
+                string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
+                wb.SaveAs(path);
 
-                wb.SaveAs(filePath);
-                Console.WriteLine($"Excel generado para {ciudad}: {filePath}");
-
-                // Aquí podrías agregar el envío del correo, si corresponde.
-                Console.WriteLine($"Excel de Tesorería generado: {filePath}");
+                Console.WriteLine($"Excel generado para {ciudad}: {path}");
                 try
                 {
-                    string asunto = "";
-                    string cuerpo = "";
-                    if (b.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper() || b.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                    string asu, cue;
+                    if (b.NombreBanco.Equals(VariablesGlobales.santander, StringComparison.OrdinalIgnoreCase)
+                     || b.NombreBanco.Equals(VariablesGlobales.scotiabank, StringComparison.OrdinalIgnoreCase))
                     {
-                        asunto = $"Acreditaciones  {b.NombreBanco} (HENDERSON)  Tanda {numTanda} - {ciudad.ToUpper()}";
-                        cuerpo = $"A continuación se adjunta el archivo de acreditaciones correspondiente para {b.NombreBanco}(HENDERSON) siendo la Tanda {numTanda} de la ciudad de {ciudad.ToUpper()} para el banco {b.NombreBanco}.";
+                        asu = $"Acreditaciones {b.NombreBanco} (HENDERSON) Tanda {numTanda} - {ciudad.ToUpper()}";
+                        cue = $"Adjunto archivo de acreditaciones para {b.NombreBanco}(HENDERSON) Tanda {numTanda} ciudad {ciudad.ToUpper()}.";
                     }
-                    else if (b.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
+                    else
                     {
-                        asunto = $"Acreditaciones  {b.NombreBanco} (TATA) -  {ciudad.ToUpper()}";
-                        cuerpo = $"A continuación se adjunta el archivo de acreditaciones correspondiente para {b.NombreBanco} para los buzones TATA de la ciudad de {ciudad.ToUpper()} para el banco {b.NombreBanco}.";
+                        asu = $"Acreditaciones {b.NombreBanco} (TATA) - {ciudad.ToUpper()}";
+                        cue = $"Adjunto archivo de acreditaciones para buzones TATA ciudad {ciudad.ToUpper()} banco {b.NombreBanco}.";
                     }
-               
-                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo);
+                    _emailService.enviarExcelPorMail(path, asu, cue);
                 }
                 catch (Exception ex)
                 {
@@ -1467,19 +1492,18 @@ namespace ANS.Model.Services
                 }
             }
 
-            // Genera el Excel para Montevideo
-            if (acreditacionesMontevideo != null && acreditacionesMontevideo.Any())
-            {
+            if (acreditacionesMontevideo?.Any() == true)
                 GenerateExcel(acreditacionesMontevideo, "MONTEVIDEO");
-            }
-
-            // Genera el Excel para Maldonado
-            if (acreditacionesMaldonado != null && acreditacionesMaldonado.Any())
-            {
+            if (acreditacionesMaldonado?.Any() == true)
                 GenerateExcel(acreditacionesMaldonado, "MALDONADO");
-            }
         }
-        private void generarExcelPorAcreditacionesAgrupadoPorEmpresa(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b)
+
+
+        private void generarExcelPorAcreditacionesAgrupadoPorEmpresa(
+           List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo,
+           List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado,
+           int numTanda,
+           Banco b)
         {
             var amarilloPastel = XLColor.LightYellow;
             var celestePastel = XLColor.LightCyan;
@@ -1487,36 +1511,33 @@ namespace ANS.Model.Services
             void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                string resourcePath = "ANS.Images.logoTecniFinal.png"; // Ajustá si tu namespace cambia
+                string resourcePath = "ANS.Images.logoTecniFinal.png";
 
                 using (Stream stream = assembly.GetManifestResourceStream(resourcePath))
                 {
                     if (stream != null)
                     {
-                        // Insertamos en celda C1 (col 3) y aplicamos un pequeño offset
-                        var imagen = ws.AddPicture(stream)
-                                       .MoveTo(ws.Cell(row, 3), 30, 5) // Offset horizontal y vertical en píxeles
-                                       .WithPlacement(XLPicturePlacement.FreeFloating)
-                                       .Scale(0.5); // Escala ajustable
-
-                        row += 1; // espacio debajo del logo
+                        ws.AddPicture(stream)
+                          .MoveTo(ws.Cell(row, 3), 30, 5)
+                          .WithPlacement(XLPicturePlacement.FreeFloating)
+                          .Scale(0.5);
+                        row += 1;
                     }
                 }
 
-                // ——— AÑADIMOS LA FECHA AQUÍ ———
-             
+                // Fecha
                 ws.Range(row, 1, row, 5).Merge();
                 var celdaFecha = ws.Cell(row, 1);
-             
-                celdaFecha.Value = "Tesorería - " + DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy",
-                    new System.Globalization.CultureInfo("es-ES"));
+                celdaFecha.Value = "Tesorería - " +
+                    DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy",
+                        new System.Globalization.CultureInfo("es-ES"));
                 celdaFecha.Style.Font.Italic = true;
                 celdaFecha.Style.Font.FontSize = 11;
                 celdaFecha.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                 celdaFecha.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                row += 1;  // espacio tras la fecha
+                row += 1;
 
-                // ——— TITULO ———
+                // Título
                 ws.Range(row, 1, row, 5).Merge();
                 var celdaTitulo = ws.Cell(row, 1);
                 celdaTitulo.Value = "BUZONES INTELIGENTES";
@@ -1526,10 +1547,10 @@ namespace ANS.Model.Services
                 celdaTitulo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
                 row += 2;
             }
+
             void generarArchivoExcel(List<DtoAcreditacionesPorEmpresa> lista, string ciudad)
             {
-                if (lista == null || !lista.Any())
-                    return;
+                if (lista == null || !lista.Any()) return;
 
                 var wb = new XLWorkbook();
                 var ws = wb.Worksheets.Add(ciudad);
@@ -1563,7 +1584,9 @@ namespace ANS.Model.Services
                         ws.Cell(row, 2).Value = item.Sucursal;
                         ws.Cell(row, 3).Value = item.NumeroCuenta;
                         ws.Cell(row, 4).Value = item.Moneda;
-                        ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
+                        ws.Cell(row, 5).Value = ServicioUtilidad
+                            .getInstancia()
+                            .FormatearDoubleConPuntosYComas(item.Monto);
 
                         var dataRange = ws.Range(row, 1, row, 5);
                         dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
@@ -1572,9 +1595,11 @@ namespace ANS.Model.Services
                         row++;
                     }
 
-                    // Fila Total
+                    // Total
                     ws.Cell(row, 4).Value = $"Total {moneda.ToUpper()}";
-                    ws.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(datos.Sum(x => x.Monto));
+                    ws.Cell(row, 5).Value = ServicioUtilidad
+                        .getInstancia()
+                        .FormatearDoubleConPuntosYComas(datos.Sum(x => x.Monto));
 
                     var totalRange = ws.Range(row, 4, row, 5);
                     totalRange.Style.Fill.BackgroundColor = celestePastel;
@@ -1584,22 +1609,30 @@ namespace ANS.Model.Services
 
                     row++;
 
-                    // Fila separadora
-                    var separador = ws.Range(row, 1, row, 5);
-                    separador.Merge();
-
+                    // Separador
+                    ws.Range(row, 1, row, 5).Merge();
                     row++;
                 }
 
-                // Separar en pesos y dólares
+                // Secciones
                 var listaPesos = lista.Where(x => x.Moneda.ToUpper() == "PESOS").ToList();
                 var listaDolares = lista.Where(x => x.Moneda.ToUpper() == "DOLARES").ToList();
 
                 AgregarSeccion(listaPesos, "Pesos");
                 AgregarSeccion(listaDolares, "Dólares");
 
-                ws.Columns().AdjustToContents();
+                // Ajuste de ancho A–E
+                ws.Columns(1, 5).AdjustToContents();
 
+                // 2) Oculta columnas F en adelante
+                ws.Columns(6, ws.ColumnCount()).Hide();
+
+                // 3) Fija el área de impresión a A1:E<lastRow>
+                var lastRow = ws.LastRowUsed().RowNumber();
+                ws.PageSetup.PrintAreas.Add($"A1:E{lastRow}");
+                ws.PageSetup.FitToPages(1, 0);
+
+                // Guardar y enviar
                 string nombreArchivo = $"Tesoreria_Tanda_{numTanda}_{ciudad.ToUpper()}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
                 wb.SaveAs(filePath);
@@ -1608,7 +1641,9 @@ namespace ANS.Model.Services
                 try
                 {
                     string asunto = $"Acreditaciones para Tesorería {b.NombreBanco} Tanda {numTanda} - {ciudad.ToUpper()}";
-                    string cuerpo = $"E-Mail específico para TESORERÍA TECNISEGUR.\nA continuación se adjunta el archivo de acreditaciones correspondiente a la tanda {numTanda} de la ciudad de {ciudad.ToUpper()} para el banco {b.NombreBanco}.";
+                    string cuerpo = $"E-Mail específico para TESORERÍA TECNISEGUR.\n" +
+                                    $"Adjunto el archivo de acreditaciones para la tanda {numTanda} de {ciudad.ToUpper()}.";
+
                     _emailService.enviarExcelPorMail(filePath, asunto, cuerpo);
                 }
                 catch (Exception ex)
@@ -1616,10 +1651,11 @@ namespace ANS.Model.Services
                     Console.WriteLine("Error al enviar el correo: " + ex.Message);
                 }
             }
-            generarArchivoExcel(acreditacionesMontevideo, "Montevideo");
 
+            generarArchivoExcel(acreditacionesMontevideo, "Montevideo");
             generarArchivoExcel(acreditacionesMaldonado, "Maldonado");
         }
+
         public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
         {
 
@@ -1783,19 +1819,19 @@ namespace ANS.Model.Services
                                    .WithPlacement(XLPicturePlacement.FreeFloating)
                                    .Scale(0.5); // Escala ajustable
 
-                    row += 6; // Espacio debajo del logo
+                    row += 2; // Espacio debajo del logo
                 }
             }
 
             // Texto "BUZONES INTELIGENTES" centrado
             ws.Range(row, 1, row, 5).Merge();
             var celdaTitulo = ws.Cell(row, 1);
-            celdaTitulo.Value = "BUZONES INTELIGENTES";
+            celdaTitulo.Value = "Buzones Inteligentes";
             celdaTitulo.Style.Font.Bold = true;
             celdaTitulo.Style.Font.FontSize = 16;
             celdaTitulo.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             celdaTitulo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            row += 2;
+            row += 1;
         }
         private List<DtoAcreditacionesPorEmpresa> getAcreditacionesPorBancoYTipoAcreditacion(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
         {
@@ -1982,121 +2018,147 @@ namespace ANS.Model.Services
         }
         public async Task generarExcelDelResumenDelDiaSantander()
         {
-            // Obtén la lista completa de acreditaciones del día
+            // Obtener datos
             Banco santander = ServicioBanco.getInstancia().getByNombre("SANTANDER");
-
             List<DtoAcreditacionesPorEmpresa> resumenAcreditaciones = getAcreditacionesDeHoy(santander);
 
-            // Separa las acreditaciones en cuatro listas según divisa y ciudad
-            List<DtoAcreditacionesPorEmpresa> resumenPesosMontevideo = new List<DtoAcreditacionesPorEmpresa>();
-            List<DtoAcreditacionesPorEmpresa> resumenPesosMaldonado = new List<DtoAcreditacionesPorEmpresa>();
-            List<DtoAcreditacionesPorEmpresa> resumenDolaresMontevideo = new List<DtoAcreditacionesPorEmpresa>();
-            List<DtoAcreditacionesPorEmpresa> resumenDolaresMaldonado = new List<DtoAcreditacionesPorEmpresa>();
+            // Listas por ciudad y divisa
+            var resumenPesosMontevideo = new List<DtoAcreditacionesPorEmpresa>();
+            var resumenPesosMaldonado = new List<DtoAcreditacionesPorEmpresa>();
+            var resumenDolaresMontevideo = new List<DtoAcreditacionesPorEmpresa>();
+            var resumenDolaresMaldonado = new List<DtoAcreditacionesPorEmpresa>();
 
-            foreach (DtoAcreditacionesPorEmpresa acreditacion in resumenAcreditaciones)
+            foreach (var acreditacion in resumenAcreditaciones)
             {
+                bool esMontevideo = acreditacion.Ciudad.Equals(
+                    VariablesGlobales.montevideo, StringComparison.OrdinalIgnoreCase);
                 if (acreditacion.Divisa == 1)
                 {
-                    if (acreditacion.Ciudad.ToUpper() == VariablesGlobales.montevideo.ToUpper())
-                        resumenPesosMontevideo.Add(acreditacion);
-                    else
-                        resumenPesosMaldonado.Add(acreditacion);
+                    if (esMontevideo) resumenPesosMontevideo.Add(acreditacion);
+                    else resumenPesosMaldonado.Add(acreditacion);
                 }
-                else // Asumimos que la única otra opción es Divisa == 2 (dólares)
+                else
                 {
-                    if (acreditacion.Ciudad.ToUpper() == VariablesGlobales.montevideo.ToUpper())
-                        resumenDolaresMontevideo.Add(acreditacion);
-                    else
-                        resumenDolaresMaldonado.Add(acreditacion);
+                    if (esMontevideo) resumenDolaresMontevideo.Add(acreditacion);
+                    else resumenDolaresMaldonado.Add(acreditacion);
                 }
             }
 
-            // -------------------------- GENERAR EXCEL PARA MONTEVIDEO --------------------------
-            using (var workbookMontevideo = new XLWorkbook())
+            // Método local para generar y enviar reporte
+            void GenerarReporte(string ciudad,
+                                List<DtoAcreditacionesPorEmpresa> pesos,
+                                List<DtoAcreditacionesPorEmpresa> dolares)
             {
-                var worksheet = workbookMontevideo.Worksheets.Add("Resumen");
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Resumen");
                 int row = 1;
 
-                // SECCIÓN PESOS MONTEVIDEO
+                // Logo + título
+                InsertarLogoDesdeRecurso(worksheet, ref row);
+                worksheet.Cell(row, 1).Value =
+                    $"Reporte Diario de Buzones Inteligentes - {DateTime.Now:dd/MM/yyyy}";
+                var titleRange = worksheet.Range(row, 1, row, 5);
+                titleRange.Merge();
+                titleRange.Style.Font.Bold = true;
+                titleRange.Style.Font.FontSize = 14;
+                titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row += 2;
+
+                // Encabezado Pesos
                 worksheet.Cell(row, 1).Value = "CLIENTE";
                 worksheet.Cell(row, 2).Value = "SUCURSAL";
                 worksheet.Cell(row, 3).Value = "CUENTA";
                 worksheet.Cell(row, 4).Value = "MONEDA";
                 worksheet.Cell(row, 5).Value = "MONTO";
-                var headerRange = worksheet.Range(row, 1, row, 5);
-                headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
-                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                headerRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                headerRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                var headerPesos = worksheet.Range(row, 1, row, 5);
+                headerPesos.Style.Font.Bold = true;
+                headerPesos.Style.Fill.BackgroundColor = XLColor.LightGray;
+                headerPesos.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                headerPesos.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                headerPesos.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                 row++;
 
-                foreach (var item in resumenPesosMontevideo)
+                // Filas Pesos
+                foreach (var item in pesos)
                 {
                     worksheet.Cell(row, 1).Value = item.Empresa;
                     worksheet.Cell(row, 2).Value = item.Sucursal;
                     worksheet.Cell(row, 3).Value = item.NumeroCuenta;
                     worksheet.Cell(row, 4).Value = item.Moneda;
-                    worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
+                    worksheet.Cell(row, 5).Value =
+                        ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
                     worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                     worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                     row++;
                 }
 
+                // Total Pesos
                 worksheet.Cell(row, 1).Value = "Total Pesos:";
-                double totalPesosMontevideo = resumenPesosMontevideo.Sum(x => x.Monto);
-                worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalPesosMontevideo);
-                worksheet.Range(row, 1, row, 5).Style.Font.Bold = true;
-                worksheet.Range(row, 1, row, 5).Style.Fill.BackgroundColor = XLColor.AliceBlue;
-                worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                row++;
+                worksheet.Cell(row, 5).Value =
+                    ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(
+                        pesos.Sum(x => x.Monto));
+                var totalPesosRange = worksheet.Range(row, 1, row, 5);
+                totalPesosRange.Style.Font.Bold = true;
+                totalPesosRange.Style.Fill.BackgroundColor = XLColor.AliceBlue;
+                totalPesosRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                totalPesosRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                row += 2;
 
-                row++; // Espacio entre secciones
-
-                // SECCIÓN DÓLARES MONTEVIDEO
+                // Encabezado Dólares
                 worksheet.Cell(row, 1).Value = "CLIENTE";
                 worksheet.Cell(row, 2).Value = "SUCURSAL";
                 worksheet.Cell(row, 3).Value = "CUENTA";
                 worksheet.Cell(row, 4).Value = "MONEDA";
                 worksheet.Cell(row, 5).Value = "MONTO";
-                var headerRangeUSD = worksheet.Range(row, 1, row, 5);
-                headerRangeUSD.Style.Font.Bold = true;
-                headerRangeUSD.Style.Fill.BackgroundColor = XLColor.LightGray;
-                headerRangeUSD.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                headerRangeUSD.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                headerRangeUSD.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                var headerDolares = worksheet.Range(row, 1, row, 5);
+                headerDolares.Style.Font.Bold = true;
+                headerDolares.Style.Fill.BackgroundColor = XLColor.LightGray;
+                headerDolares.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                headerDolares.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                headerDolares.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                 row++;
 
-                foreach (var item in resumenDolaresMontevideo)
+                // Filas Dólares
+                foreach (var item in dolares)
                 {
                     worksheet.Cell(row, 1).Value = item.Empresa;
                     worksheet.Cell(row, 2).Value = item.Sucursal;
                     worksheet.Cell(row, 3).Value = item.NumeroCuenta;
                     worksheet.Cell(row, 4).Value = item.Moneda;
-                    worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
+                    worksheet.Cell(row, 5).Value =
+                        ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
                     worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                     worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                     row++;
                 }
 
+                // Total Dólares
                 worksheet.Cell(row, 1).Value = "Total Dólares:";
-                double totalDolaresMontevideo = resumenDolaresMontevideo.Sum(x => x.Monto);
-                worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalDolaresMontevideo);
-                worksheet.Range(row, 1, row, 5).Style.Font.Bold = true;
-                worksheet.Range(row, 1, row, 5).Style.Fill.BackgroundColor = XLColor.AliceBlue;
-                worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(row, 5).Value =
+                    ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(
+                        dolares.Sum(x => x.Monto));
+                var totalDolaresRange = worksheet.Range(row, 1, row, 5);
+                totalDolaresRange.Style.Font.Bold = true;
+                totalDolaresRange.Style.Fill.BackgroundColor = XLColor.AliceBlue;
+                totalDolaresRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                totalDolaresRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
 
+                // Ajuste de columnas y ocultación de la columna F
                 worksheet.Columns().AdjustToContents();
+                worksheet.Column(6).Hide(); // Oculta columna F
 
-                string nombreArchivoMontevideo = "ReporteDiario_Santander_Montevideo_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
-                string filePathMontevideo = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivoMontevideo);
-                workbookMontevideo.SaveAs(filePathMontevideo);
+                // Guardar y enviar
+                string fileName = $"ReporteDiario_Santander_{ciudad}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(
+                    @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fileName);
+                workbook.SaveAs(filePath);
 
                 try
                 {
-                    _emailService.enviarExcelPorMail(filePathMontevideo, "Reporte Diario Santander Montevideo", "Reporte diario de acreditaciones Santander - Montevideo");
+                    _emailService.enviarExcelPorMail(
+                        filePath,
+                        $"Reporte Diario Santander {ciudad}",
+                        $"Reporte diario de acreditaciones Santander - {ciudad}");
                 }
                 catch (Exception e)
                 {
@@ -2104,101 +2166,13 @@ namespace ANS.Model.Services
                 }
             }
 
-            // -------------------------- GENERAR EXCEL PARA MALDONADO --------------------------
-            using (var workbookMaldonado = new XLWorkbook())
-            {
-                var worksheet = workbookMaldonado.Worksheets.Add("Resumen");
-                int row = 1;
-
-                // SECCIÓN PESOS MALDONADO
-                worksheet.Cell(row, 1).Value = "CLIENTE";
-                worksheet.Cell(row, 2).Value = "SUCURSAL";
-                worksheet.Cell(row, 3).Value = "CUENTA";
-                worksheet.Cell(row, 4).Value = "MONEDA";
-                worksheet.Cell(row, 5).Value = "MONTO";
-                var headerRange = worksheet.Range(row, 1, row, 5);
-                headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
-                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                headerRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                headerRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                row++;
-
-                foreach (var item in resumenPesosMaldonado)
-                {
-                    worksheet.Cell(row, 1).Value = item.Empresa;
-                    worksheet.Cell(row, 2).Value = item.Sucursal;
-                    worksheet.Cell(row, 3).Value = item.NumeroCuenta;
-                    worksheet.Cell(row, 4).Value = item.Moneda;
-                    worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
-                    worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                    row++;
-                }
-
-                worksheet.Cell(row, 1).Value = "Total Pesos:";
-                double totalPesosMaldonado = resumenPesosMaldonado.Sum(x => x.Monto);
-                worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalPesosMaldonado);
-                worksheet.Range(row, 1, row, 5).Style.Font.Bold = true;
-                worksheet.Range(row, 1, row, 5).Style.Fill.BackgroundColor = XLColor.AliceBlue;
-                worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                row++;
-
-                row++; // Espacio entre secciones
-
-                // SECCIÓN DÓLARES MALDONADO
-                worksheet.Cell(row, 1).Value = "CLIENTE";
-                worksheet.Cell(row, 2).Value = "SUCURSAL";
-                worksheet.Cell(row, 3).Value = "CUENTA";
-                worksheet.Cell(row, 4).Value = "MONEDA";
-                worksheet.Cell(row, 5).Value = "MONTO";
-                var headerRangeUSD = worksheet.Range(row, 1, row, 5);
-                headerRangeUSD.Style.Font.Bold = true;
-                headerRangeUSD.Style.Fill.BackgroundColor = XLColor.LightGray;
-                headerRangeUSD.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                headerRangeUSD.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                headerRangeUSD.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                row++;
-
-                foreach (var item in resumenDolaresMaldonado)
-                {
-                    worksheet.Cell(row, 1).Value = item.Empresa;
-                    worksheet.Cell(row, 2).Value = item.Sucursal;
-                    worksheet.Cell(row, 3).Value = item.NumeroCuenta;
-                    worksheet.Cell(row, 4).Value = item.Moneda;
-                    worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
-                    worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                    row++;
-                }
-
-                worksheet.Cell(row, 1).Value = "Total Dólares:";
-                double totalDolaresMaldonado = resumenDolaresMaldonado.Sum(x => x.Monto);
-                worksheet.Cell(row, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalDolaresMaldonado);
-                worksheet.Range(row, 1, row, 5).Style.Font.Bold = true;
-                worksheet.Range(row, 1, row, 5).Style.Fill.BackgroundColor = XLColor.AliceBlue;
-                worksheet.Range(row, 1, row, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                worksheet.Range(row, 1, row, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                worksheet.Columns().AdjustToContents();
-
-                string nombreArchivoMaldonado = "ReporteDiario_Santander_Maldonado_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
-                string filePathMaldonado = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivoMaldonado);
-                workbookMaldonado.SaveAs(filePathMaldonado);
-
-                try
-                {
-                    _emailService.enviarExcelPorMail(filePathMaldonado, "Reporte Diario Santander Maldonado", "Reporte diario de acreditaciones Santander - Maldonado");
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-            }
+            // Generar ambos reportes
+            GenerarReporte("Montevideo", resumenPesosMontevideo, resumenDolaresMontevideo);
+            GenerarReporte("Maldonado", resumenPesosMaldonado, resumenDolaresMaldonado);
 
             await Task.Delay(100);
         }
+
 
 
 

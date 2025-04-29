@@ -18,7 +18,7 @@ namespace ANS.Model.Services
 
 
         string remitente = "dchiquiar@tecnisegur.com.uy";
-        string contrasena = "D23012025";
+        string contrasena = "cfsg xikf qjwp iwzu";
         string destinatario = "dchiquiar@tecnisegur.com.uy";
         public static ServicioEmail instancia { get; set; }
 
@@ -40,7 +40,7 @@ namespace ANS.Model.Services
 
             await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
 
-            await smtp.AuthenticateAsync("dchiquiar@tecnisegur.com.uy", "D23012025");
+            await smtp.AuthenticateAsync("dchiquiar@tecnisegur.com.uy", "cfsg xikf qjwp iwzu");
 
             return smtp;
         }

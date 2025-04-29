@@ -293,6 +293,7 @@ namespace ANS.Model.Services
                         a.Empresa = null;
                     }
                 }
+                empresaDeLaAcreditacionAsignadaAlBuzon = false;
             }
         }
         private async Task obtenerFechaUltimaConexionDelBuzon(List<BuzonDTO> buzones)
