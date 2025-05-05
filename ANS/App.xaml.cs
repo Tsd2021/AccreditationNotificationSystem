@@ -115,9 +115,12 @@ namespace ANS
         private void preCargarListaNC()
         {
             var s = ServicioCC.getInstancia();
+
             if (s != null)
             {
                 s.loadCC();
+
+                s.loadEmails();
             }
         }
 
@@ -504,7 +507,7 @@ namespace ANS
 
             ITrigger triggerBBVADiaADia = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerDAD", "GrupoTrabajoBBVA")
-                .WithCronSchedule("0 0 17 ? * MON-FRI")
+                .WithCronSchedule("45 0 17 ? * MON-FRI")
                 .Build();
 
             #endregion

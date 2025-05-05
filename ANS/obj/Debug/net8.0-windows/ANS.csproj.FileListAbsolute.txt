@@ -492,6 +492,7 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\BBVAOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\EnvioMasivoOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\EnvioNivelesOperationControl.baml
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\PanelAsociarEmailABuzon.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\SantanderOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\ScotiabankOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\BancoModal.g.cs
@@ -500,8 +501,10 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\BBVAOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\EnvioMasivoOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\EnvioNivelesOperationControl.g.cs
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\PanelAsociarEmailABuzon.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\SantanderOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\UserControls\ScotiabankOperationControl.g.cs
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\Views\AltaEmailDestino.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\App.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\ANS_Content.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
@@ -509,6 +512,7 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\ANS_MarkupCompile.lref
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\App.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\MainWindow.baml
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\Views\AltaEmailDestino.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\ANS.g.resources
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\ANS.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Debug\net8.0-windows\ANS.AssemblyInfoInputs.cache

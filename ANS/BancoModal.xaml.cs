@@ -1,4 +1,5 @@
 ﻿using ANS.UserControls;
+using ANS.Views;
 using System.Windows;
 
 
@@ -38,6 +39,16 @@ namespace ANS
                 case "EnvioNiveles":
                     BankOperationsContent.Content = new EnvioNivelesOperationControl();
                     break;
+                case "AltaEmailDestino":
+                    var altaWin = new AltaEmailDestino();
+                    // No asignamos Owner para evitar InvalidOperationException
+                    altaWin.ShowDialog();
+                    // Una vez que altaWin se cierra, el ShowDialog() retorna,
+                    // así que aquí cerramos BancoModal
+                    this.Close();
+                    break;
+
+
             }
         }
 

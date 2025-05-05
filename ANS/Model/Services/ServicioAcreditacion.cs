@@ -228,7 +228,7 @@ namespace ANS.Model.Services
 
             List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
             //debo obtener todas las acreditaciones de una fecha desde y fecha hasta,por banco
-            //este metodo no tiene en cuenta el tipo de acreditacion, solo el banco y la fecha
+            
             if (desde != DateTime.MinValue && hasta != DateTime.MinValue && bank != null)
             {
                 try

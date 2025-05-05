@@ -14,7 +14,7 @@ namespace ANS.Model.Services
         private string _conexionTSD20 = ConfiguracionGlobal.ConexionTSD;
         public List<Buzon> listaBuzones { get; private set; } = new List<Buzon>();
         public static ServicioCC instancia { get; set; }
-     
+
         public static ServicioCC getInstancia()
         {
             if (instancia == null)
@@ -35,7 +35,7 @@ namespace ANS.Model.Services
             if (listaBuzones != null)
             {
 
-                using(SqlConnection c = new SqlConnection(_conexionTSD22))
+                using (SqlConnection c = new SqlConnection(_conexionTSD22))
                 {
                     c.Open();
 
@@ -43,7 +43,7 @@ namespace ANS.Model.Services
 
                     SqlCommand cmd = new SqlCommand(query, c);
 
-                    using(SqlDataReader r = cmd.ExecuteReader())
+                    using (SqlDataReader r = cmd.ExecuteReader())
                     {
 
                         int nnOrdinal = r.GetOrdinal("nn");
@@ -62,6 +62,128 @@ namespace ANS.Model.Services
                         }
                     }
                 }
+            }
+        }
+
+
+        public void loadEmails()
+        {
+            if (listaBuzones != null && listaBuzones.Count > 0)
+            {
+                foreach (var b in listaBuzones)
+                {
+                    using (SqlConnection c = new SqlConnection(_conexionTSD22))
+                    {
+                        c.Open();
+
+                        string query = "select correo,esprincipal,nc from buzoncorreo where nc = @nc;";
+
+                        SqlCommand cmd = new SqlCommand(query, c);
+
+                        cmd.Parameters.AddWithValue("@nc", b.NC);
+
+                        using (SqlDataReader r = cmd.ExecuteReader())
+                        {
+
+                            int emailOrdinal = r.GetOrdinal("correo");
+                            int ncOrdinal = r.GetOrdinal("nc");
+                            int esPrincipalOrdinal = r.GetOrdinal("esPrincipal");
+
+                            while (r.Read())
+                            {
+                                Email e = new Email()
+                                {
+                                    EsPrincipal = r.GetBoolean(esPrincipalOrdinal),
+                                    Correo = r.GetString(emailOrdinal),
+                                    NC = r.GetString(ncOrdinal)
+                                };
+                                b._listaEmails.Add(e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        public int insertarEmail(Email e)
+        {
+            try
+            {
+                if (e == null) throw new Exception("El correo o el número de cliente no pueden estar vacíos.");
+
+                using (SqlConnection c = new SqlConnection(_conexionTSD22))
+                {
+
+                    c.Open();
+
+                    string query = "insert into buzoncorreo (correo,esprincipal,nc) values (@correo,@esPrincipal,@nc);";
+
+                    SqlCommand cmd = new SqlCommand(query, c);
+
+                    cmd.Parameters.AddWithValue("@correo", e.Correo);
+
+                    cmd.Parameters.AddWithValue("@nc", e.NC);
+
+                    cmd.Parameters.AddWithValue("@esPrincipal", e.EsPrincipal);
+
+                    return cmd.ExecuteScalar() != null ? Convert.ToInt32(cmd.ExecuteScalar()) : 0;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public int eliminarEmail(Email e)
+        {
+            try
+            {
+
+                if (e == null) throw new Exception("El correo o el número de cliente no pueden estar vacíos.");
+                using (SqlConnection c = new SqlConnection(_conexionTSD22))
+                {
+                    c.Open();
+                    string query = "delete from buzoncorreo where correo = @correo and nc = @nc;";
+                    SqlCommand cmd = new SqlCommand(query, c);
+                    cmd.Parameters.AddWithValue("@correo", e.Correo);
+                    cmd.Parameters.AddWithValue("@nc", e.NC);
+                    return cmd.ExecuteNonQuery();
+                }
+            }
+
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public int modificarEmail(Email e, string nuevoEmail)
+        {
+            try
+            {
+                if (e == null) throw new Exception("El correo o el número de cliente no pueden estar vacíos.");
+
+                using (SqlConnection c = new SqlConnection(_conexionTSD22))
+                {
+                    c.Open();
+
+                    string query = "update buzoncorreo set esprincipal = @esPrincipal , correo = @nuevoEmail where correo = @viejoEmail and nc = @nc;";
+
+                    SqlCommand cmd = new SqlCommand(query, c);
+                    cmd.Parameters.AddWithValue("@viejoEmail", e.Correo);
+                    cmd.Parameters.AddWithValue("@nuevoEmail", nuevoEmail);
+                    cmd.Parameters.AddWithValue("@nc", e.NC);
+                    cmd.Parameters.AddWithValue("@esPrincipal", e.EsPrincipal);
+                    return cmd.ExecuteNonQuery();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
             }
         }
     }

@@ -13,6 +13,7 @@ namespace ANS.Model
         public string Email { get; set; }       
         public DateTime UltimaVezConectado { get; set; }
         public double HorasDesconectado { get; set; }
+        public List<Email> _listaEmails { get; set; } = new List<Email>();
         public Buzon() { }
 
         public bool estaOnline()

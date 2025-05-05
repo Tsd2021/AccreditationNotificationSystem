@@ -38,9 +38,6 @@ namespace ANS.Model.Services
 
             if (buzonesConAcreditaciones.Count == 0) return;
 
-
-
-
             var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
             var smtp = await ServicioEmail.instancia.getNewSmptClient();
             var sendLock = new SemaphoreSlim(1, 1);
@@ -65,7 +62,7 @@ namespace ANS.Model.Services
                     }
                     catch (Exception ex)
                     {
-                        // Manejo de errores: log, retry, etc.
+                        
                         Console.WriteLine($"Error al enviar el correo: {ex.Message}");
                     }
 

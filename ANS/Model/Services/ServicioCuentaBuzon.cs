@@ -1042,7 +1042,7 @@ namespace ANS.Model.Services
 
                 List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
 
-                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank);
+                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda,bank,cli,config);
 
             }
             catch (Exception e)
@@ -1128,150 +1128,7 @@ namespace ANS.Model.Services
                 throw new Exception("Error en getAcreditacionesPorBuzones: ListaCuentaBuzones vacia o nula.");
             }
         }
-        private void generarExcelPorCuentas(List<CuentaBuzon> listaCuentasBuzones, int numTanda, string city, Banco bank)
 
-        {
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.Worksheets.Add("Acreditaciones");
-                int currentRow = 1;
-
-                // Escribir la fila de encabezados
-                worksheet.Cell(currentRow, 1).Value = "Cliente";
-                worksheet.Cell(currentRow, 2).Value = "Sucursal";
-                worksheet.Cell(currentRow, 3).Value = "N° Cuenta";
-                worksheet.Cell(currentRow, 4).Value = "Moneda";
-                worksheet.Cell(currentRow, 5).Value = "Monto";
-
-                // Estilos para el encabezado
-                var headerRange = worksheet.Range(currentRow, 1, currentRow, 5);
-                headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
-                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-                currentRow++;
-
-                // Separar listas por divisa
-                var listaPesos = listaCuentasBuzones.Where(cb => cb.Moneda == "PESOS").ToList();
-                var listaDolares = listaCuentasBuzones.Where(cb => cb.Moneda == "DOLARES").ToList();
-
-                // ============================================================
-                // PASO 1 y 2: AGRUPAR POR EMPRESA Y LUEGO POR NN
-                // ============================================================
-                var agrupadoPesos = listaPesos
-                    .GroupBy(cb => cb.Empresa) // Agrupar primero por Empresa
-                    .SelectMany(empresa => empresa
-                        .GroupBy(cb => cb.NN) // Luego agrupar por NN
-                        .Select(grupo => new
-                        {
-
-                            NN = grupo.Key,
-                            Sucursal = grupo.First().SucursalCuenta,
-                            Cuenta = grupo.First().Cuenta, // Obtener la cuenta
-                            Moneda = grupo.First().Moneda, // Obtener la moneda
-                            TotalMonto = grupo.Sum(cuenta => cuenta.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0)
-                        })
-                    ).OrderBy(g => g.NN).ToList(); // PASO 3: Guardar en una lista ordenada alfabéticamente por NN
-
-                var agrupadoDolares = listaDolares
-                    .GroupBy(cb => cb.Empresa) // Agrupar primero por Empresa
-                    .SelectMany(empresa => empresa
-                        .GroupBy(cb => cb.NN) // Luego agrupar por NN
-                        .Select(grupo => new
-                        {
-                            NN = grupo.Key,
-                            Sucursal = grupo.First().SucursalCuenta,
-                            Cuenta = grupo.First().Cuenta, // Obtener la cuenta
-                            Moneda = grupo.First().Moneda, // Obtener la moneda
-                            TotalMonto = grupo.Sum(cuenta => cuenta.ListaAcreditaciones?.Sum(a => a.Monto) ?? 0)
-                        })
-                    ).OrderBy(g => g.NN).ToList(); // Ordenado por NN
-
-                // ============================================================
-                // PASO 4: CREAR EL EXCEL PARA PESOS
-                // ============================================================
-                double totalPesos = 0;
-
-                foreach (var grupo in agrupadoPesos)
-                {
-                    worksheet.Cell(currentRow, 1).Value = grupo.NN;
-                    worksheet.Cell(currentRow, 2).Value = grupo.Sucursal;
-                    worksheet.Cell(currentRow, 3).Value = grupo.Cuenta;
-                    worksheet.Cell(currentRow, 4).Value = grupo.Moneda;
-                    string montoFormateado = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(grupo.TotalMonto);
-                    worksheet.Cell(currentRow, 5).Value = montoFormateado;
-                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Font.Bold = true;
-                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Fill.BackgroundColor = XLColor.WhiteSmoke;
-
-                    totalPesos += grupo.TotalMonto;
-                    currentRow++;
-                }
-
-                // AGREGAR TOTAL DE UYU
-                worksheet.Cell(currentRow, 4).Value = "TOTAL UYU:";
-                worksheet.Cell(currentRow, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalPesos);
-                worksheet.Range(currentRow, 4, currentRow, 5).Style.Font.Bold = true;
-                worksheet.Range(currentRow, 4, currentRow, 5).Style.Fill.BackgroundColor = XLColor.OrangePeel;
-                currentRow += 2; // Separador entre PESOS y DÓLARES
-
-                // ============================================================
-                // CREAR EL EXCEL PARA DÓLARES
-                // ============================================================
-                double totalDolares = 0;
-
-                foreach (var grupo in agrupadoDolares)
-                {
-                    worksheet.Cell(currentRow, 1).Value = grupo.NN;
-                    worksheet.Cell(currentRow, 2).Value = grupo.Sucursal;
-                    worksheet.Cell(currentRow, 3).Value = grupo.Cuenta;
-                    worksheet.Cell(currentRow, 4).Value = grupo.Moneda;
-                    string montoFormateado = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(grupo.TotalMonto);
-                    worksheet.Cell(currentRow, 5).Value = montoFormateado;
-                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Font.Bold = true;
-                    worksheet.Range(currentRow, 1, currentRow, 5).Style.Fill.BackgroundColor = XLColor.WhiteSmoke;
-
-                    totalDolares += grupo.TotalMonto;
-                    currentRow++;
-                }
-
-                // AGREGAR TOTAL DE USD
-                worksheet.Cell(currentRow, 4).Value = "TOTAL USD:";
-                worksheet.Cell(currentRow, 5).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(totalDolares);
-                worksheet.Range(currentRow, 4, currentRow, 5).Style.Font.Bold = true;
-                worksheet.Range(currentRow, 4, currentRow, 5).Style.Fill.BackgroundColor = XLColor.OrangePeel;
-
-                // Ajustar el ancho de las columnas
-                worksheet.Columns().AdjustToContents();
-
-                // ============================================================
-                // NOMBRE DEL ARCHIVO SIN CARACTERES INVÁLIDOS
-                // ============================================================
-                string nombreArchivo = "Henderson_Tanda_" + numTanda + "_" + city + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
-
-                // Guardar el archivo
-                string filePath = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\" + nombreArchivo;
-
-                workbook.SaveAs(filePath);
-
-                Console.WriteLine($"Excel generado: {filePath}");
-
-
-
-                try
-                {
-
-                    string asunto = "Acreditaciones Henderson " + bank.NombreBanco + " Tanda " + numTanda + " - " + city;
-
-                    string cuerpo = "A continuación se adjunta el archivo de acreditaciones correspondiente a la tanda " + numTanda + " de la ciudad de " + city + " para el banco " + bank.NombreBanco + ".";
-
-                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error al enviar el correo: " + ex.Message);
-                }
-            }
-        }
         public Task checkUltimaConexionByIdBuzon(string nc)
         {
 
@@ -1297,7 +1154,7 @@ namespace ANS.Model.Services
             generarExcelPorAcreditacionesAgrupadoPorEmpresa(listaMontevideo, listaMaldonado, numTanda, banco);
 
         }
-        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b)
+        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c,ConfiguracionAcreditacion config)
         {
             // Colores para el formato
             var pastelYellow = XLColor.LightYellow;
@@ -1484,7 +1341,7 @@ namespace ANS.Model.Services
                         asu = $"Acreditaciones {b.NombreBanco} (TATA) - {ciudad.ToUpper()}";
                         cue = $"Adjunto archivo de acreditaciones para buzones TATA ciudad {ciudad.ToUpper()} banco {b.NombreBanco}.";
                     }
-                    _emailService.enviarExcelPorMail(path, asu, cue);
+                    _emailService.enviarExcelPorMail(path, asu, cue,c,b,config);
                 }
                 catch (Exception ex)
                 {
@@ -1644,7 +1501,7 @@ namespace ANS.Model.Services
                     string cuerpo = $"E-Mail específico para TESORERÍA TECNISEGUR.\n" +
                                     $"Adjunto el archivo de acreditaciones para la tanda {numTanda} de {ciudad.ToUpper()}.";
 
-                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo);
+                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo,null,null,null);
                 }
                 catch (Exception ex)
                 {
@@ -1795,7 +1652,7 @@ namespace ANS.Model.Services
             try
             {
                 _emailService.enviarExcelPorMail(ruta, $"Acreditaciones Día a día - ({banco.NombreBanco}) - " + ciudad.ToUpper(),
-                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")");
+                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")",null,null,null);
             }
             catch (Exception e)
             {
@@ -2158,7 +2015,7 @@ namespace ANS.Model.Services
                     _emailService.enviarExcelPorMail(
                         filePath,
                         $"Reporte Diario Santander {ciudad}",
-                        $"Reporte diario de acreditaciones Santander - {ciudad}");
+                        $"Reporte diario de acreditaciones Santander - {ciudad}",null,null,null);
                 }
                 catch (Exception e)
                 {
