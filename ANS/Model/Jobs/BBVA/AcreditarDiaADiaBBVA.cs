@@ -1,13 +1,10 @@
 ﻿using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using System.Windows.Media;
 using System.Windows;
+using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 
 namespace ANS.Model.Jobs.BBVA
 {
@@ -49,27 +46,61 @@ namespace ANS.Model.Jobs.BBVA
             finally
             {
 
-                //string msgRetorno = "SUCCESS - JOB DIAXDIA ~BBVA~";
 
-                //Color colorRetorno = Color.FromRgb(76, 175, 80); // verde succcesss
+                Application.Current.Dispatcher.Invoke(() =>
+                {
 
-                //if (e != null)
-                //{
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                //    msgRetorno = "ERROR - JOB DIAXDIA ~BBVA~ ";
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
 
-                //    colorRetorno = Color.FromRgb(255, 0, 0); //ROJO 
-                //}
+                        main.DataContext = vm;
+                    }
 
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    Mensaje mensaje = new Mensaje();
 
-                //    main.OcultarAviso(msgRetorno, colorRetorno);
+                    mensaje.Color = Color.FromRgb(0, 68, 129);
+
+                    mensaje.Banco = "BBVA";
+
+                    mensaje.Tipo = "DXD";
+
+                    mensaje.Icon = PackIconKind.Bank;
+
+                    if (e != null)
+                    {
+
+                        main.MostrarAviso("Error Job DXD - BBVA", Colors.Red);
+
+                        mensaje.Estado = "Error";
+
+                    }
+
+                    else
+                    {
+
+                        main.MostrarAviso("Success Job DXD - BBVA", Colors.Green);
+
+                        mensaje.Estado = "Success";
+
+                    }
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
+
+                    vm.CargarMensajes();
+
+                });
+
 
             }
 
             await Task.CompletedTask;
+
+        }
+
+
         }
     }
-}
+

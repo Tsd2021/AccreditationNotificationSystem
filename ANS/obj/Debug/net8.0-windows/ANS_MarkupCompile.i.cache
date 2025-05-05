@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\App.xaml
-82020474998
+10-1920046206
 1933395874
-94356354396
+99-1698730845
 30471586460
-BancoModal.xaml;MainWindow.xaml;SeleccionDeBanco.xaml;UserControls\BBVAOperationControl.xaml;UserControls\EnvioMasivoOperationControl.xaml;UserControls\EnvioNivelesOperationControl.xaml;UserControls\SantanderOperationControl.xaml;UserControls\ScotiabankOperationControl.xaml;
+BancoModal.xaml;MainWindow.xaml;SeleccionDeBanco.xaml;UserControls\BBVAOperationControl.xaml;UserControls\EnvioMasivoOperationControl.xaml;UserControls\EnvioNivelesOperationControl.xaml;UserControls\PanelAsociarEmailABuzon.xaml;UserControls\SantanderOperationControl.xaml;UserControls\ScotiabankOperationControl.xaml;Views\AltaEmailDestino.xaml;
 
 False
 

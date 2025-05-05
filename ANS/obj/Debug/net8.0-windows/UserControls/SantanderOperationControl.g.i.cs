@@ -112,7 +112,7 @@ namespace ANS.UserControls {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/ANS;component/usercontrols/santanderoperationcontrol.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/ANS;V1.0.0.0;component/usercontrols/santanderoperationcontrol.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\UserControls\SantanderOperationControl.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

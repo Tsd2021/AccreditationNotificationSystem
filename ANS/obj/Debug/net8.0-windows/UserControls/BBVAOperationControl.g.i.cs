@@ -88,7 +88,7 @@ namespace ANS.UserControls {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/ANS;component/usercontrols/bbvaoperationcontrol.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/ANS;V1.0.0.0;component/usercontrols/bbvaoperationcontrol.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\UserControls\BBVAOperationControl.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

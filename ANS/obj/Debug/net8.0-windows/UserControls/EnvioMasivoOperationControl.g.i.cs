@@ -96,7 +96,7 @@ namespace ANS.UserControls {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/ANS;component/usercontrols/enviomasivooperationcontrol.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/ANS;V1.0.0.0;component/usercontrols/enviomasivooperationcontrol.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\UserControls\EnvioMasivoOperationControl.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

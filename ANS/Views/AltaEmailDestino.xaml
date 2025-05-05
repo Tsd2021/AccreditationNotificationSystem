@@ -1,0 +1,141 @@
+﻿<Window x:Class="ANS.Views.AltaEmailDestino"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ANS.ViewModel"
+        Title="Alta Email Destino"
+        Height="550"
+        Width="800"
+        WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <vm:VMaltaEmailDestino/>
+    </Window.DataContext>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Columna Izquierda: Lista de Clientes + Filtro -->
+        <Grid Grid.Column="0" Margin="0,0,10,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- DataGrid de Clientes -->
+            <DataGrid ItemsSource="{Binding Clientes}"
+                      SelectedItem="{Binding ClienteSeleccionado}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
+                      IsReadOnly="True"
+                      Grid.Row="0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Visibility="Collapsed"/>
+                    <DataGridTextColumn Header="Cliente" Binding="{Binding Nombre}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- TextBox de filtro -->
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,5,0,0">
+                <Label Content="Filtrar:" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
+                         Width="200"
+                         Margin="5,0,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Columna Derecha: Formulario y lista de Emails relacionados -->
+        <Grid Grid.Column="1" Margin="10,0,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Banco -->
+                <RowDefinition Height="Auto"/>
+                <!-- Combo Bancos -->
+                <RowDefinition Height="Auto"/>
+                <!-- Tipo Acreditación -->
+                <RowDefinition Height="Auto"/>
+                <!-- Combo Tipos -->
+                <RowDefinition Height="Auto"/>
+                <!-- Nuevo Email Label -->
+                <RowDefinition Height="Auto"/>
+                <!-- Nuevo Email Input -->
+                <RowDefinition Height="Auto"/>
+                <!-- Botones -->
+                <RowDefinition Height="Auto"/>
+                <!-- Label Emails Relacionados -->
+                <RowDefinition Height="*"/>
+                <!-- DataGrid Emails Relacionados -->
+            </Grid.RowDefinitions>
+
+            <!-- Banco -->
+            <Label Content="Banco:" Grid.Row="0"/>
+            <ComboBox ItemsSource="{Binding Bancos}"
+                      SelectedItem="{Binding BancoSeleccionado}"
+                      SelectedIndex="0"
+                      DisplayMemberPath="NombreBanco"
+                      Grid.Row="1"
+                      Margin="0,0,0,10"/>
+
+            <!-- Tipo Acreditación -->
+            <Label Content="Tipo Acreditación:" Grid.Row="2"/>
+            <ComboBox ItemsSource="{Binding TiposAcreditacion}"
+                      SelectedItem="{Binding TipoSeleccionado}"
+                      DisplayMemberPath="TipoAcreditacion"
+                      Grid.Row="3"
+                      Margin="0,0,0,20"/>
+
+            <!-- Nuevo Email + Checkbox -->
+            <Label Content="Nuevo Email:" Grid.Row="4"/>
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Grid.Row="5"
+                        Margin="0,0,0,10">
+                <TextBox Text="{Binding NuevoEmail, UpdateSourceTrigger=PropertyChanged}"
+                         Width="250"/>
+                <CheckBox IsChecked="{Binding EsPrincipal}"
+                          Content="Es Principal"
+                          Margin="10,0,0,0"/>
+            </StackPanel>
+
+            <!-- Botones -->
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Grid.Row="6"
+                        Margin="0,0,0,10">
+                <Button Content="Guardar"
+                        Width="80"
+                        Margin="0,0,5,0"
+                        Command="{Binding GuardarCommand}"/>
+                <Button Content="Cancelar"
+                        Width="80"
+                        Command="{Binding CancelarCommand}"/>
+            </StackPanel>
+
+            <!-- Emails relacionados -->
+            <Label Content="Emails relacionados actualmente:" 
+                   FontWeight="Bold"
+                   Grid.Row="7"
+                   Margin="0,10,0,5"/>
+            <DataGrid ItemsSource="{Binding RelatedEmails}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      IsReadOnly="true"
+                      Grid.Row="8">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Email"
+                                        Binding="{Binding Correo}"
+                                        Width="*"
+                                        IsReadOnly="True"
+                                        />
+                    <DataGridCheckBoxColumn Header="Es Principal"
+                                            Binding="{Binding EsPrincipal}"
+                                            Width="Auto"
+                                            IsReadOnly="true"
+                                            />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+    </Grid>
+</Window>
