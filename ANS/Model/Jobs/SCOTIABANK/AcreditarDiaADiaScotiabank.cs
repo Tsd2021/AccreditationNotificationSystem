@@ -47,6 +47,8 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Console.WriteLine($"Error al ejecutar la tarea de Scotiabank: {ex.Message}");
 
+                ServicioLog.instancia.WriteLog(ex, "Scotiabank", "Acreditar Día a día");
+
             }
 
             finally
@@ -56,9 +58,9 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                mensaje.Banco = "SCOTIABANK";
+                mensaje.Banco = "Scotiabank";
 
-                mensaje.Tipo = "DXD";
+                mensaje.Tipo = "Acreditar cuentas día a día";
 
                 mensaje.Icon = PackIconKind.Bank;
 

@@ -6,14 +6,24 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+
+	  <!-- Publica siempre como self-contained y single-file -->
+	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	  <SelfContained>true</SelfContained>
+	  <PublishSingleFile>true</PublishSingleFile>
+
+	  
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\bandes.png" />
     <None Remove="Images\bbva.png" />
     <None Remove="Images\disconnected.png" />
     <None Remove="Images\emailIcon.png" />
     <None Remove="Images\envioMasivo.png" />
     <None Remove="Images\FirmaDiegoMail.png" />
+    <None Remove="Images\hsbc.png" />
+    <None Remove="Images\itau.png" />
     <None Remove="Images\logoTecniExcel.png" />
     <None Remove="Images\logoTecniFinal.png" />
     <None Remove="Images\santander.png" />
@@ -29,6 +39,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.104.2" />
+	<PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
     <PackageReference Include="CoreWCF.Http" Version="1.6.0" />
     <PackageReference Include="EPPlus" Version="8.0.1" />
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739" />
@@ -50,10 +61,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Images\bandes.png" />
     <Resource Include="Images\bbva.png" />
     <Resource Include="Images\disconnected.png" />
     <Resource Include="Images\emailIcon.png" />
     <Resource Include="Images\envioMasivo.png" />
+    <Resource Include="Images\hsbc.png" />
+    <Resource Include="Images\itau.png" />
     <Resource Include="Images\santander.png" />
     <Resource Include="Images\scotiabank.png" />
     <EmbeddedResource Include="Images\logoTecniExcel.png">

@@ -47,14 +47,13 @@ namespace ANS.Model.Jobs.BBVA
 
                 await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda);
 
-                await _servicioCuentaBuzon.acreditarPuntoAPuntoPorBanco(bbva);
-
             }
             catch (Exception ex)
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea de BBVA: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
+                ServicioLog.instancia.WriteLog(ex, "BBVA", "Envío excel TATA");
             }
             finally
             {

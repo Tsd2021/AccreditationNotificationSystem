@@ -47,6 +47,8 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Console.WriteLine($"Error al ejecutar DXD DE LAS SIERRAS: {ex.Message}");
 
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Acreditar Día a Día De las Sierras");
+
             }
             finally
             {
@@ -55,9 +57,9 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                mensaje.Banco = "SANTANDER";
+                mensaje.Banco = "Santander";
 
-                mensaje.Tipo = "DXD DE LAS SIERRAS";
+                mensaje.Tipo = "Acreditar día a día (De las Sierras)";
 
                 mensaje.Icon = PackIconKind.Bank;
 

@@ -1,5 +1,6 @@
 ﻿using ANS.Model;
 using ANS.Model.Services;
+using ANS.Views;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System.Windows.Input;
@@ -26,6 +27,7 @@ namespace ANS.ViewModel
         public ICommand EjecutarDeLasSierrasTXTCommand { get; }
         public ICommand EjecutarDiaADiaExcelCommand { get; }
         public ICommand EjecutarReporteDiarioCommand { get; }
+        public ICommand EjecutarAltaEmailDestinoCommand { get; }
         public ServicioCuentaBuzon _servicioCuentaBuzon { get; set; }
         public Banco _banco { get; set; }
         public VMsantanderOperations(Banco b)
@@ -56,7 +58,25 @@ namespace ANS.ViewModel
             EjecutarDiaADiaExcelCommand = new RelayCommand(async () => await ejecutarDiaADiaExcel());
 
             EjecutarReporteDiarioCommand = new RelayCommand(async () => await ejecutarReporteDiarioExcel());
+
+            EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
+
         }
+
+        private async Task ejecutarAltaEmailDestino()
+        {
+
+            Banco b = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
+
+            Cliente c = ServicioCliente.getInstancia().getById(164);
+
+            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.tanda);
+
+            var alta = new AltaEmailDestino(b, c, t);
+
+            alta.ShowDialog();
+        }
+
         private async Task ejecutarDiaADiaTXT()
         {
 

@@ -1,6 +1,7 @@
 ﻿
 using ANS.Model;
 using ANS.Model.Services;
+using ANS.Views;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System.Diagnostics;
@@ -24,6 +25,9 @@ namespace ANS.ViewModel
         public ICommand EjecutarDiaADiaTXTCommand { get; }
         public ICommand EjecutarExcelTataCommand { get; }
         public ICommand EjecutarExcelDiaADia { get; }
+        public ICommand EjecutarAltaEmailDestinoCommand { get; }
+
+
         #endregion
         public VMbbvaOperations(Banco b)
         {
@@ -39,6 +43,24 @@ namespace ANS.ViewModel
             EjecutarExcelTataCommand = new RelayCommand(async () => await ejecutarExcelTata());
 
             EjecutarExcelDiaADia = new RelayCommand(async () => await ejecutarExcelDiaADia());
+
+            EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
+
+        }
+
+
+        private async Task ejecutarAltaEmailDestino()
+        {
+
+            Banco b = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
+
+            Cliente c = null;
+
+            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
+
+            var alta = new AltaEmailDestino(b, c, t);
+
+            alta.ShowDialog();
 
         }
         private async Task ejecutarPuntoAPuntoTXT()
@@ -107,7 +129,6 @@ namespace ANS.ViewModel
 
                 TimeSpan hasta = new TimeSpan(20, 30, 0);
 
-
                 // ID TATA : 242
 
                 Cliente tata = ServicioCliente.getInstancia().getById(242);
@@ -153,6 +174,7 @@ namespace ANS.ViewModel
 
                 throw;
             }
+
             finally
             {
                 IsLoading = false;

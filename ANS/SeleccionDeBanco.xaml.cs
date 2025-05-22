@@ -18,28 +18,43 @@ namespace ANS
 
         private void BankButton_Click(object sender, RoutedEventArgs e)
         {
-   
-        
+            var button = (System.Windows.Controls.Button)sender;
+            string tag = button.Tag?.ToString();
 
-
-
-            var button = sender as System.Windows.Controls.Button;
-            string bancoSeleccionado = button.Tag.ToString();
-
-            if (bancoSeleccionado == "AltaEmailDestino")
+            try
             {
-                // Abro directamente la ventana de alta de email destino
-                var altaWin = new AltaEmailDestino();
-                altaWin.Owner = this;      // opcional si quieres que esté sobre MainWindow
-                altaWin.ShowDialog();      // modal
-                                           // aquí no hago nada más, nunca llamo a BancoModal.ShowDialog()
+                if (tag == "AltaEmailDestino")
+                {
+                    var altaWin = new AltaEmailDestino
+                    {
+                        Owner = this
+                    };
+                    altaWin.ShowDialog();
+                }
+                else
+                {
+                    var modal = new BancoModal(tag)
+                    {
+                        Owner = this
+                    };
+                    modal.ShowDialog();
+                }
             }
-            else
+            catch (System.Reflection.TargetInvocationException tie)
             {
-                // Para cualquier otro banco, uso BancoModal
-                var modal = new BancoModal(bancoSeleccionado);
-                modal.Owner = this;        // opcional
-                modal.ShowDialog();
+                MessageBox.Show(
+                    $"Error al inicializar la ventana:\n{tie.InnerException?.Message ?? tie.Message}",
+                    "Error de Invocación",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error inesperado:\n{ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
     }

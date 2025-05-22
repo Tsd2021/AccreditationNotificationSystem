@@ -76,7 +76,7 @@ namespace ANS.Model.Services
                     {
                         c.Open();
 
-                        string query = "select correo,esprincipal,nc from buzoncorreo where nc = @nc;";
+                        string query = "select email,nccc from ccemail where nccc = @nc;";
 
                         SqlCommand cmd = new SqlCommand(query, c);
 
@@ -85,15 +85,14 @@ namespace ANS.Model.Services
                         using (SqlDataReader r = cmd.ExecuteReader())
                         {
 
-                            int emailOrdinal = r.GetOrdinal("correo");
-                            int ncOrdinal = r.GetOrdinal("nc");
-                            int esPrincipalOrdinal = r.GetOrdinal("esPrincipal");
+                            int emailOrdinal = r.GetOrdinal("email");
+                            int ncOrdinal = r.GetOrdinal("nccc");
 
                             while (r.Read())
                             {
                                 Email e = new Email()
                                 {
-                                    EsPrincipal = r.GetBoolean(esPrincipalOrdinal),
+                                    
                                     Correo = r.GetString(emailOrdinal),
                                     NC = r.GetString(ncOrdinal)
                                 };

@@ -1,5 +1,7 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -16,6 +18,7 @@ namespace ANS.Model.Jobs.HSBC
         }
         public async Task Execute(IJobExecutionContext context)
         {
+
             Exception e = null;
             try
             {
@@ -35,38 +38,68 @@ namespace ANS.Model.Jobs.HSBC
 
 
             }
+
             catch (Exception ex)
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea de HSBC {ex.Message}");
-                //ACA GUARDAR EN UN LOG
-
+                ServicioLog.instancia.WriteLog(ex, "HSBC", "Acreditar Día a Día");
             }
+
             finally
             {
 
-                //string msgRetorno = "SUCCESS - JOB DIAXDIA ~SANTANDER~";
+                Application.Current.Dispatcher.Invoke(() =>
+                {
 
-                //Color colorRetorno = Color.FromRgb(76, 175, 80); // verde succcesss
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                //if (e != null)
-                //{
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
 
-                //    msgRetorno = "ERROR - JOB DIAXDIA ~SANTANDER~ ";
+                        main.DataContext = vm;
+                    }
 
-                //    colorRetorno = Color.FromRgb(255, 0, 0); //ROJO 
-                //}
+                    Mensaje mensaje = new Mensaje();
 
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    mensaje.Color = Color.FromRgb(123, 27, 56);
 
-                //    main.OcultarAviso(msgRetorno, colorRetorno);
-                //});
+                    mensaje.Banco = "HSBC";
+
+                    mensaje.Tipo = "Acreditar cuentas día a día";
+
+                    mensaje.Icon = PackIconKind.Bank;
+
+                    if (e != null)
+                    {
+
+                        main.MostrarAviso("Error Job Acreditar Día a Día HSBC", Colors.Red);
+
+                        mensaje.Estado = "Error";
+
+                    }
+
+                    else
+                    {
+
+                        main.MostrarAviso("Success Job Acreditar Día a Día HSBC", Colors.Green);
+
+                        mensaje.Estado = "Success";
+
+                    }
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
+
+                    vm.CargarMensajes();
+
+                });
+
 
             }
 
             await Task.CompletedTask;
+
         }
     }
 }

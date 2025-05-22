@@ -40,7 +40,10 @@ namespace ANS.Model.Jobs.BBVA
             catch (Exception ex)
             {
                 e = ex;
+
                 Console.WriteLine($"Error al ejecutar la tarea de BBVA: {ex.Message}");
+
+                ServicioLog.instancia.WriteLog(ex, "BBVA", "Acreditar Punto a Punto");
                 //ACA GUARDAR EN UN LOG
             }
             finally
@@ -65,7 +68,7 @@ namespace ANS.Model.Jobs.BBVA
 
                     mensaje.Banco = "BBVA";
 
-                    mensaje.Tipo = "P2P";
+                    mensaje.Tipo = "Acreditar cuentas punto a punto";
 
                     mensaje.Icon = PackIconKind.Bank;
 

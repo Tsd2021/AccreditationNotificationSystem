@@ -1,10 +1,12 @@
 ﻿using Microsoft.Data.SqlClient;
+using System.Linq.Expressions;
 
 namespace ANS.Model.Services
 {
     public class ServicioCliente
     {
         private string _conexionENCUESTA = ConfiguracionGlobal.ConexionEncuesta;
+        private string _conexionTSD22 = ConfiguracionGlobal.Conexion22;
         public static ServicioCliente instancia { get; set; }
         public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
         public static ServicioCliente getInstancia()
@@ -104,6 +106,53 @@ namespace ANS.Model.Services
                 }
             }
             return retorno;
+        }
+
+
+        public List<Cliente> ObtenerClientesPorBancoYTipoAcreditacion(Banco b, ConfiguracionAcreditacion config)
+        {
+            List<Cliente> retorno = new List<Cliente>();
+
+            try
+            {
+                using (SqlConnection cn = new SqlConnection(_conexionTSD22))
+                {
+
+                    cn.Open();
+                    string q = @"Select * from CLIENTES 
+                                where IDCLIENTE in (SELECT DISTINCT CB.IDCLIENTE 
+                                FROM ConfiguracionAcreditacion AS config 
+                                inner join CUENTASBUZONES as cb on config.CuentasBuzonesId = cb.ID 
+                                inner join cc on cb.IDCLIENTE = cc.IDCLIENTE and config.NC = cc.NC 
+                                where cb.banco = @banco  
+                                and config.TipoAcreditacion = @tipoAcreditacion)";
+
+                    SqlCommand cmd = new SqlCommand(q, cn);
+                    cmd.Parameters.AddWithValue("@banco", b.NombreBanco);
+                    cmd.Parameters.AddWithValue("@tipoAcreditacion", config.TipoAcreditacion);
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        int idClienteOrdinal = r.GetOrdinal("IDCLIENTE");
+                        int nombreOrdinal = r.GetOrdinal("NOMBRE");
+                        int ciudadOrdinal = r.GetOrdinal("CIUDAD");
+                        while (r.Read())
+                        {
+                            Cliente newCli = new Cliente
+                            {
+                                IdCliente = r.GetInt32(idClienteOrdinal),
+                                Nombre = r.GetString(nombreOrdinal),
+                                Ciudad = r.GetString(ciudadOrdinal)
+                            };
+                            retorno.Add(newCli);
+                        }
+                    }
+                }
+                return retorno;
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
         }
     }
 }

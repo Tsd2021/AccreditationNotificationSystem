@@ -1,4 +1,5 @@
-﻿using ANS.ViewModel;
+﻿using ANS.Model;
+using ANS.ViewModel;
 using System.Windows;
 
 namespace ANS.Views
@@ -13,6 +14,18 @@ namespace ANS.Views
             InitializeComponent();
 
             var viewmodel = new VMaltaEmailDestino();
+
+            DataContext = viewmodel;
+        }
+
+
+
+
+        public AltaEmailDestino(Banco banco,Cliente cliente,ConfiguracionAcreditacion tanda)
+        {
+            InitializeComponent();
+
+            var viewmodel = new VMaltaEmailDestino(banco,cliente,tanda);
 
             DataContext = viewmodel;
         }

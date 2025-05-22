@@ -42,6 +42,8 @@ namespace ANS.Model.Jobs.SCOTIABANK
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar TANDA 1 de Scotiabank: {ex.Message}");
+
+                ServicioLog.instancia.WriteLog(ex, "Scotiabank", "Acreditar Tanda 1");
                 //ACA GUARDAR EN UN LOG
 
             }
@@ -54,7 +56,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                 mensaje.Banco = "Scotiabank";
 
-                mensaje.Tipo = "TANDA1";
+                mensaje.Tipo = "Acreditar Tanda 1 (Henderson)";
 
                 mensaje.Icon = PackIconKind.Bank;
 

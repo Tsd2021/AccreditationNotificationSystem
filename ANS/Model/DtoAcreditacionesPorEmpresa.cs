@@ -13,6 +13,7 @@ namespace ANS.Model
         public int SucursalId { get; set; }
         public string NN { get; set; }
         public string NC { get; set; }
+        public int IdCliente { get; set; }
 
 
         public DtoAcreditacionesPorEmpresa()

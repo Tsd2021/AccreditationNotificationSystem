@@ -1,5 +1,7 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.ViewModel;
+using MaterialDesignThemes.Wpf;
 using Quartz;
 using System.Windows;
 using System.Windows.Media;
@@ -25,7 +27,7 @@ namespace ANS.Model.Jobs.BANDES
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Acreditando por banco BANDES", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Acreditando por banco BANDES", Color.FromRgb(123, 27, 56));
 
                 });
 
@@ -39,34 +41,65 @@ namespace ANS.Model.Jobs.BANDES
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea de BANDES {ex.Message}");
-                //ACA GUARDAR EN UN LOG
+                ServicioLog.instancia.WriteLog(ex, "Bandes", "Acreditar Día a Día");
+              
 
             }
             finally
             {
 
-                //string msgRetorno = "SUCCESS - JOB DIAXDIA ~SANTANDER~";
+                Application.Current.Dispatcher.Invoke(() =>
+                {
 
-                //Color colorRetorno = Color.FromRgb(76, 175, 80); // verde succcesss
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                //if (e != null)
-                //{
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
 
-                //    msgRetorno = "ERROR - JOB DIAXDIA ~SANTANDER~ ";
+                        main.DataContext = vm;
+                    }
 
-                //    colorRetorno = Color.FromRgb(255, 0, 0); //ROJO 
-                //}
+                    Mensaje mensaje = new Mensaje();
 
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    // Bordó (Bordeaux)
+                    mensaje.Color = Color.FromRgb(123, 27, 56);
 
-                //    main.OcultarAviso(msgRetorno, colorRetorno);
-                //});
+                    mensaje.Banco = "Bandes";
+
+                    mensaje.Tipo = "Acreditar cuentas día a día";
+
+                    mensaje.Icon = PackIconKind.Bank;
+
+                    if (e != null)
+                    {
+
+                        main.MostrarAviso("Error Job Acreditar Día a Día Bandes", Colors.Red);
+
+                        mensaje.Estado = "Error";
+
+                    }
+
+                    else
+                    {
+
+                        main.MostrarAviso("Success Job Acreditar Día a Día Bandes", Colors.Green);
+
+                        mensaje.Estado = "Success";
+
+                    }
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
+
+                    vm.CargarMensajes();
+
+                });
+
 
             }
 
             await Task.CompletedTask;
+
         }
     }
 }

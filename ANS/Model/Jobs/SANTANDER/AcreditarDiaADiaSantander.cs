@@ -40,6 +40,7 @@ namespace ANS.Model.Jobs.SANTANDER
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea Día a día de SANTANDER: {ex.Message}");
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Acreditar día a día");
                 //ACA GUARDAR EN UN LOG
 
             }
@@ -50,9 +51,9 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                mensaje.Banco = "SANTANDER";
+                mensaje.Banco = "Santander";
 
-                mensaje.Tipo = "DÍA A DÍA";
+                mensaje.Tipo = "Acreditar cuentas día a día";
 
                 mensaje.Icon = PackIconKind.Bank;
 

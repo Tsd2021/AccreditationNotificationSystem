@@ -44,6 +44,8 @@ namespace ANS.Model.Jobs.ENVIO_MASIVO
                 e = ex;
 
                 Console.WriteLine($"Error al ejecutar la tarea de ENVIO MASIVO: {ex.Message}");
+
+                ServicioLog.instancia.WriteLog(ex, "Todos", $"Envío masívo {numEnvioMasivo}");
                 //ACA GUARDAR EN UN LOG
             }
             finally

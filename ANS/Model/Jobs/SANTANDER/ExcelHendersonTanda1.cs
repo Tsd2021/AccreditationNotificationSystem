@@ -36,7 +36,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea EXCEL TANDA 1 HENDERSON", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando Tarea: Envío Excel Tanda 1 Henderson", Color.FromRgb(255, 102, 102));
 
                 });
                 Banco santander = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
@@ -55,8 +55,9 @@ namespace ANS.Model.Jobs.SANTANDER
             catch (Exception ex)
             {
                 e = ex;
-                Console.WriteLine($"Error al ejecutar EXCEL HENDEROSN TANDA 1 de SANTANDER: {ex.Message}");
-                //ACA GUARDAR EN UN LOG
+                Console.WriteLine($"Error al ejecutar Envío Excel Tanda 1 Henderson: {ex.Message}");
+                //ACA GUARDAR EN UN LOG.
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Excel Henderson Tanda 1");
 
             }
             finally
@@ -68,7 +69,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Banco = "SANTANDER";
 
-                mensaje.Tipo = "Excel Henderson Tanda 1 " + _city;
+                mensaje.Tipo = "Envío Excel Tanda 1 Henderson" + _city;
 
                 mensaje.Icon = PackIconKind.Bank;
 
@@ -89,7 +90,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job Excel HENDERSON_TANDA1 SANTANDER", Colors.Red);
+                        main.MostrarAviso("Error Job Envío Excel Tanda 1 Henderson", Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -100,7 +101,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     else
                     {
 
-                        main.MostrarAviso("Success Job Excel HENDERSON_TANDA1 SANTANDER", Colors.Green);
+                        main.MostrarAviso("Success Job Excel Envío Excel Tanda 1 Henderson", Colors.Green);
 
                         mensaje.Estado = "Success";
 

@@ -1,5 +1,6 @@
 ﻿using ANS.Model;
 using ANS.Model.Services;
+using ANS.Views;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System.Windows.Input;
@@ -32,11 +33,27 @@ namespace ANS.ViewModel
             EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarAcreditacionDiaADia());
 
             EjecutarDiaADiaExcelCommand = new RelayCommand(async () => await ejecutarExcelDiAADia());
+            EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
         }
         public bool IsLoading
         {
             get => _isLoading;
             set => Set(ref _isLoading, value);
+        }
+
+
+        private async Task ejecutarAltaEmailDestino()
+        {
+
+            Banco b = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.scotiabank);
+
+            Cliente c = ServicioCliente.getInstancia().getById(164);
+
+            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.tanda);
+
+            var alta = new AltaEmailDestino(b, c, t);
+
+            alta.ShowDialog();
         }
         private async Task ejecutarTanda1HendersonTXT()
         {
@@ -56,6 +73,7 @@ namespace ANS.ViewModel
                 IsLoading = false;
             }
         }
+
         private async Task ejecutarTanda1HendersonExcel()
         {
             IsLoading = true;
@@ -204,6 +222,9 @@ namespace ANS.ViewModel
         public ICommand EjecutarTanda2HendersonExcelCommand { get; }
         public ICommand EjecutarDiaADiaTXTCommand { get; set; }
         public ICommand EjecutarDiaADiaExcelCommand { get; set; }
+        public ICommand EjecutarAltaEmailDestinoCommand { get; }
+
+
         #endregion
     }
 }
