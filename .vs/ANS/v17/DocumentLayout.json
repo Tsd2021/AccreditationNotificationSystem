@@ -5,6 +5,22 @@
     {
       "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\servicioenviomasivo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\servicioenviomasivo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\jobs\\itau\\enviarexcelitau.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\itau\\enviarexcelitau.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\viewmodel\\vmitauoperations.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\viewmodel\\vmitauoperations.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\jobs\\hsbc\\enviarexcelhsbc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\hsbc\\enviarexcelhsbc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -13,7 +29,7 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedHeight": 207,
+          "DockedHeight": 209,
           "SelectedChildIndex": 1,
           "Children": [
             {
@@ -28,9 +44,61 @@
               "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
               "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
               "RelativeToolTip": "ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
-              "ViewState": "AgIAAB0CAAAAAAAAAAAjwEMCAAA1AAAAAAAAAA==",
+              "ViewState": "AgIAAGEAAAAAAAAAAAAQwHIAAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-29T18:43:07.395Z",
+              "WhenOpened": "2025-05-22T20:50:06.162Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "EnviarExcelItau.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\ITAU\\EnviarExcelItau.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\ITAU\\EnviarExcelItau.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\ITAU\\EnviarExcelItau.cs",
+              "RelativeToolTip": "ANS\\Model\\Jobs\\ITAU\\EnviarExcelItau.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAowCYAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-22T20:22:43.948Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "EnviarExcelHsbc.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\HSBC\\EnviarExcelHsbc.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\HSBC\\EnviarExcelHsbc.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\HSBC\\EnviarExcelHsbc.cs",
+              "RelativeToolTip": "ANS\\Model\\Jobs\\HSBC\\EnviarExcelHsbc.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAUwCUAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-22T19:27:56.492Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ServicioCuentaBuzon.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "RelativeToolTip": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "ViewState": "AgIAABQGAAAAAAAAAAAQwDEGAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-22T19:20:31.693Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "VMitauOperations.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\ViewModel\\VMitauOperations.cs",
+              "RelativeDocumentMoniker": "ANS\\ViewModel\\VMitauOperations.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\ViewModel\\VMitauOperations.cs",
+              "RelativeToolTip": "ANS\\ViewModel\\VMitauOperations.cs",
+              "ViewState": "AgIAADkAAAAAAAAAAAA3wEMAAAA+AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-22T19:41:08.068Z",
               "EditorCaption": ""
             }
           ]

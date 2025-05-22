@@ -53,6 +53,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 e = ex;
                 Console.WriteLine($"Error al ejecutar EXCEL 2  SANTANDER para TESORERIA: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Excel Tanda 2 TESORERIA");
 
             }
 

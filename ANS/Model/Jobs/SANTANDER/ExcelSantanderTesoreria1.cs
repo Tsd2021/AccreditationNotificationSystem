@@ -54,6 +54,8 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Console.WriteLine($"Error al ejecutar EXCEL 1  SANTANDER para TESORERIA: {ex.Message}");
 
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Excel Tanda 1 TESORERIA");
+
             }
 
             finally

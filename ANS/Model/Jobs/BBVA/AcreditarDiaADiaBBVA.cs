@@ -40,7 +40,8 @@ namespace ANS.Model.Jobs.BBVA
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea de BBVA: {ex.Message}");
-                //ACA GUARDAR EN UN LOG
+                ServicioLog.instancia.WriteLog(ex, "BBVA", "Acreditar Día a Día");
+               
 
             }
             finally
@@ -66,7 +67,7 @@ namespace ANS.Model.Jobs.BBVA
 
                     mensaje.Banco = "BBVA";
 
-                    mensaje.Tipo = "DXD";
+                    mensaje.Tipo = "Acreditar cuentas día a día";
 
                     mensaje.Icon = PackIconKind.Bank;
 

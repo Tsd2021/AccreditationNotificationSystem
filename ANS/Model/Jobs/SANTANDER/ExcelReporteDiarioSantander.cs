@@ -47,6 +47,8 @@ namespace ANS.Model.Jobs.SANTANDER
                 Console.WriteLine($"Error al ejecutar ExcelReporteDiarioSantander: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
 
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Reporte Diario");
+
             }
 
             finally

@@ -52,7 +52,7 @@ namespace ANS.UserControls {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/ANS;V1.0.0.0;component/usercontrols/panelasociaremailabuzon.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/ANS;component/usercontrols/panelasociaremailabuzon.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\UserControls\PanelAsociarEmailABuzon.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -5,87 +5,159 @@
         Title="Selección de Banco" WindowState="Maximized">
     <Grid>
         <materialDesign:ColorZone Mode="Dark"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch">
+            <!-- Contenedor central dividido en dos columnas -->
+            <Grid HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Margin="50">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                <!-- Título -->
-                <TextBlock Text="Menú administrativo" 
-                       FontSize="24"  
-                       Margin="0,0,0,20"
-                       HorizontalAlignment="Center"/>
+                <!-- COLUMNA IZQUIERDA: Bancos -->
+                <StackPanel Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <!-- Título -->
+                    <TextBlock Text="Bancos"
+                               FontSize="24"
+                               Margin="0,0,0,20"
+                               HorizontalAlignment="Center"
+                               Foreground="White"/>
 
-                <TextBlock Text="Elegí un módulo" 
-                       FontSize="18"  
-                       Margin="0,0,0,20"
-                       HorizontalAlignment="Center"/>
-                <!-- UniformGrid para colocar 3 botones de imagen -->
-                <UniformGrid Columns="5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50">
-                    <!-- Primer banco -->
-                    <Button Click="BankButton_Click" Tag="BBVA" BorderBrush="Black" BorderThickness="5" Background="White" Margin="30">
-                        <Image Source="Images/bbva.png" Width="150" Height="150"/>
-                    </Button>
-                    <!-- Segundo banco -->
+                    <!-- Logos de bancos en 2x2 -->
+                    <UniformGrid Columns="2"
+                                 Rows="3"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center">
+                        <Button Click="BankButton_Click"
+                                Tag="Bandes"
+                                BorderBrush="Black"
+                                BorderThickness="5"
+                                Background="White"
+                                Margin="10">
+                            <Image Source="Images/bandes.png"
+                                   Width="150" Height="150"/>
+                        </Button>
+                        <Button Click="BankButton_Click"
+                                Tag="Hsbc"
+                                BorderBrush="Black"
+                                BorderThickness="5"
+                                Background="White"
+                                Margin="10">
+                            <Image Source="Images/hsbc.png"
+                                   Width="150" Height="150"/>
+                        </Button>
+                        <Button Click="BankButton_Click"
+                                Tag="Itau"
+                                BorderBrush="Black"
+                                BorderThickness="5"
+                                Background="White"
+                                Margin="10">
+                            <Image Source="Images/itau.png"
+                                   Width="150" Height="150"/>
+                        </Button>
+                        <Button Click="BankButton_Click"
+                                Tag="BBVA"
+                                BorderBrush="Black"
+                                BorderThickness="5"
+                                Background="White"
+                                Margin="10">
+                            <Image Source="Images/bbva.png"
+                                   Width="150" Height="150"/>
+                        </Button>
+                        <Button Click="BankButton_Click"
+                                Tag="Santander"
+                                BorderBrush="Black"
+                                BorderThickness="5"
+                                Background="White"
+                                Margin="10">
+                            <Image Source="Images/santander.png"
+                                   Width="150" Height="150"/>
+                        </Button>
+                        <Button Click="BankButton_Click"
+                                Tag="Scotiabank"
+                                BorderBrush="Black"
+                                BorderThickness="5"
+                                Background="White"
+                                Margin="10">
+                            <Image Source="Images/scotiabank.png"
+                                   Width="150" Height="150"/>
+                        </Button>
+                    </UniformGrid>
+                </StackPanel>
+
+                <!-- COLUMNA DERECHA: Otras opciones -->
+                <StackPanel Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <!-- Título -->
+                    <TextBlock Text="Otras opciones"
+                               FontSize="24"
+                               Margin="0,0,0,20"
+                               HorizontalAlignment="Center"
+                               Foreground="White"/>
+
+                    <!-- Botones de funcionalidad adicionales -->
                     <StackPanel>
-                        <Button Click="BankButton_Click" Tag="Santander" BorderBrush="Black" BorderThickness="5" Background="White" Margin="30">
-                            <Image Source="Images/santander.png" Width="150" Height="150"/>
-                        </Button>
-                    </StackPanel>
-                    <!-- Tercer banco -->
-                    <Button Click="BankButton_Click" Tag="Scotiabank" BorderBrush="Black" BorderThickness="5" Background="White" Margin="30">
-                        <Image Source="Images/scotiabank.png" Width="150" Height="150"/>
-                    </Button>
-                    <StackPanel Margin="30"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                        <Button Click="BankButton_Click"
-                          Tag="EnvioMasivo"
-                          BorderBrush="Black" BorderThickness="5"
-                          Background="GhostWhite"
-                          Width="90" Height="90">
-                            <Image Source="Images/envioMasivo.png"
-                        Width="50" Height="50"/>
-                        </Button>
-                        <TextBlock Text="Envío masivo"
-                         FontSize="20"
-                         HorizontalAlignment="Center"
-                         Margin="0,10,0,0"/>
-                    </StackPanel>
-                    <StackPanel Margin="30"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Center">
-                        <Button Click="BankButton_Click"
-                   Tag="EnvioNiveles"
-                   BorderBrush="Black" BorderThickness="5"
-                   Background="GhostWhite"
-                   Width="90" Height="90">
-                            <Image Source="Images/disconnected.png"
-                 Width="50" Height="50"/>
-                        </Button>
-                        <TextBlock Text="Notificar desconexiones"
-                  FontSize="20"
-                  HorizontalAlignment="Center"
-                  Margin="0,10,0,0"/>
-                    </StackPanel>
-                    <StackPanel Margin="30"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
-                        <Button Click="BankButton_Click"
-                          Tag="AltaEmailDestino"
-                          BorderBrush="Black" BorderThickness="5"
-                          Background="GhostWhite"
-                          Width="90" Height="90">
-                            <Image Source="Images/emailIcon.png"
-                        Width="50" Height="50"/>
-                        </Button>
-                        <TextBlock Text="Alta Email Destino"
-                         FontSize="20"
-                         HorizontalAlignment="Center"
-                         Margin="0,10,0,0"/>
-                    </StackPanel>
-                </UniformGrid>
+                        <StackPanel Margin="10"
+                                    HorizontalAlignment="Center">
+                            <Button Click="BankButton_Click"
+                                    Tag="EnvioMasivo"
+                                    BorderBrush="Black"
+                                    BorderThickness="5"
+                                    Background="GhostWhite"
+                                    Width="90"
+                                    Height="90">
+                                <Image Source="Images/envioMasivo.png"
+                                       Width="50" Height="50"/>
+                            </Button>
+                            <TextBlock Text="Envío masivo"
+                                       FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,10,0,0"/>
+                        </StackPanel>
 
-            </StackPanel>
+                        <StackPanel Margin="10"
+                                    HorizontalAlignment="Center">
+                            <Button Click="BankButton_Click"
+                                    Tag="EnvioNiveles"
+                                    BorderBrush="Black"
+                                    BorderThickness="5"
+                                    Background="GhostWhite"
+                                    Width="90"
+                                    Height="90">
+                                <Image Source="Images/disconnected.png"
+                                       Width="50" Height="50"/>
+                            </Button>
+                            <TextBlock Text="Notificar desconexiones"
+                                       FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,10,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="10"
+                                    HorizontalAlignment="Center">
+                            <Button Click="BankButton_Click"
+                                    Tag="AltaEmailDestino"
+                                    BorderBrush="Black"
+                                    BorderThickness="5"
+                                    Background="GhostWhite"
+                                    Width="90"
+                                    Height="90">
+                                <Image Source="Images/emailIcon.png"
+                                       Width="50" Height="50"/>
+                            </Button>
+                            <TextBlock Text="Alta Email Destino"
+                                       FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
         </materialDesign:ColorZone>
     </Grid>
 </Window>

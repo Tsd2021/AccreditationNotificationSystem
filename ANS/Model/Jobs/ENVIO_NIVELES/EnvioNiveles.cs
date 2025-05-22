@@ -44,6 +44,7 @@ namespace ANS.Model.Jobs.ENVIO_MASIVO
 
                 Console.WriteLine($"Error al ejecutar la tarea de ENVIO NIVELES: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
+                ServicioLog.instancia.WriteLog(ex, "Buzones Desconectados", "Envío notificación por desconexión");
             }
             finally
             {

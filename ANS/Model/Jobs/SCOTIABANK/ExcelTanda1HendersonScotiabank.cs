@@ -54,6 +54,8 @@ namespace ANS.Model.Jobs.SCOTIABANK
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar EXCEL TANDA 1 de Scotiabank: {ex.Message}");
+
+                ServicioLog.instancia.WriteLog(ex, "Scotiabank", "Excel Tanda 1 Henderson");
                 //ACA GUARDAR EN UN LOG
 
             }

@@ -6,6 +6,9 @@ using ANS.Model.Jobs.SANTANDER;
 using ANS.Model.Jobs.SCOTIABANK;
 using ANS.Model.Jobs.ENVIO_MASIVO;
 using ANS.Model.Services;
+using ANS.Model.Jobs.ITAU;
+using ANS.Model.Jobs.HSBC;
+using ANS.Model.Jobs.BANDES;
 
 namespace ANS.Model.Jobs
 {
@@ -27,13 +30,13 @@ namespace ANS.Model.Jobs
             #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarPuntoAPuntoBBVAJob))
             {
-          
+
                 return new AcreditarPuntoAPuntoBBVAJob(_servicioCuentaBuzon);
             }
 
             if (jobType == typeof(AcreditarDiaADiaBBVAJob))
             {
-            
+
                 return new AcreditarDiaADiaBBVAJob(_servicioCuentaBuzon);
             }
             #endregion
@@ -43,7 +46,7 @@ namespace ANS.Model.Jobs
                 return new ExcelBBVAReporteDiario(_servicioCuentaBuzon);
             }
 
-            if(jobType == typeof(ExcelBBVATata))
+            if (jobType == typeof(ExcelBBVATata))
             {
                 return new ExcelBBVATata(_servicioCuentaBuzon);
             }
@@ -53,28 +56,28 @@ namespace ANS.Model.Jobs
             #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarDiaADiaSantander))
             {
-              
+
                 return new AcreditarDiaADiaSantander(_servicioCuentaBuzon);
             }
 
             if (jobType == typeof(AcreditarPuntoAPuntoSantander))
             {
-      
+
                 return new AcreditarPuntoAPuntoSantander(_servicioCuentaBuzon);
             }
 
             if (jobType == typeof(AcreditarTandaSantander))
             {
-         
+
                 return new AcreditarTandaSantander(_servicioCuentaBuzon);
-            }      
+            }
 
             if (jobType == typeof(AcreditarPuntoAPuntoScotiabank))
             {
                 return new AcreditarPuntoAPuntoScotiabank(_servicioCuentaBuzon);
             }
 
-            if(jobType == typeof(AcreditarDiaADiaSantanderDeLasSierras))
+            if (jobType == typeof(AcreditarDiaADiaSantanderDeLasSierras))
             {
                 return new AcreditarDiaADiaSantanderDeLasSierras(_servicioCuentaBuzon);
             }
@@ -101,7 +104,7 @@ namespace ANS.Model.Jobs
                 return new ExcelHendersonTanda2(_servicioCuentaBuzon);
             }
 
-            if(jobType == typeof(ExcelSantanderDiaADia))
+            if (jobType == typeof(ExcelSantanderDiaADia))
             {
                 return new ExcelSantanderDiaADia(_servicioCuentaBuzon);
             }
@@ -111,7 +114,7 @@ namespace ANS.Model.Jobs
                 return new ExcelReporteDiarioSantander(_servicioCuentaBuzon);
             }
 
-            if(jobType == typeof(ExcelSantanderTesoreria1))
+            if (jobType == typeof(ExcelSantanderTesoreria1))
             {
                 return new ExcelSantanderTesoreria1(_servicioCuentaBuzon);
             }
@@ -153,6 +156,45 @@ namespace ANS.Model.Jobs
             }
             #endregion
             #endregion
+            #region ITAU_JOBS
+            if (jobType == typeof(AcreditarPorBancoITAU))
+            {
+
+                return new AcreditarPorBancoITAU(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(EnviarExcelItau))
+            {
+
+                return new EnviarExcelItau(_servicioCuentaBuzon);
+            }
+            #endregion
+            #region HSBC_JOBS
+            if (jobType == typeof(AcreditarPorBancoHSBC))
+            {
+
+                return new AcreditarPorBancoHSBC(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(EnviarExcelHsbc))
+            {
+
+                return new EnviarExcelHsbc(_servicioCuentaBuzon);
+            }
+            #endregion
+            #region BANDES_JOBS
+            if (jobType == typeof(AcreditarPorBancoBANDES))
+            {
+
+                return new AcreditarPorBancoBANDES(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(EnviarExcelBandes))
+            {
+
+                return new EnviarExcelBandes(_servicioCuentaBuzon);
+            }
+            #endregion
             #region ENVIO_MASIVO
             if (jobType == typeof(EnvioMasivo))
             {
@@ -168,6 +210,6 @@ namespace ANS.Model.Jobs
 
             return (IJob)Activator.CreateInstance(jobType);
         }
-        public void ReturnJob(IJob job) {  }
+        public void ReturnJob(IJob job) { }
     }
 }

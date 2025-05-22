@@ -45,6 +45,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la Tanda 2 de SANTANDER: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Acreditar Tanda 2");
 
             }
             finally
@@ -55,9 +56,9 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                mensaje.Banco = "SANTANDER";
+                mensaje.Banco = "Santander";
 
-                mensaje.Tipo = "TANDA2";
+                mensaje.Tipo = "Acreditar Tanda 2 (Henderson)";
 
                 mensaje.Icon = PackIconKind.Bank;
 

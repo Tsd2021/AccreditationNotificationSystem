@@ -9,9 +9,9 @@
   
              >
     <UserControl.Resources>
-        <!-- Convertidor para visibilidad -->
+
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <!-- Estilo para botones modernos -->
+
         <Style x:Key="ModernButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#FF2196F3"/>
             <Setter Property="Foreground" Value="White"/>
@@ -56,6 +56,18 @@
 
     <!-- Grid raíz para contener el contenido y el overlay del ProgressBar -->
     <Grid>
+        <Button x:Name="btnAsociarMails"
+                Content="Asociar Mails"
+                Background="Black"
+                Style="{StaticResource ModernButtonStyle}"
+               
+                Command="{Binding EjecutarAltaEmailDestinoCommand}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                BorderThickness="5"
+                BorderBrush="Black"            
+                Margin="10"
+                Grid.Row="0"/>
         <xctk:BusyIndicator IsBusy="{Binding IsLoading}" 
                             BusyContent="Cargando..."
                             Background="#80FFFFFF">
@@ -318,7 +330,7 @@
                 </Grid>
             </Grid>
 
-   
+
         </xctk:BusyIndicator>
     </Grid>
 </UserControl>

@@ -44,6 +44,8 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Console.WriteLine($"Error al ejecutar la tarea de SANTANDER: {ex.Message}");
 
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Acreditar Punto a Punto");
+
             }
 
             finally
@@ -53,9 +55,9 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                mensaje.Banco = "SANTANDER";
+                mensaje.Banco = "Santander";
 
-                mensaje.Tipo = "P2P";
+                mensaje.Tipo = "Acreditar cuentas punto a punto";
 
                 mensaje.Icon = PackIconKind.Bank;
 

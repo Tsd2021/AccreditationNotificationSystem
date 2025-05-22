@@ -1,6 +1,8 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.ViewModel;
 using MaterialDesignColors.ColorManipulation;
+using MaterialDesignThemes.Wpf;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -35,7 +37,7 @@ namespace ANS.Model.Jobs.ITAU
                 });
 
 
-                Banco itau =  ServicioBanco.getInstancia().getByNombre(VariablesGlobales.itau);
+                Banco itau = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.itau);
 
                 await _servicioCuentaBuzon.acreditarDiaADiaPorBanco(itau);
 
@@ -44,35 +46,70 @@ namespace ANS.Model.Jobs.ITAU
             catch (Exception ex)
             {
                 e = ex;
-                Console.WriteLine($"Error al ejecutar la tarea de ITAU {ex.Message}");
+                Console.WriteLine($"Error al ejecutar la tarea de Acreditar ITAU {ex.Message}");
                 //ACA GUARDAR EN UN LOG
+                ServicioLog.instancia.WriteLog(ex, "Itau", "Acreditar Día a Día");
 
             }
             finally
             {
 
-                //string msgRetorno = "SUCCESS - JOB DIAXDIA ~SANTANDER~";
+                Application.Current.Dispatcher.Invoke(() =>
+                {
 
-                //Color colorRetorno = Color.FromRgb(76, 175, 80); // verde succcesss
+                    MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                //if (e != null)
-                //{
+                    VMmainWindow vm = main.DataContext as VMmainWindow;
+                    if (vm == null)
+                    {
+                        vm = new VMmainWindow();
 
-                //    msgRetorno = "ERROR - JOB DIAXDIA ~SANTANDER~ ";
+                        main.DataContext = vm;
+                    }
 
-                //    colorRetorno = Color.FromRgb(255, 0, 0); //ROJO 
-                //}
+                    Mensaje mensaje = new Mensaje();
 
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    mensaje.Color = Color.FromRgb(123, 27, 56);
 
-                //    main.OcultarAviso(msgRetorno, colorRetorno);
-                //});
+
+                    mensaje.Banco = "Itau";
+
+                    mensaje.Tipo = "Acreditar cuentas día a día";
+
+                    mensaje.Icon = PackIconKind.Bank;
+
+                    if (e != null)
+                    {
+
+                        main.MostrarAviso("Error Job Acreditar Itau", Colors.Red);
+
+                        mensaje.Estado = "Error";
+
+                    }
+
+                    else
+                    {
+
+                        main.MostrarAviso("Success Job Acreditar Itau", Colors.Green);
+
+                        mensaje.Estado = "Success";
+
+                    }
+                    ServicioMensajeria.getInstancia().agregar(mensaje);
+
+                    vm.CargarMensajes();
+
+                });
+
 
             }
 
             await Task.CompletedTask;
+
+
         }
+
+
     }
 }
+

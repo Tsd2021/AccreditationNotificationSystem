@@ -6,25 +6,38 @@
         Height="550"
         Width="800"
         WindowStartupLocation="CenterScreen">
+
+    <!-- Estilo global para resaltar en rojo cualquier TextBox en error -->
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="BorderBrush"    Value="Red"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
     <Window.DataContext>
         <vm:VMaltaEmailDestino/>
     </Window.DataContext>
+
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Columna Izquierda: Lista de Clientes + Filtro -->
+        <!-- Columna Izquierda: Clientes + Filtro -->
         <Grid Grid.Column="0" Margin="0,0,10,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- DataGrid de Clientes -->
             <DataGrid ItemsSource="{Binding Clientes}"
-                      SelectedItem="{Binding ClienteSeleccionado}"
+                      SelectedItem="{Binding ClienteSeleccionado, Mode=TwoWay}"
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
                       SelectionMode="Single"
@@ -32,13 +45,18 @@
                       IsReadOnly="True"
                       Grid.Row="0">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Visibility="Collapsed"/>
-                    <DataGridTextColumn Header="Cliente" Binding="{Binding Nombre}" Width="*"/>
+                    <DataGridTextColumn Header="ID"
+                                        Binding="{Binding Id}"
+                                        Visibility="Collapsed"/>
+                    <DataGridTextColumn Header="Cliente"
+                                        Binding="{Binding Nombre}"
+                                        Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- TextBox de filtro -->
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,5,0,0">
+            <StackPanel Orientation="Horizontal"
+                        Grid.Row="1"
+                        Margin="0,5,0,0">
                 <Label Content="Filtrar:" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
                          Width="200"
@@ -46,25 +64,27 @@
             </StackPanel>
         </Grid>
 
-        <!-- Columna Derecha: Formulario y lista de Emails relacionados -->
+        <!-- Columna Derecha: Formulario y Emails relacionados -->
         <Grid Grid.Column="1" Margin="10,0,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <!-- Banco -->
+                <!-- Banco Label -->
                 <RowDefinition Height="Auto"/>
                 <!-- Combo Bancos -->
                 <RowDefinition Height="Auto"/>
-                <!-- Tipo Acreditación -->
+                <!-- Tipo Label -->
                 <RowDefinition Height="Auto"/>
                 <!-- Combo Tipos -->
                 <RowDefinition Height="Auto"/>
                 <!-- Nuevo Email Label -->
                 <RowDefinition Height="Auto"/>
-                <!-- Nuevo Email Input -->
+                <!-- Nuevo Email + Checkbox -->
+                <RowDefinition Height="Auto"/>
+                <!-- Mensaje de error -->
                 <RowDefinition Height="Auto"/>
                 <!-- Botones -->
                 <RowDefinition Height="Auto"/>
-                <!-- Label Emails Relacionados -->
+                <!-- Emails Relacionados Label -->
                 <RowDefinition Height="*"/>
                 <!-- DataGrid Emails Relacionados -->
             </Grid.RowDefinitions>
@@ -72,8 +92,7 @@
             <!-- Banco -->
             <Label Content="Banco:" Grid.Row="0"/>
             <ComboBox ItemsSource="{Binding Bancos}"
-                      SelectedItem="{Binding BancoSeleccionado}"
-                      SelectedIndex="0"
+                      SelectedItem="{Binding BancoSeleccionado, Mode=TwoWay}"
                       DisplayMemberPath="NombreBanco"
                       Grid.Row="1"
                       Margin="0,0,0,10"/>
@@ -81,7 +100,7 @@
             <!-- Tipo Acreditación -->
             <Label Content="Tipo Acreditación:" Grid.Row="2"/>
             <ComboBox ItemsSource="{Binding TiposAcreditacion}"
-                      SelectedItem="{Binding TipoSeleccionado}"
+                      SelectedItem="{Binding TipoSeleccionado, Mode=TwoWay}"
                       DisplayMemberPath="TipoAcreditacion"
                       Grid.Row="3"
                       Margin="0,0,0,20"/>
@@ -91,18 +110,30 @@
             <StackPanel Orientation="Horizontal"
                         VerticalAlignment="Center"
                         Grid.Row="5"
-                        Margin="0,0,0,10">
-                <TextBox Text="{Binding NuevoEmail, UpdateSourceTrigger=PropertyChanged}"
-                         Width="250"/>
-                <CheckBox IsChecked="{Binding EsPrincipal}"
+                        Margin="0,0,0,0">
+                <TextBox x:Name="NuevoEmailTextBox"
+                         Width="250"
+                         Text="{Binding NuevoEmail,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        ValidatesOnDataErrors=True,
+                                        NotifyOnValidationError=True}"/>
+                <CheckBox IsChecked="{Binding EsPrincipal, Mode=TwoWay}"
                           Content="Es Principal"
                           Margin="10,0,0,0"/>
             </StackPanel>
 
+            <!-- Mensaje de error debajo del TextBox -->
+            <TextBlock Grid.Row="6"
+                       Margin="0,2,0,10"
+                       Foreground="Red"
+                       FontSize="12"
+                       Text="{Binding (Validation.Errors)[0].ErrorContent,
+                                      ElementName=NuevoEmailTextBox}"/>
+
             <!-- Botones -->
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Grid.Row="6"
+                        Grid.Row="7"
                         Margin="0,0,0,10">
                 <Button Content="Guardar"
                         Width="80"
@@ -114,26 +145,22 @@
             </StackPanel>
 
             <!-- Emails relacionados -->
-            <Label Content="Emails relacionados actualmente:" 
+            <Label Content="Emails relacionados actualmente:"
                    FontWeight="Bold"
-                   Grid.Row="7"
+                   Grid.Row="8"
                    Margin="0,10,0,5"/>
             <DataGrid ItemsSource="{Binding RelatedEmails}"
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
-                      IsReadOnly="true"
-                      Grid.Row="8">
+                      IsReadOnly="True"
+                      Grid.Row="9">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Email"
                                         Binding="{Binding Correo}"
-                                        Width="*"
-                                        IsReadOnly="True"
-                                        />
+                                        Width="*"/>
                     <DataGridCheckBoxColumn Header="Es Principal"
                                             Binding="{Binding EsPrincipal}"
-                                            Width="Auto"
-                                            IsReadOnly="true"
-                                            />
+                                            Width="Auto"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

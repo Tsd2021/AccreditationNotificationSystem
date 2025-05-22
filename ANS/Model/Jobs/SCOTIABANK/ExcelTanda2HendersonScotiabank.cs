@@ -20,7 +20,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
         }
         public async Task Execute(IJobExecutionContext context)
         {
-      
+
 
             Exception e = null;
             try
@@ -52,6 +52,9 @@ namespace ANS.Model.Jobs.SCOTIABANK
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar EXCEL TANDA 2 de Scotiabank: {ex.Message}");
+
+
+                ServicioLog.instancia.WriteLog(ex, "Scotiabank", "Excel Tanda 2 Henderson");
                 //ACA GUARDAR EN UN LOG
 
             }
@@ -116,6 +119,6 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
         }
 
-            
-        }
+
     }
+}

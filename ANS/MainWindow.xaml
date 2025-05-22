@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:ANS.Model"
-        Title="Accreditation Notification System" 
+        Title="TAAS" 
         WindowState="Maximized">
     <Window.Resources>
 
@@ -93,7 +93,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Título -->
-                        <TextBlock Text="Accreditation Notification System" 
+                        <TextBlock Text="Tecnisegur Automatic Accreditation System" 
                                    Foreground="White"
                                    FontSize="26"
                                    HorizontalAlignment="Center"

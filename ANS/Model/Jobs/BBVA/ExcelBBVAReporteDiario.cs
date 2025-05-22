@@ -34,7 +34,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 });
                 Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
 
-                ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.p2p);
+                ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
                 await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bbva, config);
 
@@ -46,6 +46,8 @@ namespace ANS.Model.Jobs.SANTANDER
                 e = ex;
 
                 Console.WriteLine($"Error al ejecutar Resumen Diario BBVA " +  ex.Message);
+
+                ServicioLog.instancia.WriteLog(ex, "BBVA", "Envío Excel Resumen Diario");
 
             }
 

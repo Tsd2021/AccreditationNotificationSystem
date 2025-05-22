@@ -70,6 +70,33 @@ namespace ANS.Model.Services
 
             smtp.Timeout = 5 * 60 * 1000;
 
+            // Aquí pones la validación personalizada del certificado
+            smtp.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
+            {
+                if (sslPolicyErrors == System.Net.Security.SslPolicyErrors.None)
+                    return true;
+
+                if (sslPolicyErrors == System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors)
+                {
+                    foreach (var status in chain.ChainStatus)
+                    {
+                        if (status.Status == System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.RevocationStatusUnknown ||
+                            status.Status == System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.OfflineRevocation)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+                return false;
+            };
+
             await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
 
             await smtp.AuthenticateAsync("dchiquiar@tecnisegur.com.uy", "cfsg xikf qjwp iwzu");
@@ -77,12 +104,15 @@ namespace ANS.Model.Services
             return smtp;
         }
 
+
         public bool enviarExcelPorMail(string excelPath, string asunto, string cuerpo, Cliente c, Banco b, ConfiguracionAcreditacion config)
         {
 
             List<Email> listaEmails = new List<Email>();
 
-            if (c != null)
+            if (b.NombreBanco.ToUpper() == VariablesGlobales.bandes.ToUpper() ||
+                b.NombreBanco.ToUpper() == VariablesGlobales.itau.ToUpper() ||
+                b.NombreBanco.ToUpper() == VariablesGlobales.hsbc.ToUpper())
             {
                 listaEmails = ObtenerEmailsPorClienteBancoYConfig(c, b, config);
             }
@@ -120,6 +150,15 @@ namespace ANS.Model.Services
                     mail.IsBodyHtml = true;
                     mail.AlternateViews.Add(avHtml);
 
+                    //Cuando esté en producción activar esto:
+                    //if (listaEmails != null && listaEmails.Count > 0)
+                    //{
+                    //    foreach(var e in listaEmails)
+                    //    {
+                    //        mail.To.Add(e.Correo);
+                    //    }
+                    //}
+
                     //mail.CC.Add("pablo@tecnisegur.com.uy");
 
                     // Adjunta el archivo Excel
@@ -128,7 +167,7 @@ namespace ANS.Model.Services
                         mail.Attachments.Add(new Attachment(excelPath));
                     }
 
-                    System.Net.Mail.SmtpClient clienteSmtp = new System.Net.Mail.SmtpClient("smtp.gmail.com")
+                    SmtpClient clienteSmtp = new SmtpClient("smtp.gmail.com")
                     {
                         Port = 587,
                         Credentials = new NetworkCredential(remitente, contrasena),
@@ -216,14 +255,20 @@ namespace ANS.Model.Services
             }
         }
 
-        public async Task<bool> EnviarExcelPorMailMasivoConMailKit(Stream excelStream, string fileName, string subject, string body, string destino, MailKit.Net.Smtp.SmtpClient smtpClient)
+        public async Task<bool> EnviarExcelPorMailMasivoConMailKit(Stream excelStream, string fileName, string subject, string body, List<Email> _destinos, MailKit.Net.Smtp.SmtpClient smtpClient)
         {
             try
             {
 
                 var message = new MimeMessage();
                 message.From.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
-                message.To.Add(MailboxAddress.Parse(destino));
+                //Cuando esté en producción activar esto:
+                /*
+                foreach (var e in _destinos)
+                {
+                    message.To.Add(MailboxAddress.Parse(e.Correo));
+                }*/
+                message.To.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
                 message.Subject = subject;
 
                 var builder = new BodyBuilder();

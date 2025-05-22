@@ -17,7 +17,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         }
         public async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Hsbc no hace nada");
         }
     }
 }

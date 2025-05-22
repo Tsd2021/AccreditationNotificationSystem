@@ -14,7 +14,6 @@ namespace ANS.Model.Jobs.SANTANDER
 
         private readonly IServicioCuentaBuzon _servicioCuentaBuzon;
    
-
         public ExcelSantanderDiaADia(IServicioCuentaBuzon servicioCuentaBuzon)
         {
             _servicioCuentaBuzon = servicioCuentaBuzon;
@@ -55,7 +54,7 @@ namespace ANS.Model.Jobs.SANTANDER
                 Console.WriteLine($"Error al ejecutar Excel Santander DiaADia " +  ex.Message);
 
                 //ACA GUARDAR EN UN LOG
-
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Excel Día a Día");
             }
 
             finally

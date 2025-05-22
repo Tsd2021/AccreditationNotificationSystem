@@ -37,7 +37,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea EXCEL TANDA 2 HENDERSON", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando Tarea: Envío Excel Tanda 2 Henderson", Color.FromRgb(255, 102, 102));
 
                 });
 
@@ -58,9 +58,9 @@ namespace ANS.Model.Jobs.SANTANDER
             catch (Exception ex)
             {
                 e = ex;
-                Console.WriteLine($"Error al ejecutar EXCEL HENDEROSN TANDA 2 de SANTANDER: {ex.Message}");
+                Console.WriteLine($"Error al ejecutar Envío Excel Tanda 2 Henderson: {ex.Message}");
                 //ACA GUARDAR EN UN LOG
-
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Excel Henderson Tanda 2");
             }
 
             finally
@@ -72,7 +72,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Banco = "SANTANDER";
 
-                mensaje.Tipo = "EXCEL TANDA2";
+                mensaje.Tipo = "Envío Excel Tanda2";
 
                 mensaje.Icon = PackIconKind.Bank;
 
@@ -93,7 +93,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job Excel HENDERSON_TANDA2 SANTANDER", Colors.Red);
+                        main.MostrarAviso("Error Job Envío Excel Tanda 2 Henderson", Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -104,7 +104,7 @@ namespace ANS.Model.Jobs.SANTANDER
                     else
                     {
 
-                        main.MostrarAviso("Success Job Excel HENDERSON_TANDA2 SANTANDER", Colors.Green);
+                        main.MostrarAviso("Success Job Envío Excel Tanda 2 Henderson", Colors.Green);
 
                         mensaje.Estado = "Success";
 

@@ -1,11 +1,11 @@
-﻿using ANS.Model.Interfaces;
-using Microsoft.Data.SqlClient;
-using ANS.Model.GeneradorArchivoPorBanco;
+﻿using ANS.Model.GeneradorArchivoPorBanco;
+using ANS.Model.Interfaces;
 using ClosedXML.Excel;
-using System.IO;
 using ClosedXML.Excel.Drawings;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.Data.SqlClient;
+using System.IO;
 using System.Reflection;
-using System.Diagnostics;
 
 namespace ANS.Model.Services
 {
@@ -1042,7 +1042,7 @@ namespace ANS.Model.Services
 
                 List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
 
-                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda,bank,cli,config);
+                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config);
 
             }
             catch (Exception e)
@@ -1050,111 +1050,7 @@ namespace ANS.Model.Services
                 throw e;
             }
         }
-        //METODO PARA OBTENER ACREDITACIONES(EXCEL , VA POR FECHA)
-        private void getAcreditacionesPorBuzones(List<CuentaBuzon> listaCuentasBuzones, TimeSpan hasta, TimeSpan desde, Banco bank)
-        {
-            if (listaCuentasBuzones != null && listaCuentasBuzones.Count > 0)
-            {
-                try
-                {
-
-                    DateTime hastaEfectivo = DateTime.Today.Add(hasta);
-
-                    DateTime desdeEfectivo = DateTime.Today.Add(desde);
-
-                    using (SqlConnection conn = new SqlConnection(_conexionTSD))
-                    {
-
-                        conn.Open();
-
-                        string query;
-
-                        foreach (CuentaBuzon account in listaCuentasBuzones)
-                        {
-
-                            query = "select * " +
-                                    "from acreditaciondepositodiegotest " +
-                                    "where idbuzon = @accNC " +
-                                    "and convert(date,fecha) = convert(date,getdate()) " +
-                                    "and fecha >= @desde " +
-                                    "and fecha <= @hasta " +
-                                    "and idbanco = @bankId " +
-                                    "and idcuenta = @accId";
-
-                            SqlCommand cmd = new SqlCommand(query, conn);
-
-                            cmd.Parameters.AddWithValue("@accNC", account.NC);
-
-                            cmd.Parameters.AddWithValue("@hasta", hastaEfectivo);
-
-                            cmd.Parameters.AddWithValue("@bankId", bank.BancoId);
-
-                            cmd.Parameters.AddWithValue("@accId", account.IdCuenta);
-
-                            cmd.Parameters.AddWithValue("@desde", desdeEfectivo);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    Acreditacion accreditation = new Acreditacion
-                                    {
-                                        Id = reader.GetInt32(0),
-                                        IdBuzon = reader.GetString(1),
-                                        IdOperacion = reader.GetInt64(2),
-                                        Fecha = reader.GetDateTime(3),
-                                        IdBanco = reader.GetInt32(4),
-                                        IdCuenta = reader.GetInt32(5),
-                                        Moneda = reader.GetInt32(6),
-                                        No_Enviado = reader.GetBoolean(7),
-                                        Monto = (float)reader.GetDouble(8) // Se lee como double y se convierte a float.
-                                    };
-                                    account.ListaAcreditaciones.Add(accreditation);
-                                }
-                            }
-
-                        }
-
-                    }
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception " + ex.Message);
-                }
-            }
-            else
-            {
-                throw new Exception("Error en getAcreditacionesPorBuzones: ListaCuentaBuzones vacia o nula.");
-            }
-        }
-
-        public Task checkUltimaConexionByIdBuzon(string nc)
-        {
-
-            if (nc == null)
-            {
-                throw new Exception("Error en checkUltimaConexionByIdBuzon : 'nc' vacío.");
-            }
-            return null;
-        }
-        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta)
-        {
-
-            DateTime fechaDesde = DateTime.Today.Add(desde);
-
-            DateTime fechaHasta = DateTime.Today.Add(hasta);
-
-            List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaYBanco(fechaDesde, fechaHasta, banco);
-
-            List<DtoAcreditacionesPorEmpresa> listaMontevideo = lista.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
-
-            List<DtoAcreditacionesPorEmpresa> listaMaldonado = lista.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
-
-            generarExcelPorAcreditacionesAgrupadoPorEmpresa(listaMontevideo, listaMaldonado, numTanda, banco);
-
-        }
-        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c,ConfiguracionAcreditacion config)
+        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config)
         {
             // Colores para el formato
             var pastelYellow = XLColor.LightYellow;
@@ -1181,6 +1077,10 @@ namespace ANS.Model.Services
                 ws.Range(row, 1, row, 5).Merge();
                 var celdaFecha = ws.Cell(row, 1);
                 celdaFecha.Value = $"{b.NombreBanco} - Tanda {numTanda} - {DateTime.Now}";
+                if (b.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
+                {
+                    celdaFecha.Value = $"{b.NombreBanco}  - {DateTime.Now}";
+                }
                 celdaFecha.Style.Font.Italic = true;
                 celdaFecha.Style.Font.FontSize = 11;
                 celdaFecha.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
@@ -1323,7 +1223,7 @@ namespace ANS.Model.Services
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
 
-                string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
+                string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
                 wb.SaveAs(path);
 
                 Console.WriteLine($"Excel generado para {ciudad}: {path}");
@@ -1341,7 +1241,7 @@ namespace ANS.Model.Services
                         asu = $"Acreditaciones {b.NombreBanco} (TATA) - {ciudad.ToUpper()}";
                         cue = $"Adjunto archivo de acreditaciones para buzones TATA ciudad {ciudad.ToUpper()} banco {b.NombreBanco}.";
                     }
-                    _emailService.enviarExcelPorMail(path, asu, cue,c,b,config);
+                    _emailService.enviarExcelPorMail(path, asu, cue, c, b, config);
                 }
                 catch (Exception ex)
                 {
@@ -1353,6 +1253,34 @@ namespace ANS.Model.Services
                 GenerateExcel(acreditacionesMontevideo, "MONTEVIDEO");
             if (acreditacionesMaldonado?.Any() == true)
                 GenerateExcel(acreditacionesMaldonado, "MALDONADO");
+        }
+
+
+
+        public Task checkUltimaConexionByIdBuzon(string nc)
+        {
+
+            if (nc == null)
+            {
+                throw new Exception("Error en checkUltimaConexionByIdBuzon : 'nc' vacío.");
+            }
+            return null;
+        }
+        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta)
+        {
+
+            DateTime fechaDesde = DateTime.Today.Add(desde);
+
+            DateTime fechaHasta = DateTime.Today.Add(hasta);
+
+            List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaYBanco(fechaDesde, fechaHasta, banco);
+
+            List<DtoAcreditacionesPorEmpresa> listaMontevideo = lista.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
+
+            List<DtoAcreditacionesPorEmpresa> listaMaldonado = lista.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+
+            generarExcelPorAcreditacionesAgrupadoPorEmpresa(listaMontevideo, listaMaldonado, numTanda, banco);
+
         }
 
 
@@ -1491,7 +1419,7 @@ namespace ANS.Model.Services
 
                 // Guardar y enviar
                 string nombreArchivo = $"Tesoreria_Tanda_{numTanda}_{ciudad.ToUpper()}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+                string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
                 wb.SaveAs(filePath);
 
                 Console.WriteLine($"Excel de Tesorería generado: {filePath}");
@@ -1501,7 +1429,7 @@ namespace ANS.Model.Services
                     string cuerpo = $"E-Mail específico para TESORERÍA TECNISEGUR.\n" +
                                     $"Adjunto el archivo de acreditaciones para la tanda {numTanda} de {ciudad.ToUpper()}.";
 
-                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo,null,null,null);
+                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo, null, null, null);
                 }
                 catch (Exception ex)
                 {
@@ -1554,14 +1482,14 @@ namespace ANS.Model.Services
 
             }
 
-            generarExcel("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco);
+            GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco);
 
-            generarExcel("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco);
+            GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco);
 
             await Task.CompletedTask;
 
         }
-        private void generarExcel(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco)
+        private void GenerarExcelFormatoDiaADia(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco)
         {
             var fechaHoy = DateTime.Now.ToString("dd - MM - yy");
             var workbook = new XLWorkbook();
@@ -1642,17 +1570,19 @@ namespace ANS.Model.Services
 
             ws.Columns().AdjustToContents();
 
-            string nombreArchivo = $"AcreditacionesDiaADia_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+            //string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
 
             string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
 
-            workbook.SaveAs(ruta);
 
+            workbook.SaveAs(ruta);
 
             try
             {
                 _emailService.enviarExcelPorMail(ruta, $"Acreditaciones Día a día - ({banco.NombreBanco}) - " + ciudad.ToUpper(),
-                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")",null,null,null);
+                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")", null, banco, null);
             }
             catch (Exception e)
             {
@@ -1661,35 +1591,7 @@ namespace ANS.Model.Services
 
         }
 
-        private void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            string resourcePath = "ANS.Images.logoTecniFinal.png"; // Ajusta si tu namespace cambia
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourcePath))
-            {
-                if (stream != null)
-                {
-                    // Insertamos el logo en la celda C1 (col 3) con un pequeño offset
-                    var imagen = ws.AddPicture(stream)
-                                   .MoveTo(ws.Cell(row, 3), 30, 5) // Offset horizontal y vertical en píxeles
-                                   .WithPlacement(XLPicturePlacement.FreeFloating)
-                                   .Scale(0.5); // Escala ajustable
-
-                    row += 2; // Espacio debajo del logo
-                }
-            }
-
-            // Texto "BUZONES INTELIGENTES" centrado
-            ws.Range(row, 1, row, 5).Merge();
-            var celdaTitulo = ws.Cell(row, 1);
-            celdaTitulo.Value = "Buzones Inteligentes";
-            celdaTitulo.Style.Font.Bold = true;
-            celdaTitulo.Style.Font.FontSize = 16;
-            celdaTitulo.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            celdaTitulo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            row += 1;
-        }
         private List<DtoAcreditacionesPorEmpresa> getAcreditacionesPorBancoYTipoAcreditacion(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
         {
 
@@ -1712,6 +1614,7 @@ namespace ANS.Model.Services
                         cb.SUCURSAL,
                         acc.MONEDA,
                         cc.SUCURSAL as CIUDAD, 
+                        cb.IDCLIENTE as IDCLIENTE,
                         SUM(acc.MONTO) AS TotalMonto 
                         FROM ConfiguracionAcreditacion AS config 
                         INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
@@ -1726,7 +1629,8 @@ namespace ANS.Model.Services
                         cb.EMPRESA,
                         cb.SUCURSAL,
                         cc.SUCURSAL,
-                        acc.MONEDA
+                        acc.MONEDA,
+                        cb.IDCLIENTE
                         ORDER BY cb.empresa asc;";
             }
 
@@ -1740,6 +1644,7 @@ namespace ANS.Model.Services
                         acc.MONEDA,
                         cb.SUCURSAL,
                         config.TipoAcreditacion,
+                        cb.IDCLIENTE as IDCLIENTE,
                         SUM(acc.MONTO) AS TOTAL
                         FROM ConfiguracionAcreditacion AS config
                         INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID
@@ -1758,6 +1663,7 @@ namespace ANS.Model.Services
                         acc.MONEDA,
                         cc.sucursal,
                         cc.NN,   
+                        cb.IDCLIENTE,
                         config.TipoAcreditacion
                         ORDER BY cb.EMPRESA ASC";
             }
@@ -1771,6 +1677,7 @@ namespace ANS.Model.Services
                         cb.CUENTA,
                         acc.MONEDA,
                         cb.SUCURSAL,
+                        cb.IDCLIENTE as IDCLIENTE,
                         config.TipoAcreditacion,
                         SUM(acc.MONTO) AS TOTAL 
                         FROM ConfiguracionAcreditacion AS config 
@@ -1791,8 +1698,44 @@ namespace ANS.Model.Services
                         acc.MONEDA,
                         cc.sucursal,
                         CB.EMPRESA,
+                        cb.IDCLIENTE,
                         config.TipoAcreditacion 
                         ORDER BY cC.NN ASC";
+            }
+
+            if (banco.NombreBanco.ToUpper() == VariablesGlobales.hsbc.ToUpper() ||
+                banco.NombreBanco.ToUpper() == VariablesGlobales.itau.ToUpper() ||
+                banco.NombreBanco.ToUpper() == VariablesGlobales.bandes.ToUpper())
+            {
+                query = @"SELECT  
+                        cb.EMPRESA, 
+                        cc.nn, 
+                        cc.SUCURSAL as CIUDAD, 
+                        cb.CUENTA, 
+                        acc.MONEDA, 
+                        cb.SUCURSAL, 
+                        config.TipoAcreditacion,
+                        cb.IDCLIENTE as IDCLIENTE,
+                        SUM(acc.MONTO) AS TOTAL 
+                        FROM ConfiguracionAcreditacion AS config 
+                        INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
+                        INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
+                        INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
+                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
+                        WHERE config.TipoAcreditacion = @tipoAcreditacion 
+                        AND cb.BANCO = @banco 
+                        AND convert(date,acc.FECHA) = convert(date,getdate()) 
+                        GROUP BY 
+                        cb.BANCO, 
+                        cb.CUENTA, 
+                        cb.EMPRESA, 
+                        cb.SUCURSAL, 
+                        acc.MONEDA, 
+                        cc.sucursal, 
+                        cc.NN, 
+                        config.TipoAcreditacion,
+                        cb.IDCLIENTE
+                        ORDER BY cb.EMPRESA ASC";
             }
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
@@ -1818,6 +1761,7 @@ namespace ANS.Model.Services
                         int monedaOrdinal = reader.GetOrdinal("MONEDA");
                         int ciudadOrdinal = reader.GetOrdinal("CIUDAD");
                         int totalMontoOrdinal = reader.GetOrdinal("TotalMonto");
+                        int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
 
                         // Aquí se lee cada registro de la consulta de BBVA.
                         while (reader.Read())
@@ -1833,6 +1777,7 @@ namespace ANS.Model.Services
                             nuevoDto.Divisa = reader.GetInt32(monedaOrdinal);
                             nuevoDto.Monto = reader.GetDouble(totalMontoOrdinal);
                             nuevoDto.Ciudad = reader.GetString(ciudadOrdinal);
+                            nuevoDto.IdCliente = reader.GetInt32(idClienteOrdinal);
 
                             // Si tienes algún método para ajustar o formatear la moneda.
                             nuevoDto.setMoneda();
@@ -1850,7 +1795,7 @@ namespace ANS.Model.Services
                         int monedaOrdinal = reader.GetOrdinal("MONEDA");
                         int totalOrdinal = reader.GetOrdinal("TOTAL");
                         int nnOrdinal = reader.GetOrdinal("NN");
-
+                        int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                         while (reader.Read())
                         {
                             DtoAcreditacionesPorEmpresa nuevoDto = new DtoAcreditacionesPorEmpresa();
@@ -1862,7 +1807,7 @@ namespace ANS.Model.Services
                             nuevoDto.Divisa = reader.GetInt32(monedaOrdinal);
                             nuevoDto.Monto = reader.GetDouble(totalOrdinal);
                             nuevoDto.NN = reader.GetString(nnOrdinal);
-
+                            nuevoDto.IdCliente = reader.GetInt32(idClienteOrdinal);
                             nuevoDto.setMoneda();
 
                             retorno.Add(nuevoDto);
@@ -2007,7 +1952,7 @@ namespace ANS.Model.Services
                 // Guardar y enviar
                 string fileName = $"ReporteDiario_Santander_{ciudad}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(
-                    @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fileName);
+                    @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fileName);
                 workbook.SaveAs(filePath);
 
                 try
@@ -2015,7 +1960,7 @@ namespace ANS.Model.Services
                     _emailService.enviarExcelPorMail(
                         filePath,
                         $"Reporte Diario Santander {ciudad}",
-                        $"Reporte diario de acreditaciones Santander - {ciudad}",null,null,null);
+                        $"Reporte diario de acreditaciones Santander - {ciudad}", null, null, null);
                 }
                 catch (Exception e)
                 {
@@ -2032,6 +1977,116 @@ namespace ANS.Model.Services
 
 
 
+        #region UTILITIES
+        private void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourcePath = "ANS.Images.logoTecniFinal.png"; // Ajusta si tu namespace cambia
 
+            using (Stream stream = assembly.GetManifestResourceStream(resourcePath))
+            {
+                if (stream != null)
+                {
+                    // Insertamos el logo en la celda C1 (col 3) con un pequeño offset
+                    var imagen = ws.AddPicture(stream)
+                                   .MoveTo(ws.Cell(row, 3), 30, 5) // Offset horizontal y vertical en píxeles
+                                   .WithPlacement(XLPicturePlacement.FreeFloating)
+                                   .Scale(0.5); // Escala ajustable
+
+                    row += 2; // Espacio debajo del logo
+                }
+            }
+
+            // Texto "BUZONES INTELIGENTES" centrado
+            ws.Range(row, 1, row, 5).Merge();
+            var celdaTitulo = ws.Cell(row, 1);
+            celdaTitulo.Value = "Buzones Inteligentes";
+            celdaTitulo.Style.Font.Bold = true;
+            celdaTitulo.Style.Font.FontSize = 16;
+            celdaTitulo.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            celdaTitulo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            row += 1;
+        }
+        #endregion
+        #region UNUSED
+        //METODO PARA OBTENER ACREDITACIONES(EXCEL , VA POR FECHA)
+        //private void getAcreditacionesPorBuzones(List<CuentaBuzon> listaCuentasBuzones, TimeSpan hasta, TimeSpan desde, Banco bank)
+        //{
+        //    if (listaCuentasBuzones != null && listaCuentasBuzones.Count > 0)
+        //    {
+        //        try
+        //        {
+
+        //            DateTime hastaEfectivo = DateTime.Today.Add(hasta);
+
+        //            DateTime desdeEfectivo = DateTime.Today.Add(desde);
+
+        //            using (SqlConnection conn = new SqlConnection(_conexionTSD))
+        //            {
+
+        //                conn.Open();
+
+        //                string query;
+
+        //                foreach (CuentaBuzon account in listaCuentasBuzones)
+        //                {
+
+        //                    query = "select * " +
+        //                            "from acreditaciondepositodiegotest " +
+        //                            "where idbuzon = @accNC " +
+        //                            "and convert(date,fecha) = convert(date,getdate()) " +
+        //                            "and fecha >= @desde " +
+        //                            "and fecha <= @hasta " +
+        //                            "and idbanco = @bankId " +
+        //                            "and idcuenta = @accId";
+
+        //                    SqlCommand cmd = new SqlCommand(query, conn);
+
+        //                    cmd.Parameters.AddWithValue("@accNC", account.NC);
+
+        //                    cmd.Parameters.AddWithValue("@hasta", hastaEfectivo);
+
+        //                    cmd.Parameters.AddWithValue("@bankId", bank.BancoId);
+
+        //                    cmd.Parameters.AddWithValue("@accId", account.IdCuenta);
+
+        //                    cmd.Parameters.AddWithValue("@desde", desdeEfectivo);
+
+        //                    using (SqlDataReader reader = cmd.ExecuteReader())
+        //                    {
+        //                        while (reader.Read())
+        //                        {
+        //                            Acreditacion accreditation = new Acreditacion
+        //                            {
+        //                                Id = reader.GetInt32(0),
+        //                                IdBuzon = reader.GetString(1),
+        //                                IdOperacion = reader.GetInt64(2),
+        //                                Fecha = reader.GetDateTime(3),
+        //                                IdBanco = reader.GetInt32(4),
+        //                                IdCuenta = reader.GetInt32(5),
+        //                                Moneda = reader.GetInt32(6),
+        //                                No_Enviado = reader.GetBoolean(7),
+        //                                Monto = (float)reader.GetDouble(8) // Se lee como double y se convierte a float.
+        //                            };
+        //                            account.ListaAcreditaciones.Add(accreditation);
+        //                        }
+        //                    }
+
+        //                }
+
+        //            }
+        //            return;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine("Exception " + ex.Message);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        throw new Exception("Error en getAcreditacionesPorBuzones: ListaCuentaBuzones vacia o nula.");
+        //    }
+        //}
+        #endregion
     }
 }

@@ -21,7 +21,6 @@ namespace ANS.Model.Services
 
             return instancia;
         }
-
         public async Task procesarEnvioMasivo(int numEnvioMasivo)
         {
             List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
@@ -37,6 +36,8 @@ namespace ANS.Model.Services
                 .ToList();
 
             if (buzonesConAcreditaciones.Count == 0) return;
+
+            ObtenerMailsPorBuzon(buzonesConAcreditaciones);
 
             var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
             var smtp = await ServicioEmail.instancia.getNewSmptClient();
@@ -57,12 +58,12 @@ namespace ANS.Model.Services
 
                         await ServicioEmail.instancia
                             .EnviarExcelPorMailMasivoConMailKit(
-                               excelStream, fileName, subject, body, "dchiquiar@tecnisegur.com.uy", smtp);
+                               excelStream, fileName, subject, body, b._Emails, smtp);
 
                     }
                     catch (Exception ex)
                     {
-                        
+
                         Console.WriteLine($"Error al enviar el correo: {ex.Message}");
                     }
 
@@ -82,6 +83,21 @@ namespace ANS.Model.Services
             await Task.WhenAll(tasks);
             await smtp.DisconnectAsync(true);
         }
+
+        private void ObtenerMailsPorBuzon(List<BuzonDTO> buzonesConAcreditaciones)
+        {
+            foreach (var b in buzonesConAcreditaciones)
+            {
+                foreach (var e in ServicioCC.getInstancia().getBuzones())
+                {
+                    if (b.NC == e.NC)
+                    {
+                        b._Emails = e._listaEmails;
+                    }
+                }
+            }
+        }
+
         public async Task hidratarDTOconSusAcreditaciones(List<BuzonDTO> deps, int numEnvioMasivo)
         {
             if (deps == null || deps.Count == 0) return;
@@ -139,10 +155,10 @@ namespace ANS.Model.Services
                 if (hendersons.Any())
                 {
                     const string sqlH = @"
-                SELECT * 
-                FROM acreditaciondepositodiegotest
-                WHERE fecha > @fechaInicio AND fecha <= @fechaFin
-                  AND idbuzon IN (SELECT NC FROM @ListaH)";
+                                    SELECT * 
+                                    FROM acreditaciondepositodiegotest
+                                    WHERE fecha > @fechaInicio AND fecha <= @fechaFin
+                                    AND idbuzon IN (SELECT NC FROM @ListaH)";
 
                     using var cmdH = new SqlCommand(sqlH, conn);
                     // Parámetro TVP para Henderson
@@ -277,7 +293,7 @@ namespace ANS.Model.Services
                         a.Usuario = info.Usuario;
                         a.FechaDep = info.FechaDep;
                         a.Empresa = info.Empresa;
-                        if(empresaDeLaAcreditacionAsignadaAlBuzon == false)
+                        if (empresaDeLaAcreditacionAsignadaAlBuzon == false)
                         {
                             empresaDeLaAcreditacionAsignadaAlBuzon = true;
                             b.Empresa = a.Empresa;
@@ -339,10 +355,6 @@ namespace ANS.Model.Services
                     b.UltimaFechaConexion = DateTime.MinValue;
             }
         }
-
-       
-
-       
 
         private async Task<List<BuzonDTO>> getBuzonesByNumeroEnvioMasivo(int numEnvioMasivo)
         {
@@ -635,6 +647,7 @@ order by idoperacion desc
             public int IdCliente { get; set; }
             public bool EsHenderson { get; set; }
             public int NumeroEnvioMasivo { get; set; }
+            public List<Email> _Emails { get; set; } = new List<Email>();
             public BuzonDTO()
             {
 

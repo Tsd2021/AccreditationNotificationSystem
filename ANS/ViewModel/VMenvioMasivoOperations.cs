@@ -48,6 +48,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Todos", "Envío Masivo 1");
             }
             finally
             {
@@ -67,6 +68,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Todos", "Envío Masivo 2");
             }
             finally
             {
@@ -82,11 +84,13 @@ namespace ANS.ViewModel
             try
             {
                 await _servicioEnvioMasivo.procesarEnvioMasivo(3);
+                
             }
 
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Todos", "Envío Masivo 3");
             }
             finally
             {
