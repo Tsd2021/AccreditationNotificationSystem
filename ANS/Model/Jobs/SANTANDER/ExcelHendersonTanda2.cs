@@ -70,7 +70,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                mensaje.Banco = "SANTANDER";
+                mensaje.Banco = "Santander";
 
                 mensaje.Tipo = "Envío Excel Tanda2";
 

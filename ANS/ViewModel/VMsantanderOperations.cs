@@ -68,9 +68,9 @@ namespace ANS.ViewModel
 
             Banco b = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-            Cliente c = ServicioCliente.getInstancia().getById(164);
+            Cliente c = null;
 
-            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.tanda);
+            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
             var alta = new AltaEmailDestino(b, c, t);
 
@@ -108,6 +108,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Acreditar Punto a Punto");
             }
             finally
             {
@@ -128,6 +129,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Acreditar Tanda 1 Henderson");
             }
             finally
             {
@@ -145,6 +147,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Acreditar Tanda 2 Henderson");
             }
             finally
             {
@@ -178,6 +181,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Tanda 1 Henderson");
             }
             finally
             {
@@ -210,6 +214,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Tanda 2 Henderson");
             }
             finally
             {
@@ -226,14 +231,21 @@ namespace ANS.ViewModel
             {
                 await _servicioCuentaBuzon.acreditarDiaADiaPorCliente(cli, _banco, VariablesGlobales.horaCierreSantanderDeLaSierras_TXT);
             }
+
             catch (Exception e)
             {
+
                 Console.WriteLine(e);
+
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Acreditar De las Sierras");
+
             }
+
             finally
             {
                 IsLoading = false;
             }
+
         }
         private async Task ejecutarTanda1ExcelTesoreria()
         {
@@ -250,9 +262,11 @@ namespace ANS.ViewModel
             {
                 await Task.Run(() => { _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, desde, hasta).Wait(); });
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine(ex);
+                Console.WriteLine(e);
+
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Tanda 1 Excel TESORERÍA");
             }
             finally
             {
@@ -283,6 +297,8 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Tanda 2 Excel TESORERÍA");
             }
 
             finally
@@ -310,6 +326,8 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Console.WriteLine(e);
+
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Día a Día");
             }
             finally
             {

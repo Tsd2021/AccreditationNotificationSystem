@@ -7,8 +7,8 @@
         Width="800"
         WindowStartupLocation="CenterScreen">
 
-    <!-- Estilo global para resaltar en rojo cualquier TextBox en error -->
     <Window.Resources>
+        <!-- TextBoxes en rojo si hay error de validación -->
         <Style TargetType="TextBox">
             <Style.Triggers>
                 <Trigger Property="Validation.HasError" Value="True">
@@ -23,49 +23,66 @@
         <vm:VMaltaEmailDestino/>
     </Window.DataContext>
 
-    <Grid Margin="10">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="3*"/>
-        </Grid.ColumnDefinitions>
+    <DockPanel Margin="10">
+        <!-- EXPANDER LATERAL PARA SELECCIÓN DE CLIENTES -->
+        <Expander Header="Asociar cliente"
+                  IsExpanded="{Binding MostrarClientes}"
+                  Width="250"
+                  ExpandDirection="Left"
+                  DockPanel.Dock="Left"
+                  Margin="0,0,10,0">
+            <StackPanel>
 
-        <!-- Columna Izquierda: Clientes + Filtro -->
-        <Grid Grid.Column="0" Margin="0,0,10,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+                <!-- Filtro de clientes -->
+                <TextBox Margin="0,0,0,5"
+                         Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
+                        />
 
-            <DataGrid ItemsSource="{Binding Clientes}"
-                      SelectedItem="{Binding ClienteSeleccionado, Mode=TwoWay}"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      SelectionMode="Single"
-                      SelectionUnit="FullRow"
-                      IsReadOnly="True"
-                      Grid.Row="0">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID"
-                                        Binding="{Binding Id}"
-                                        Visibility="Collapsed"/>
-                    <DataGridTextColumn Header="Cliente"
-                                        Binding="{Binding Nombre}"
-                                        Width="*"/>
-                </DataGrid.Columns>
-            </DataGrid>
+                <!-- Lista de clientes -->
+                <DataGrid ItemsSource="{Binding Clientes}"
+                          SelectedItem="{Binding ClienteSeleccionado}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          Height="300">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Cliente"
+                                            Binding="{Binding Nombre}"
+                                            Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
 
-            <StackPanel Orientation="Horizontal"
-                        Grid.Row="1"
-                        Margin="0,5,0,0">
-                <Label Content="Filtrar:" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
-                         Width="200"
-                         Margin="5,0,0,0"/>
+                <!-- BLOQUE DE CLIENTE SELECCIONADO -->
+                <StackPanel Margin="0,10,0,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <!-- Cuando no hay cliente, ocultar -->
+                                <DataTrigger Binding="{Binding ClienteSeleccionado}"
+                                             Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <!-- Label con nombre -->
+                    <TextBlock Text="Seleccionado:"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="{Binding ClienteSeleccionado.Nombre}"
+                               Margin="0,2,0,10"/>
+
+                    <!-- Botón debajo para deseleccionar -->
+                    <Button Content="Deseleccionar"
+                            Command="{Binding DeseleccionarClienteCommand}"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+
             </StackPanel>
-        </Grid>
+        </Expander>
 
-        <!-- Columna Derecha: Formulario y Emails relacionados -->
-        <Grid Grid.Column="1" Margin="10,0,0,0">
+        <!-- FORMULARIO PRINCIPAL -->
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <!-- Banco Label -->
@@ -82,17 +99,17 @@
                 <RowDefinition Height="Auto"/>
                 <!-- Mensaje de error -->
                 <RowDefinition Height="Auto"/>
-                <!-- Botones -->
+                <!-- Botones Guardar/Cancelar -->
                 <RowDefinition Height="Auto"/>
-                <!-- Emails Relacionados Label -->
+                <!-- Emails asociados Label -->
                 <RowDefinition Height="*"/>
-                <!-- DataGrid Emails Relacionados -->
+                <!-- DataGrid Emails asociados -->
             </Grid.RowDefinitions>
 
             <!-- Banco -->
             <Label Content="Banco:" Grid.Row="0"/>
             <ComboBox ItemsSource="{Binding Bancos}"
-                      SelectedItem="{Binding BancoSeleccionado, Mode=TwoWay}"
+                      SelectedItem="{Binding BancoSeleccionado}"
                       DisplayMemberPath="NombreBanco"
                       Grid.Row="1"
                       Margin="0,0,0,10"/>
@@ -100,37 +117,35 @@
             <!-- Tipo Acreditación -->
             <Label Content="Tipo Acreditación:" Grid.Row="2"/>
             <ComboBox ItemsSource="{Binding TiposAcreditacion}"
-                      SelectedItem="{Binding TipoSeleccionado, Mode=TwoWay}"
+                      SelectedItem="{Binding TipoSeleccionado}"
                       DisplayMemberPath="TipoAcreditacion"
                       Grid.Row="3"
-                      Margin="0,0,0,20"/>
+                      Margin="0,0,0,10"/>
 
-            <!-- Nuevo Email + Checkbox -->
+            <!-- Nuevo Email y Checkbox -->
             <Label Content="Nuevo Email:" Grid.Row="4"/>
             <StackPanel Orientation="Horizontal"
-                        VerticalAlignment="Center"
                         Grid.Row="5"
-                        Margin="0,0,0,0">
+                        Margin="0,0,0,10">
                 <TextBox x:Name="NuevoEmailTextBox"
                          Width="250"
                          Text="{Binding NuevoEmail,
                                         UpdateSourceTrigger=PropertyChanged,
-                                        ValidatesOnDataErrors=True,
-                                        NotifyOnValidationError=True}"/>
-                <CheckBox IsChecked="{Binding EsPrincipal, Mode=TwoWay}"
-                          Content="Es Principal"
+                                        ValidatesOnDataErrors=True}"/>
+                <CheckBox Content="Es Principal"
+                          IsChecked="{Binding EsPrincipal}"
                           Margin="10,0,0,0"/>
             </StackPanel>
 
-            <!-- Mensaje de error debajo del TextBox -->
+            <!-- Mensaje de error -->
             <TextBlock Grid.Row="6"
-                       Margin="0,2,0,10"
                        Foreground="Red"
                        FontSize="12"
+                       Margin="0,0,0,10"
                        Text="{Binding (Validation.Errors)[0].ErrorContent,
                                       ElementName=NuevoEmailTextBox}"/>
 
-            <!-- Botones -->
+            <!-- Botones Guardar / Cancelar -->
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         Grid.Row="7"
@@ -144,25 +159,24 @@
                         Command="{Binding CancelarCommand}"/>
             </StackPanel>
 
-            <!-- Emails relacionados -->
-            <Label Content="Emails relacionados actualmente:"
+            <!-- Emails asociados -->
+            <Label Content="Emails asociados:"
                    FontWeight="Bold"
                    Grid.Row="8"
-                   Margin="0,10,0,5"/>
+                   Margin="0,0,0,5"/>
             <DataGrid ItemsSource="{Binding RelatedEmails}"
                       AutoGenerateColumns="False"
-                      CanUserAddRows="False"
                       IsReadOnly="True"
                       Grid.Row="9">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Email"
                                         Binding="{Binding Correo}"
                                         Width="*"/>
-                    <DataGridCheckBoxColumn Header="Es Principal"
+                    <DataGridCheckBoxColumn Header="Principal"
                                             Binding="{Binding EsPrincipal}"
                                             Width="Auto"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
-    </Grid>
+    </DockPanel>
 </Window>

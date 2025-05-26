@@ -33,9 +33,6 @@
     <Compile Update="UserControls\ItauOperationControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UserControls\PanelAsociarEmailABuzon.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="UserControls\SantanderOperationControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

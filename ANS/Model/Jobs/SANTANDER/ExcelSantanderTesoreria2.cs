@@ -13,7 +13,7 @@ namespace ANS.Model.Jobs.SANTANDER
     {
 
         private readonly IServicioCuentaBuzon _servicioCuentaBuzon;
-   
+
 
         public ExcelSantanderTesoreria2(IServicioCuentaBuzon servicioCuentaBuzon)
         {
@@ -64,7 +64,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 mensaje.Color = Color.FromRgb(255, 102, 102);
 
-                mensaje.Banco = "SANTANDER";
+                mensaje.Banco = "Santander";
 
                 mensaje.Tipo = "Excel Santander para Tesorería 2 ";
 

@@ -700,7 +700,6 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\EnvioNivelesOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\HsbcOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\ItauOperationControl.baml
-C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\PanelAsociarEmailABuzon.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\SantanderOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\ScotiabankOperationControl.baml
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\BancoModal.g.cs
@@ -712,7 +711,6 @@ C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\A
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\EnvioNivelesOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\HsbcOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\ItauOperationControl.g.cs
-C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\PanelAsociarEmailABuzon.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\SantanderOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\UserControls\ScotiabankOperationControl.g.cs
 C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\obj\Release\net8.0-windows\win-x64\Views\AltaEmailDestino.g.cs

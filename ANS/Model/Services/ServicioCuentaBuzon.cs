@@ -1222,8 +1222,12 @@ namespace ANS.Model.Services
                     fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-
+                //PRODUCCION: 
                 string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
+
+                //TESTING:
+                //string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
+
                 wb.SaveAs(path);
 
                 Console.WriteLine($"Excel generado para {ciudad}: {path}");
@@ -1429,7 +1433,7 @@ namespace ANS.Model.Services
                     string cuerpo = $"E-Mail específico para TESORERÍA TECNISEGUR.\n" +
                                     $"Adjunto el archivo de acreditaciones para la tanda {numTanda} de {ciudad.ToUpper()}.";
 
-                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo, null, null, null);
+                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo, null, b, new ConfiguracionAcreditacion(VariablesGlobales.tanda));
                 }
                 catch (Exception ex)
                 {
@@ -1574,7 +1578,7 @@ namespace ANS.Model.Services
 
             //string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
 
-            string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
 
 
             workbook.SaveAs(ruta);
@@ -1960,7 +1964,7 @@ namespace ANS.Model.Services
                     _emailService.enviarExcelPorMail(
                         filePath,
                         $"Reporte Diario Santander {ciudad}",
-                        $"Reporte diario de acreditaciones Santander - {ciudad}", null, null, null);
+                        $"Reporte diario de acreditaciones Santander - {ciudad}", null, santander, null);
                 }
                 catch (Exception e)
                 {

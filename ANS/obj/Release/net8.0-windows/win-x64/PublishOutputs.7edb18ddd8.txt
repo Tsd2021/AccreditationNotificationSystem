@@ -1,0 +1,2 @@
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\bin\Release\net8.0-windows\win-x64\publish\ANS.pdb
+C:\Users\dchiquiar.ABUDIL\source\repos\Tsd2021\AccreditationNotificationSystem\ANS\bin\Release\net8.0-windows\win-x64\publish\ANS.exe

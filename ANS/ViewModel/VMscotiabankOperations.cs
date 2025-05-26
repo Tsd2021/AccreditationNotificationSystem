@@ -47,9 +47,9 @@ namespace ANS.ViewModel
 
             Banco b = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.scotiabank);
 
-            Cliente c = ServicioCliente.getInstancia().getById(164);
+            Cliente c = null;
 
-            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.tanda);
+            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
             var alta = new AltaEmailDestino(b, c, t);
 

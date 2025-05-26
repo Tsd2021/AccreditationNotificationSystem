@@ -67,7 +67,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                 mensaje.Banco = "Scotiabank";
 
-                mensaje.Tipo = "EXCEL TANDA2";
+                mensaje.Tipo = "Envío Excel Tanda 2";
 
                 mensaje.Icon = PackIconKind.Bank;
 
