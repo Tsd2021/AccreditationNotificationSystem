@@ -7,7 +7,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
     public class BBVAFileGenerator : IBancoModoAcreditacion
     {
         private const string CuentaTransportadora = "007584652";
+        //ruta produccion:
         private readonly string rutaBase = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\BBVA";
+
+        //ruta testing:
+        //private readonly string rutaBase = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\BBVA";
         private readonly ConfiguracionAcreditacion configActual;
 
         private List<CuentaBuzon> buzonesMontevideo = new();
@@ -102,11 +106,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 }
                 using (var sw2 = new StreamWriter(pathB)) { }
 
-              //  MessageBox.Show("Datos exportados correctamente.", "EXPORTAR", MessageBoxButton.OK, MessageBoxImage.Information);
+
             }
             catch (Exception ex)
             {
-                //MessageBox.Show($"ERROR, VERIFIQUE: {ex.Message}", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+
             }
         }
 
@@ -127,7 +131,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 // Agrupación y orden similar al código antiguo
                 var grupos = cuentas
                     .SelectMany(b => b.Depositos ?? new List<Deposito>(), (b, dep) => new { b, dep, parts = b.Cuenta.Split('-') })
-                    .GroupBy(x => new {
+                    .GroupBy(x => new
+                    {
                         x.b.SucursalCuenta,
                         Cuenta = x.parts[0].Trim(),
                         x.b.Divisa,
@@ -136,7 +141,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         Remito = x.dep.IdOperacion.ToString(),
                         x.b.Producto
                     })
-                    .Select(g => new {
+                    .Select(g => new
+                    {
                         Sucursal = g.Key.SucursalCuenta,
                         Cuenta = g.Key.Cuenta,
                         Moneda = g.Key.Divisa,

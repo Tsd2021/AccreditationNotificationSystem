@@ -31,7 +31,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 { 67, 1 },
                 { 68, 1 },
                 { 69, 2 },
-                { 70, 2 }
+                { 70, 2 },
+                { 373,3 },
+                { 374,3 }
                 };
         public SantanderFileGenerator(ConfiguracionAcreditacion config)
         {

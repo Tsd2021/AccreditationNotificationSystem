@@ -229,7 +229,6 @@ namespace ANS
                 .UsingJobData("numEnvioMasivo", 1)
                 .Build();
 
-         
             ITrigger triggerEnvioMasivo1 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo1Trigger", "GrupoEnvioMasivo")
                 .WithCronSchedule("0 30 7 ? * MON-FRI")
@@ -237,7 +236,7 @@ namespace ANS
 
             #endregion
 
-            #region Tarea 2: ENVIO MASIVO 2 (15:00:0)
+            #region Tarea 2: ENVIO MASIVO 2 (14:45:00)
       
             IJobDetail jobEnvioMasivo2 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo2Job", "GrupoEnvioMasivo")
@@ -247,9 +246,8 @@ namespace ANS
      
             ITrigger triggerEnvioMasivo2 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo2Trigger", "GrupoEnvioMasivo")
-                .WithCronSchedule("0 0 15 ? * MON-FRI")
+                .WithCronSchedule("0 45 14 ? * MON-FRI")
                 .Build();
-
             #endregion
 
             #region Tarea 2: ENVIO MASIVO 3 (19:00:0)
@@ -320,7 +318,6 @@ namespace ANS
                     .WithCronSchedule("30 2 7 ? * MON-FRI")
                     .Build();
                 #endregion
-
                 #region Tarea 2: EXCEL TANDA 1 (7:03:35 AM)
                 // Job para generar Excel a partir de los registros (implementado en ExcelHendersonTanda1)
                 IJobDetail jobExcelTanda1Scotiabank = JobBuilder.Create<ExcelTanda1HendersonScotiabank>()
@@ -333,7 +330,6 @@ namespace ANS
                     .WithCronSchedule("35 3 7 ? * MON-FRI")
                     .Build();
                 #endregion
-
                 #region Tarea 3: ACREDITAR TANDA 2 (14:44:50)
                 // Job para acreditar tanda 2 (implementado en AcreditarTanda2HendersonScotiabank)
                 IJobDetail jobAcreditarTanda2Scotiabank = JobBuilder.Create<AcreditarTanda2HendersonScotiabank>()
@@ -346,7 +342,6 @@ namespace ANS
                     .WithCronSchedule("50 44 14 ? * MON-FRI")
                     .Build();
                 #endregion
-
                 #region Tarea 4: EXCEL TANDA 2 (14:45:50)
                 // Job para generar Excel a partir de la segunda tanda (implementado en ExcelHendersonTanda2)
                 IJobDetail jobExcelTanda2Scotiabank = JobBuilder.Create<ExcelTanda2HendersonScotiabank>()
@@ -357,6 +352,26 @@ namespace ANS
                 ITrigger triggerExcelTanda2Scotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerExcelTAN2", "GrupoTrabajoScotiabank")
                     .WithCronSchedule("50 45 14 ? * MON-FRI")
+                    .Build();
+                #endregion
+                #region Tarea 5: Acreditar DXD (16:05:50)
+                IJobDetail jobAcreditarDiaADiaScotiabank =  JobBuilder.Create<AcreditarDiaADiaScotiabank>()
+                                                            .WithIdentity("ScotiabankJobAcreditarDXD", "GrupoTrabajoScotiabank")
+                                                            .Build();
+
+                // Trigger que dispara la ejecución a las 14:35:36 de lunes a viernes.
+                ITrigger triggerAcreditarDiaADiaScotiabank = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerAcreditarDXD", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("50 5 16 ? * MON-FRI")
+                    .Build();
+                #endregion
+                #region Tarea 6: EXCEL DXD (16:10:20)
+                IJobDetail jobExcelDiaADiaScotiabank = JobBuilder.Create<ExcelScotiabankDiaADia>()
+                    .WithIdentity("ScotiabankJobExcelDXD", "GrupoTrabajoScotiabank")
+                    .Build();
+                ITrigger triggerExcelDiaADiaScotiabank = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerExcelDXD", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("20 10 16 ? * MON-FRI")
                     .Build();
                 #endregion
 
@@ -373,6 +388,10 @@ namespace ANS
                     await scheduler.ScheduleJob(jobAcreditarTanda2Scotiabank, triggerAcreditarTanda2Scotiabank);
 
                     await scheduler.ScheduleJob(jobExcelTanda2Scotiabank, triggerExcelTanda2Scotiabank);
+
+                    await scheduler.ScheduleJob(jobAcreditarDiaADiaScotiabank,triggerAcreditarDiaADiaScotiabank);
+
+                    await scheduler.ScheduleJob(jobExcelDiaADiaScotiabank, triggerExcelDiaADiaScotiabank);
 
                 }
                 catch (Exception ex)

@@ -23,9 +23,9 @@ namespace ANS.Model.Services
     {
 
         public List<Email> emailsEnvio { get; set; } = new List<Email>();
-        string remitente = "dchiquiar@tecnisegur.com.uy";
-        string contrasena = "cfsg xikf qjwp iwzu";
-        string destinatario = "dchiquiar@tecnisegur.com.uy";
+        string remitente = "acreditaciones@tecnisegur.com.uy";
+        string contrasena = "exad urge pknr xpaj";
+        string destinatario = "acreditaciones@tecnisegur.com.uy";
         private string _conexionTSD = ConfiguracionGlobal.Conexion22;
         public static ServicioEmail instancia { get; set; }
 
@@ -101,7 +101,7 @@ namespace ANS.Model.Services
 
             await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
 
-            await smtp.AuthenticateAsync("dchiquiar@tecnisegur.com.uy", "cfsg xikf qjwp iwzu");
+            await smtp.AuthenticateAsync("acreditaciones@tecnisegur.com.uy", contrasena);
 
             return smtp;
         }
@@ -269,14 +269,14 @@ namespace ANS.Model.Services
             {
 
                 var message = new MimeMessage();
-                message.From.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
+                message.From.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
                 //Cuando esté en producción activar esto:
                 /*
                 foreach (var e in _destinos)
                 {
                     message.To.Add(MailboxAddress.Parse(e.Correo));
                 }*/
-                message.To.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
+                message.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
                 message.Subject = subject;
 
                 var builder = new BodyBuilder();

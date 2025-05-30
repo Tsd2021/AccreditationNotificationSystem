@@ -33,6 +33,7 @@ namespace ANS.ViewModel
             EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarAcreditacionDiaADia());
 
             EjecutarDiaADiaExcelCommand = new RelayCommand(async () => await ejecutarExcelDiAADia());
+
             EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
         }
         public bool IsLoading

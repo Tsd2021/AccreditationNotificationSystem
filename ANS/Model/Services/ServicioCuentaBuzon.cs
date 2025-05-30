@@ -176,69 +176,6 @@ namespace ANS.Model.Services
 
         }
 
-        private List<Acreditacion>? obtenerAcreditaciones(CuentaBuzon unBuzon)
-        {
-            List<Acreditacion> listaAcreditaciones = new List<Acreditacion>();
-
-
-            using (SqlConnection conn = new SqlConnection(_conexionTSD))
-            {
-                conn.Open();
-
-                string query = "SELECT " +
-                                    "IDBUZON,IDOPERACION,FECHA,IDBANCO,IDCUENTA,MONEDA,NO_ENVIADO,MONTO " +
-                               "FROM " +
-                                    "ACREDITACIONDEPOSITODIEGOTEST " +
-                               "WHERE " +
-                                    "IDBUZON = @nc " +
-                               "AND " +
-                                    "IDCUENTA = @idCuenta " +
-                               "AND " +
-                                    "FECHA >= @fecha " +
-                               "AND " +
-                                    "IDBANCO = @bankId " +
-                               "AND MONEDA = @fuckingCoin " +
-                               "ORDER BY " +
-                                    "FECHA DESC";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-
-                cmd.Parameters.AddWithValue("@nc", unBuzon.NC);
-
-                cmd.Parameters.AddWithValue("@idCuenta", unBuzon.IdCuenta);
-
-                cmd.Parameters.AddWithValue("@bankId", ServicioBanco.getInstancia().getByNombre(unBuzon.Banco).BancoId);
-
-                cmd.Parameters.AddWithValue("@fecha", DateTime.Now.AddDays(-7).ToString("yyyyMMdd"));
-
-                cmd.Parameters.AddWithValue("@fuckingCoin", unBuzon.getIdMoneda());
-
-                using (SqlDataReader rdr = cmd.ExecuteReader())
-                {
-
-                    while (rdr.Read())
-                    {
-                        Acreditacion acre = new Acreditacion
-                        {
-                            IdBuzon = rdr.GetString(0),
-                            IdOperacion = rdr.GetInt64(1),
-                            Fecha = rdr.GetDateTime(2),
-                            IdBanco = rdr.GetInt32(3),
-                            IdCuenta = rdr.GetInt32(4),
-                            Moneda = rdr.GetInt32(5),
-                            No_Enviado = rdr.GetBoolean(6),
-                            Monto = rdr.GetDouble(7),
-                        };
-
-                        listaAcreditaciones.Add(acre);
-                    }
-
-                }
-
-            }
-
-            return listaAcreditaciones;
-        }
         public List<CuentaBuzon> getAllByTipoAcreditacion(string tipoAcreditacion)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
@@ -775,7 +712,7 @@ namespace ANS.Model.Services
                         if (ultIdOperacion > 0)
                         {
 
-                            if (!unaCuentaBuzon.Cierre.HasValue)
+                            if (unaCuentaBuzon.Cierre.HasValue)
                             {
                                 horaCierre = unaCuentaBuzon.Cierre.Value.TimeOfDay;
                             }
@@ -1234,6 +1171,7 @@ namespace ANS.Model.Services
                 try
                 {
                     string asu, cue;
+
                     if (b.NombreBanco.Equals(VariablesGlobales.santander, StringComparison.OrdinalIgnoreCase)
                      || b.NombreBanco.Equals(VariablesGlobales.scotiabank, StringComparison.OrdinalIgnoreCase))
                     {
@@ -1423,7 +1361,11 @@ namespace ANS.Model.Services
 
                 // Guardar y enviar
                 string nombreArchivo = $"Tesoreria_Tanda_{numTanda}_{ciudad.ToUpper()}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+                // PRODUCCION:
+                 string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+
+                //TESTING:
+                //string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
                 wb.SaveAs(filePath);
 
                 Console.WriteLine($"Excel de Tesorería generado: {filePath}");
@@ -1674,6 +1616,8 @@ namespace ANS.Model.Services
 
             if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToLower() == VariablesGlobales.diaxdia.ToLower())
             {
+
+                //Si es Scotia,sacar 
                 query = @"SELECT 
                         cC.NN,
                         CB.EMPRESA,
@@ -1704,7 +1648,7 @@ namespace ANS.Model.Services
                         CB.EMPRESA,
                         cb.IDCLIENTE,
                         config.TipoAcreditacion 
-                        ORDER BY cC.NN ASC";
+                        ORDER BY cc.NN ASC";
             }
 
             if (banco.NombreBanco.ToUpper() == VariablesGlobales.hsbc.ToUpper() ||

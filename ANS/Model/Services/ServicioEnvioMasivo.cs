@@ -2,7 +2,6 @@
 using System.Data;
 using ClosedXML.Excel;
 using System.IO;
-using System.Reflection;
 
 
 namespace ANS.Model.Services
@@ -376,7 +375,6 @@ namespace ANS.Model.Services
                     hastaTime = new TimeSpan(7, 0, 0); ;
                     break;
 
-
                 //Son los cierre > 7 pero < a 15:30
                 case 2:
                     desdeTime = new TimeSpan(7, 0, 0);
@@ -438,6 +436,47 @@ namespace ANS.Model.Services
                         retorno.Add(dto);
                     }
                 }
+
+                if (numEnvioMasivo == 1)
+                {
+
+                    string queryParaObtenerHenderson = @"select distinct NC,NN,SUCURSAL,CIERRE,cc.IDCLIENTE from cc
+                                                         inner join ClientesRelacionadosTest as cr 
+                                                         on cc.IDCLIENTE = cr.IdRazonSocial 
+                                                         where cr.IdCliente = 164 
+                                                         and tanda = 1 and estado = 'alta' ";
+
+                    SqlCommand cmd2 = new SqlCommand(queryParaObtenerHenderson, conn);
+
+                    using (SqlDataReader reader2 = await cmd2.ExecuteReaderAsync())
+                    {
+                        int ncOrdinal = reader2.GetOrdinal("NC");
+
+                        int nnOrdinal = reader2.GetOrdinal("NN");
+
+                        int sucursalOrdinal = reader2.GetOrdinal("SUCURSAL");
+
+                        int cierreOrdinal = reader2.GetOrdinal("CIERRE");
+
+                        int idClienteOrdinal = reader2.GetOrdinal("IDCLIENTE");
+
+                        while (await reader2.ReadAsync())
+                        {
+
+                            BuzonDTO dto = new BuzonDTO();
+                            dto.NC = reader2.GetString(ncOrdinal);
+                            dto.NN = reader2.GetString(nnOrdinal);
+                            dto.Sucursal = reader2.GetString(sucursalOrdinal);
+                            dto.Cierre = reader2.GetDateTime(cierreOrdinal);
+                            dto.Email = "dchiquiar@tecnisegur.com.uy";
+                            dto.IdCliente = reader2.GetInt32(idClienteOrdinal);
+                            dto.EsHenderson = true;
+                            dto.NumeroEnvioMasivo = numEnvioMasivo;
+                            retorno.Add(dto);
+                        }
+                    }
+
+                }
             }
             return retorno;
         }
@@ -447,7 +486,7 @@ namespace ANS.Model.Services
             // Inicializar out-params
             subject = body = fileName = string.Empty;
 
-            // BaseDirectory nunca es null y apunta al directorio donde se ejecuta la app
+            // Directorio base y logo
             string baseDir = AppContext.BaseDirectory;
             var logoPath = Path.Combine(baseDir, "Images", "logoTecniExcel.png");
 
@@ -463,78 +502,56 @@ namespace ANS.Model.Services
             ws.Range("C1", "H1").Merge().Value =
                 $"TOTALES Y DEPÓSITOS DE BUZONERA {buzonDTO.NN.ToUpper()}";
 
-            // 2) Calcular fechaInicio y fechaCierre
-            DateTime fechaInicio;
-            TimeSpan horaCierre = buzonDTO.Cierre.TimeOfDay;
-            DateTime fechaCierre = new(
-                DateTime.Now.Year,
-                DateTime.Now.Month,
-                DateTime.Now.Day,
-                horaCierre.Hours,
-                horaCierre.Minutes,
-                0
-            );
-
+            // 2) Fechas inicio y cierre
             DateTime hoy = DateTime.Today;
-            if (!buzonDTO.EsHenderson)
+            DateTime fechaInicio;
+            DateTime fechaCierre;
+
+            if (buzonDTO.EsHenderson && buzonDTO.NumeroEnvioMasivo == 1)
             {
                 int diasARestar = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
                 var baseDate = hoy.AddDays(-diasARestar);
-                var t = buzonDTO.Cierre.TimeOfDay;
-                fechaInicio = new(
-                    baseDate.Year,
-                    baseDate.Month,
-                    baseDate.Day,
-                    t.Hours,
-                    t.Minutes,
-                    0
-                );
+                fechaInicio = new DateTime(baseDate.Year, baseDate.Month, baseDate.Day, 14, 30, 0);
+                fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, 7, 0, 0);
             }
             else
             {
-                DateTime baseDate;
-                TimeSpan t;
-                switch (buzonDTO.NumeroEnvioMasivo)
+                var horaCierreDto = buzonDTO.Cierre.TimeOfDay;
+                fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, horaCierreDto.Hours, horaCierreDto.Minutes, 0);
+
+                if (!buzonDTO.EsHenderson)
                 {
-                    case 1:
-                        baseDate = hoy.DayOfWeek == DayOfWeek.Monday
-                            ? hoy.AddDays(-3)
-                            : hoy.AddDays(-1);
-                        t = new TimeSpan(14, 30, 0);
-                        break;
-                    case 2:
-                        baseDate = hoy;
-                        t = new TimeSpan(7, 0, 0);
-                        break;
-                    default:
-                        baseDate = buzonDTO.Cierre.Date;
-                        t = buzonDTO.Cierre.TimeOfDay;
-                        break;
+                    int diasARestar = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
+                    var baseDate = hoy.AddDays(-diasARestar);
+                    var t = buzonDTO.Cierre.TimeOfDay;
+                    fechaInicio = new DateTime(baseDate.Year, baseDate.Month, baseDate.Day, t.Hours, t.Minutes, 0);
                 }
-                fechaInicio = new(
-                    baseDate.Year,
-                    baseDate.Month,
-                    baseDate.Day,
-                    t.Hours,
-                    t.Minutes,
-                    0
-                );
+                else
+                {
+                    switch (buzonDTO.NumeroEnvioMasivo)
+                    {
+                        case 2:
+                            fechaInicio = new DateTime(hoy.Year, hoy.Month, hoy.Day, 7, 0, 0);
+                            break;
+                        default:
+                            var cierreDto = buzonDTO.Cierre;
+                            fechaInicio = new DateTime(cierreDto.Year, cierreDto.Month, cierreDto.Day, cierreDto.Hour, cierreDto.Minute, 0);
+                            break;
+                    }
+                }
             }
 
             string inicioStr = fechaInicio.ToString("dd/MM/yyyy HH:mm");
             string cierreStr = fechaCierre.ToString("dd/MM/yyyy HH:mm");
-            ws.Range("C2", "H2").Merge().Value = $"DEL {inicioStr} AL {cierreStr}";
+            ws.Range("C2", "H2").Merge().Value =
+                $"DEL {inicioStr} AL {cierreStr}";
 
-            // 3) Totales
+            // 3) Totales agrupados por empresa depositante
             ws.Cell(5, 1).Value = "TOTALES:";
             ws.Cell(5, 1).Style.Font.SetBold();
 
             var headerColor = XLColor.FromHtml("#D9B382");
-            var colsTot = new[]
-            {
-        "EMPRESA", "TOTAL PESOS", "TOTAL DÓLARES",
-        "TOTAL ARG", "TOTAL REALES", "TOTAL EUROS"
-    };
+            var colsTot = new[] { "EMPRESA", "TOTAL PESOS", "TOTAL DÓLARES", "TOTAL ARG", "TOTAL REALES", "TOTAL EUROS" };
             int rowHeaderTot = 6;
             for (int i = 0; i < colsTot.Length; i++)
             {
@@ -546,65 +563,63 @@ namespace ANS.Model.Services
                 c.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             }
 
-            // Sumarización por divisa
-            double totPesos = buzonDTO.Acreditaciones
-                .Where(a => a.Divisa == 1).Sum(a => a.Monto);
-            double totDolares = buzonDTO.Acreditaciones
-                .Where(a => a.Divisa == 2).Sum(a => a.Monto);
-            double totArg = buzonDTO.Acreditaciones
-                .Where(a => a.Divisa == 3).Sum(a => a.Monto);
-            double totReales = buzonDTO.Acreditaciones
-                .Where(a => a.Divisa == 4).Sum(a => a.Monto);
-            double totEuros = buzonDTO.Acreditaciones
-                .Where(a => a.Divisa == 5).Sum(a => a.Monto);
+            // Agrupar acreditaciones por empresa
+            var totalesPorEmpresa = buzonDTO.Acreditaciones
+                .GroupBy(a => a.Empresa)
+                .Select(g => new {
+                    Empresa = g.Key,
+                    Pesos = g.Where(a => a.Divisa == 1).Sum(a => a.Monto),
+                    Dolares = g.Where(a => a.Divisa == 2).Sum(a => a.Monto),
+                    Arg = g.Where(a => a.Divisa == 3).Sum(a => a.Monto),
+                    Reales = g.Where(a => a.Divisa == 4).Sum(a => a.Monto),
+                    Euros = g.Where(a => a.Divisa == 5).Sum(a => a.Monto)
+                })
+                .ToList();
 
-            // Fila de la empresa
-            int rowEmpresa = rowHeaderTot + 1;
-            ws.Cell(rowEmpresa, 1).Value = buzonDTO.Empresa ?? string.Empty;
-            ws.Cell(rowEmpresa, 2).Value = totPesos;
-            ws.Cell(rowEmpresa, 3).Value = totDolares;
-            ws.Cell(rowEmpresa, 4).Value = totArg;
-            ws.Cell(rowEmpresa, 5).Value = totReales;
-            ws.Cell(rowEmpresa, 6).Value = totEuros;
+            // Filas de cada empresa
+            int row = rowHeaderTot + 1;
+            foreach (var t in totalesPorEmpresa)
+            {
+                ws.Cell(row, 1).Value = t.Empresa;
+                ws.Cell(row, 2).Value = t.Pesos;
+                ws.Cell(row, 3).Value = t.Dolares;
+                ws.Cell(row, 4).Value = t.Arg;
+                ws.Cell(row, 5).Value = t.Reales;
+                ws.Cell(row, 6).Value = t.Euros;
 
+                for (int col = 2; col <= 6; col++)
+                {
+                    var cell = ws.Cell(row, col);
+                    cell.Style.NumberFormat.SetFormat("#,##0.00");
+                    cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                }
+                ws.Cell(row, 1).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                row++;
+            }
+
+            // Fila TOTAL general
+            ws.Cell(row, 1).Value = "TOTAL";
+            ws.Cell(row, 2).Value = totalesPorEmpresa.Sum(x => x.Pesos);
+            ws.Cell(row, 3).Value = totalesPorEmpresa.Sum(x => x.Dolares);
+            ws.Cell(row, 4).Value = totalesPorEmpresa.Sum(x => x.Arg);
+            ws.Cell(row, 5).Value = totalesPorEmpresa.Sum(x => x.Reales);
+            ws.Cell(row, 6).Value = totalesPorEmpresa.Sum(x => x.Euros);
             for (int col = 2; col <= 6; col++)
             {
-                var cell = ws.Cell(rowEmpresa, col);
+                var cell = ws.Cell(row, col);
                 cell.Style.NumberFormat.SetFormat("#,##0.00");
                 cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                 cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             }
-            ws.Cell(rowEmpresa, 1).Style.Border.OutsideBorder
-                = XLBorderStyleValues.Thin;
-
-            // Fila TOTAL
-            int rowTotal = rowHeaderTot + 2;
-            ws.Cell(rowTotal, 1).Value = "TOTAL";
-            ws.Cell(rowTotal, 2).Value = totPesos;
-            ws.Cell(rowTotal, 3).Value = totDolares;
-            ws.Cell(rowTotal, 4).Value = totArg;
-            ws.Cell(rowTotal, 5).Value = totReales;
-            ws.Cell(rowTotal, 6).Value = totEuros;
-            for (int col = 2; col <= 6; col++)
-            {
-                var cell = ws.Cell(rowTotal, col);
-                cell.Style.NumberFormat.SetFormat("#,##0.00");
-                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-            }
-            ws.Cell(rowTotal, 1).Style.Border.OutsideBorder
-                = XLBorderStyleValues.Thin;
+            ws.Cell(row, 1).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
             // 4) Depósitos
-            ws.Cell(rowTotal + 2, 1).Value = "DEPOSITOS:";
-            ws.Cell(rowTotal + 2, 1).Style.Font.SetBold();
+            int rowHeaderDet = row + 2;
+            ws.Cell(rowHeaderDet - 1, 1).Value = "DEPOSITOS:";
+            ws.Cell(rowHeaderDet - 1, 1).Style.Font.SetBold();
 
-            var colsDet = new[]
-            {
-        "OPERACIÓN", "FECHA", "MONEDA",
-        "TOTAL", "USUARIO", "EMPRESA", "SUCURSAL"
-    };
-            int rowHeaderDet = rowTotal + 3;
+            var colsDet = new[] { "OPERACIÓN", "FECHA", "MONEDA", "TOTAL", "USUARIO", "EMPRESA", "SUCURSAL" };
             for (int i = 0; i < colsDet.Length; i++)
             {
                 var c = ws.Cell(rowHeaderDet, i + 1);
@@ -615,7 +630,6 @@ namespace ANS.Model.Services
                 c.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             }
 
-            // Detalle de cada acreditación
             int rowDet = rowHeaderDet + 1;
             foreach (var a in buzonDTO.Acreditaciones)
             {
@@ -625,15 +639,13 @@ namespace ANS.Model.Services
                 ws.Cell(rowDet, 3).Value = a.Moneda;
                 ws.Cell(rowDet, 4).Value = a.Monto;
                 ws.Cell(rowDet, 4).Style.NumberFormat.SetFormat("#,##0.00");
-                ws.Cell(rowDet, 4).Style.Alignment.Horizontal
-                    = XLAlignmentHorizontalValues.Right;
+                ws.Cell(rowDet, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                 ws.Cell(rowDet, 5).Value = a.Usuario;
                 ws.Cell(rowDet, 6).Value = a.Empresa;
                 ws.Cell(rowDet, 7).Value = buzonDTO.Sucursal;
 
                 ws.Range(rowDet, 1, rowDet, colsDet.Length)
-                  .Style.Border.OutsideBorder
-                  = XLBorderStyleValues.Thin;
+                  .Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
                 rowDet++;
             }
@@ -656,8 +668,6 @@ del {inicioStr}<br/>al {cierreStr}</p>
 
             return ms;
         }
-
-
 
 
 

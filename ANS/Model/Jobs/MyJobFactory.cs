@@ -24,9 +24,7 @@ namespace ANS.Model.Jobs
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
             Type jobType = bundle.JobDetail.JobType;
-
             #region BBVA_JOBS
-
             #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarPuntoAPuntoBBVAJob))
             {
@@ -129,30 +127,35 @@ namespace ANS.Model.Jobs
             #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarTanda1HendersonScotiabank))
             {
-
                 return new AcreditarTanda1HendersonScotiabank(_servicioCuentaBuzon);
             }
 
-
             if (jobType == typeof(AcreditarTanda2HendersonScotiabank))
             {
-
                 return new AcreditarTanda2HendersonScotiabank(_servicioCuentaBuzon);
             }
 
+            if(jobType == typeof(AcreditarDiaADiaScotiabank))
+            {
+                return new AcreditarDiaADiaScotiabank(_servicioCuentaBuzon);
+            }
             #endregion
+
             #region JOBS_QUE_ENVIAN_EXCEL
             if (jobType == typeof(ExcelTanda1HendersonScotiabank))
             {
 
                 return new ExcelTanda1HendersonScotiabank(_servicioCuentaBuzon);
             }
-
-
             if (jobType == typeof(ExcelTanda2HendersonScotiabank))
             {
 
                 return new ExcelTanda2HendersonScotiabank(_servicioCuentaBuzon);
+            }
+
+            if(jobType == typeof(ExcelScotiabankDiaADia))
+            {
+                return new ExcelScotiabankDiaADia(_servicioCuentaBuzon);
             }
             #endregion
             #endregion
@@ -207,7 +210,6 @@ namespace ANS.Model.Jobs
                 return new EnvioNiveles(ServicioNiveles.getInstancia());
             }
             #endregion
-
             return (IJob)Activator.CreateInstance(jobType);
         }
         public void ReturnJob(IJob job) { }
