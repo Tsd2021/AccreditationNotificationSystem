@@ -11,8 +11,6 @@ namespace ANS
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-
-        
         private VMmainWindow _viewModel;
         public MainWindow()
         {
@@ -28,6 +26,16 @@ namespace ANS
         }
         public void MostrarAviso(string msg, System.Windows.Media.Color color)
         {
+            if (this.WindowState == WindowState.Minimized)
+                return;
+
+
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => MostrarAviso(msg, color));
+                return;
+            }
+
             var model = new SnackbarMsg
 
             {

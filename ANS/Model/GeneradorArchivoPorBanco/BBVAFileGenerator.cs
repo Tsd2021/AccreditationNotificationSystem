@@ -6,7 +6,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 {
     public class BBVAFileGenerator : IBancoModoAcreditacion
     {
-        private const string CuentaTransportadora = "007584652";
+        private const string CuentaTransportadora = "7584652";
         //ruta produccion:
         private readonly string rutaBase = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\BBVA";
 
@@ -68,7 +68,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         string sub = FormatString(parts[1].Trim(), 3);
                         string mon = buz.Divisa;
                         string prod = FormatString(buz.Producto.ToString(), 3);
-                        string trans = FormatString(CuentaTransportadora, 9);
+                        string trans = FormatString(CuentaTransportadora, 7);
                         string remito = FormatString(buz.IdReferenciaAlCliente + "X" + dep.IdOperacion, 12);
                         remito = remito.Length > 12 ? remito.Substring(0, 12) : remito;
                         double suma = dep.Totales?.Sum(t => t.ImporteTotal) ?? 0;

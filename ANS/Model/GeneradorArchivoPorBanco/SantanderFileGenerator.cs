@@ -408,25 +408,29 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         private void agregarLineaAlStringBuilder_Agrupado(StringBuilder lineas, CuentaBuzon unaCuenta, double totalPorCuenta)
         {
 
-            string referenciaDetalle = "";
-
             string referencia = unaCuenta.IdReferenciaAlCliente;
-
             if (CuentasTata.ContainsKey(unaCuenta.IdCuenta))
             {
                 referencia = ReemplazarPrimerCaracter(unaCuenta.IdReferenciaAlCliente, CuentasTata[unaCuenta.IdCuenta]);
             }
 
+            // Formatear sucursal a 4 dígitos y cuenta a 12 dígitos
+            var sucursalFormateada = unaCuenta.SucursalCuenta.PadLeft(4, '0');
+            var cuentaFormateada = unaCuenta.Cuenta.PadLeft(12, '0');
 
-            lineas.AppendLine($"{_tipoRegistro};{_tipoOperacion};{unaCuenta.SucursalCuenta};{unaCuenta.Cuenta};{unaCuenta.Divisa};{totalPorCuenta}00;{_tipoMovimiento};{_tipoDetalle};{referenciaDetalle}");
-
+            // Construir línea
+            lineas.AppendLine(
+                $"{_tipoRegistro};{_tipoOperacion};" +
+                $"{sucursalFormateada};{cuentaFormateada};" +
+                $"{unaCuenta.Divisa};{totalPorCuenta}00;" +
+                $"{_tipoMovimiento};{_tipoDetalle};{referencia}"
+            );
         }
         //METODO PARA CREAR LINEAS EN ARCHIVOS PUNTO A PUNTO!
         private void agregarLineaAlStringBuilder_Individual(StringBuilder sb, CuentaBuzon cb, Deposito depo, Total tot)
         {
 
             string referenciaDetalle = "";
-
             string referencia = cb.IdReferenciaAlCliente;
 
             if (CuentasTata.ContainsKey(cb.IdCliente))
@@ -436,8 +440,17 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             referenciaDetalle = $"{referencia}-{depo.IdOperacion}";
 
+            // Formatear sucursal a 4 dígitos y cuenta a 12 dígitos
+            var sucursalFormateada = cb.SucursalCuenta.PadLeft(4, '0');
+            var cuentaFormateada = cb.Cuenta.PadLeft(12, '0');
 
-            sb.AppendLine($"{_tipoRegistro};{_tipoOperacion};{cb.SucursalCuenta};{cb.Cuenta};{cb.Divisa};{tot.ImporteTotal}00;{_tipoMovimiento};{_tipoDetalle};{referenciaDetalle}");
+            sb.AppendLine(
+                $"{_tipoRegistro};{_tipoOperacion};" +
+                $"{sucursalFormateada};{cuentaFormateada};" +
+                $"{cb.Divisa};{tot.ImporteTotal}00;" +
+                $"{_tipoMovimiento};{_tipoDetalle};{referenciaDetalle}"// +
+              //  $"{referencia}"
+            );
         }
         private string ReemplazarPrimerCaracter(string input, int newNumber)
         {

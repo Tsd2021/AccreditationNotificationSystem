@@ -31,7 +31,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea EXCEL Tanda 2 Scotiabank", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Ejecutando tarea EXCEL Tanda 2 Henderson", Color.FromRgb(255, 102, 102));
 
                 });
 
