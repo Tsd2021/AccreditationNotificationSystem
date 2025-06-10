@@ -1,0 +1,12 @@
+".vs/" 
+"bin/" 
+"obj/" 
+"*.user" 
+"*.suo" 
+"*.log" 
+"*.cache" 
+"*.ide" 
+**/bin/
+**/obj/
+ANS/bin/
+ANS/obj/
