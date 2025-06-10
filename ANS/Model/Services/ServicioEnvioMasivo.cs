@@ -375,24 +375,28 @@ namespace ANS.Model.Services
                     hastaTime = new TimeSpan(7, 0, 0); ;
                     break;
 
-                //Son los cierre > 7 pero < a 15:30
+                //Son los cierre > 7 pero < a 14:30
                 case 2:
                     desdeTime = new TimeSpan(7, 0, 0);
+                    hastaTime = new TimeSpan(14, 30, 0);
+                    break;
+
+                case 3:
+                    // rangos de 14:30 a 15:30
+                    desdeTime = new TimeSpan(14, 30, 0);
                     hastaTime = new TimeSpan(15, 30, 0);
                     break;
 
-                //Son los CIERRE > 15:30
-                case 3:
+                case 4:
                     // rangos de 15:30 a 19:00
                     desdeTime = new TimeSpan(15, 30, 0);
                     hastaTime = new TimeSpan(19, 0, 0);
-
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-            query = @"SELECT NC, NN, SUCURSAL, CIERRE,IDCLIENTE 
+            query =    @"SELECT NC, NN, SUCURSAL, CIERRE,IDCLIENTE 
                        FROM dbo.CC 
                        WHERE ESTADO = 'alta' 
                        AND CAST(CIERRE AS time) > @desdeTime 

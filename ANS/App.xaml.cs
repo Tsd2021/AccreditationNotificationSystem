@@ -174,7 +174,7 @@ namespace ANS
         {
             #region Tarea 1: ENVIO NIVELES  ( STARTS 9:10:00 ENDS 22:00:00)
 
-            IJobDetail jobEnvioNiveles = JobBuilder.Create<EnvioMasivo>()
+            IJobDetail jobEnvioNiveles = JobBuilder.Create<EnvioNiveles>()
                 .WithIdentity("EnvioNivelesJob", "GrupoEnvioNiveles")
                 .Build();
 
@@ -206,8 +206,8 @@ namespace ANS
             ServicioEmail.getInstancia();
             ServicioNiveles.getInstancia();
             ServicioLog.getInstancia();
-            Exception e = new Exception("test-SAMA");
-            ServicioLog.instancia.WriteLog(e, "bank-SAMA", "type-SAMA");
+            Exception e = new Exception("test");
+            ServicioLog.instancia.WriteLog(e, "bank", "type");
         }
         private void preCargarListaNC()
         {
@@ -236,7 +236,7 @@ namespace ANS
 
             #endregion
 
-            #region Tarea 2: ENVIO MASIVO 2 (14:45:00)
+            #region Tarea 2: ENVIO MASIVO 2 (14:50:00)
       
             IJobDetail jobEnvioMasivo2 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo2Job", "GrupoEnvioMasivo")
@@ -246,11 +246,11 @@ namespace ANS
      
             ITrigger triggerEnvioMasivo2 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo2Trigger", "GrupoEnvioMasivo")
-                .WithCronSchedule("0 45 14 ? * MON-FRI")
+                .WithCronSchedule("0 50 14 ? * MON-FRI")
                 .Build();
             #endregion
 
-            #region Tarea 2: ENVIO MASIVO 3 (19:00:0)
+            #region Tarea 3: ENVIO MASIVO 3 (16:10:00)
        
             IJobDetail jobEnvioMasivo3 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo3Job", "GrupoEnvioMasivo")
@@ -259,7 +259,21 @@ namespace ANS
 
             ITrigger triggerEnvioMasivo3 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo3Trigger", "GrupoEnvioMasivo")
-                .WithCronSchedule("0 0 19 ? * MON-FRI")
+                .WithCronSchedule("0 10 16 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
+            #region Tarea 4: ENVIO MASIVO 4 (19:40:0)
+
+            IJobDetail jobEnvioMasivo4 = JobBuilder.Create<EnvioMasivo>()
+                .WithIdentity("EnvioMasivo4Job", "GrupoEnvioMasivo")
+                .UsingJobData("numEnvioMasivo", 4)
+                .Build();
+
+            ITrigger triggerEnvioMasivo4 = TriggerBuilder.Create()
+                .WithIdentity("EnvioMasivo4Trigger", "GrupoEnvioMasivo")
+                .WithCronSchedule("0 40 19 ? * MON-FRI")
                 .Build();
 
             #endregion
@@ -271,6 +285,8 @@ namespace ANS
                 await scheduler.ScheduleJob(jobEnvioMasivo2, triggerEnvioMasivo2);
 
                 await scheduler.ScheduleJob(jobEnvioMasivo3, triggerEnvioMasivo3);
+
+                await scheduler.ScheduleJob(jobEnvioMasivo4, triggerEnvioMasivo4);
 
             }
             catch (Exception e)
@@ -539,7 +555,7 @@ namespace ANS
                                                     .WithIdentity("SantanderTriggerP2P", "GrupoTrabajoSantander")
                                                     .WithDailyTimeIntervalSchedule(x => x
                                                     .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 0))
-                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(15, 30))
+                                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(15, 45))
                                                     .OnDaysOfTheWeek(new[]
                                                     {
                                                         DayOfWeek.Monday,
