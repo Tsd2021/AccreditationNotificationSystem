@@ -223,100 +223,142 @@ namespace ANS.Model.Services
         }
 
         //DEVUELVE DE CADA NN Y SU EMPRESA, EL MONTO TOTAL
-        public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesByFechaBancoClienteYTipoAcreditacion(DateTime desde, DateTime hasta, Cliente cli, Banco bank, ConfiguracionAcreditacion tipoAcreditacion)
+        public async Task<List<DtoAcreditacionesPorEmpresa>>
+    getAcreditacionesByFechaBancoClienteYTipoAcreditacion(
+        DateTime desde,
+        DateTime hasta,
+        Cliente cli,
+        Banco bank,
+        ConfiguracionAcreditacion tipoAcreditacion)
         {
+            var retorno = new List<DtoAcreditacionesPorEmpresa>();
+            bool esBBVA = bank.NombreBanco
+                .Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase);
 
-            List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
-            //debo obtener todas las acreditaciones de una fecha desde y fecha hasta,por banco
-            
-            if (desde != DateTime.MinValue && hasta != DateTime.MinValue && bank != null)
+            // 1) Elige la consulta según sea BBVA o no
+            string sql = esBBVA
+                ? @"
+            SELECT
+                cc.NN,
+                cb.CUENTA,
+                acc.MONEDA     AS MonedaCode,
+                cc.SUCURSAL as CIUDAD,
+                SUM(acc.MONTO) AS TotalMonto
+            FROM ConfiguracionAcreditacion config
+            INNER JOIN CUENTASBUZONES cb
+                ON config.CuentasBuzonesId = cb.ID
+            INNER JOIN cc
+                ON config.NC = cc.NC
+            INNER JOIN AcreditacionDepositoDiegoTest acc
+                ON acc.IDBUZON   = config.NC
+               AND acc.IDCUENTA  = cb.ID
+            WHERE UPPER(cb.BANCO)     = UPPER(@banco)
+              AND cb.IDCLIENTE        = @idCliente
+              AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
+            GROUP BY
+                cc.NN, cb.CUENTA, acc.MONEDA, cc.SUCURSAL;"
+                : @"
+            SELECT
+                cc.NN,
+                cb.EMPRESA,
+                cb.CUENTA,
+                cb.SUCURSAL,
+                acc.MONEDA    AS MonedaCode,
+                cc.SUCURSAL  AS Ciudad,
+                SUM(acc.MONTO) AS TotalMonto
+            FROM ConfiguracionAcreditacion config
+            INNER JOIN CUENTASBUZONES cb
+                ON config.CuentasBuzonesId = cb.ID
+            INNER JOIN cc
+                ON config.NC = cc.NC
+            INNER JOIN AcreditacionDepositoDiegoTest acc
+                ON acc.IDBUZON   = config.NC
+               AND acc.IDCUENTA  = cb.ID
+            WHERE UPPER(config.TipoAcreditacion) = UPPER(@tipoAcred)
+              AND UPPER(cb.BANCO)                 = UPPER(@banco)
+              AND acc.FECHA >= @FechaDesde
+              AND acc.FECHA <= @FechaHasta
+            GROUP BY
+                cc.NN,
+                cb.EMPRESA,
+                cb.CUENTA,
+                cb.SUCURSAL,
+                acc.MONEDA,
+                cc.SUCURSAL;";
+
+            using var conn = new SqlConnection(_conexionTSD);
+            using var cmd = new SqlCommand(sql, conn);
+
+            // 2) Parámetros comunes
+            cmd.Parameters.AddWithValue("@banco", bank.NombreBanco);
+
+            if (esBBVA)
             {
-                try
+                cmd.Parameters.AddWithValue("@idCliente", cli.IdCliente);
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@tipoAcred", tipoAcreditacion.TipoAcreditacion);
+                cmd.Parameters.AddWithValue("@FechaDesde", desde);
+                cmd.Parameters.AddWithValue("@FechaHasta", hasta);
+            }
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            // 3) Mapear según esquema de columnas
+            if (esBBVA)
+            {
+                int ordNN = reader.GetOrdinal("NN");
+                int ordCuenta = reader.GetOrdinal("CUENTA");
+                int ordMonedaCode = reader.GetOrdinal("MonedaCode");
+                int ordTotal = reader.GetOrdinal("TotalMonto");
+                int ordCiudad = reader.GetOrdinal("CIUDAD");
+
+                while (await reader.ReadAsync())
                 {
-
-
-                    using (SqlConnection conn = new SqlConnection(_conexionTSD))
+                    var dto = new DtoAcreditacionesPorEmpresa
                     {
-                        //ATENTO EN EL ON DONDE SE JOINEAN LAS TABLAS POR CONFIG.NC = CC.NC PRUEBA
-                      string query =    @"SELECT   
-                                        cc.NN,      
-                                        cb.EMPRESA,cb.cuenta,   
-                                        cb.SUCURSAL, 
-                                        cb.moneda, 
-                                        cc.sucursal as CIUDAD, 
-                                        SUM(acc.monto) AS TotalMonto 
-                                        FROM ConfiguracionAcreditacion AS config 
-                                        INNER JOIN CUENTASBUZONES AS cb  
-                                        ON config.CuentasBuzonesId = cb.ID 
-                                        INNER JOIN cc  
-                                        ON config.NC = cc.NC 
-                                        INNER JOIN AcreditacionDepositoDiegoTest AS acc  
-                                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
-                                        WHERE config.TipoAcreditacion = @tipoAcreditacion 
-                                        AND cb.BANCO = @banco 
-                                        AND acc.FECHA >= @FechaDesde 
-                                        AND acc.FECHA <= @FechaHasta 
-                                        GROUP BY  
-                                        cc.NN, 
-                                        cb.EMPRESA, 
-                                        cb.cuenta, 
-                                        cb.SUCURSAL, 
-                                        cb.moneda, 
-                                        cc.sucursal";
-
-                        using (SqlCommand cmd = new SqlCommand(query, conn))
-                        {
-                            cmd.Parameters.AddWithValue("@banco", bank.NombreBanco);
-
-                            cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion.TipoAcreditacion);
-
-                            cmd.Parameters.AddWithValue("@FechaDesde", desde);
-
-                            cmd.Parameters.AddWithValue("@FechaHasta", hasta);
-
-                            conn.Open();
-
-                            using (var reader = await cmd.ExecuteReaderAsync())
-                            {
-                           
-                                int ordinalNN = reader.GetOrdinal("NN");
-                                int ordinalSucursal = reader.GetOrdinal("sucursal");
-                                int ordinalEmpresa = reader.GetOrdinal("EMPRESA");
-                                int ordinalCuenta = reader.GetOrdinal("cuenta");
-                                int ordinalMoneda = reader.GetOrdinal("moneda");
-                                int ordinalCiudad = reader.GetOrdinal("CIUDAD");
-                                int ordinalMonto = reader.GetOrdinal("TotalMonto");
-
-
-                                while (await reader.ReadAsync())
-                                {
-                                    DtoAcreditacionesPorEmpresa dto = new DtoAcreditacionesPorEmpresa
-                                    {
-
-                                        NN = reader.GetString(ordinalNN),
-                                        Empresa = reader.GetString(ordinalEmpresa),
-                                        Sucursal = reader.GetString(ordinalSucursal),
-                                        NumeroCuenta = reader.GetString(ordinalCuenta),
-                                        Moneda = reader.GetString(ordinalMoneda),
-                                        Ciudad = reader.GetString(ordinalCiudad),
-                                        Monto = reader.GetDouble(ordinalMonto)
-                                    };
-
-
-                                    dto.setMoneda();
-
-                                    retorno.Add(dto);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw e;
+                        NN = reader.GetString(ordNN).Trim(),
+                        NumeroCuenta = reader.GetString(ordCuenta).Trim(),
+                        Divisa = reader.GetInt32(ordMonedaCode),
+                        Monto = reader.GetDouble(ordTotal),
+                        Ciudad = reader.GetString(ordCiudad).Trim()
+                        // Empresa, Sucursal y Ciudad no interesan para BBVA
+                    };
+                    dto.setMoneda();
+                    retorno.Add(dto);
                 }
             }
+            else
+            {
+                int ordNN = reader.GetOrdinal("NN");
+                int ordEmpresa = reader.GetOrdinal("EMPRESA");
+                int ordCuenta = reader.GetOrdinal("CUENTA");
+                int ordSucursal = reader.GetOrdinal("SUCURSAL");
+                int ordMonedaCode = reader.GetOrdinal("MonedaCode");
+                int ordCiudad = reader.GetOrdinal("Ciudad");
+                int ordTotal = reader.GetOrdinal("TotalMonto");
+
+                while (await reader.ReadAsync())
+                {
+                    var dto = new DtoAcreditacionesPorEmpresa
+                    {
+                        NN = reader.GetString(ordNN).Trim(),
+                        Empresa = reader.GetString(ordEmpresa).Trim(),
+                        NumeroCuenta = reader.GetString(ordCuenta).Trim(),
+                        Sucursal = reader.GetString(ordSucursal).Trim(),
+                        Divisa = reader.GetInt32(ordMonedaCode),
+                        Ciudad = reader.GetString(ordCiudad).Trim(),
+                        Monto = reader.GetDouble(ordTotal)
+                    };
+                    dto.setMoneda();
+                    retorno.Add(dto);
+                }
+            }
+
             return retorno;
         }
+
     }
 }

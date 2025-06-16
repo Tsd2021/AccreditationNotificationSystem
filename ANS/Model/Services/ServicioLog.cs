@@ -25,7 +25,12 @@ namespace ANS.Model.Services
             string line = $"[ERROR] {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Bank: {bank} | AccreditationType: {accreditationType} | Exception: {e.Message}";
 
             // Directorio y nombre de archivo con fecha actual
-            string logDirectory = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\Logs\";
+
+            //Testing Prod:
+            //  string logDirectory = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\Logs\";
+
+            //Testing Local:
+            string logDirectory = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\Logs\";
             string fileName = $"TAAS_Log{DateTime.Now:ddMMyyyy}.txt";
             string filePath = Path.Combine(logDirectory, fileName);
 
