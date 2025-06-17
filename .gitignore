@@ -1,0 +1,14 @@
+".vs/" 
+"bin/" 
+"obj/" 
+"*.user" 
+"*.suo" 
+"*.log" 
+"*.cache" 
+"*.ide" 
+**/bin/
+**/obj/
+ANS/bin/
+ANS/obj/
+ANS/bin/Release/net8.0-windows/win-x64/publish/
+C:/Users/dchiquiar.ABUDIL/source/repos/Tsd2021/AccreditationNotificationSystem/ANS/bin
