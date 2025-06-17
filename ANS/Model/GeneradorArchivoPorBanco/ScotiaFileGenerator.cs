@@ -240,9 +240,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     subFolder = $"{ciudad} DOLARES";
                 }
                 // Ruta Test Producción:
-                //string baseDirectory = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK";
+                string baseDirectory = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK";
                 // Ruta Test Local:
-                string baseDirectory = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\SCOTIABANK";
+                //string baseDirectory = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\SCOTIABANK";
                 // Combinar para obtener la ruta completa
                 string directory = Path.Combine(baseDirectory, subFolder);
                 string rutaDestino = Path.Combine(directory, fileName);

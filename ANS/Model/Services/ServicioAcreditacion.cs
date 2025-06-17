@@ -18,39 +18,45 @@ namespace ANS.Model.Services
         }
         public void insertar(Acreditacion a)
         {
-            if (a != null)
+            if (a == null) return;
+
+            // Determinamos la fecha que vamos a insertar
+            DateTime fechaParaInsertar =
+                a.FechaTanda != DateTime.MinValue
+                ? a.FechaTanda
+                : DateTime.Now;
+
+            using (var conn = new SqlConnection(_conexionTSD))
+            using (var cmd = conn.CreateCommand())
             {
-                DateTime fechaParaInsertar = DateTime.Now;
+                cmd.CommandText =   @"
+                                    IF NOT EXISTS (
+                                    SELECT 1
+                                    FROM AcreditacionDepositoDiegoTest
+                                    WHERE IDBUZON     = @IDBUZON
+                                    AND IDOPERACION = @IDOPERACION
+                                    AND MONEDA      = @MONEDA
+                                    AND IDCUENTA    = @IDCUENTA
+                                    )
+                                    BEGIN
+                                    INSERT INTO AcreditacionDepositoDiegoTest
+                                    (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO)
+                                    VALUES
+                                    (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO);
+                                    END";
 
-                if (a.FechaTanda != DateTime.MinValue)
-                {
-                    fechaParaInsertar = a.FechaTanda;
-                }
+                // Parámetros
+                cmd.Parameters.AddWithValue("@IDBUZON", a.IdBuzon);
+                cmd.Parameters.AddWithValue("@IDOPERACION", a.IdOperacion);
+                cmd.Parameters.AddWithValue("@FECHA", fechaParaInsertar);
+                cmd.Parameters.AddWithValue("@IDBANCO", (object)a.IdBanco ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@IDCUENTA", (object)a.IdCuenta ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@MONEDA", a.Moneda);
+                cmd.Parameters.AddWithValue("@NO_ENVIADO", a.No_Enviado);
+                cmd.Parameters.AddWithValue("@MONTO", a.Monto);
 
-                using (SqlConnection conn = new SqlConnection(_conexionTSD))
-                {
-                    string query = @"INSERT INTO AcreditacionDepositoDiegoTest 
-                            (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO) 
-                            VALUES 
-                            (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO)";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-
-                        cmd.Parameters.AddWithValue("@IDBUZON", a.IdBuzon);
-                        cmd.Parameters.AddWithValue("@IDOPERACION", a.IdOperacion);
-                        cmd.Parameters.AddWithValue("@FECHA", fechaParaInsertar);
-                        cmd.Parameters.AddWithValue("@IDBANCO", (object)a.IdBanco ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@IDCUENTA", (object)a.IdCuenta ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@MONEDA", a.Moneda);
-                        cmd.Parameters.AddWithValue("@NO_ENVIADO", a.No_Enviado);
-                        cmd.Parameters.AddWithValue("@MONTO", a.Monto);
-
-                        conn.Open();
-
-                        cmd.ExecuteNonQuery();
-                    }
-                }
+                conn.Open();
+                cmd.ExecuteNonQuery();
             }
         }
         public async Task crearAcreditacionesByListaCuentaBuzones(List<CuentaBuzon> accounts)
@@ -59,6 +65,10 @@ namespace ANS.Model.Services
             {
                 foreach (var _acc in accounts)
                 {
+                    if(_acc.NC == "EA23L0410N12000062")
+                    {
+                        Console.WriteLine("es el que se repite de fonbay");
+                    }
                     foreach (var _dep in _acc.Depositos)
                     {
                         int bankId = ServicioBanco.getInstancia().getByNombre(_acc.Banco).BancoId;

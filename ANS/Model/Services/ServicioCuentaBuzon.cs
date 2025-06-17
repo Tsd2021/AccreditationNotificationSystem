@@ -240,7 +240,7 @@ namespace ANS.Model.Services
             {
 
                 // POR DEFAULT 
-                query = @"select c.NC, 
+                query = @"select distinct c.NC, 
                         cb.BANCO, 
                         c.CIERRE, 
                         c.IDCLIENTE, 
@@ -265,7 +265,7 @@ namespace ANS.Model.Services
                 {
                     if (banco.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper())
                     {
-                        query = @"select c.NC,
+                        query = @"select distinct c.NC,
                             cb.BANCO,
                             c.CIERRE,
                             c.IDCLIENTE,
@@ -296,7 +296,7 @@ namespace ANS.Model.Services
 
                         //Si es dia a dia Scotiabank hay que excluir todo Henderson porq ya fue acreditado.
                         //Y tambien la consulta es especial porque no exluye RELACIONADOS!
-                        query = @"select c.NC,
+                        query = @"select distinct c.NC,
                                 cb.BANCO,
                                 c.CIERRE,
                                 c.IDCLIENTE,
@@ -314,7 +314,7 @@ namespace ANS.Model.Services
                                 inner join cc c on cb.idcliente = c.IDCLIENTE 
                                 and c.nc = config.nc 
                                 where cb.BANCO = @bank 
-                                and cb.idcliente not in(164)
+                                and cb.idcliente not in (164)
                                 and config.TipoAcreditacion = @tipoAcreditacion;";
                     }
                 }
@@ -691,9 +691,9 @@ namespace ANS.Model.Services
                 {
                     foreach (var unaCuentaBuzon in cuentaBuzones)
                     {
-                        if(unaCuentaBuzon.NC == "EA25L1315N12000181")
+                        if(unaCuentaBuzon.NC == "EA23L0410N12000062")
                         {
-                            Console.WriteLine("es ferrari");
+                            Console.WriteLine("es fonbay");
                         }
                         int ultIdOperacion = await obtenerUltimaOperacionByNC(unaCuentaBuzon);
 
@@ -1148,10 +1148,10 @@ namespace ANS.Model.Services
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 //PRODUCCION: 
-               // string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
+                string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
 
                 //TESTING:
-                string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
+                //string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
 
                 wb.SaveAs(path);
 
@@ -1350,11 +1350,11 @@ namespace ANS.Model.Services
                 // Guardar y enviar
                 string nombreArchivo = $"Tesoreria_Tanda_{numTanda}_{ciudad.ToUpper()}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 // PRODUCCION:
-                 
-                //string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+
+                string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
 
                 //TESTING:
-                string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+                //string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
                 wb.SaveAs(filePath);
 
                 Console.WriteLine($"Excel de Tesorería generado: {filePath}");
@@ -1508,9 +1508,9 @@ namespace ANS.Model.Services
             string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
             //produccion:
-            //string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
             //testing:
-            string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+            //string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
 
 
             workbook.SaveAs(ruta);
@@ -1848,14 +1848,14 @@ namespace ANS.Model.Services
             // Guardar + enviar
             string nombre = $"ReporteDiario_Santander_{ciudad}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
 
-        //produccion:
+            //produccion:
 
-        
-       //     string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombre);
+
+            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombre);
 
 
             //testing:
-            string ruta = Path.Combine(@"C: \Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombre);
+            //string ruta = Path.Combine(@"C: \Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombre);
             wb.SaveAs(ruta);
 
             ServicioEmail.getInstancia().enviarExcelPorMail(

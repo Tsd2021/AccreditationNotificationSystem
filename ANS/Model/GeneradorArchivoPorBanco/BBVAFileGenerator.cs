@@ -8,10 +8,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
     {
         private const string CuentaTransportadora = "7584652";
         //ruta produccion:
-       // private readonly string rutaBase = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\BBVA";
+        private readonly string rutaBase = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\BBVA";
 
         //ruta testing:
-        private readonly string rutaBase = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\BBVA";
+        //private readonly string rutaBase = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\BBVA";
         private readonly ConfiguracionAcreditacion configActual;
 
         private List<CuentaBuzon> buzonesMontevideo = new();
