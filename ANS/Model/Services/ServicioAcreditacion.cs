@@ -385,30 +385,31 @@ namespace ANS.Model.Services
                 await conn.OpenAsync();
 
                 string query = @"SELECT
-                                cb.EMPRESA,
+                                cb.EMPRESA,  
                                 cb.CUENTA,
                                 cb.SUCURSAL,
-                                acc.MONEDA    AS MonedaCode,
-                                cc.SUCURSAL   AS Ciudad,
-                                SUM(acc.MONTO) AS TotalMonto
+                                acc.MONEDA             AS MonedaCode,
+                                cc.SUCURSAL            AS Ciudad,
+                                SUM(acc.MONTO)         AS TotalMonto
                                 FROM ConfiguracionAcreditacion AS config
                                 INNER JOIN CUENTASBUZONES AS cb
                                 ON config.CuentasBuzonesId = cb.ID
+                                INNER JOIN cc
+                                ON config.NC = cc.NC
                                 INNER JOIN AcreditacionDepositoDiegoTest AS acc
                                 ON acc.IDBUZON  = config.NC
                                 AND acc.IDCUENTA = cb.ID
-                                INNER JOIN cc
-                                ON cb.SUCURSAL = cc.ID
                                 WHERE
-                                UPPER(config.TipoAcreditacion) = @tipoAcreditacion
-                                AND UPPER(cb.BANCO)            = @banco
-                                AND CAST(acc.FECHA AS date)    = CAST(GETDATE() AS date)
+                                UPPER(cb.BANCO)    = @banco   
+                                and config.TipoAcreditacion = @tipoAcreditacion
+                                AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
                                 GROUP BY
                                 cb.EMPRESA,
                                 cb.CUENTA,
                                 cb.SUCURSAL,
                                 acc.MONEDA,
-                                cc.SUCURSAL;";
+                                cc.SUCURSAL;
+";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
 
@@ -441,7 +442,7 @@ namespace ANS.Model.Services
                             Ciudad = r.GetString(ciudadOrdinal).Trim(),
                             Monto = r.GetDouble(totalMontoOrdinal)
                         };
-
+                        dto.setMoneda();
                         retorno.Add(dto);
                     }
                 }
