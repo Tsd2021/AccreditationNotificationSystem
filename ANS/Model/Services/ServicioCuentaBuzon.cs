@@ -691,7 +691,7 @@ namespace ANS.Model.Services
                 {
                     foreach (var unaCuentaBuzon in cuentaBuzones)
                     {
-                        if(unaCuentaBuzon.NC == "EA23L0410N12000062")
+                        if (unaCuentaBuzon.NC == "EA23L0410N12000062")
                         {
                             Console.WriteLine("es fonbay");
                         }
@@ -1148,10 +1148,10 @@ namespace ANS.Model.Services
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 //PRODUCCION: 
-                string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
+                //string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
 
                 //TESTING:
-                //string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
+                string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
 
                 wb.SaveAs(path);
 
@@ -1207,18 +1207,126 @@ namespace ANS.Model.Services
             {
                 List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco, new ConfiguracionAcreditacion("Tanda"));
 
-                List<DtoAcreditacionesPorEmpresa> listaMontevideo = lista.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
 
-                List<DtoAcreditacionesPorEmpresa> listaMaldonado = lista.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
-
-                generarExcelPorAcreditacionesAgrupadoPorEmpresa(listaMontevideo, listaMaldonado, numTanda, banco);
-
+                generarExcelTesoreriaTanda(lista, numTanda, banco);
 
             }
 
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
+            }
+        }
+
+        public static void generarExcelTesoreriaTanda(
+                 List<DtoAcreditacionesPorEmpresa> datos,
+                 int numTanda,
+                 Banco banco)
+        {
+            var ciudades = new[] { "MONTEVIDEO", "MALDONADO" };
+
+            foreach (var ciudad in ciudades)
+            {
+                var datosCiudad = datos
+                    .Where(d => d.Ciudad.Equals(ciudad, StringComparison.OrdinalIgnoreCase));
+
+                var pesos = datosCiudad
+                    .Where(d => d.Divisa == 1)
+                    .OrderBy(d => d.Empresa)
+                    .ToList();
+                var dolares = datosCiudad
+                    .Where(d => d.Divisa != 1)
+                    .OrderBy(d => d.Empresa)
+                    .ToList();
+
+                using var wb = new XLWorkbook();
+                var ws = wb.Worksheets.Add(ciudad);
+                int row = 1;
+
+                // Insertar logo
+                InsertarLogoParaTesoreriaExcel(ws, ref row);
+
+                // Insertar título
+                ws.Range(row, 1, row, 6).Merge().Value =
+                    $"TECNISEGUR - Excel para tesorería {numTanda} - {ciudad.ToUpper()} -";
+                var titleCell = ws.Cell(row, 1);
+                titleCell.Style.Font.Bold = true;
+                titleCell.Style.Font.FontSize = 14;
+                titleCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                titleCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                row += 2;
+
+                // Encabezados
+                var headers = new[] { "Empresa", "Cuenta", "Sucursal", "Moneda", "Ciudad", "TotalMonto" };
+                for (int c = 0; c < headers.Length; c++)
+                {
+                    ws.Cell(row, c + 1).Value = headers[c];
+                }
+                row++;
+
+                // Filas de PESOS
+                foreach (var d in pesos)
+                {
+                    ws.Cell(row, 1).Value = d.Empresa;
+                    ws.Cell(row, 2).Value = d.NumeroCuenta;
+                    ws.Cell(row, 3).Value = d.Sucursal;
+                    ws.Cell(row, 4).Value = d.Divisa;
+                    ws.Cell(row, 5).Value = d.Ciudad;
+                    ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia()
+                        .FormatearDoubleConPuntosYComas(d.Monto);
+                    row++;
+                }
+
+                // Total PESOS
+                ws.Range(row, 1, row, 5).Merge().Value = "TOTAL PESOS";
+                ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia()
+                    .FormatearDoubleConPuntosYComas(pesos.Sum(d => d.Monto));
+                ws.Range(row, 1, row, 6).Style.Font.SetBold();
+                row += 2;
+
+                // Filas de DÓLARES
+                foreach (var d in dolares)
+                {
+                    ws.Cell(row, 1).Value = d.Empresa;
+                    ws.Cell(row, 2).Value = d.NumeroCuenta;
+                    ws.Cell(row, 3).Value = d.Sucursal;
+                    ws.Cell(row, 4).Value = d.Divisa;
+                    ws.Cell(row, 5).Value = d.Ciudad;
+                    ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia()
+                        .FormatearDoubleConPuntosYComas(d.Monto);
+                    row++;
+                }
+
+                // Total DÓLARES
+                ws.Range(row, 1, row, 5).Merge().Value = "TOTAL DÓLARES";
+                ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia()
+                    .FormatearDoubleConPuntosYComas(dolares.Sum(d => d.Monto));
+                ws.Range(row, 1, row, 6).Style.Font.SetBold();
+
+                // Ajustar columnas y guardar archivo
+                ws.Columns().AdjustToContents();
+                var nombreArchivo =
+                    $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{DateTime.Now:yyyyMMdd}.xlsx";
+                var filePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    nombreArchivo);
+                wb.SaveAs(filePath);
+
+                // Envío por correo
+                try
+                {
+                    var asunto =
+                        $"Acreditaciones TESORERÍA {banco.NombreBanco} Tanda {numTanda} - {ciudad}";
+                    var cuerpo =
+                        $"Adjunto acreditaciones de la tanda {numTanda} para {ciudad}.";
+                    ServicioEmail.getInstancia().enviarExcelPorMail(
+                        filePath, asunto, cuerpo, null, banco,
+                        new ConfiguracionAcreditacion(VariablesGlobales.tanda));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al enviar correo para {ciudad}: {ex.Message}");
+                }
             }
         }
 
@@ -1360,10 +1468,10 @@ namespace ANS.Model.Services
                 string nombreArchivo = $"Tesoreria_Tanda_{numTanda}_{ciudad.ToUpper()}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 // PRODUCCION:
 
-                string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+                //string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
 
                 //TESTING:
-                //string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+                string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
                 wb.SaveAs(filePath);
 
                 Console.WriteLine($"Excel de Tesorería generado: {filePath}");
@@ -1384,6 +1492,10 @@ namespace ANS.Model.Services
             generarArchivoExcel(acreditacionesMontevideo, "Montevideo");
             generarArchivoExcel(acreditacionesMaldonado, "Maldonado");
         }
+
+
+
+
 
         public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
         {
@@ -1425,10 +1537,11 @@ namespace ANS.Model.Services
                 }
 
             }
+            if (acreditacionesPesosMvd.Count > 0 || acreditacionesDolaresMvd.Count > 0)
+                GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco);
 
-            GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco);
-
-            GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco);
+            if (acreditacionesPesosMaldonado.Count > 0 || acreditacionesDolaresMaldonado.Count > 0)
+                GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco);
 
             await Task.CompletedTask;
 
@@ -1517,9 +1630,9 @@ namespace ANS.Model.Services
             string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
             //produccion:
-            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+            //string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
             //testing:
-            //string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+            string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
 
 
             workbook.SaveAs(ruta);
@@ -1803,16 +1916,24 @@ namespace ANS.Model.Services
             // -- Encabezado común
             InsertarLogoDesdeRecurso(ws, ref row);
             ws.Cell(row, 1).Value = $"Reporte Diario Santander - {ciudad} - {DateTime.Now:dd/MM/yyyy}";
-            ws.Range(row, 1, row, 5).Merge().Style
-              .Font.SetBold().Font.SetFontSize(14)
+            ws.Range(row, 1, row, 5)
+              .Merge()
+              .Style.Font.SetBold().Font.SetFontSize(14)
               .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
             row += 2;
 
-            // Para cada moneda, imprimimos sección
-            foreach (var monedaGroup in datosCiudad
-                .GroupBy(d => d.Moneda, StringComparer.OrdinalIgnoreCase))
+            // Aquí forzamos el orden: primero UYU, luego USD, luego otras monedas
+            var monedaGroups = datosCiudad
+                .GroupBy(d => d.Moneda, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(g =>
+                    g.Key.Equals("UYU", StringComparison.OrdinalIgnoreCase) ? 0 :
+                    g.Key.Equals("USD", StringComparison.OrdinalIgnoreCase) ? 1 :
+                    2
+                );
+
+            foreach (var monedaGroup in monedaGroups)
             {
-                // Encabezado
+                // Encabezado de sección
                 ws.Cell(row, 1).Value = "CLIENTE";
                 ws.Cell(row, 2).Value = "SUCURSAL";
                 ws.Cell(row, 3).Value = "CUENTA";
@@ -1831,7 +1952,7 @@ namespace ANS.Model.Services
                     ws.Cell(row, 1).Value = it.Empresa;
                     ws.Cell(row, 2).Value = it.Sucursal;
                     ws.Cell(row, 3).Value = it.NumeroCuenta;
-                    ws.Cell(row, 4).Value = it.Moneda;      // p.ej. "UYU" o "USD"
+                    ws.Cell(row, 4).Value = it.Moneda;      // "UYU" o "USD"
                     ws.Cell(row, 5).Value = ServicioUtilidad
                         .getInstancia()
                         .FormatearDoubleConPuntosYComas(it.Monto);
@@ -1842,7 +1963,7 @@ namespace ANS.Model.Services
                 }
 
                 // Total
-                ws.Cell(row, 1).Value = $"Total {monedaGroup.First().Moneda}:";
+                ws.Cell(row, 1).Value = $"Total {monedaGroup.Key}:";
                 ws.Cell(row, 5).Value = ServicioUtilidad
                     .getInstancia()
                     .FormatearDoubleConPuntosYComas(monedaGroup.Sum(x => x.Monto));
@@ -1860,11 +1981,11 @@ namespace ANS.Model.Services
             //produccion:
 
 
-            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombre);
+            //string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombre);
 
 
             //testing:
-            //string ruta = Path.Combine(@"C: \Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombre);
+            string ruta = Path.Combine(@"C: \Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombre);
             wb.SaveAs(ruta);
 
             ServicioEmail.getInstancia().enviarExcelPorMail(
@@ -1908,6 +2029,23 @@ namespace ANS.Model.Services
             celdaTitulo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             row += 1;
         }
+
+
+        private static void InsertarLogoParaTesoreriaExcel(IXLWorksheet ws, ref int row)
+        {
+            var asm = Assembly.GetExecutingAssembly();
+            const string resourcePath = "ANS.Images.logoTecniFinal.png";
+            using var stream = asm.GetManifestResourceStream(resourcePath);
+            if (stream != null)
+            {
+                ws.AddPicture(stream)
+                  .MoveTo(ws.Cell(row, 3), 30, 5)
+                  .WithPlacement(XLPicturePlacement.FreeFloating)
+                  .Scale(0.5);
+                row += 2;
+            }
+        }
+
         #endregion
         #region UNUSED
         //METODO PARA OBTENER ACREDITACIONES(EXCEL , VA POR FECHA)

@@ -27,10 +27,10 @@ namespace ANS.Model.Services
             // Directorio y nombre de archivo con fecha actual
 
             //Testing Prod:
-            string logDirectory = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\Logs\";
+            //string logDirectory = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\Logs\";
 
             //Testing Local:
-            //string logDirectory = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\Logs\";
+            string logDirectory = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\Logs\";
             string fileName = $"TAAS_Log{DateTime.Now:ddMMyyyy}.txt";
             string filePath = Path.Combine(logDirectory, fileName);
 
