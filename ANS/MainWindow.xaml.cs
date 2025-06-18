@@ -61,7 +61,22 @@ namespace ANS
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            // Mostrar diálogo de confirmación
+            var result = MessageBox.Show(
+                "¿Está seguro de que desea cerrar? Se dejará de acreditar a los bancos.",
+                "Confirmar cierre",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
 
+            // Si el usuario elige No, cancelar el cierre
+            if (result == MessageBoxResult.No)
+            {
+                e.Cancel = true;
+            }
+            // Si elige Yes, e.Cancel queda en false y la ventana se cierra
+        }
 
 
     }

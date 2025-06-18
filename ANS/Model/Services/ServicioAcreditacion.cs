@@ -370,5 +370,84 @@ namespace ANS.Model.Services
             return retorno;
         }
 
+        public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesParaExcelTesoreria(Banco banco, ConfiguracionAcreditacion configuracionAcreditacion)
+        {
+            if(banco == null || configuracionAcreditacion == null)
+            {
+                throw new Exception("Banco o Configuración vacías");
+            }
+
+            List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
+
+            using (var conn = new SqlConnection(_conexionTSD))
+            {
+
+                await conn.OpenAsync();
+
+                string query = @"SELECT
+                                cb.EMPRESA,
+                                cb.CUENTA,
+                                cb.SUCURSAL,
+                                acc.MONEDA    AS MonedaCode,
+                                cc.SUCURSAL   AS Ciudad,
+                                SUM(acc.MONTO) AS TotalMonto
+                                FROM ConfiguracionAcreditacion AS config
+                                INNER JOIN CUENTASBUZONES AS cb
+                                ON config.CuentasBuzonesId = cb.ID
+                                INNER JOIN AcreditacionDepositoDiegoTest AS acc
+                                ON acc.IDBUZON  = config.NC
+                                AND acc.IDCUENTA = cb.ID
+                                INNER JOIN cc
+                                ON cb.SUCURSAL = cc.ID
+                                WHERE
+                                UPPER(config.TipoAcreditacion) = @tipoAcreditacion
+                                AND UPPER(cb.BANCO)            = @banco
+                                AND CAST(acc.FECHA AS date)    = CAST(GETDATE() AS date)
+                                GROUP BY
+                                cb.EMPRESA,
+                                cb.CUENTA,
+                                cb.SUCURSAL,
+                                acc.MONEDA,
+                                cc.SUCURSAL;";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+
+                cmd.Parameters.AddWithValue("@banco", banco.NombreBanco);
+
+                cmd.Parameters.AddWithValue("@tipoAcreditacion", configuracionAcreditacion.TipoAcreditacion);
+
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    int empresaOrdinal = r.GetOrdinal("EMPRESA");
+
+                    int cuentaOrdinal = r.GetOrdinal("CUENTA"); 
+
+                    int sucursalOrdinal = r.GetOrdinal("SUCURSAL"); 
+
+                    int monedaOrdinal = r.GetOrdinal("MonedaCode");
+
+                    int ciudadOrdinal = r.GetOrdinal("Ciudad");
+
+                    int totalMontoOrdinal = r.GetOrdinal("TotalMonto");
+
+                    while (r.Read())
+                    {
+                        DtoAcreditacionesPorEmpresa dto  = new DtoAcreditacionesPorEmpresa
+                        {
+                            Empresa = r.GetString(empresaOrdinal).Trim(),
+                            NumeroCuenta = r.GetString(cuentaOrdinal).Trim(),
+                            Sucursal = r.GetString(sucursalOrdinal).Trim(),
+                            Divisa = r.GetInt32(monedaOrdinal),
+                            Ciudad = r.GetString(ciudadOrdinal).Trim(),
+                            Monto = r.GetDouble(totalMontoOrdinal)
+                        };
+
+                        retorno.Add(dto);
+                    }
+                }
+
+                return retorno;
+            }
+        }
     }
 }

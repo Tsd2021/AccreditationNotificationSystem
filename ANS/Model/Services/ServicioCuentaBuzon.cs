@@ -1203,14 +1203,23 @@ namespace ANS.Model.Services
 
             DateTime fechaHasta = DateTime.Today.Add(hasta);
 
-            List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaYBanco(fechaDesde, fechaHasta, banco);
+            try
+            {
+                List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco, new ConfiguracionAcreditacion("Tanda"));
 
-            List<DtoAcreditacionesPorEmpresa> listaMontevideo = lista.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
+                List<DtoAcreditacionesPorEmpresa> listaMontevideo = lista.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
 
-            List<DtoAcreditacionesPorEmpresa> listaMaldonado = lista.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+                List<DtoAcreditacionesPorEmpresa> listaMaldonado = lista.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
 
-            generarExcelPorAcreditacionesAgrupadoPorEmpresa(listaMontevideo, listaMaldonado, numTanda, banco);
+                generarExcelPorAcreditacionesAgrupadoPorEmpresa(listaMontevideo, listaMaldonado, numTanda, banco);
 
+
+            }
+
+            catch(Exception ex)
+            {
+                throw ex;
+            }
         }
 
 
