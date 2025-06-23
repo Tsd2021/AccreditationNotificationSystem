@@ -28,68 +28,68 @@ namespace ANS.Model.Services
             if (horaDeCierre != TimeSpan.Zero)
             {
 
-                query = @"SELECT 
+                        query = @"SELECT 
                         d.iddeposito, 
                         d.idoperacion, 
                         d.codigo, 
                         d.tipo, 
                         CASE 
-                            WHEN CHARINDEX('-', d.empresa) > 0 
-                                THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                            ELSE LTRIM(RTRIM(d.empresa))
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
                         END AS empresa, 
                         d.fechadep         
-                    FROM 
+                        FROM 
                         Depositos d
-                    INNER JOIN 
+                        INNER JOIN 
                         relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
-                    INNER JOIN 
+                        INNER JOIN 
                         Totales t ON rd.IdTotal = t.IdTotal
-                    WHERE 
+                        WHERE 
                         d.codigo = @nc
                         AND (
-                            CASE 
-                                WHEN CHARINDEX('-', d.empresa) > 0 
-                                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                                ELSE LTRIM(RTRIM(d.empresa))
-                            END
+                        CASE 
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
+                        END
                         ) LIKE '%' + @empresa + '%'
                         AND d.idoperacion > @ultimaOperacion                
                         AND t.Divisas = @divisaActual 
-                        AND d.fechadep < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))";
+                        AND d.fechadep < @fechaCierre";
                 //   AND d.FechaActualizacion < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))
 
             }
             else
             {
-                query = @"SELECT 
-                            d.iddeposito, 
-                            d.idoperacion, 
-                            d.codigo, 
-                            d.tipo, 
-                            CASE 
-                                WHEN CHARINDEX('-', d.empresa) > 0 
-                                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                                ELSE LTRIM(RTRIM(d.empresa))
-                            END AS empresa, 
-                            d.fechadep         
+                        query = @"SELECT 
+                        d.iddeposito, 
+                        d.idoperacion, 
+                        d.codigo, 
+                        d.tipo, 
+                        CASE 
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
+                        END AS empresa, 
+                        d.fechadep         
                         FROM 
-                            Depositos d
+                        Depositos d
                         INNER JOIN 
-                            relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
+                        relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
                         INNER JOIN 
-                            Totales t ON rd.IdTotal = t.IdTotal
+                        Totales t ON rd.IdTotal = t.IdTotal
                         WHERE 
-                            d.codigo = @nc
-                            AND (
-                                CASE 
-                                    WHEN CHARINDEX('-', d.empresa) > 0 
-                                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                                    ELSE LTRIM(RTRIM(d.empresa))
-                                END
-                            ) LIKE '%' + @empresa + '%'
-                            AND d.idoperacion > @ultimaOperacion                
-                            AND t.Divisas = @divisaActual;";
+                        d.codigo = @nc
+                        AND (
+                        CASE 
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
+                        END
+                        ) LIKE '%' + @empresa + '%'
+                        AND d.idoperacion > @ultimaOperacion                
+                        AND t.Divisas = @divisaActual;";
             }
 
             using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
@@ -106,10 +106,18 @@ namespace ANS.Model.Services
 
                     cmd.Parameters.AddWithValue("@divisaActual", buzon.Divisa);
 
-                    if (horaDeCierre != TimeSpan.Zero)
+
+                    //old
+                    //if (horaDeCierre != TimeSpan.Zero)
+                    //{
+                    //    cmd.Parameters.Add("@horaDeCierre", SqlDbType.Time).Value = horaDeCierre;
+                    //}
+
+                    if(horaDeCierre != TimeSpan.Zero)
                     {
-                        cmd.Parameters.Add("@horaDeCierre", SqlDbType.Time).Value = horaDeCierre;
+                        cmd.Parameters.AddWithValue("@fechaCierre", DateTime.Today.Add(horaDeCierre));
                     }
+
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {

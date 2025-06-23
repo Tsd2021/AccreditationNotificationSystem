@@ -649,17 +649,12 @@ namespace ANS.Model.Services
                 {
                     if (ultIdOperacionPorBuzon > 0)
                     {
-                        if (bank.NombreBanco == VariablesGlobales.santander)
-                        {
-                            await ServicioDeposito.getInstancia()
-                                .asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, VariablesGlobales.horaFinPuntoAPuntoSantander);
-                        }
-                        else
-                        {
 
-                            await ServicioDeposito.getInstancia()
-                            .asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, TimeSpan.Zero);
-                        }
+                        TimeSpan timeSpanDelBuzon = unBuzon.Cierre.HasValue ? unBuzon.Cierre.Value.TimeOfDay : TimeSpan.Zero;
+
+                        await ServicioDeposito.getInstancia()
+                                .asignarDepositosAlBuzon(unBuzon, ultIdOperacionPorBuzon, timeSpanDelBuzon);
+                        
                     }
                 }
 
@@ -1147,11 +1142,11 @@ namespace ANS.Model.Services
                     fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                //PRODUCCION: 
-                //string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
+                //PRODUCCION:
+                string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
 
                 //TESTING:
-                string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
+                //string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
 
                 wb.SaveAs(path);
 
@@ -1307,9 +1302,7 @@ namespace ANS.Model.Services
                 ws.Columns().AdjustToContents();
                 var nombreArchivo =
                     $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{DateTime.Now:yyyyMMdd}.xlsx";
-                var filePath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                    nombreArchivo);
+                var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo); ;
                 wb.SaveAs(filePath);
 
                 // Envío por correo
@@ -1329,172 +1322,6 @@ namespace ANS.Model.Services
                 }
             }
         }
-
-
-        private void generarExcelPorAcreditacionesAgrupadoPorEmpresa(
-           List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo,
-           List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado,
-           int numTanda,
-           Banco b)
-        {
-            var amarilloPastel = XLColor.LightYellow;
-            var celestePastel = XLColor.LightCyan;
-
-            void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
-            {
-                var assembly = Assembly.GetExecutingAssembly();
-                string resourcePath = "ANS.Images.logoTecniFinal.png";
-
-                using (Stream stream = assembly.GetManifestResourceStream(resourcePath))
-                {
-                    if (stream != null)
-                    {
-                        ws.AddPicture(stream)
-                          .MoveTo(ws.Cell(row, 3), 30, 5)
-                          .WithPlacement(XLPicturePlacement.FreeFloating)
-                          .Scale(0.5);
-                        row += 1;
-                    }
-                }
-
-                // Fecha
-                ws.Range(row, 1, row, 5).Merge();
-                var celdaFecha = ws.Cell(row, 1);
-                celdaFecha.Value = "Tesorería - " +
-                    DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy",
-                        new System.Globalization.CultureInfo("es-ES"));
-                celdaFecha.Style.Font.Italic = true;
-                celdaFecha.Style.Font.FontSize = 11;
-                celdaFecha.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                celdaFecha.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                row += 1;
-
-                // Título
-                ws.Range(row, 1, row, 5).Merge();
-                var celdaTitulo = ws.Cell(row, 1);
-                celdaTitulo.Value = "BUZONES INTELIGENTES";
-                celdaTitulo.Style.Font.Bold = true;
-                celdaTitulo.Style.Font.FontSize = 16;
-                celdaTitulo.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                celdaTitulo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                row += 2;
-            }
-
-            void generarArchivoExcel(List<DtoAcreditacionesPorEmpresa> lista, string ciudad)
-            {
-                if (lista == null || !lista.Any()) return;
-
-                var wb = new XLWorkbook();
-                var ws = wb.Worksheets.Add(ciudad);
-                ws.ShowGridLines = false;
-                int row = 1;
-
-                InsertarLogoDesdeRecurso(ws, ref row);
-
-                void AgregarSeccion(List<DtoAcreditacionesPorEmpresa> datos, string moneda)
-                {
-                    if (!datos.Any()) return;
-
-                    // Encabezados
-                    ws.Cell(row, 1).Value = "CLIENTE";
-                    ws.Cell(row, 2).Value = "SUCURSAL";
-                    ws.Cell(row, 3).Value = "CUENTA";
-                    ws.Cell(row, 4).Value = "MONEDA";
-                    ws.Cell(row, 5).Value = "MONTO";
-
-                    var headerRange = ws.Range(row, 1, row, 5);
-                    headerRange.Style.Font.Bold = true;
-                    headerRange.Style.Fill.BackgroundColor = amarilloPastel;
-                    headerRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    headerRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                    row++;
-
-                    foreach (var item in datos)
-                    {
-                        ws.Cell(row, 1).Value = item.Empresa;
-                        ws.Cell(row, 2).Value = item.Sucursal;
-                        ws.Cell(row, 3).Value = item.NumeroCuenta;
-                        ws.Cell(row, 4).Value = item.Moneda;
-                        ws.Cell(row, 5).Value = ServicioUtilidad
-                            .getInstancia()
-                            .FormatearDoubleConPuntosYComas(item.Monto);
-
-                        var dataRange = ws.Range(row, 1, row, 5);
-                        dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                        dataRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                        row++;
-                    }
-
-                    // Total
-                    ws.Cell(row, 4).Value = $"Total {moneda.ToUpper()}";
-                    ws.Cell(row, 5).Value = ServicioUtilidad
-                        .getInstancia()
-                        .FormatearDoubleConPuntosYComas(datos.Sum(x => x.Monto));
-
-                    var totalRange = ws.Range(row, 4, row, 5);
-                    totalRange.Style.Fill.BackgroundColor = celestePastel;
-                    totalRange.Style.Font.Bold = true;
-                    totalRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    totalRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-                    row++;
-
-                    // Separador
-                    ws.Range(row, 1, row, 5).Merge();
-                    row++;
-                }
-
-                // Secciones
-                var listaPesos = lista.Where(x => x.Moneda.ToUpper() == "PESOS").ToList();
-                var listaDolares = lista.Where(x => x.Moneda.ToUpper() == "DOLARES").ToList();
-
-                AgregarSeccion(listaPesos, "Pesos");
-                AgregarSeccion(listaDolares, "Dólares");
-
-                // Ajuste de ancho A–E
-                ws.Columns(1, 5).AdjustToContents();
-
-                // 2) Oculta columnas F en adelante
-                ws.Columns(6, ws.ColumnCount()).Hide();
-
-                // 3) Fija el área de impresión a A1:E<lastRow>
-                var lastRow = ws.LastRowUsed().RowNumber();
-                ws.PageSetup.PrintAreas.Add($"A1:E{lastRow}");
-                ws.PageSetup.FitToPages(1, 0);
-
-                // Guardar y enviar
-                string nombreArchivo = $"Tesoreria_Tanda_{numTanda}_{ciudad.ToUpper()}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                // PRODUCCION:
-
-                //string filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
-
-                //TESTING:
-                string filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
-                wb.SaveAs(filePath);
-
-                Console.WriteLine($"Excel de Tesorería generado: {filePath}");
-                try
-                {
-                    string asunto = $"Acreditaciones para Tesorería {b.NombreBanco} Tanda {numTanda} - {ciudad.ToUpper()}";
-                    string cuerpo = $"E-Mail específico para TESORERÍA TECNISEGUR.\n" +
-                                    $"Adjunto el archivo de acreditaciones para la tanda {numTanda} de {ciudad.ToUpper()}.";
-
-                    _emailService.enviarExcelPorMail(filePath, asunto, cuerpo, null, b, new ConfiguracionAcreditacion(VariablesGlobales.tanda));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error al enviar el correo: " + ex.Message);
-                }
-            }
-
-            generarArchivoExcel(acreditacionesMontevideo, "Montevideo");
-            generarArchivoExcel(acreditacionesMaldonado, "Maldonado");
-        }
-
-
-
 
 
         public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
@@ -1630,9 +1457,9 @@ namespace ANS.Model.Services
             string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
             //produccion:
-            //string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
             //testing:
-            string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+            //string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
 
 
             workbook.SaveAs(ruta);
@@ -1981,11 +1808,11 @@ namespace ANS.Model.Services
             //produccion:
 
 
-            //string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombre);
+            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombre);
 
 
             //testing:
-            string ruta = Path.Combine(@"C: \Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombre);
+            //string ruta = Path.Combine(@"C: \Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombre);
             wb.SaveAs(ruta);
 
             ServicioEmail.getInstancia().enviarExcelPorMail(
