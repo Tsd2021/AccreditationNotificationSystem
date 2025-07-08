@@ -32,16 +32,21 @@
     <None Remove="Images\santander.png" />
     <None Remove="Images\scotiabank.png" />
     <None Remove="Images\tecnisegurlogo.png" />
+    <None Remove="Reports\TotalesyDepositosCC.rdlc" />
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <Content Include="Images\FirmaDiegoMail.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Reports\TotalesyDepositosCC.rdlc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="ReportViewerCore.NETCore" Version="15.1.26" />
 	<PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
     <PackageReference Include="CoreWCF.Http" Version="1.6.0" />
     <PackageReference Include="EPPlus" Version="8.0.1" />
@@ -83,6 +88,18 @@
     <EmbeddedResource Include="Images\tecnisegurlogo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+
+<ItemGroup>
+  <Content Include="Reports\TotalesyDepositosCC.rdlc">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
+</ItemGroup>
+
+  <ItemGroup>
+    <None Update="Model\Reports\TotalesyDepositosCC.rdlc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

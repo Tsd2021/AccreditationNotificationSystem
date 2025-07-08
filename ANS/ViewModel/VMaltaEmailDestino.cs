@@ -162,9 +162,9 @@ namespace ANS.ViewModel
             foreach (var b in ServicioBanco.getInstancia().ListaBancos)
                 Bancos.Add(b);
 
-            TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "DiaADia" });
-            TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "PuntoAPunto" });
-            TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "Tanda" });
+            //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "DiaADia" });
+            //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "PuntoAPunto" });
+            //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "Tanda" });
         }
 
         private void CargarDatosIniciales(Banco b, ConfiguracionAcreditacion config)

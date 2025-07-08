@@ -370,7 +370,7 @@ namespace ANS.Model.Services
             return retorno;
         }
 
-        public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesParaExcelTesoreria(Banco banco, ConfiguracionAcreditacion configuracionAcreditacion)
+        public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesParaExcelTesoreria(Banco banco,int numTanda, ConfiguracionAcreditacion configuracionAcreditacion)
         {
             if(banco == null || configuracionAcreditacion == null)
             {
@@ -378,38 +378,73 @@ namespace ANS.Model.Services
             }
 
             List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
-
+            string query = "";
             using (var conn = new SqlConnection(_conexionTSD))
             {
 
                 await conn.OpenAsync();
 
-                string query = @"SELECT
-                                cb.EMPRESA,  
-                                cb.CUENTA,
-                                cb.SUCURSAL,
-                                acc.MONEDA             AS MonedaCode,
-                                cc.SUCURSAL            AS Ciudad,
-                                SUM(acc.MONTO)         AS TotalMonto
-                                FROM ConfiguracionAcreditacion AS config
-                                INNER JOIN CUENTASBUZONES AS cb
-                                ON config.CuentasBuzonesId = cb.ID
-                                INNER JOIN cc
-                                ON config.NC = cc.NC
-                                INNER JOIN AcreditacionDepositoDiegoTest AS acc
-                                ON acc.IDBUZON  = config.NC
-                                AND acc.IDCUENTA = cb.ID
-                                WHERE
-                                UPPER(cb.BANCO)    = @banco   
-                                and config.TipoAcreditacion = @tipoAcreditacion
-                                AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
-                                GROUP BY
-                                cb.EMPRESA,
-                                cb.CUENTA,
-                                cb.SUCURSAL,
-                                acc.MONEDA,
-                                cc.SUCURSAL;
-";
+                if (numTanda == 1)
+                {
+                    //Si numTanda es 1, entonces debemos incluir DELASSIERRAS que es día a día en el excel para tesorería.
+                    query = @"SELECT
+                            cb.EMPRESA,
+                            cb.CUENTA,
+                            cb.SUCURSAL,
+                            acc.MONEDA             AS MonedaCode,
+                            cc.SUCURSAL            AS Ciudad,
+                            SUM(acc.MONTO)         AS TotalMonto
+                            FROM ConfiguracionAcreditacion AS config
+                            INNER JOIN CUENTASBUZONES AS cb
+                            ON config.CuentasBuzonesId = cb.ID
+                            INNER JOIN CC AS cc
+                            ON config.NC = cc.NC
+                            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+                            ON acc.IDBUZON  = config.NC
+                            AND acc.IDCUENTA = cb.ID
+                            WHERE
+                            UPPER(cb.BANCO) = @banco
+                            AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
+                            AND CONVERT(time, acc.FECHA) = '07:00:00'
+                            GROUP BY
+                            cb.EMPRESA,
+                            cb.CUENTA,
+                            cb.SUCURSAL,
+                            acc.MONEDA,
+                            cc.SUCURSAL;";
+                }
+
+                else
+                {
+                    query = @"SELECT
+                            cb.EMPRESA,
+                            cb.CUENTA,
+                            cb.SUCURSAL,
+                            acc.MONEDA             AS MonedaCode,
+                            cc.SUCURSAL            AS Ciudad,
+                            SUM(acc.MONTO)         AS TotalMonto
+                            FROM ConfiguracionAcreditacion AS config
+                            INNER JOIN CUENTASBUZONES AS cb
+                            ON config.CuentasBuzonesId = cb.ID
+                            INNER JOIN CC AS cc
+                            ON config.NC = cc.NC
+                            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+                            ON acc.IDBUZON  = config.NC
+                            AND acc.IDCUENTA = cb.ID
+                            WHERE
+                            UPPER(cb.BANCO) = @banco
+                            AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
+                            and config.TipoAcreditacion = @tipoAcreditacion
+                            AND CONVERT(time, acc.FECHA) = '14:30:00'
+                            GROUP BY
+                            cb.EMPRESA,
+                            cb.CUENTA,
+                            cb.SUCURSAL,
+                            acc.MONEDA,
+                            cc.SUCURSAL";
+                }
+
+
 
                 SqlCommand cmd = new SqlCommand(query, conn);
 

@@ -135,7 +135,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             }
         }
         */
-
+        /*
         private void armarStringParaTxt_Agrupado(List<CuentaBuzon> cb)
         {
             // Agrupar las cuentas por Divisa y Ciudad (se asume que "Ciudad" es una propiedad de CuentaBuzon)
@@ -266,6 +266,128 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // Escribir el contenido en el archivo
             File.WriteAllText(route, txt.ToString());
         }
+        */
+        private void armarStringParaTxt_Agrupado(List<CuentaBuzon> cb)
+        {
+            if (cb == null || !cb.Any())
+                throw new Exception("No hay cuentas para generar el archivo");
+
+            // 1) Agrupo por DIVISA + CIUDAD (cada grupo genera un archivo)
+            var grupos = cb.GroupBy(c => new { c.Divisa, c.Ciudad });
+
+            foreach (var grupo in grupos)
+            {
+                var txt = new StringBuilder();
+
+                // 2) Dentro de cada DIVISA/Ciudad, agrupo por CUENTA+SUCURSAL y sumo depósitos
+                foreach (var gCuenta in grupo.GroupBy(c => new { c.Cuenta, c.SucursalCuenta }))
+                {
+                    var ejemplo = gCuenta.First();
+
+                    // Fecha y signo
+                    string fecha = DateTime.Today.ToString("ddMMyyyy");
+                    string signo = "+";
+
+                    // Total de esta cuenta (suma de todos los depósitos)
+                    decimal totalImporte = gCuenta
+                        .Sum(c => c.Depositos
+                            .Sum(d => d.Totales
+                                .Sum(i => i.ImporteTotal)));
+
+                    long parteEntera = (long)totalImporte;
+                    // (parte entera + "00"), pad a 15 dígitos
+                    string importe = (parteEntera.ToString() + "00")
+                        .PadLeft(15, '0');
+
+                    // Moneda: "00" o "01"
+                    string moneda = ejemplo.Divisa == VariablesGlobales.uyu
+                        ? "00" : "01";
+
+                    // Número de cuenta: pad 11 + prefijo según moneda
+                    string nroCuenta = ejemplo.Cuenta.PadLeft(11, '0');
+                    nroCuenta = moneda == "00"
+                        ? "2101" + "0000" + nroCuenta
+                        : "2101" + "2225" + nroCuenta;
+
+                    // 876 caracteres
+                    var linea = new StringBuilder();
+                    linea
+                        .Append(_rutOrdenante)   // 18
+                        .Append(' ', 3)          //  3
+                        .Append(_tipoOperativa)  //  2
+                        .Append(fecha)           //  8
+                        .Append(' ', 21)         // 21
+                        .Append(importe)         // 15
+                        .Append(signo)           //  1
+                        .Append(moneda)          //  2
+                        .Append(nroCuenta)       // 19
+                        .Append(' ', 2)          //  2
+                        .Append(' ', 40)         // 40
+                        .Append(' ', 12)         // 12
+                        .Append(' ', 9)          //  9
+                        .Append(' ', 1)          //  1
+                        .Append(' ', 30)         // 30
+                        .Append(' ', 692);       // 692
+
+                    txt.AppendLine(linea.ToString());
+                }
+
+                // 3) Obtengo de la primera cuenta del grupo los valores externos
+                var ejemploGrupo = grupo.First();
+                // Asumimos que ConfiguracionAcreditacion tiene propiedad 'Henderson'
+                //int henderson = ejemploGrupo.esHenderson() ?? 0;
+                bool cashOffice = ejemploGrupo.esCashOffice();
+                string ciudad = grupo.Key.Ciudad;
+
+                // Calculo 'Modo' y 'suctecni'
+                //string modo = henderson == 1 ? "Henderson_Tanda1"
+                //            : henderson == 2 ? "Henderson_Tanda2"
+                //            : "";
+
+                string modo = "";
+                if (cashOffice) modo = "CashOffice";
+
+                string suctecni = ciudad == "MONTEVIDEO" ? "Mont" : "Mald";
+
+                // Rutas UNC según ciudad y cashOffice
+                string rutaBase = ciudad == "MONTEVIDEO"
+                    ? @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK\MONTEVIDEO"
+                    : @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK\MALDONADO";
+                string basePath = cashOffice
+                    ? @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK\cashoffice$\CashScotiabank\"
+                    : rutaBase;
+
+                // Carpeta diaria yyyy-MM-dd
+                string folderName = DateTime.Now.ToString("yyyy-MM-dd");
+                string folderPath = Path.Combine(basePath, folderName);
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+
+                // Nombre de archivo
+                long totalGrupo = (long)grupo
+                    .Sum(c => c.Depositos
+                        .Sum(d => d.Totales
+                            .Sum(i => i.ImporteTotal)));
+                string divCode = grupo.Key.Divisa == VariablesGlobales.uyu ? "UYU" : "USD";
+                string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm");
+                string fileName = $"{timestamp}-{divCode}{totalGrupo}-" +
+                                    $"AcreditacionBuzonesTecnisegur{modo}{suctecni}.txt";
+
+                string rutaDestino = Path.Combine(folderPath, fileName);
+
+                // 4) Grabo con tu método
+                crearYEscribirArchivo(txt, rutaDestino);
+            }
+        }
+
+        private void crearYEscribirArchivo(StringBuilder txt, string route)
+        {
+            var directory = Path.GetDirectoryName(route);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            File.WriteAllText(route, txt.ToString());
+        }
+
 
     }
 }

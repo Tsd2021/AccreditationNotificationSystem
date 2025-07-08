@@ -1,7 +1,10 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using ClosedXML.Excel;
+using Microsoft.Data.SqlClient;
+using Microsoft.Reporting.NETCore;
 using System.Data;
-using ClosedXML.Excel;
 using System.IO;
+using System.Reflection;
+
 
 
 namespace ANS.Model.Services
@@ -22,6 +25,10 @@ namespace ANS.Model.Services
         }
         public async Task procesarEnvioMasivo(int numEnvioMasivo)
         {
+            try
+            {
+
+            
             List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
 
             await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
@@ -46,7 +53,7 @@ namespace ANS.Model.Services
             {
                 // preparar excelStream, subject, body, fileName, destino…
                 b.MontoTotal = b.Acreditaciones.Sum(a => a.Monto);
-                var excelStream = ArmarExcel(b, out var subject, out var body, out var fileName);
+                var excelStream = ArmarExcelConReportViewer(b, out var subject, out var body, out var fileName);
                 await semaphore.WaitAsync();
                 try
                 {
@@ -81,6 +88,11 @@ namespace ANS.Model.Services
 
             await Task.WhenAll(tasks);
             await smtp.DisconnectAsync(true);
+            }
+            catch(Exception e)
+            {
+                throw e;
+            }
         }
 
         private void ObtenerMailsPorBuzon(List<BuzonDTO> buzonesConAcreditaciones)
@@ -241,17 +253,17 @@ namespace ANS.Model.Services
                 tvp.Rows.Add(nc, idOp);
 
             // 4. Ejecutar un solo SELECT
-            var sql = @"
+            var sql =   @"
                         SELECT 
-                          d.codigo   AS NC,
-                          d.idoperacion AS IdOperacion,
-                          d.usuario,
-                          d.fechadep  AS FechaDep,
-                          d.empresa
+                        d.codigo   AS NC,
+                        d.idoperacion AS IdOperacion,
+                        d.usuario,
+                        d.fechadep  AS FechaDep,
+                        d.empresa
                         FROM depositos d
                         INNER JOIN @ListaKeys k
-                          ON d.codigo      = k.NC
-                         AND d.idoperacion = k.IdOperacion;";
+                        ON d.codigo      = k.NC
+                        AND d.idoperacion = k.IdOperacion;";
 
             using var conn = new SqlConnection(ConfiguracionGlobal.ConexionWebBuzones);
             await conn.OpenAsync();
@@ -397,10 +409,10 @@ namespace ANS.Model.Services
             }
 
             query =    @"SELECT NC, NN, SUCURSAL, CIERRE,IDCLIENTE 
-                       FROM dbo.CC 
-                       WHERE ESTADO = 'alta' 
-                       AND CAST(CIERRE AS time) > @desdeTime 
-                       AND CAST(CIERRE AS time) <= @hastaTime";
+                        FROM dbo.CC 
+                        WHERE ESTADO = 'alta' 
+                        AND CAST(CIERRE AS time) > @desdeTime 
+                        AND CAST(CIERRE AS time) <= @hastaTime";
 
             using (SqlConnection conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
             {
@@ -673,7 +685,228 @@ del {inicioStr}<br/>al {cierreStr}</p>
             return ms;
         }
 
+        private Stream ArmarExcel2(BuzonDTO buzonDTO, out string subject, out string body, out string fileName)
+        {
+            subject = body = fileName = string.Empty;
+            string baseDir = AppContext.BaseDirectory;
+            var logoPath = Path.Combine(baseDir, "Images", "logoTecniExcel.png");
 
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Acreditaciones");
+
+            // ────────────── Layout exacto según AcreditacionTI-POCITOS ──────────────
+
+            // Anchos de columnas (igual que plantilla)
+            ws.Column("B").Width = 15.710625;
+            ws.Column("C").Width = 9.140625;
+            ws.Column("D").Width = 0.710625; ws.Column("D").Hide();
+            ws.Column("E").Width = 15.710625;
+            ws.Column("F").Width = 13.0;
+            ws.Column("G").Width = 13.0;
+            ws.Column("H").Width = 13.0;
+            ws.Column("I").Width = 13.0;
+
+            // Márgenes de página
+            ws.PageSetup.Margins.Left = 0.7874015748031497;
+            ws.PageSetup.Margins.Right = 0.7874015748031497;
+            ws.PageSetup.Margins.Top = 0.7874015748031497;
+            ws.PageSetup.Margins.Bottom = 0.7874015748031497;
+
+            // Altos de fila fijos
+            ws.Row(1).Height = 21.75;
+            ws.Row(2).Height = 12.00;
+            ws.Row(3).Height = 24.60;
+            ws.Row(4).Height = 5.10;
+            ws.Row(5).Height = 6.00;
+            ws.Row(7).Height = 11.85;
+            ws.Row(8).Height = 17.10;
+            ws.Row(9).Height = 2.10;
+            ws.Row(10).Height = 25.50;
+            ws.Row(13).Height = 8.25;
+            ws.Row(14).Height = 17.10;
+
+            // 1) Área logo
+            ws.Range("B2:C5").Merge();
+            if (File.Exists(logoPath))
+                ws.AddPicture(logoPath)
+                  .MoveTo(ws.Cell("B2"))
+                  .WithSize(80, 80);
+
+            // 2) Título
+            ws.Range("E3:I3").Merge()
+              .Value = $"TOTALES Y DEPOSITOS DE BUZONERA {buzonDTO.NN.ToUpper()}";
+
+            // 3) Subtítulo fechas
+            DateTime hoy = DateTime.Today;
+            DateTime fechaInicio, fechaCierre;
+            if (buzonDTO.EsHenderson && buzonDTO.NumeroEnvioMasivo == 1)
+            {
+                int dias = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
+                var bd = hoy.AddDays(-dias);
+                fechaInicio = new DateTime(bd.Year, bd.Month, bd.Day, 14, 30, 0);
+                fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, 9, 30, 0);
+            }
+            else
+            {
+                var c = buzonDTO.Cierre;
+                fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, c.Hour, c.Minute, 0);
+                if (!buzonDTO.EsHenderson)
+                {
+                    int dias = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
+                    var bd2 = hoy.AddDays(-dias);
+                    var t = c.TimeOfDay;
+                    fechaInicio = new DateTime(bd2.Year, bd2.Month, bd2.Day, t.Hours, t.Minutes, 0);
+                }
+                else if (buzonDTO.NumeroEnvioMasivo == 2)
+                    fechaInicio = new DateTime(hoy.Year, hoy.Month, hoy.Day, 7, 0, 0);
+                else
+                    fechaInicio = new DateTime(hoy.Year, hoy.Month, hoy.Day, c.Hour, c.Minute, 0);
+            }
+            string inicioStr = fechaInicio.ToString("dd/MM/yyyy HH:mm");
+            string cierreStr = fechaCierre.ToString("dd/MM/yyyy HH:mm");
+            ws.Range("E5:I6").Merge()
+              .Value = $"DEL {inicioStr} AL {cierreStr}";
+
+            // 4) Sección TOTALES
+            ws.Range("B8:C8").Merge().Value = "TOTALES:";
+            ws.Range("B8:C8").Style.Font.SetBold();
+
+            var headerColor = XLColor.FromHtml("#D9B382");
+            ws.Range("B10:C10").Merge().Value = "EMPRESA";
+            ws.Range("B10:C10").Style
+              .Fill.SetBackgroundColor(headerColor)
+              .Font.SetBold()
+              .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+              .Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+            var totCols = new[] {
+        new { Col="E", Title="TOTAL PESOS" },
+        new { Col="F", Title="TOTAL DOLARES" },
+        new { Col="G", Title="TOTAL ARG" },
+        new { Col="H", Title="TOTAL REALES" },
+        new { Col="I", Title="TOTAL EUROS" },
+    };
+            foreach (var tc in totCols)
+            {
+                ws.Cell($"{tc.Col}10").Value = tc.Title;
+                ws.Cell($"{tc.Col}10").Style
+                  .Fill.SetBackgroundColor(headerColor)
+                  .Font.SetBold()
+                  .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                  .Border.OutsideBorder = XLBorderStyleValues.Thin;
+            }
+
+            var totales = buzonDTO.Acreditaciones
+              .GroupBy(a => a.Empresa)
+              .Select(g => new {
+                  Empresa = g.Key,
+                  Pesos = g.Where(a => a.Divisa == 1).Sum(a => a.Monto),
+                  Dolares = g.Where(a => a.Divisa == 2).Sum(a => a.Monto),
+                  Arg = g.Where(a => a.Divisa == 3).Sum(a => a.Monto),
+                  Reales = g.Where(a => a.Divisa == 4).Sum(a => a.Monto),
+                  Euros = g.Where(a => a.Divisa == 5).Sum(a => a.Monto)
+              })
+              .ToList();
+
+            int row = 11;
+            foreach (var t in totales)
+            {
+                ws.Range($"B{row}:C{row}").Merge().Value = t.Empresa;
+                ws.Range($"B{row}:C{row}").Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                foreach (var tc in totCols)
+                {
+                    double val = tc.Col switch
+                    {
+                        "E" => t.Pesos,
+                        "F" => t.Dolares,
+                        "G" => t.Arg,
+                        "H" => t.Reales,
+                        "I" => t.Euros,
+                        _ => 0
+                    };
+                    ws.Cell($"{tc.Col}{row}").Value = val;
+                    ws.Cell($"{tc.Col}{row}").Style
+                      .NumberFormat.SetFormat("#,##0.00")
+                      .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right)
+                      .Border.OutsideBorder = XLBorderStyleValues.Thin;
+                }
+                row++;
+            }
+
+            // Fila TOTAL general
+            ws.Range($"B{row}:C{row}").Merge().Value = "TOTAL";
+            ws.Range($"B{row}:C{row}").Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            foreach (var tc in totCols)
+            {
+                ws.Cell($"{tc.Col}{row}").FormulaA1 = $"=SUM({tc.Col}11:{tc.Col}{row - 1})";
+                ws.Cell($"{tc.Col}{row}").Style
+                  .NumberFormat.SetFormat("#,##0.00")
+                  .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right)
+                  .Border.OutsideBorder = XLBorderStyleValues.Thin;
+            }
+
+            // 5) Sección DEPÓSITOS
+            ws.Range("B14:C14").Merge().Value = "DEPOSITOS:";
+            ws.Range("B14:C14").Style.Font.SetBold();
+
+            var detHeaders = new Dictionary<string, string> {
+        { "B", "OPERACION" },
+        { "C", "FECHA" },
+        { "E", "MONEDA" },
+        { "F", "TOTAL" },
+        { "G", "USUARIO" },
+        { "H", "EMPRESA" },
+        { "I", "SUCURSAL" }
+    };
+            foreach (var kv in detHeaders)
+            {
+                ws.Cell($"{kv.Key}15").Value = kv.Value;
+                ws.Cell($"{kv.Key}15").Style
+                  .Fill.SetBackgroundColor(headerColor)
+                  .Font.SetBold()
+                  .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                  .Border.OutsideBorder = XLBorderStyleValues.Thin;
+            }
+
+            int rowDet = 16;
+            foreach (var a in buzonDTO.Acreditaciones)
+            {
+                ws.Cell($"B{rowDet}").Value = a.IdOperacion;
+                ws.Cell($"C{rowDet}").Value = a.FechaDep;
+                ws.Cell($"C{rowDet}").Style.DateFormat.SetFormat("yyyy-MM-dd HH:mm:ss");
+
+                ws.Cell($"E{rowDet}").Value = a.Moneda;
+                ws.Cell($"F{rowDet}").Value = a.Monto;
+                ws.Cell($"F{rowDet}").Style
+                  .NumberFormat.SetFormat("#,##0.00")
+                  .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+
+                ws.Cell($"G{rowDet}").Value = a.Usuario;
+                ws.Cell($"H{rowDet}").Value = a.Empresa;
+                ws.Cell($"I{rowDet}").Value = buzonDTO.Sucursal;
+
+                ws.Range($"B{rowDet}:I{rowDet}")
+                  .Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                rowDet++;
+            }
+
+            // Guardar en memoria
+            var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            ms.Position = 0;
+
+            fileName = $"EnvioMasivo_{buzonDTO.NC}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            subject = $"Acreditaciones Buzón Inteligente [{buzonDTO.NN}] - {fechaInicio:dd/MM/yyyy}";
+            body = $@"
+<p>Acreditaciones del <strong>Buzón Inteligente {buzonDTO.NN}</strong><br/>
+del {inicioStr}<br/>al {cierreStr}</p>
+<p><strong>Última conexión del buzón:</strong><br/>
+{buzonDTO.UltimaFechaConexion:dd/MM/yyyy HH:mm}</p>";
+
+            return ms;
+        }
 
         /*
          
@@ -687,6 +920,97 @@ group by idoperacion,fecha
 order by idoperacion asc)
 order by idoperacion desc
          */
+        public class TotalesImprimir
+        {
+            public string EMPRESA { get; set; }
+            public string TOTALPESOS { get; set; }
+            public string TOTALARG { get; set; }
+            public string TOTALDOLARES { get; set; }
+            public string TOTALEUROS { get; set; }
+            public string TOTALREALES { get; set; }
+        }
+
+        public class DepositosCCImprimir
+        {
+            public string OPERACION { get; set; }
+            public string MONEDA { get; set; }
+            public string FECHA { get; set; }
+            public string TOTAL { get; set; }
+            public string USUARIO { get; set; }
+            public string EMPRESA { get; set; }
+            public string SUCURSAL { get; set; }
+        }
+        private Stream ArmarExcelConReportViewer(BuzonDTO buzonDTO, out string subject, out string body, out string fileName)
+        {
+            subject = body = fileName = string.Empty;
+
+            // 1. Construyo los DataSources
+            var totales = buzonDTO.Acreditaciones
+                .GroupBy(a => a.Empresa)
+                .Select(g => new TotalesImprimir
+                {
+                    EMPRESA = g.Key,
+                    TOTALPESOS = g.Where(a => a.Divisa == 1).Sum(a => a.Monto).ToString("N2"),
+                    TOTALDOLARES = g.Where(a => a.Divisa == 2).Sum(a => a.Monto).ToString("N2"),
+                    TOTALARG = g.Where(a => a.Divisa == 3).Sum(a => a.Monto).ToString("N2"),
+                    TOTALREALES = g.Where(a => a.Divisa == 4).Sum(a => a.Monto).ToString("N2"),
+                    TOTALEUROS = g.Where(a => a.Divisa == 5).Sum(a => a.Monto).ToString("N2"),
+                })
+                .ToList();
+
+            var depositos = buzonDTO.Acreditaciones
+                .Select(a => new DepositosCCImprimir
+                {
+                    OPERACION = a.IdOperacion.ToString(),
+                    MONEDA = a.Moneda,
+                    FECHA = a.FechaDep.ToString("yyyy-MM-dd HH:mm:ss"),
+                    TOTAL = a.Monto.ToString("N2"),
+                    USUARIO = a.Usuario,
+                    EMPRESA = a.Empresa,
+                    SUCURSAL = buzonDTO.Sucursal
+                })
+                .ToList();
+
+            // 2. Ruta al RDLC y chequeo de existencia
+            var reportPath = Path.Combine(AppContext.BaseDirectory, "Reports", "TotalesyDepositosCC.rdlc");
+            if (!File.Exists(reportPath))
+                throw new FileNotFoundException($"No se encontró el informe en: {reportPath}");
+
+            // 3. Cargo la definición en memoria
+            var report = new LocalReport();
+            using (var stream = File.OpenRead(reportPath))
+            {
+                report.LoadReportDefinition(stream);
+            }
+
+            // 4. Asigno los DataSources (los nombres deben coincidir con <DataSet Name="…"> en el RDLC)
+            report.DataSources.Clear();
+            report.DataSources.Add(new ReportDataSource("DataSet1", totales));
+            report.DataSources.Add(new ReportDataSource("DataSet2", depositos));
+
+            // 5. Parámetros
+            string fechaRango = $"DEL {buzonDTO.FechaInicio:dd/MM/yyyy HH:mm} AL {buzonDTO.Cierre:dd/MM/yyyy HH:mm}";
+            report.SetParameters(new ReportParameter("FECHA1", fechaRango));
+            report.SetParameters(new ReportParameter("SUCURSAL", buzonDTO.NN));
+
+            // 6. Render a Excel
+            byte[] excelBytes = report.Render(
+              format: "EXCELOPENXML",    // <-- en lugar de "Excel"
+              deviceInfo: null,
+              out var mimeType,
+              out var encoding,
+              out var fileExt,           // aquí fileExt será "xlsx"
+              out var streams,
+              out var warnings
+          );
+
+            // 7. Preparo el Stream de salida
+            fileName = $"Acreditacion{buzonDTO.NN}_{DateTime.Now:yyyyMMdd_HHmmss}.{fileExt}";
+            subject = $"Acreditaciones Buzón Inteligente [{buzonDTO.NN}] - {buzonDTO.FechaInicio:dd/MM/yyyy}";
+            body = $"Acreditaciones del Buzón Inteligente {buzonDTO.NN} del <strong>{fechaRango}</strong>";
+
+            return new MemoryStream(excelBytes);
+        }
 
         public class BuzonDTO
         {

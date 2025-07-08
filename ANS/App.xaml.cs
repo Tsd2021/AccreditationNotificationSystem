@@ -236,8 +236,8 @@ namespace ANS
 
             #endregion
 
-            #region Tarea 2: ENVIO MASIVO 2 (14:50:00)
-      
+            #region Tarea 2: ENVIO MASIVO 2 (15:05:00)
+
             IJobDetail jobEnvioMasivo2 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo2Job", "GrupoEnvioMasivo")
                 .UsingJobData("numEnvioMasivo", 2)  
@@ -246,7 +246,7 @@ namespace ANS
      
             ITrigger triggerEnvioMasivo2 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo2Trigger", "GrupoEnvioMasivo")
-                .WithCronSchedule("0 50 14 ? * MON-FRI")
+                .WithCronSchedule("0 5 15 ? * MON-FRI")
                 .Build();
             #endregion
 
@@ -613,18 +613,10 @@ namespace ANS
 
             ITrigger triggerBBVAPuntoAPunto = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerP2P", "GrupoTrabajoBBVA")
-                .WithDailyTimeIntervalSchedule(x => x
-                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(6, 30)) // Hora de inicio: 6:30 AM
-                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 30)) // Hora de fin: 19:30 PM
-                    .OnDaysOfTheWeek(new[]
-                    {
-                        DayOfWeek.Monday,
-                        DayOfWeek.Tuesday,
-                        DayOfWeek.Wednesday,
-                        DayOfWeek.Thursday,
-                        DayOfWeek.Friday
-                    })
-                    .WithIntervalInMinutes(30)).Build(); // Intervalo de 30 minutos
+                .WithSchedule(CronScheduleBuilder
+                    // Segundos | Minutos    | Horas     | Day-of-month | Meses | Días-semana
+                    .CronSchedule("0 15,45 8-19 ? * MON-FRI"))
+                .Build();
             #endregion
 
             // Tarea 2: Acreditar dia a dia. 17:00

@@ -71,7 +71,7 @@ namespace ANS.Model.Services
                 }
             }
         }
-        private List<Cliente> getClientesRelacionados(Cliente cli)
+        public List<Cliente> getClientesRelacionados(Cliente cli)
         {
             List<Cliente> retorno = new List<Cliente>();
             string query = @"

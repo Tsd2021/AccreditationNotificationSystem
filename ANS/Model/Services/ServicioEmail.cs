@@ -277,6 +277,7 @@ namespace ANS.Model.Services
                     message.To.Add(MailboxAddress.Parse(e.Correo));
                 }*/
                 message.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
+                message.To.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
                 message.Subject = subject;
 
                 var builder = new BodyBuilder();

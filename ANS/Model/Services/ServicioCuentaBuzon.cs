@@ -1200,7 +1200,7 @@ namespace ANS.Model.Services
 
             try
             {
-                List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco, new ConfiguracionAcreditacion("Tanda"));
+                List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco,numTanda, new ConfiguracionAcreditacion("Tanda"));
 
 
                 generarExcelTesoreriaTanda(lista, numTanda, banco);

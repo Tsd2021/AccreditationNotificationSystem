@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ANS.Model.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -64,6 +65,18 @@ namespace ANS.Model
                 return 2;
             }
             return -1;
+        }
+
+        public bool esHenderson()
+        {
+            bool es = false;
+
+            if(ServicioCliente.getInstancia().getClientesRelacionados(new Cliente { IdCliente = this.IdCliente }).Where(c => c.IdCliente == IdCliente).Any(c => c.Nombre.ToUpper().Contains("HENDERSON")))
+            {
+                es = true;
+            }
+
+            return es;
         }
     }
 }
