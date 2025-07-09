@@ -18,7 +18,7 @@ namespace ANS
 {
     /// <summary>
     /// </summary>
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
         private IScheduler _scheduler;
         protected override async void OnStartup(StartupEventArgs e)
@@ -246,7 +246,7 @@ namespace ANS
      
             ITrigger triggerEnvioMasivo2 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo2Trigger", "GrupoEnvioMasivo")
-                .WithCronSchedule("0 5 15 ? * MON-FRI")
+                .WithCronSchedule("10 28 18 ? * MON-FRI")
                 .Build();
             #endregion
 
@@ -284,9 +284,9 @@ namespace ANS
 
                 await scheduler.ScheduleJob(jobEnvioMasivo2, triggerEnvioMasivo2);
 
-                await scheduler.ScheduleJob(jobEnvioMasivo3, triggerEnvioMasivo3);
+                //await scheduler.ScheduleJob(jobEnvioMasivo3, triggerEnvioMasivo3);
 
-                await scheduler.ScheduleJob(jobEnvioMasivo4, triggerEnvioMasivo4);
+                //await scheduler.ScheduleJob(jobEnvioMasivo4, triggerEnvioMasivo4);
 
             }
             catch (Exception e)

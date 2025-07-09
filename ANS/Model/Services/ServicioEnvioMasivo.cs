@@ -4,8 +4,8 @@ using Microsoft.Reporting.NETCore;
 using System.Data;
 using System.IO;
 using System.Reflection;
-
-
+using TAAS.Reports;
+using SharedDTOs;
 
 namespace ANS.Model.Services
 {
@@ -43,7 +43,9 @@ namespace ANS.Model.Services
 
             if (buzonesConAcreditaciones.Count == 0) return;
 
-            ObtenerMailsPorBuzon(buzonesConAcreditaciones);
+            var reportService = new TAAS.Reports.ReportService();
+
+                ObtenerMailsPorBuzon(buzonesConAcreditaciones);
 
             var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
             var smtp = await ServicioEmail.instancia.getNewSmptClient();
@@ -53,7 +55,38 @@ namespace ANS.Model.Services
             {
                 // preparar excelStream, subject, body, fileName, destino…
                 b.MontoTotal = b.Acreditaciones.Sum(a => a.Monto);
-                var excelStream = ArmarExcelConReportViewer(b, out var subject, out var body, out var fileName);
+
+                var b2 = new BuzonDTO2
+                {
+                    NC = b.NC,
+                    NN = b.NN,
+                    Empresa = b.Empresa,
+                    FechaInicio = b.FechaInicio,
+                    Cierre = b.Cierre,
+                    MontoTotal = b.MontoTotal,
+                    Moneda = b.Moneda,
+                    Divisa = b.Divisa,
+                    IdOperacion = b.IdOperacion,
+                    Sucursal = b.Sucursal,
+                    IdOperacionFinal = b.IdOperacionFinal,
+                    IdOperacionInicio = b.IdOperacionInicio,
+                    NumeroEnvioMasivo = b.NumeroEnvioMasivo,
+                    UltimaFechaConexion = b.UltimaFechaConexion,
+                    // mapea Acreditaciones:
+                    Acreditaciones = b.Acreditaciones.Select(a => new AcreditacionDTO2
+                    {
+                        NC = a.NC,
+                        IdOperacion = a.IdOperacion,
+                        Divisa = a.Divisa,
+                        Monto = a.Monto,
+                        Usuario = a.Usuario,
+                        FechaDep = a.FechaDep,
+                        Empresa = a.Empresa
+                    }).ToList()
+                };
+
+                //var excelStream = ArmarExcelConReportViewer(b, out var subject, out var body, out var fileName);
+                var excelStream = reportService.ArmarExcelConReportViewer(b2, out var subject, out var body, out var fileName);
                 await semaphore.WaitAsync();
                 try
                 {
@@ -924,8 +957,8 @@ order by idoperacion desc
         {
             public string EMPRESA { get; set; }
             public string TOTALPESOS { get; set; }
-            public string TOTALARG { get; set; }
             public string TOTALDOLARES { get; set; }
+            public string TOTALARG { get; set; }
             public string TOTALEUROS { get; set; }
             public string TOTALREALES { get; set; }
         }
@@ -940,11 +973,49 @@ order by idoperacion desc
             public string EMPRESA { get; set; }
             public string SUCURSAL { get; set; }
         }
-        private Stream ArmarExcelConReportViewer(BuzonDTO buzonDTO, out string subject, out string body, out string fileName)
+        private Stream ArmarExcelConReportViewer(
+            BuzonDTO buzonDTO,
+            out string subject,
+            out string body,
+            out string fileName)
         {
             subject = body = fileName = string.Empty;
 
-            // 1. Construyo los DataSources
+            // 1) Calcular fechas de rango
+            DateTime hoy = DateTime.Today;
+            DateTime fechaInicio, fechaCierre;
+            if (buzonDTO.EsHenderson && buzonDTO.NumeroEnvioMasivo == 1)
+            {
+                int dias = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
+                var bd = hoy.AddDays(-dias);
+                fechaInicio = new DateTime(bd.Year, bd.Month, bd.Day, 14, 30, 0);
+                fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, 9, 30, 0);
+            }
+            else
+            {
+                var c = buzonDTO.Cierre;
+                fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, c.Hour, c.Minute, 0);
+
+                if (!buzonDTO.EsHenderson)
+                {
+                    int dias = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
+                    var bd2 = hoy.AddDays(-dias);
+                    fechaInicio = new DateTime(bd2.Year, bd2.Month, bd2.Day, c.Hour, c.Minute, 0);
+                }
+                else if (buzonDTO.NumeroEnvioMasivo == 2)
+                {
+                    fechaInicio = new DateTime(hoy.Year, hoy.Month, hoy.Day, 7, 0, 0);
+                }
+                else
+                {
+                    fechaInicio = new DateTime(hoy.Year, hoy.Month, hoy.Day, c.Hour, c.Minute, 0);
+                }
+            }
+
+            string inicioStr = fechaInicio.ToString("dd/MM/yyyy HH:mm");
+            string cierreStr = fechaCierre.ToString("dd/MM/yyyy HH:mm");
+
+            // 2) Construir listas para los DataSources
             var totales = buzonDTO.Acreditaciones
                 .GroupBy(a => a.Empresa)
                 .Select(g => new TotalesImprimir
@@ -957,6 +1028,18 @@ order by idoperacion desc
                     TOTALEUROS = g.Where(a => a.Divisa == 5).Sum(a => a.Monto).ToString("N2"),
                 })
                 .ToList();
+
+            // Agregar fila de totales generales
+            var totalGeneral = new TotalesImprimir
+            {
+                EMPRESA = "TOTAL",
+                TOTALPESOS = totales.Sum(x => decimal.Parse(x.TOTALPESOS)).ToString("N2"),
+                TOTALDOLARES = totales.Sum(x => decimal.Parse(x.TOTALDOLARES)).ToString("N2"),
+                TOTALARG = totales.Sum(x => decimal.Parse(x.TOTALARG)).ToString("N2"),
+                TOTALREALES = totales.Sum(x => decimal.Parse(x.TOTALREALES)).ToString("N2"),
+                TOTALEUROS = totales.Sum(x => decimal.Parse(x.TOTALEUROS)).ToString("N2"),
+            };
+            totales.Add(totalGeneral);
 
             var depositos = buzonDTO.Acreditaciones
                 .Select(a => new DepositosCCImprimir
@@ -971,46 +1054,61 @@ order by idoperacion desc
                 })
                 .ToList();
 
-            // 2. Ruta al RDLC y chequeo de existencia
-            var reportPath = Path.Combine(AppContext.BaseDirectory, "Reports", "TotalesyDepositosCC.rdlc");
+            // 3) Determinar y validar ruta del .rdlc
+            string exeLocation = Assembly.GetExecutingAssembly().Location;
+            string exeFolder = !string.IsNullOrEmpty(exeLocation)
+                                 ? Path.GetDirectoryName(exeLocation)
+                                 : AppContext.BaseDirectory;
+            if (string.IsNullOrEmpty(exeFolder))
+                exeFolder = Environment.CurrentDirectory;
+
+            string reportPath = Path.Combine(exeFolder, "Reports", "TotalesyDepositosCC.rdlc");
             if (!File.Exists(reportPath))
-                throw new FileNotFoundException($"No se encontró el informe en: {reportPath}");
+                throw new FileNotFoundException($"No se encontró el .rdlc en '{reportPath}'");
 
-            // 3. Cargo la definición en memoria
-            var report = new LocalReport();
-            using (var stream = File.OpenRead(reportPath))
-            {
-                report.LoadReportDefinition(stream);
-            }
+            // 4) Cargar y preparar LocalReport
+            using var report = new LocalReport();
+            using (var fs = File.OpenRead(reportPath))
+                report.LoadReportDefinition(fs);
 
-            // 4. Asigno los DataSources (los nombres deben coincidir con <DataSet Name="…"> en el RDLC)
             report.DataSources.Clear();
+            // OJO: estos nombres ("DataSet1"/"DataSet2") deben coincidir EXACTAMENTE con los DataSet
+            // definidos en tu .rdlc (revisa el diseñador).
             report.DataSources.Add(new ReportDataSource("DataSet1", totales));
             report.DataSources.Add(new ReportDataSource("DataSet2", depositos));
 
-            // 5. Parámetros
-            string fechaRango = $"DEL {buzonDTO.FechaInicio:dd/MM/yyyy HH:mm} AL {buzonDTO.Cierre:dd/MM/yyyy HH:mm}";
+            // Parámetros del informe
+            string fechaRango = $"{inicioStr} al {cierreStr}";
             report.SetParameters(new ReportParameter("FECHA1", fechaRango));
             report.SetParameters(new ReportParameter("SUCURSAL", buzonDTO.NN));
 
-            // 6. Render a Excel
-            byte[] excelBytes = report.Render(
-              format: "EXCELOPENXML",    // <-- en lugar de "Excel"
-              deviceInfo: null,
-              out var mimeType,
-              out var encoding,
-              out var fileExt,           // aquí fileExt será "xlsx"
-              out var streams,
-              out var warnings
-          );
+            // 5) Render a Excel
+            try
+            {
+                byte[] excelBytes = report.Render(
+                    format: "EXCELOPENXML",
+                    deviceInfo: null,
+                    out string mimeType,
+                    out string encoding,
+                    out string extension,
+                    out string[] streamIds,
+                    out Warning[] warnings
+                );
 
-            // 7. Preparo el Stream de salida
-            fileName = $"Acreditacion{buzonDTO.NN}_{DateTime.Now:yyyyMMdd_HHmmss}.{fileExt}";
-            subject = $"Acreditaciones Buzón Inteligente [{buzonDTO.NN}] - {buzonDTO.FechaInicio:dd/MM/yyyy}";
-            body = $"Acreditaciones del Buzón Inteligente {buzonDTO.NN} del <strong>{fechaRango}</strong>";
+                fileName = $"Acreditacion_{buzonDTO.NN}_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}";
+                subject = $"Acreditaciones Buzón Inteligente [{buzonDTO.NN}] – {hoy:dd/MM/yyyy}";
+                body = $"Acreditaciones del Buzón Inteligente {buzonDTO.NN} del <strong>{fechaRango}</strong>";
 
-            return new MemoryStream(excelBytes);
+                return new MemoryStream(excelBytes);
+            }
+            catch (LocalProcessingException lpex)
+            {
+                Console.Error.WriteLine($"Error en Render: {lpex.Message} | Inner: {lpex.InnerException?.Message}");
+                throw;
+            }
         }
+
+
 
         public class BuzonDTO
         {

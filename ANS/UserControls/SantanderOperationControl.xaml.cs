@@ -2,7 +2,7 @@
 using ANS.Model.Services;
 using ANS.ViewModel;
 using System.Windows.Controls;
-
+using UserControl = System.Windows.Controls.UserControl;
 namespace ANS.UserControls
 {
     /// <summary>

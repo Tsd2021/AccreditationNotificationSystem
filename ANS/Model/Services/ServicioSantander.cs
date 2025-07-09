@@ -197,7 +197,7 @@ namespace ANS.Model.Services
                 Password = password;
             }
 
-            public object BeforeSendRequest(ref Message request, IClientChannel channel)
+            public object BeforeSendRequest(ref System.ServiceModel.Channels.Message request, IClientChannel channel)
             {
                 XmlDocument doc = new XmlDocument();
 
