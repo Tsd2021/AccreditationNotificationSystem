@@ -246,7 +246,7 @@ namespace ANS
      
             ITrigger triggerEnvioMasivo2 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo2Trigger", "GrupoEnvioMasivo")
-                .WithCronSchedule("10 28 18 ? * MON-FRI")
+                .WithCronSchedule("10 05 15 ? * MON-FRI")
                 .Build();
             #endregion
 
