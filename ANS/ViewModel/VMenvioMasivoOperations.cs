@@ -17,6 +17,7 @@ namespace ANS.ViewModel
         public ICommand EjecutarEnvioMasivo1 { get; }
         public ICommand EjecutarEnvioMasivo2 { get; }
         public ICommand EjecutarEnvioMasivo3 { get; }
+        public ICommand EjecutarEnvioMasivo4 { get; }
         public ServicioEnvioMasivo _servicioEnvioMasivo { get; set; }
         public VMenvioMasivoOperations()
         {
@@ -28,6 +29,8 @@ namespace ANS.ViewModel
             EjecutarEnvioMasivo2 = new RelayCommand(async () => await ejecutarEnvioMasivo2());
 
             EjecutarEnvioMasivo3 = new RelayCommand(async () => await ejecutarEnvioMasivo3());
+
+            EjecutarEnvioMasivo4 = new RelayCommand(async () => await ejecutarEnvioMasivo4());
 
         }
         private async Task ejecutarEnvioMasivo1()
@@ -90,6 +93,27 @@ namespace ANS.ViewModel
             {
                 IsLoading = false;
             }
+        }
+
+        private async Task ejecutarEnvioMasivo4()
+        {
+
+            IsLoading = true;
+
+            try
+            {
+                await _servicioEnvioMasivo.procesarEnvioMasivo(4);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Todos", "Envío Masivo 4");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+
         }
     }
 }

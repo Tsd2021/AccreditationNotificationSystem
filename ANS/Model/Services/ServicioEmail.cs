@@ -107,10 +107,10 @@ namespace ANS.Model.Services
         }
 
 
-        public bool enviarExcelPorMail(string excelPath, string asunto, string cuerpo, Cliente c, Banco b, ConfiguracionAcreditacion config)
+        public bool enviarExcelPorMail(string excelPath, string asunto, string cuerpo, Cliente c, Banco b, ConfiguracionAcreditacion config,string ciudad)
         {
 
-            var listaEmails = ObtenerEmailsPorClienteBancoYConfig(c, b, config);
+            var listaEmails = ObtenerEmailsPorClienteBancoYConfig(c, b, config,ciudad);
 
             if (!listaEmails.Any())
                 return false; // no hay a quién enviar
@@ -186,13 +186,13 @@ namespace ANS.Model.Services
             }
         }
 
-        private List<Email> ObtenerEmailsPorClienteBancoYConfig(Cliente cliente, Banco banco, ConfiguracionAcreditacion config)
+        private List<Email> ObtenerEmailsPorClienteBancoYConfig(Cliente cliente, Banco banco, ConfiguracionAcreditacion config,string ciudad)
         {
             var emails = new List<Email>();
 
             // Construyo la consulta base
             var sb = new StringBuilder(@"
-                                        SELECT email, esprincipal
+                                        SELECT email, esprincipal , ciudad
                                         FROM EmailDestinoEnvio
                                         WHERE banco = @banco
                                       ");
@@ -208,13 +208,25 @@ namespace ANS.Model.Services
             {
                 sb.Append(" AND (idcliente IS NULL OR idcliente = @idcliente)");
             }
+
+
             else
             {
                 sb.Append(" AND idcliente IS NULL");
             }
 
+       
+
             using var conn = new SqlConnection(_conexionTSD);
             using var cmd = new SqlCommand(sb.ToString(), conn);
+
+
+            if (!string.IsNullOrEmpty(ciudad))
+            {
+                sb.Append(" AND (ciudad = @ciudad)");
+                cmd.Parameters.Add("@ciudad", SqlDbType.VarChar, 50)
+                .Value = ciudad;
+            }
 
             // Parámetros obligatorios
             cmd.Parameters.Add("@banco", SqlDbType.VarChar, 100).Value = banco.NombreBanco;
@@ -232,13 +244,16 @@ namespace ANS.Model.Services
             }
 
             conn.Open();
+
             using var reader = cmd.ExecuteReader();
+
             while (reader.Read())
             {
                 emails.Add(new Email
                 {
                     Correo = reader.GetString(reader.GetOrdinal("email")),
-                    EsPrincipal = reader.GetBoolean(reader.GetOrdinal("esprincipal"))
+                    EsPrincipal = reader.GetBoolean(reader.GetOrdinal("esprincipal")),
+                    Ciudad = reader.GetString(reader.GetOrdinal("ciudad"))
                 });
             }
 
@@ -320,22 +335,23 @@ namespace ANS.Model.Services
             string cliente,
             string tipoAcreditacion,
             string correo,
-            bool esPrincipal)
+            bool esPrincipal,
+            string ciudad)
         {
-            // Validaciones mínimas
+       
             if (string.IsNullOrWhiteSpace(banco)
              || string.IsNullOrWhiteSpace(tipoAcreditacion)
-             || string.IsNullOrWhiteSpace(correo))
+             || string.IsNullOrWhiteSpace(correo)
+             || string.IsNullOrWhiteSpace(ciudad))
             {
                 return 0;
             }
 
             const string sql = @"
-        INSERT INTO EmailDestinoEnvio
-            (IdCliente, Cliente, TipoAcreditacion, Banco, Email, EsPrincipal)
-        VALUES
-            (@idCliente, @cliente, @tipoAcreditacion, @banco, @email, @esPrincipal);
-    ";
+                                INSERT INTO EmailDestinoEnvio
+                                (IdCliente, Cliente, TipoAcreditacion, Banco, Email, EsPrincipal, Ciudad)
+                                VALUES
+                                (@idCliente, @cliente, @tipoAcreditacion, @banco, @email, @esPrincipal, @ciudad);";
 
             using var cn = new SqlConnection(_conexionTSD);
             using var cmd = new SqlCommand(sql, cn);
@@ -352,12 +368,15 @@ namespace ANS.Model.Services
                         ? (object)DBNull.Value
                         : cliente
                 );
+
                 cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion);
                 cmd.Parameters.AddWithValue("@banco", banco);
                 cmd.Parameters.AddWithValue("@email", correo);
                 cmd.Parameters.AddWithValue("@esPrincipal", esPrincipal);
+                cmd.Parameters.AddWithValue("@ciudad", ciudad);
 
                 cn.Open();
+
                 return cmd.ExecuteNonQuery();
             }
         }
@@ -371,22 +390,23 @@ namespace ANS.Model.Services
             }
 
             const string sql = @"
-        SELECT email, esprincipal
-          FROM emaildestinoenvio
-         WHERE banco            = @nombreBanco
-           AND tipoacreditacion = @tipoAcreditacion
-           AND (
-                 idcliente IS NULL 
-              OR idcliente = @idCliente 
-           )";
+                                SELECT email, esprincipal
+                                FROM emaildestinoenvio
+                                WHERE banco            = @nombreBanco
+                                AND tipoacreditacion = @tipoAcreditacion
+                                AND (
+                                idcliente IS NULL 
+                                OR idcliente = @idCliente)";
 
             var resultado = new List<Email>();
 
             using var conn = new SqlConnection(_conexionTSD);
+
             using var cmd = new SqlCommand(sql, conn);
             {
                 // Parámetros básicos
                 cmd.Parameters.AddWithValue("@nombreBanco", nombreBanco);
+
                 cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion);
 
                 // Parámetro opcional de cliente
@@ -396,8 +416,11 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@idCliente", sqlIdCliente);
 
                 conn.Open();
+
                 using var reader = cmd.ExecuteReader();
+
                 int emailOrd = reader.GetOrdinal("email");
+
                 int principalOrd = reader.GetOrdinal("esprincipal");
 
                 while (reader.Read())

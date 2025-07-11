@@ -11,5 +11,6 @@ namespace ANS
         public string Correo { get; set; }
         public bool EsPrincipal { get; set; }
         public string NC { get; set; }
+        public string Ciudad { get; set; }
     }
 }

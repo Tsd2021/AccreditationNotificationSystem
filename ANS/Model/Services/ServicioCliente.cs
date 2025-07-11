@@ -47,7 +47,7 @@ namespace ANS.Model.Services
         {
             using (SqlConnection conn = new SqlConnection(_conexionENCUESTA))
             {
-                string query = @"SELECT IDCLIENTE, NOMBRE FROM CLIENTES WHERE Facturacion IN(1,3)";
+                string query = @"SELECT IDCLIENTE,NOMBRE,RUT FROM CLIENTES WHERE Facturacion IN(1,3)";
                 SqlCommand cmd = new SqlCommand(query, conn);
                 conn.Open();
 
@@ -59,6 +59,7 @@ namespace ANS.Model.Services
                         {
                             IdCliente = reader.GetInt32(0),
                             Nombre = reader.GetString(1),
+                            Rut = reader.IsDBNull(2) ? null : reader.GetString(2)
                         };
 
                         if (cli.IdCliente == 164)

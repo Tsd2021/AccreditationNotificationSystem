@@ -102,7 +102,7 @@
 
                                 <!-- Fila 1 -->
                                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10,5">
-                                    <TextBlock Text="Envío Masivo 1 (07:30 AM)"
+                                    <TextBlock Text="Envío Masivo 1 (07:30)"
                                                FontSize="20"
                                                FontFamily="HP Simplified"
                                                VerticalAlignment="Center"/>

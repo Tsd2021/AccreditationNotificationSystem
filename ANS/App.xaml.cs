@@ -26,6 +26,8 @@ namespace ANS
 
             base.OnStartup(e);
 
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
             cargarClientes();
 
             preCargarBancos();
@@ -280,13 +282,14 @@ namespace ANS
 
             try
             {
+
                 await scheduler.ScheduleJob(jobEnvioMasivo1, triggerEnvioMasivo1);
 
                 await scheduler.ScheduleJob(jobEnvioMasivo2, triggerEnvioMasivo2);
 
-                //await scheduler.ScheduleJob(jobEnvioMasivo3, triggerEnvioMasivo3);
+                await scheduler.ScheduleJob(jobEnvioMasivo3, triggerEnvioMasivo3);
 
-                //await scheduler.ScheduleJob(jobEnvioMasivo4, triggerEnvioMasivo4);
+                await scheduler.ScheduleJob(jobEnvioMasivo4, triggerEnvioMasivo4);
 
             }
             catch (Exception e)

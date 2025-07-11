@@ -12,6 +12,7 @@ namespace ANS.Model
         public int IdCliente { get; set; }
         public string Nombre { get; set; }
         public string Ciudad { get; set; }
+        public string Rut { get; set; }
         public List<Cliente> ClientesRelacionados { get; set; } = new List<Cliente> { };
 
     }

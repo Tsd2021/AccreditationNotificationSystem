@@ -3,11 +3,8 @@ using ANS.Model.Services;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -62,6 +59,21 @@ namespace ANS.ViewModel
             set
             {
                 if (Set(ref _bancoSeleccionado, value))
+                {
+                    RaiseSelectionChanged();
+                }
+            }
+        }
+
+        public ObservableCollection<string> Ciudades { get; } = new ObservableCollection<string>();
+
+        private string _ciudadSeleccionada;
+        public string CiudadSeleccionada
+        {
+            get => _ciudadSeleccionada;
+            set
+            {
+                if (Set(ref _ciudadSeleccionada, value))
                 {
                     RaiseSelectionChanged();
                 }
@@ -150,6 +162,9 @@ namespace ANS.ViewModel
             ClienteSeleccionado = _todosClientes
                 .FirstOrDefault(c => c.IdCliente == cliente?.IdCliente);
             FiltroCliente = cliente?.Nombre ?? "";
+
+            CiudadSeleccionada = "Montevideo"; // Asignar ciudad por defecto
+
             TipoSeleccionado = TiposAcreditacion
                 .FirstOrDefault(t => t.TipoAcreditacion == tipoAcreditacion.TipoAcreditacion);
         }
@@ -161,6 +176,9 @@ namespace ANS.ViewModel
 
             foreach (var b in ServicioBanco.getInstancia().ListaBancos)
                 Bancos.Add(b);
+
+            Ciudades.Add("Maldonado");
+            Ciudades.Add("Montevideo");
 
             //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "DiaADia" });
             //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "PuntoAPunto" });
@@ -217,7 +235,8 @@ namespace ANS.ViewModel
                         cliente: nombreCli,
                         tipoAcreditacion: TipoSeleccionado.TipoAcreditacion,
                         correo: NuevoEmail,
-                        esPrincipal: EsPrincipal
+                        esPrincipal: EsPrincipal,
+                        ciudad: CiudadSeleccionada
                     );
 
                 if (filas > 0)

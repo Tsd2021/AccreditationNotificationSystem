@@ -27,8 +27,7 @@ namespace ANS.Model.Services
         {
             try
             {
-
-            
+          
             List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
 
             await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
@@ -45,7 +44,7 @@ namespace ANS.Model.Services
 
             var reportService = new TAAS.Reports.ReportService();
 
-                ObtenerMailsPorBuzon(buzonesConAcreditaciones);
+            ObtenerMailsPorBuzon(buzonesConAcreditaciones);
 
             var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
             var smtp = await ServicioEmail.instancia.getNewSmptClient();

@@ -1166,7 +1166,7 @@ namespace ANS.Model.Services
                         asu = $"Acreditaciones {b.NombreBanco} (TATA) - {ciudad.ToUpper()}";
                         cue = $"Adjunto archivo de acreditaciones para buzones TATA ciudad {ciudad.ToUpper()} banco {b.NombreBanco}.";
                     }
-                    _emailService.enviarExcelPorMail(path, asu, cue, c, b, config);
+                    _emailService.enviarExcelPorMail(path, asu, cue, c, b, config,ciudad);
                 }
                 catch (Exception ex)
                 {
@@ -1179,9 +1179,6 @@ namespace ANS.Model.Services
             if (acreditacionesMaldonado?.Any() == true)
                 GenerateExcel(acreditacionesMaldonado, "MALDONADO");
         }
-
-
-
         public Task checkUltimaConexionByIdBuzon(string nc)
         {
 
@@ -1314,7 +1311,7 @@ namespace ANS.Model.Services
                         $"Adjunto acreditaciones de la tanda {numTanda} para {ciudad}.";
                     ServicioEmail.getInstancia().enviarExcelPorMail(
                         filePath, asunto, cuerpo, null, banco,
-                        new ConfiguracionAcreditacion(VariablesGlobales.tanda));
+                        new ConfiguracionAcreditacion(VariablesGlobales.tanda),ciudad);
                 }
                 catch (Exception ex)
                 {
@@ -1467,7 +1464,7 @@ namespace ANS.Model.Services
             try
             {
                 _emailService.enviarExcelPorMail(ruta, $"Acreditaciones Día a día - ({banco.NombreBanco}) - " + ciudad.ToUpper(),
-                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")", null, banco, null);
+                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")", null, banco, null,ciudad);
             }
             catch (Exception e)
             {
@@ -1821,7 +1818,9 @@ namespace ANS.Model.Services
                 $"Acreditaciones Santander - {ciudad}",
                 null,
                 banco,
-                null);
+                null,
+                ciudad
+                );
         }
 
 
