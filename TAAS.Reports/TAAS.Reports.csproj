@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- .NET 8 + WinForms -->
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Copia siempre el RDLC al bin -->
+		<Content Include="Reports\TotalesyDepositosCC.rdlc">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Port del ReportViewer original de SSRS para .NET 8 -->
+		<PackageReference Include="ReportViewerCore.NETCore" Version="15.1.26" />
+		<!-- Para procesar expresiones VB en el RDLC -->
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.7" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.7" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SharedDTOs\SharedDTOs.csproj" />
+	</ItemGroup>
+
+</Project>

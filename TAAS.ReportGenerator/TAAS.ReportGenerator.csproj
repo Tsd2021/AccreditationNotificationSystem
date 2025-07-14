@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	
+	<ItemGroup>
+		<!-- RDLC que usarás para renderizar -->
+		<None Include="Reports\TotalesyDepositosCC.rdlc">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup>
+		<!-- Paquete para LocalReport en .NET Core -->
+		<PackageReference Include="Microsoft.Reporting.NETCore" Version="1.0.0" />
+	</ItemGroup>
+</Project>

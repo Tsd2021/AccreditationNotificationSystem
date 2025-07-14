@@ -209,7 +209,6 @@ namespace ANS.Model.Services
                 sb.Append(" AND (idcliente IS NULL OR idcliente = @idcliente)");
             }
 
-
             else
             {
                 sb.Append(" AND idcliente IS NULL");

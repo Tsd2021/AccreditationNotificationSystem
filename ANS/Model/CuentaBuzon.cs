@@ -18,6 +18,7 @@ namespace ANS.Model
         public string NC { get; set; }
         public string NN { get; set; }
         public string Ciudad { get; set; }
+        public string NombreWS { get; set; }
         public DateTime? Cierre { get; set; }
         public int IdCliente { get; set; }
         public string SucursalCuenta { get; set; }

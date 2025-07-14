@@ -71,6 +71,7 @@ namespace ANS.Model.Services
                     IdOperacionInicio = b.IdOperacionInicio,
                     NumeroEnvioMasivo = b.NumeroEnvioMasivo,
                     UltimaFechaConexion = b.UltimaFechaConexion,
+                    NombreWS = b.NombreWS,
                     // mapea Acreditaciones:
                     Acreditaciones = b.Acreditaciones.Select(a => new AcreditacionDTO2
                     {
@@ -440,11 +441,15 @@ namespace ANS.Model.Services
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-            query =    @"SELECT NC, NN, SUCURSAL, CIERRE,IDCLIENTE 
-                        FROM dbo.CC 
-                        WHERE ESTADO = 'alta' 
-                        AND CAST(CIERRE AS time) > @desdeTime 
-                        AND CAST(CIERRE AS time) <= @hastaTime";
+                query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+                        from
+                        cc as c 
+                        left join 
+                        cc_nombrews as ws 
+                        on ws.NC = c.NC 
+                        where c.estado = 'alta'
+                        AND CAST(c.CIERRE AS time) > @desdeTime 
+                        AND CAST(c.CIERRE AS time) <= @hastaTime";
 
             using (SqlConnection conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
             {
@@ -470,6 +475,8 @@ namespace ANS.Model.Services
 
                     int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
 
+                    int nombreWSOrdinal = reader.GetOrdinal("NombreWS");
+
                     while (await reader.ReadAsync())
                     {
                         BuzonDTO dto = new BuzonDTO();
@@ -481,6 +488,14 @@ namespace ANS.Model.Services
                         dto.IdCliente = reader.GetInt32(idClienteOrdinal);
                         dto.EsHenderson = dto.esHenderson();
                         dto.NumeroEnvioMasivo = numEnvioMasivo;
+                        if(!reader.IsDBNull(nombreWSOrdinal))
+                        {
+                            dto.NombreWS = reader.GetString(nombreWSOrdinal);
+                        }
+                        else
+                        {
+                            dto.NombreWS = "NO_DEFINIDO";
+                        }
                         retorno.Add(dto);
                     }
                 }
@@ -1094,6 +1109,7 @@ order by idoperacion desc
             public string Sucursal { get; set; }
             public long IdOperacionFinal { get; set; }
             public long IdOperacionInicio { get; set; }
+            public string NombreWS { get; set; }
             public List<AcreditacionDTO> Acreditaciones { get; set; } = new List<AcreditacionDTO>();
             public DateTime UltimaFechaConexion { get; set; }
             public int IdCliente { get; set; }
