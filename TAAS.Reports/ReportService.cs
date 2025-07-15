@@ -85,24 +85,23 @@ namespace TAAS.Reports
             string cierreStr = fechaCierre.ToString("dd/MM/yyyy HH:mm");
             string fechaRango = $"{inicioStr} al {cierreStr}";
 
-            // Directorios y logs
             string exeFolder = AppContext.BaseDirectory;
             string reportPath = Path.Combine(exeFolder, "Reports", "TotalesyDepositosCC.rdlc");
             if (!File.Exists(reportPath))
                 throw new FileNotFoundException($"No se encontró el informe en: {reportPath}");
 
-            // 1) Preparo las colecciones
+           
             string Formato(double v) =>
                              v == 0.0
                                  ? v.ToString("0")    // "0" sin decimales
                                  : v.ToString("N2");  // "123,45" con dos decimales
 
-            // Totales por empresa (aplica Formato)
+     
             var totales = buzonDTO.Acreditaciones
                 .GroupBy(a => a.Empresa)
                 .Select(g =>
                 {
-                    // Sumas convertidas a double
+                
                     double sumaPesos = g.Where(a => a.Divisa == 1).Sum(a => (double)a.Monto);
                     double sumaDolares = g.Where(a => a.Divisa == 2).Sum(a => (double)a.Monto);
                     double sumaArg = g.Where(a => a.Divisa == 3).Sum(a => (double)a.Monto);
@@ -121,7 +120,6 @@ namespace TAAS.Reports
                 })
                 .ToList();
 
-            // Añadir fila global “TOTAL” (siempre con dos decimales)
             totales.Add(new TotalesImprimir
             {
                 EMPRESA = "TOTAL",
@@ -155,21 +153,21 @@ namespace TAAS.Reports
                 })
                 .ToList();
 
-            // 2) Crea y configura el reporte
+      
             var report = new LocalReport();
             using var streamRdlc = File.OpenRead(reportPath);
             report.LoadReportDefinition(streamRdlc);
             report.DisplayName = Path.GetFileNameWithoutExtension(reportPath);
-            // 4) Asignar DataSources
+         
             report.DataSources.Clear();
             report.DataSources.Add(new ReportDataSource("DataSet1", totales));
             report.DataSources.Add(new ReportDataSource("DataSet2", depositos));
 
-            // 5) Parámetros
+      
             report.SetParameters(new ReportParameter("FECHA1", fechaRango));
             report.SetParameters(new ReportParameter("SUCURSAL", nombreBuzonParaUsar));
 
-            // 6) Render a Excel (OpenXML)
+    
             byte[] excelBytes = report.Render(
                 format: "EXCEL",
                 deviceInfo: null,
@@ -180,9 +178,12 @@ namespace TAAS.Reports
                 out Warning[] warnings
             );
 
-            // 7) Preparo salida
-            fileName = $"Acreditacion{nombreBuzonParaUsar}_{DateTime.Now:yyyyMMdd_HHmmss}.{fileExt}";
+
+
+            fileName = $"Acreditacion{nombreBuzonParaUsar}_{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}.{fileExt}";
+
             subject = $"Acreditaciones Buzón Inteligente [{nombreBuzonParaUsar}] - {inicioStr}";
+
             body = $"Acreditaciones del Buzón Inteligente {nombreBuzonParaUsar} del <strong>{fechaRango}</strong>";
 
             return new MemoryStream(excelBytes);

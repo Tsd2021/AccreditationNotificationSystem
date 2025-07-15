@@ -22,6 +22,8 @@ namespace ANS.Model.Jobs.SCOTIABANK
         {
 
 
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
+
             Exception e = null;
             try
             {
@@ -45,7 +47,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                 int numTanda = 2;
 
-                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, scotiabank, "noimporta", numTanda);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, scotiabank, "noimporta", numTanda, _tarea);
 
             }
             catch (Exception ex)

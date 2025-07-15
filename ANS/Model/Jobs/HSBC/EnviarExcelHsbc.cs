@@ -20,6 +20,9 @@ namespace ANS.Model.Jobs.HSBC
         public async Task Execute(IJobExecutionContext context)
         {
             Exception e = null;
+
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
+
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>
@@ -35,7 +38,7 @@ namespace ANS.Model.Jobs.HSBC
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion("DiaADia");
 
-                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(hsbc, config);
+                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(hsbc, config,_tarea);
 
             }
             catch (Exception ex)

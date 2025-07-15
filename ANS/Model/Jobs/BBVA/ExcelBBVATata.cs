@@ -21,7 +21,7 @@ namespace ANS.Model.Jobs.BBVA
         public async Task Execute(IJobExecutionContext context)
         {
 
-
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
             Exception e = null;
             try
             {
@@ -45,7 +45,7 @@ namespace ANS.Model.Jobs.BBVA
 
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda,_tarea);
 
             }
             catch (Exception ex)

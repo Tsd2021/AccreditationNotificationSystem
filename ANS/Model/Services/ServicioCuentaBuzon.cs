@@ -933,7 +933,7 @@ namespace ANS.Model.Services
 
         }
         //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
-        public async Task enviarExcelFormatoTanda(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda)
+        public async Task enviarExcelFormatoTanda(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda,string tarea)
         {
             try
             {
@@ -962,7 +962,7 @@ namespace ANS.Model.Services
 
                 List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
 
-                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config);
+                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config,tarea);
 
             }
             catch (Exception e)
@@ -970,7 +970,7 @@ namespace ANS.Model.Services
                 throw e;
             }
         }
-        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config)
+        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config,string tarea)
         {
             // Colores para el formato
             var pastelYellow = XLColor.LightYellow;
@@ -1154,7 +1154,7 @@ namespace ANS.Model.Services
                 try
                 {
                     string asu, cue;
-
+                   
                     if (b.NombreBanco.Equals(VariablesGlobales.santander, StringComparison.OrdinalIgnoreCase)
                      || b.NombreBanco.Equals(VariablesGlobales.scotiabank, StringComparison.OrdinalIgnoreCase))
                     {
@@ -1165,8 +1165,9 @@ namespace ANS.Model.Services
                     {
                         asu = $"Acreditaciones {b.NombreBanco} (TATA) - {ciudad.ToUpper()}";
                         cue = $"Adjunto archivo de acreditaciones para buzones TATA ciudad {ciudad.ToUpper()} banco {b.NombreBanco}.";
+                        
                     }
-                    _emailService.enviarExcelPorMail(path, asu, cue, c, b, config,ciudad);
+                    _emailService.enviarExcelPorMail(path, asu, cue, c, b, tarea,ciudad);
                 }
                 catch (Exception ex)
                 {
@@ -1188,7 +1189,7 @@ namespace ANS.Model.Services
             }
             return null;
         }
-        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta)
+        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta, string tarea)
         {
 
             DateTime fechaDesde = DateTime.Today.Add(desde);
@@ -1200,7 +1201,7 @@ namespace ANS.Model.Services
                 List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco,numTanda, new ConfiguracionAcreditacion("Tanda"));
 
 
-                generarExcelTesoreriaTanda(lista, numTanda, banco);
+                generarExcelTesoreriaTanda(lista, numTanda, banco,tarea);
 
             }
 
@@ -1213,7 +1214,8 @@ namespace ANS.Model.Services
         public static void generarExcelTesoreriaTanda(
                  List<DtoAcreditacionesPorEmpresa> datos,
                  int numTanda,
-                 Banco banco)
+                 Banco banco,
+                 string tarea)
         {
             var ciudades = new[] { "MONTEVIDEO", "MALDONADO" };
 
@@ -1299,7 +1301,12 @@ namespace ANS.Model.Services
                 ws.Columns().AdjustToContents();
                 var nombreArchivo =
                     $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{DateTime.Now:yyyyMMdd}.xlsx";
-                var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo); ;
+
+                //Testing
+
+                //var filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+                //Produccion:
+                var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
                 wb.SaveAs(filePath);
 
                 // Envío por correo
@@ -1311,7 +1318,7 @@ namespace ANS.Model.Services
                         $"Adjunto acreditaciones de la tanda {numTanda} para {ciudad}.";
                     ServicioEmail.getInstancia().enviarExcelPorMail(
                         filePath, asunto, cuerpo, null, banco,
-                        new ConfiguracionAcreditacion(VariablesGlobales.tanda),ciudad);
+                        tarea,ciudad);
                 }
                 catch (Exception ex)
                 {
@@ -1321,7 +1328,7 @@ namespace ANS.Model.Services
         }
 
 
-        public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
+        public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion,string tarea)
         {
 
             List<DtoAcreditacionesPorEmpresa> acreditacionesPorBancoYTipoAcreditacion = getAcreditacionesPorBancoYTipoAcreditacion(banco, tipoAcreditacion);
@@ -1362,15 +1369,15 @@ namespace ANS.Model.Services
 
             }
             if (acreditacionesPesosMvd.Count > 0 || acreditacionesDolaresMvd.Count > 0)
-                GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco);
+                GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco,tarea);
 
             if (acreditacionesPesosMaldonado.Count > 0 || acreditacionesDolaresMaldonado.Count > 0)
-                GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco);
+                GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco,tarea);
 
             await Task.CompletedTask;
 
         }
-        private void GenerarExcelFormatoDiaADia(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco)
+        private void GenerarExcelFormatoDiaADia(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco ,  string tarea)
         {
             var fechaHoy = DateTime.Now.ToString("dd - MM - yy");
             var workbook = new XLWorkbook();
@@ -1464,7 +1471,7 @@ namespace ANS.Model.Services
             try
             {
                 _emailService.enviarExcelPorMail(ruta, $"Acreditaciones Día a día - ({banco.NombreBanco}) - " + ciudad.ToUpper(),
-                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")", null, banco, null,ciudad);
+                    $"Reporte de las acreditaciones realizadas día a día del banco: {banco.NombreBanco} (" + ciudad.ToUpper() + ")", null, banco, tarea,ciudad);
             }
             catch (Exception e)
             {
@@ -1702,7 +1709,7 @@ namespace ANS.Model.Services
 
             return retorno;
         }
-        public async Task generarExcelDelResumenDelDiaSantander()
+        public async Task generarExcelDelResumenDelDiaSantander(string tarea)
         {
             // Obtener datos
             var banco = ServicioBanco.getInstancia().getByNombre("SANTANDER");
@@ -1718,7 +1725,8 @@ namespace ANS.Model.Services
                 generarReporteDiario(
                     ciudad,
                     grupo,
-                    banco);
+                    banco,
+                    tarea);
             }
 
             // pausa breve para asegurar envío
@@ -1730,7 +1738,8 @@ namespace ANS.Model.Services
         public void generarReporteDiario(
     string ciudad,
     IEnumerable<DtoAcreditacionesPorEmpresa> datosCiudad,
-    Banco banco
+    Banco banco,
+    string tarea
     )
         {
             using var wb = new XLWorkbook();
@@ -1818,7 +1827,7 @@ namespace ANS.Model.Services
                 $"Acreditaciones Santander - {ciudad}",
                 null,
                 banco,
-                null,
+                tarea,
                 ciudad
                 );
         }

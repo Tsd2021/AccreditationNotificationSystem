@@ -9,5 +9,8 @@
             BancoId = bancoId;
             NombreBanco = nombreBanco;
         }
+
+
+        public List<string> TareasEmail { get; set; } = new List<string>();
     }
 }

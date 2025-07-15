@@ -3,8 +3,11 @@ using ANS.Model.Services;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -43,8 +46,9 @@ namespace ANS.ViewModel
             {
                 if (Set(ref _clienteSeleccionado, value))
                 {
-                    // Actualiza la lista de emails y los estados de los comandos
+                    MostrarClientes = false;
                     RaiseSelectionChanged();
+                    (DeseleccionarClienteCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -60,11 +64,27 @@ namespace ANS.ViewModel
             {
                 if (Set(ref _bancoSeleccionado, value))
                 {
+                    TareaSeleccionada = null;
                     RaiseSelectionChanged();
                 }
             }
         }
 
+        // -- TareasEmail del banco --
+        public IEnumerable<string> TareasEmail => BancoSeleccionado?.TareasEmail ?? Enumerable.Empty<string>();
+
+        private string _tareaSeleccionada;
+        public string TareaSeleccionada
+        {
+            get => _tareaSeleccionada;
+            set
+            {
+                if (Set(ref _tareaSeleccionada, value))
+                    RaiseSelectionChanged();
+            }
+        }
+
+        // -- Ciudades --
         public ObservableCollection<string> Ciudades { get; } = new ObservableCollection<string>();
 
         private string _ciudadSeleccionada;
@@ -74,32 +94,12 @@ namespace ANS.ViewModel
             set
             {
                 if (Set(ref _ciudadSeleccionada, value))
-                {
                     RaiseSelectionChanged();
-                }
-            }
-        }
-
-        // -- Tipos de acreditación --
-        public ObservableCollection<ConfiguracionAcreditacion> TiposAcreditacion { get; }
-            = new ObservableCollection<ConfiguracionAcreditacion>();
-
-        private ConfiguracionAcreditacion _tipoSeleccionado;
-        public ConfiguracionAcreditacion TipoSeleccionado
-        {
-            get => _tipoSeleccionado;
-            set
-            {
-                if (Set(ref _tipoSeleccionado, value))
-                {
-                    RaiseSelectionChanged();
-                }
             }
         }
 
         // -- Emails relacionados --
-        public ObservableCollection<Email> RelatedEmails { get; }
-            = new ObservableCollection<Email>();
+        public ObservableCollection<Email> RelatedEmails { get; } = new ObservableCollection<Email>();
 
         // -- Nuevo email --
         private string _nuevoEmail;
@@ -113,11 +113,11 @@ namespace ANS.ViewModel
             }
         }
 
-        private bool _esPrincipal;
-        public bool EsPrincipal
+        private bool _activo;
+        public bool Activo
         {
-            get => _esPrincipal;
-            set => Set(ref _esPrincipal, value);
+            get => _activo;
+            set => Set(ref _activo, value);
         }
 
         // -- Comandos --
@@ -128,17 +128,15 @@ namespace ANS.ViewModel
 
         public VMaltaEmailDestino()
         {
-            // Alternar visibilidad del panel de clientes
             ToggleClientesCommand = new RelayCommand(() =>
             {
                 MostrarClientes = !MostrarClientes;
                 if (MostrarClientes) AplicarFiltro();
             });
 
-            // Deseleccionar solo si hay uno elegido
             DeseleccionarClienteCommand = new RelayCommand(
-                execute: DeseleccionarCliente,
-                canExecute: () => ClienteSeleccionado != null
+                DeseleccionarCliente,
+                () => ClienteSeleccionado != null
             );
 
             GuardarCommand = new RelayCommand(Guardar, CanGuardar);
@@ -148,57 +146,30 @@ namespace ANS.ViewModel
             AplicarFiltro();
         }
 
-        // Constructor auxiliar (si lo usas desde otra parte)
-        public VMaltaEmailDestino(Banco banco,
-                                 Cliente cliente,
-                                 ConfiguracionAcreditacion tipoAcreditacion)
-            : this()
+        public VMaltaEmailDestino(Banco banco, Cliente cliente) : this()
         {
-            CargarDatosIniciales(banco, tipoAcreditacion);
-            AplicarFiltro();
+            Bancos.Clear();
+            Bancos.Add(banco);
+            BancoSeleccionado = banco;
 
-            BancoSeleccionado = Bancos
-                .FirstOrDefault(b => b.NombreBanco == banco.NombreBanco);
-            ClienteSeleccionado = _todosClientes
-                .FirstOrDefault(c => c.IdCliente == cliente?.IdCliente);
-            FiltroCliente = cliente?.Nombre ?? "";
+            _todosClientes.Clear();
+            Clientes.Clear();
+            var clientesBanco = ServicioCliente.getInstancia().ListaClientes;
+            _todosClientes.AddRange(clientesBanco);
+            foreach (var c in clientesBanco)
+                Clientes.Add(c);
 
-            CiudadSeleccionada = "Montevideo"; // Asignar ciudad por defecto
-
-            TipoSeleccionado = TiposAcreditacion
-                .FirstOrDefault(t => t.TipoAcreditacion == tipoAcreditacion.TipoAcreditacion);
+            ClienteSeleccionado = _todosClientes.FirstOrDefault(c => c.IdCliente == cliente?.IdCliente);
+            CiudadSeleccionada = Ciudades.FirstOrDefault() ?? string.Empty;
         }
 
         private void CargarDatosIniciales()
         {
             _todosClientes.AddRange(ServicioCliente.getInstancia().ListaClientes);
             foreach (var c in _todosClientes) Clientes.Add(c);
-
-            foreach (var b in ServicioBanco.getInstancia().ListaBancos)
-                Bancos.Add(b);
-
+            foreach (var b in ServicioBanco.getInstancia().ListaBancos) Bancos.Add(b);
             Ciudades.Add("Maldonado");
             Ciudades.Add("Montevideo");
-
-            //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "DiaADia" });
-            //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "PuntoAPunto" });
-            //TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "Tanda" });
-        }
-
-        private void CargarDatosIniciales(Banco b, ConfiguracionAcreditacion config)
-        {
-            _todosClientes.AddRange(
-                ServicioCliente.getInstancia()
-                    .ObtenerClientesPorBancoYTipoAcreditacion(b, config)
-            );
-            foreach (var c in _todosClientes) Clientes.Add(c);
-
-            foreach (var bank in ServicioBanco.getInstancia().ListaBancos)
-                Bancos.Add(bank);
-
-            TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "DiaADia" });
-            TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "PuntoAPunto" });
-            TiposAcreditacion.Add(new ConfiguracionAcreditacion { TipoAcreditacion = "Tanda" });
         }
 
         private void AplicarFiltro()
@@ -206,17 +177,48 @@ namespace ANS.ViewModel
             Clientes.Clear();
             var filtrada = string.IsNullOrWhiteSpace(FiltroCliente)
                 ? _todosClientes
-                : _todosClientes.Where(c =>
-                    c.Nombre.IndexOf(FiltroCliente,
-                                      StringComparison.OrdinalIgnoreCase) >= 0
-                  );
+                : _todosClientes.Where(c => c.Nombre.IndexOf(FiltroCliente, StringComparison.OrdinalIgnoreCase) >= 0);
             foreach (var c in filtrada) Clientes.Add(c);
+        }
+
+        private void RaiseSelectionChanged()
+        {
+            // Ahora solo depende de banco y tarea
+            if (BancoSeleccionado != null && !string.IsNullOrWhiteSpace(TareaSeleccionada))
+                CargarEmailsAsociados();
+            else
+                RelatedEmails.Clear();
+
+            (GuardarCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (DeseleccionarClienteCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+
+        private void CargarEmailsAsociados()
+        {
+            try
+            {
+                var lista = ServicioEmail
+                    .getInstancia()
+                    .ListarPor(
+                        ClienteSeleccionado?.IdCliente,
+                        BancoSeleccionado.NombreBanco,
+                        TareaSeleccionada,
+                        CiudadSeleccionada
+                    );
+                RelatedEmails.Clear();
+                foreach (var e in lista) RelatedEmails.Add(e);
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show($"Error al cargar emails:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private bool CanGuardar()
         {
+            // El cliente ya no es requerido
             return BancoSeleccionado != null
-                && TipoSeleccionado != null
+                && !string.IsNullOrWhiteSpace(TareaSeleccionada)
                 && string.IsNullOrEmpty(this[nameof(NuevoEmail)]);
         }
 
@@ -224,96 +226,46 @@ namespace ANS.ViewModel
         {
             try
             {
-                int? idCli = ClienteSeleccionado?.IdCliente;
-                string nombreCli = ClienteSeleccionado?.Nombre;
-
                 int filas = ServicioEmail
                     .getInstancia()
                     .AgregarEmailDestino(
                         banco: BancoSeleccionado.NombreBanco,
-                        idCliente: idCli,
-                        cliente: nombreCli,
-                        tipoAcreditacion: TipoSeleccionado.TipoAcreditacion,
+                        idCliente: ClienteSeleccionado?.IdCliente,
+                        tarea: TareaSeleccionada,
                         correo: NuevoEmail,
-                        esPrincipal: EsPrincipal,
+                        activo: Activo,
                         ciudad: CiudadSeleccionada
                     );
-
                 if (filas > 0)
                 {
                     CargarEmailsAsociados();
                     NuevoEmail = string.Empty;
-                    EsPrincipal = false;
-                    MostrarClientes = false;
+                    Activo = false;
                 }
                 else
                 {
-                    MessageBox.Show(
-                        "No se guardó ningún registro.",
-                        "Atención",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
-                    );
+                    MessageBox.Show("No se guardó ningún registro.", "Atención", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
-            catch (SqlException sqlEx)
+            catch (SqlException ex)
             {
-                MessageBox.Show(
-                    $"Error al guardar en la base de datos:\n{sqlEx.Message}",
-                    "Error SQL",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
-                );
+                MessageBox.Show($"Error SQL al guardar:\n{ex.Message}", "Error SQL", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Ocurrió un error inesperado:\n{ex.Message}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
-                );
+                MessageBox.Show($"Error inesperado:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private void Cancelar()
-        {
-            // tu lógica de cancelar...
-        }
-
-        private void RaiseSelectionChanged()
-        {
-            if (BancoSeleccionado != null && TipoSeleccionado != null)
-                CargarEmailsAsociados();
-            else
-                RelatedEmails.Clear();
-
-            // Actualiza habilitación de comandos
-            (GuardarCommand as RelayCommand)
-                ?.RaiseCanExecuteChanged();
-            (DeseleccionarClienteCommand as RelayCommand)
-                ?.RaiseCanExecuteChanged();
-        }
-
-        private void CargarEmailsAsociados()
-        {
-            var idCli = ClienteSeleccionado?.IdCliente;
-            var lista = ServicioEmail
-                .getInstancia()
-                .ListarPor(
-                    idCli,
-                    BancoSeleccionado.NombreBanco,
-                    TipoSeleccionado.TipoAcreditacion
-                );
-
-            RelatedEmails.Clear();
-            foreach (var e in lista) RelatedEmails.Add(e);
         }
 
         private void DeseleccionarCliente()
         {
             ClienteSeleccionado = null;
             MostrarClientes = false;
+        }
+
+        private void Cancelar()
+        {
+            // Lógica cancelar
         }
 
         #region IDataErrorInfo
@@ -326,8 +278,7 @@ namespace ANS.ViewModel
                 {
                     if (string.IsNullOrWhiteSpace(NuevoEmail))
                         return "El email es obligatorio.";
-                    if (!Regex.IsMatch(NuevoEmail,
-                        @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                    if (!Regex.IsMatch(NuevoEmail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
                         return "Formato de email inválido.";
                 }
                 return null;

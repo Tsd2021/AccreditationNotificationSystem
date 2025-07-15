@@ -26,12 +26,23 @@
     <DockPanel Margin="10">
         <!-- EXPANDER LATERAL PARA SELECCIÓN DE CLIENTES -->
         <Expander Header="Asociar cliente"
-                  IsExpanded="{Binding MostrarClientes}"
+                  IsExpanded="{Binding MostrarClientes, Mode=TwoWay}"
                   Width="250"
                   ExpandDirection="Left"
                   DockPanel.Dock="Left"
                   Margin="0,0,10,0">
-            <!-- ... (sin cambios) -->
+            <StackPanel Margin="5">
+                <!-- Filtro -->
+                <TextBox 
+                         Text="{Binding FiltroCliente,
+                                        UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,5"/>
+                <!-- Lista de clientes -->
+                <ListBox ItemsSource="{Binding Clientes}"
+                         SelectedItem="{Binding ClienteSeleccionado, Mode=TwoWay}"
+                         DisplayMemberPath="Nombre"
+                         Height="400"/>
+            </StackPanel>
         </Expander>
 
         <!-- FORMULARIO PRINCIPAL -->
@@ -42,7 +53,7 @@
                 <RowDefinition Height="Auto"/>
                 <!-- 1 Combo Bancos -->
                 <RowDefinition Height="Auto"/>
-                <!-- 2 Tipo Label -->
+                <!-- 2 Tipo Acred. Label -->
                 <RowDefinition Height="Auto"/>
                 <!-- 3 Combo Tipos -->
                 <RowDefinition Height="Auto"/>
@@ -56,7 +67,7 @@
                 <RowDefinition Height="Auto"/>
                 <!-- 8 Mensaje de error -->
                 <RowDefinition Height="Auto"/>
-                <!-- 9 Botones Guardar/Cancelar -->
+                <!-- 9 Botones -->
                 <RowDefinition Height="Auto"/>
                 <!-- 10 Emails asociados Label -->
                 <RowDefinition Height="*"/>
@@ -72,12 +83,15 @@
                       Margin="0,0,0,10"/>
 
             <!-- Tipo Acreditación -->
-            <Label Content="Tipo Acreditación:" Grid.Row="2"/>
-            <ComboBox ItemsSource="{Binding TiposAcreditacion}"
-                      SelectedItem="{Binding TipoSeleccionado}"
-                      DisplayMemberPath="TipoAcreditacion"
-                      Grid.Row="3"
-                      Margin="0,0,0,10"/>
+            <Label Content="Tipo Tarea:" Grid.Row="2"/>
+
+            <!-- Combo de TareasEmail -->
+            <ComboBox Grid.Row="3"
+          ItemsSource="{Binding TareasEmail}"
+          SelectedItem="{Binding TareaSeleccionada, Mode=TwoWay}"
+          IsEnabled="{Binding BancoSeleccionado}"
+          Margin="0,0,0,10"
+          Width="200"/>
 
             <!-- Ciudades -->
             <Label Content="Ciudades:" Grid.Row="4"/>
@@ -137,8 +151,8 @@
                     <DataGridTextColumn Header="Email"
                                         Binding="{Binding Correo}"
                                         Width="*"/>
-                    <DataGridCheckBoxColumn Header="Principal"
-                                            Binding="{Binding EsPrincipal}"
+                    <DataGridCheckBoxColumn Header="Activo"
+                                            Binding="{Binding Activo}"
                                             Width="Auto"/>
                 </DataGrid.Columns>
             </DataGrid>

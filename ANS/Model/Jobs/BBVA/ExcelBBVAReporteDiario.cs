@@ -21,6 +21,8 @@ namespace ANS.Model.Jobs.SANTANDER
 
             Exception e = null;
 
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
+
             try
             {
 
@@ -36,7 +38,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
-                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bbva, config);
+                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bbva, config, _tarea);
 
             }
 

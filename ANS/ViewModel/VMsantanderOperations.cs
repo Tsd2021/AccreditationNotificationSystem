@@ -167,13 +167,15 @@ namespace ANS.ViewModel
 
             int numTanda = 1;
 
+            string tarea = "Tanda1";
+
             try
             {
 
                 await Task.Run(async () =>
                 {
 
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda,tarea);
 
                 });
 
@@ -201,12 +203,12 @@ namespace ANS.ViewModel
 
             int numTanda = 2;
 
-
+            string tarea = "Tanda2";
             try
             {
                 await Task.Run(async () =>
                 {
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda,tarea);
 
                    // await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
@@ -258,9 +260,11 @@ namespace ANS.ViewModel
 
             Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
+            string tarea = "Tesoreria1";
+
             try
             {
-                await Task.Run(() => { _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, desde, hasta).Wait(); });
+                await Task.Run(() => { _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, desde, hasta, tarea).Wait(); });
             }
             catch (Exception e)
             {
@@ -287,10 +291,12 @@ namespace ANS.ViewModel
 
             Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
+            string tarea = "Tesoreria2";
+
             try
             {
 
-                await Task.Run(() => {  _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta).Wait(); });
+                await Task.Run(() => {  _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta,tarea).Wait(); });
 
             }
 
@@ -315,11 +321,14 @@ namespace ANS.ViewModel
 
             IsLoading = true; await Task.Yield();
 
+            string tarea = "DiaADia";
+
+
             try
             {
                 await Task.Run(() =>
                 {
-                    _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bank, config).Wait();
+                    _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bank, config,tarea).Wait();
                 });
 
             }
@@ -341,11 +350,13 @@ namespace ANS.ViewModel
         {
             IsLoading = true; await Task.Yield();
 
+            string tarea = "ReporteDiario";
+
             try
             {
                 await Task.Run(() =>
                 {
-                     _servicioCuentaBuzon.generarExcelDelResumenDelDiaSantander().Wait();
+                     _servicioCuentaBuzon.generarExcelDelResumenDelDiaSantander(tarea).Wait();
                 });
                 
             }

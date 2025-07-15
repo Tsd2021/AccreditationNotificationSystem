@@ -20,6 +20,8 @@ namespace ANS.Model.Jobs.HSBC
         {
 
             Exception e = null;
+
+           
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>

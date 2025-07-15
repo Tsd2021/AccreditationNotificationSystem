@@ -25,6 +25,8 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
             Exception e = null;
 
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
+
             try
             {
 
@@ -41,7 +43,7 @@ namespace ANS.Model.Jobs.SCOTIABANK
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion("DiaADia");
 
-                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(scotiabank, config);
+                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(scotiabank, config,_tarea);
 
             }
 

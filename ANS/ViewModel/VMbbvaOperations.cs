@@ -129,13 +129,15 @@ namespace ANS.ViewModel
 
                 TimeSpan hasta = new TimeSpan(20, 30, 0);
 
+                string tarea = "ExcelTata";
+
                 // ID TATA : 242
 
                 Cliente tata = ServicioCliente.getInstancia().getById(242);
 
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda,tarea);
 
 
             }
@@ -157,13 +159,15 @@ namespace ANS.ViewModel
 
             ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
+            string tarea = "DiaADia";
+
             try
             {
 
                 await Task.Run(async () =>
                 {
 
-                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco, config);
+                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco, config, tarea);
 
                 });
             }

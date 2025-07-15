@@ -25,7 +25,7 @@ namespace ANS.Views
         {
             InitializeComponent();
 
-            var viewmodel = new VMaltaEmailDestino(banco,cliente,tanda);
+            var viewmodel = new VMaltaEmailDestino(banco,cliente);
 
             DataContext = viewmodel;
         }

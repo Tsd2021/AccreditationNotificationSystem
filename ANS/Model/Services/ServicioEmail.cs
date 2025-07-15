@@ -8,6 +8,7 @@ using MimeKit;
 using MimeKit.Utils;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using System.CodeDom;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Net;
@@ -107,12 +108,12 @@ namespace ANS.Model.Services
         }
 
 
-        public bool enviarExcelPorMail(string excelPath, string asunto, string cuerpo, Cliente c, Banco b, ConfiguracionAcreditacion config,string ciudad)
+        public bool enviarExcelPorMail(string excelPath, string asunto, string cuerpo, Cliente c, Banco b, string tarea ,string ciudad)
         {
 
-            var listaEmails = ObtenerEmailsPorClienteBancoYConfig(c, b, config,ciudad);
+            var listaEmails = ObtenerEmailsPorBancoTareaYCiudad(b, tarea, ciudad);
 
-            if (!listaEmails.Any())
+            if (listaEmails == null || listaEmails.Count == 0)
                 return false; // no hay a quién enviar
 
             try
@@ -186,66 +187,74 @@ namespace ANS.Model.Services
             }
         }
 
-        private List<Email> ObtenerEmailsPorClienteBancoYConfig(Cliente cliente, Banco banco, ConfiguracionAcreditacion config,string ciudad)
+        private List<Email> ObtenerEmailsPorBancoTareaYCiudad(Banco banco,string tarea,string ciudad)
+        {
+
+            if (banco == null || string.IsNullOrEmpty(tarea) || string.IsNullOrEmpty(ciudad))
+            {
+                throw new ArgumentException("Banco , tarea y ciudad son obligatorios.");
+            }
+
+            List<Email> retorno = ServicioEmailTarea.Instancia.ListaEmailTarea.Where(e=> e.Banco.ToUpper() == banco.NombreBanco.ToUpper() &&
+                     e.Tarea.ToUpper() == tarea.ToUpper() &&
+                     e.Ciudad.ToUpper() == ciudad.ToUpper()).ToList();
+
+            return retorno;
+        }
+
+
+        private List<Email> ObtenerEmailsPorClienteBancoYConfig(
+           Cliente cliente,
+           Banco banco,
+           ConfiguracionAcreditacion config,
+           string ciudad)
         {
             var emails = new List<Email>();
 
-            // Construyo la consulta base
+            // 1. Construyo la consulta base
             var sb = new StringBuilder(@"
-                                        SELECT email, esprincipal , ciudad
-                                        FROM EmailDestinoEnvio
-                                        WHERE banco = @banco
-                                      ");
+            SELECT email, esprincipal, ciudad
+            FROM EmailDestinoEnvio
+            WHERE banco = @banco
+            ");
 
-            // Filtro opcional por tipo de acreditación
+            // 2. Filtro opcional por tipo de acreditación
             if (config != null)
-            {
                 sb.Append(" AND tipoacreditacion = @tipoAcreditacion");
-            }
 
-            // Filtro de cliente: genérico (NULL) o específico
+            // 3. Filtro de cliente: genérico (NULL) o específico
             if (cliente != null)
-            {
                 sb.Append(" AND (idcliente IS NULL OR idcliente = @idcliente)");
-            }
-
             else
-            {
                 sb.Append(" AND idcliente IS NULL");
-            }
 
-       
+            // 4. Filtro opcional de ciudad
+            if (!string.IsNullOrEmpty(ciudad))
+                sb.Append(" AND ciudad = @ciudad");
 
+            // 5. Creo el comando **después** de armar toda la cadena
             using var conn = new SqlConnection(_conexionTSD);
             using var cmd = new SqlCommand(sb.ToString(), conn);
 
+            // 6. Agrego los parámetros
+            cmd.Parameters.Add("@banco", SqlDbType.VarChar, 100)
+               .Value = banco.NombreBanco;
 
-            if (!string.IsNullOrEmpty(ciudad))
-            {
-                sb.Append(" AND (ciudad = @ciudad)");
-                cmd.Parameters.Add("@ciudad", SqlDbType.VarChar, 50)
-                .Value = ciudad;
-            }
-
-            // Parámetros obligatorios
-            cmd.Parameters.Add("@banco", SqlDbType.VarChar, 100).Value = banco.NombreBanco;
-
-            // Parámetros opcionales (solo si los usamos)
             if (config != null)
-            {
                 cmd.Parameters.Add("@tipoAcreditacion", SqlDbType.VarChar, 50)
                    .Value = config.TipoAcreditacion;
-            }
+
             if (cliente != null)
-            {
                 cmd.Parameters.Add("@idcliente", SqlDbType.Int)
                    .Value = cliente.IdCliente;
-            }
 
+            if (!string.IsNullOrEmpty(ciudad))
+                cmd.Parameters.Add("@ciudad", SqlDbType.VarChar, 50)
+                   .Value = ciudad;
+
+            // 7. Ejecución
             conn.Open();
-
             using var reader = cmd.ExecuteReader();
-
             while (reader.Read())
             {
                 emails.Add(new Email
@@ -257,10 +266,7 @@ namespace ANS.Model.Services
             }
 
             return emails;
-
         }
-
-
         public async Task<bool> EnviarMailDesconexion(MimeMessage msg, MailKit.Net.Smtp.SmtpClient smtpClient)
         {
             try
@@ -327,19 +333,16 @@ namespace ANS.Model.Services
         }
 
 
-        // ServicioEmail: AgregarEmailDestino
         public int AgregarEmailDestino(
             string banco,
             int? idCliente,
-            string cliente,
-            string tipoAcreditacion,
+            string tarea,
             string correo,
-            bool esPrincipal,
+            bool activo,
             string ciudad)
         {
-       
             if (string.IsNullOrWhiteSpace(banco)
-             || string.IsNullOrWhiteSpace(tipoAcreditacion)
+             || string.IsNullOrWhiteSpace(tarea)
              || string.IsNullOrWhiteSpace(correo)
              || string.IsNullOrWhiteSpace(ciudad))
             {
@@ -347,89 +350,72 @@ namespace ANS.Model.Services
             }
 
             const string sql = @"
-                                INSERT INTO EmailDestinoEnvio
-                                (IdCliente, Cliente, TipoAcreditacion, Banco, Email, EsPrincipal, Ciudad)
-                                VALUES
-                                (@idCliente, @cliente, @tipoAcreditacion, @banco, @email, @esPrincipal, @ciudad);";
+            INSERT INTO Email_Tarea
+                (Email, Tarea, Banco, Ciudad, activo, idcliente)
+            VALUES
+                (@email, @tarea, @banco, @ciudad, 1 , @idCliente);
+        ";
 
             using var cn = new SqlConnection(_conexionTSD);
             using var cmd = new SqlCommand(sql, cn);
-            {
-                // Parámetro nullable para IdCliente
-                cmd.Parameters.AddWithValue(
-                    "@idCliente",
-                    idCliente.HasValue ? (object)idCliente.Value : DBNull.Value
-                );
-                // Cliente puede ser null o vacío en envíos genéricos
-                cmd.Parameters.AddWithValue(
-                    "@cliente",
-                    string.IsNullOrWhiteSpace(cliente)
-                        ? (object)DBNull.Value
-                        : cliente
-                );
+            cmd.Parameters.AddWithValue("@email", correo);
+            cmd.Parameters.AddWithValue("@tarea", tarea);
+            cmd.Parameters.AddWithValue("@banco", banco);
+            cmd.Parameters.AddWithValue("@ciudad", ciudad);
+            cmd.Parameters.AddWithValue("@activo", activo);
+            cmd.Parameters.AddWithValue(
+                "@idCliente",
+                idCliente.HasValue ? (object)idCliente.Value : DBNull.Value
+            );
 
-                cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion);
-                cmd.Parameters.AddWithValue("@banco", banco);
-                cmd.Parameters.AddWithValue("@email", correo);
-                cmd.Parameters.AddWithValue("@esPrincipal", esPrincipal);
-                cmd.Parameters.AddWithValue("@ciudad", ciudad);
-
-                cn.Open();
-
-                return cmd.ExecuteNonQuery();
-            }
+            cn.Open();
+            return cmd.ExecuteNonQuery();
         }
 
-        public List<Email> ListarPor(int? idCliente, string nombreBanco, string tipoAcreditacion)
+        public List<Email> ListarPor(
+            int? idCliente,
+            string nombreBanco,
+            string tarea,
+            string ciudad)
         {
             if (string.IsNullOrWhiteSpace(nombreBanco)
-             || string.IsNullOrWhiteSpace(tipoAcreditacion))
+             || string.IsNullOrWhiteSpace(tarea)
+             || string.IsNullOrWhiteSpace(ciudad))
             {
-                throw new ArgumentException("Banco y tipo de acreditación son obligatorios.");
+                throw new ArgumentException("Banco, tarea y ciudad son obligatorios.");
             }
 
             const string sql = @"
-                                SELECT email, esprincipal
-                                FROM emaildestinoenvio
-                                WHERE banco            = @nombreBanco
-                                AND tipoacreditacion = @tipoAcreditacion
-                                AND (
-                                idcliente IS NULL 
-                                OR idcliente = @idCliente)";
+            SELECT Email, activo
+            FROM Email_Tarea
+            WHERE Banco = @nombreBanco
+              AND Tarea = @tarea
+              AND Ciudad = @ciudad
+              AND (idcliente IS NULL OR idcliente = @idCliente);";
 
             var resultado = new List<Email>();
-
             using var conn = new SqlConnection(_conexionTSD);
-
             using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@nombreBanco", nombreBanco);
+            cmd.Parameters.AddWithValue("@tarea", tarea);
+            cmd.Parameters.AddWithValue("@ciudad", ciudad);
+            cmd.Parameters.AddWithValue(
+                "@idCliente",
+                idCliente.HasValue ? (object)idCliente.Value : DBNull.Value
+            );
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            int emailOrd = reader.GetOrdinal("Email");
+            int activoOrd = reader.GetOrdinal("activo");
+
+            while (reader.Read())
             {
-                // Parámetros básicos
-                cmd.Parameters.AddWithValue("@nombreBanco", nombreBanco);
-
-                cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion);
-
-                // Parámetro opcional de cliente
-                object sqlIdCliente = idCliente.HasValue
-                                      ? (object)idCliente.Value
-                                      : DBNull.Value;
-                cmd.Parameters.AddWithValue("@idCliente", sqlIdCliente);
-
-                conn.Open();
-
-                using var reader = cmd.ExecuteReader();
-
-                int emailOrd = reader.GetOrdinal("email");
-
-                int principalOrd = reader.GetOrdinal("esprincipal");
-
-                while (reader.Read())
+                resultado.Add(new Email
                 {
-                    resultado.Add(new Email
-                    {
-                        Correo = reader.GetString(emailOrd),
-                        EsPrincipal = reader.GetBoolean(principalOrd)
-                    });
-                }
+                    Correo = reader.GetString(emailOrd),
+                    Activo = reader.GetBoolean(activoOrd) // reutilizamos esta propiedad para 'activo'
+                });
             }
 
             return resultado;

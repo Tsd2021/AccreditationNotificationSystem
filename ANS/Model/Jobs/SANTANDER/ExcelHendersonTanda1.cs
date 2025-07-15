@@ -25,6 +25,7 @@ namespace ANS.Model.Jobs.SANTANDER
         {
 
             string _city = context.JobDetail.JobDataMap.GetString("city") ?? string.Empty;
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
 
             Exception e = null;
 
@@ -49,7 +50,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde,hasta,henderson,santander, _city,numTanda);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde,hasta,henderson,santander, _city,numTanda,_tarea);
 
             }
             catch (Exception ex)

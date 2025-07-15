@@ -71,6 +71,7 @@ namespace ANS.Model.Services
                     IdOperacionInicio = b.IdOperacionInicio,
                     NumeroEnvioMasivo = b.NumeroEnvioMasivo,
                     UltimaFechaConexion = b.UltimaFechaConexion,
+                    EsHenderson = b.EsHenderson,
                     NombreWS = b.NombreWS,
                     // mapea Acreditaciones:
                     Acreditaciones = b.Acreditaciones.Select(a => new AcreditacionDTO2

@@ -25,7 +25,7 @@ namespace ANS.Model.Jobs.SANTANDER
         {
 
             Exception e = null;
-
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
             try
             {
 
@@ -45,7 +45,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta);
+                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta,_tarea);
 
             }
             catch (Exception ex)

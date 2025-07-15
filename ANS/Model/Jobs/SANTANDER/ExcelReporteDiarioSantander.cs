@@ -26,6 +26,8 @@ namespace ANS.Model.Jobs.SANTANDER
 
             Exception e = null;
 
+            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
+
             try
             {
 
@@ -38,7 +40,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 });
 
-                await _servicioCuentaBuzon.generarExcelDelResumenDelDiaSantander();
+                await _servicioCuentaBuzon.generarExcelDelResumenDelDiaSantander(_tarea);
 
             }
             catch (Exception ex)

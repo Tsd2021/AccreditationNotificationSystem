@@ -87,12 +87,14 @@ namespace ANS.ViewModel
 
             int numTanda = 1;
 
+            string tarea = "Tanda1";
+
             try
             {
 
                 await Task.Run(async () =>
                 {
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda, tarea);
 
                     // await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
@@ -144,12 +146,14 @@ namespace ANS.ViewModel
 
             int numTanda = 2;
 
+            string tarea = "Tanda2";
+
             try
             {
 
                 await Task.Run(async () =>
                 {
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, banco, "MONTEVIDEO", numTanda, tarea);
 
                     // await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
@@ -195,13 +199,13 @@ namespace ANS.ViewModel
             IsLoading = true;
 
             ConfiguracionAcreditacion configDiaADia = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
-
+            string tarea = "DiaADia";
             try
             {
 
                 await Task.Run(async () =>
                 {
-                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco,configDiaADia);
+                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco,configDiaADia,tarea);
 
                 });
 

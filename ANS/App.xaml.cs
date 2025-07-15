@@ -34,6 +34,8 @@ namespace ANS
 
             preCargarListaNC();
 
+            preCargarEmailsTarea();
+
             initServicios();
 
             var factory = new StdSchedulerFactory();
@@ -81,13 +83,17 @@ namespace ANS
             }
 
         }
-
+        private void preCargarEmailsTarea()
+        {
+            ServicioEmailTarea.Instancia.ObtenerTodosLosEmailTarea();
+        }
         private async Task crearJobsHSBC(IScheduler scheduler)
         {
             //Tarea 1: Acreditar dia a dia HSBC  (16:31:10)
             #region TAREA_ACREDITAR_DXD
             IJobDetail jobAcreditarHsbc = JobBuilder.Create<AcreditarPorBancoHSBC>()
             .WithIdentity("HSBCJobAcreditar", "GrupoTrabajoHSBC")
+           
             .Build();
 
             ITrigger triggerAcreditarHsbc = TriggerBuilder.Create()
@@ -100,6 +106,7 @@ namespace ANS
             #region TAREA_ENVIAR_EXCEL_DXD
             IJobDetail jobEnviarExcelHsbc = JobBuilder.Create<EnviarExcelHsbc>()
             .WithIdentity("HSBCJobEnviarExcel", "GrupoTrabajoHSBC")
+            .UsingJobData("tarea", "DiaADia")
             .Build();
 
             ITrigger triggerEnviarExcelHsbc = TriggerBuilder.Create()
@@ -130,6 +137,7 @@ namespace ANS
             #region TAREA_ENVIAR_EXCEL_DXD
             IJobDetail jobEnviarExcelItau = JobBuilder.Create<EnviarExcelItau>()
             .WithIdentity("ItauJobEnviarExcel", "GrupoTrabajoITAU")
+              .UsingJobData("tarea", "DiaADia")
             .Build();
 
             ITrigger triggerEnviarExcelItau = TriggerBuilder.Create()
@@ -160,6 +168,7 @@ namespace ANS
             #region TAREA_ENVIAR_EXCEL_DXD
             IJobDetail jobEnviarExcelBandes = JobBuilder.Create<EnviarExcelBandes>()
             .WithIdentity("BandesJobEnviarExcel", "GrupoTrabajoBANDES")
+            .UsingJobData("tarea", "DiaADia")
             .Build();
 
             ITrigger triggerEnviarExcelBandes = TriggerBuilder.Create()
@@ -221,6 +230,86 @@ namespace ANS
 
                 s.loadEmails();
             }
+        }
+        private void cargarClientes()
+        {
+            ServicioCliente.getInstancia().getAllClientes();
+        }
+        private void preCargarBancos()
+        {
+            var santander = new Banco(1, VariablesGlobales.santander.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "Tanda1",
+                "Tanda2",
+                "Tesoreria1",
+                "Tesoreria2",
+                "DiaADia",
+                "ReporteDiario"
+            }
+            };
+            Banco scotiabank = new Banco(2, VariablesGlobales.scotiabank.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "Tanda1",
+                "Tanda2",
+                "DiaADia"
+            }
+            };
+            Banco hsbc = new Banco(3, VariablesGlobales.hsbc.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "DiaADia"
+            }
+            };
+            Banco bbva = new Banco(4, VariablesGlobales.bbva.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "ExcelTata",
+                "ReporteDiario"
+            }
+            };
+            Banco heritage = new Banco(5, VariablesGlobales.heritage.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "DiaADia"
+            }
+            };
+            Banco brou = new Banco(6, VariablesGlobales.brou.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "DiaADia",
+            }
+            };
+            Banco itau = new Banco(7, VariablesGlobales.itau.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "DiaADia"
+            }
+            };
+            Banco bandes = new Banco(8, VariablesGlobales.bandes.ToUpper())
+            {
+                TareasEmail = new List<string>
+            {
+                "DiaADia"
+            }
+            };
+
+            ServicioBanco.getInstancia().agregar(santander);
+            ServicioBanco.getInstancia().agregar(scotiabank);
+            ServicioBanco.getInstancia().agregar(hsbc);
+            ServicioBanco.getInstancia().agregar(bbva);
+            ServicioBanco.getInstancia().agregar(heritage);
+            ServicioBanco.getInstancia().agregar(brou);
+            ServicioBanco.getInstancia().agregar(itau);
+            ServicioBanco.getInstancia().agregar(bandes);
         }
         private async Task crearJobsEnviosMasivos(IScheduler scheduler)
         {
@@ -296,31 +385,7 @@ namespace ANS
             {
                 Console.WriteLine(e);
             }
-        }
-        private void cargarClientes()
-        {
-            ServicioCliente.getInstancia().getAllClientes();
-        }
-        private void preCargarBancos()
-        {
-            Banco santander = new Banco(1, VariablesGlobales.santander.ToUpper());
-            Banco scotiabank = new Banco(2, VariablesGlobales.scotiabank.ToUpper());
-            Banco hsbc = new Banco(3, VariablesGlobales.hsbc.ToUpper());
-            Banco bbva = new Banco(4, VariablesGlobales.bbva.ToUpper());
-            Banco heritage = new Banco(5, VariablesGlobales.heritage.ToUpper());
-            Banco brou = new Banco(6, VariablesGlobales.brou.ToUpper());
-            Banco itau = new Banco(7, VariablesGlobales.itau.ToUpper());
-            Banco bandes = new Banco(8, VariablesGlobales.bandes.ToUpper());
-
-            ServicioBanco.getInstancia().agregar(santander);
-            ServicioBanco.getInstancia().agregar(scotiabank);
-            ServicioBanco.getInstancia().agregar(hsbc);
-            ServicioBanco.getInstancia().agregar(bbva);
-            ServicioBanco.getInstancia().agregar(heritage);
-            ServicioBanco.getInstancia().agregar(brou);
-            ServicioBanco.getInstancia().agregar(itau);
-            ServicioBanco.getInstancia().agregar(bandes);
-        }
+        }  
         private async Task crearJobsScotiabank(IScheduler scheduler)
         {
             if (scheduler != null)
@@ -341,6 +406,7 @@ namespace ANS
                 // Job para generar Excel a partir de los registros (implementado en ExcelHendersonTanda1)
                 IJobDetail jobExcelTanda1Scotiabank = JobBuilder.Create<ExcelTanda1HendersonScotiabank>()
                     .WithIdentity("ScotiabankJobExcelTAN1", "GrupoTrabajoScotiabank")
+                    .UsingJobData("tarea", "Tanda1")
                     .Build();
 
                 // Trigger que dispara la ejecución a las 7:03:35 AM de lunes a viernes.
@@ -365,6 +431,7 @@ namespace ANS
                 // Job para generar Excel a partir de la segunda tanda (implementado en ExcelHendersonTanda2)
                 IJobDetail jobExcelTanda2Scotiabank = JobBuilder.Create<ExcelTanda2HendersonScotiabank>()
                     .WithIdentity("ScotiabankJobExcelTAN2", "GrupoTrabajoScotiabank")
+                    .UsingJobData("tarea", "Tanda2")
                     .Build();
 
                 // Trigger que dispara la ejecución a las 14:35:36 de lunes a viernes.
@@ -387,6 +454,7 @@ namespace ANS
                 #region Tarea 6: EXCEL DXD (16:10:20)
                 IJobDetail jobExcelDiaADiaScotiabank = JobBuilder.Create<ExcelScotiabankDiaADia>()
                     .WithIdentity("ScotiabankJobExcelDXD", "GrupoTrabajoScotiabank")
+                    .UsingJobData("tarea","DiaADia")
                     .Build();
                 ITrigger triggerExcelDiaADiaScotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerExcelDXD", "GrupoTrabajoScotiabank")
@@ -450,6 +518,7 @@ namespace ANS
             IJobDetail jobExcelHendersonTanda1 = JobBuilder.Create<ExcelHendersonTanda1>()
                                         .WithIdentity("JobExcelHendersonTanda1", "GrupoTrabajoSantander")
                                         .UsingJobData("city", "MONTEVIDEO")
+                                        .UsingJobData("tarea", "Tanda1")
                                         .Build();
 
 
@@ -463,6 +532,7 @@ namespace ANS
             #region EXCEL_TANDA1_TESORERIA
             IJobDetail jobTanda1ExcelTesoreria = JobBuilder.Create<ExcelSantanderTesoreria1>()
             .WithIdentity("SantanderJobTan1Tesoreria", "GrupoTrabajoSantander")
+             .UsingJobData("tarea", "Tesoreria1")
             .Build();
 
 
@@ -490,6 +560,7 @@ namespace ANS
             IJobDetail jobExcelHendersonTanda2 = JobBuilder.Create<ExcelHendersonTanda2>()
                             .WithIdentity("JobExcelHendersonTanda2", "GrupoTrabajoSantander")
                             .UsingJobData("city", "MONTEVIDEO")
+                             .UsingJobData("tarea", "Tanda2")
                             .Build();
 
             ITrigger triggerExcelHendersonTanda2 = TriggerBuilder.Create()
@@ -502,6 +573,7 @@ namespace ANS
             #region EXCEL_TANDA2_TESORERIA
             IJobDetail jobTanda2ExcelTesoreria = JobBuilder.Create<ExcelSantanderTesoreria2>()
                         .WithIdentity("SantanderJobTan2Tesoreria", "GrupoTrabajoSantander")
+                         .UsingJobData("tarea", "Tesoreria2")
                         .Build();
 
 
@@ -527,7 +599,10 @@ namespace ANS
 
             // Tarea 9: 15:51:30 EXCEL DIA A DIA
             #region EXCEL_DXD_SANTANDER
-            IJobDetail jobDiaADiaSantanderExcel = JobBuilder.Create<ExcelSantanderDiaADia>().WithIdentity("SantanderJobExcelDAD1", "GrupoTrabajoSantander").Build();
+            IJobDetail jobDiaADiaSantanderExcel = JobBuilder.Create<ExcelSantanderDiaADia>()
+                .WithIdentity("SantanderJobExcelDAD1", "GrupoTrabajoSantander")
+                .UsingJobData("tarea", "DiaADia")
+                .Build();
 
             ITrigger triggerDiaADiaSantanderExcel = TriggerBuilder.Create()
                 .WithIdentity("SantanderTriggerExcelDAD1", "GrupoTrabajoSantander")
@@ -540,6 +615,7 @@ namespace ANS
 
             IJobDetail jobReporteDiarioSantander = JobBuilder.Create<ExcelReporteDiarioSantander>()
                         .WithIdentity("SantanderJobReporteDiario", "GrupoTrabajoSantander")
+                        .UsingJobData("tarea", "ReporteDiario")
                         .Build();
 
             ITrigger triggerReporteDiarioSantander = TriggerBuilder.Create()
@@ -640,6 +716,7 @@ namespace ANS
             #region TAREA_EXCEL_RESUMENDIARIO
             IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
             .WithIdentity("BBVAJobExcelReporteDiario", "GrupoTrabajoBBVA")
+            .UsingJobData("tarea", "ReporteDiario")
             .Build();
 
             ITrigger triggerBBVAEnviarExcelResumen = TriggerBuilder.Create()
@@ -652,6 +729,7 @@ namespace ANS
             #region TAREA_EXCEL_TATA 21:06
             IJobDetail jobBBVAEnviarExcelTata = JobBuilder.Create<ExcelBBVATata>()
             .WithIdentity("BBVAJobExcelTata", "GrupoTrabajoBBVA")
+            .UsingJobData("tarea", "ExcelTata")
             .Build();
 
             ITrigger triggerBBVAEnviarExcelTata = TriggerBuilder.Create()
@@ -671,15 +749,12 @@ namespace ANS
         }
         protected override async void OnExit(ExitEventArgs e)
         {
-            // Al salir de la app, paramos el Scheduler para liberar recursos
-
             if (_scheduler != null)
             {
                 await _scheduler.Shutdown();
             }
 
             base.OnExit(e);
-
         }
     }
 }

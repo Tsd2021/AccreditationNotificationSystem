@@ -61,12 +61,14 @@ namespace ANS.ViewModel
 
             IsLoading = true;
 
+            string tarea = "DiaADia";
+
             try
             {
                 await Task.Run(async () =>
                 {
 
-                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco, new ConfiguracionAcreditacion { TipoAcreditacion = VariablesGlobales.diaxdia });
+                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco, new ConfiguracionAcreditacion { TipoAcreditacion = VariablesGlobales.diaxdia }, tarea);
 
                 });
 
