@@ -195,7 +195,7 @@ namespace ANS.Model.Services
                 throw new ArgumentException("Banco , tarea y ciudad son obligatorios.");
             }
 
-            List<Email> retorno = ServicioEmailTarea.Instancia.ListaEmailTarea.Where(e=> e.Banco.ToUpper() == banco.NombreBanco.ToUpper() &&
+            List<Email> retorno = ServicioEmailTarea.Instancia.ObtenerTodosLosEmailTarea().Where(e=> e.Banco.ToUpper() == banco.NombreBanco.ToUpper() &&
                      e.Tarea.ToUpper() == tarea.ToUpper() &&
                      e.Ciudad.ToUpper() == ciudad.ToUpper()).ToList();
 

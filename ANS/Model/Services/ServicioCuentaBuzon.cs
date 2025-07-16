@@ -956,6 +956,8 @@ namespace ANS.Model.Services
                     config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
                 }
 
+                
+
                 List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank, config);
 
                 List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();

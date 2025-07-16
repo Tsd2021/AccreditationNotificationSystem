@@ -327,6 +327,8 @@ namespace ANS.Model.Services
 
                 while (await reader.ReadAsync())
                 {
+
+               
                     var dto = new DtoAcreditacionesPorEmpresa
                     {
                         NN = reader.GetString(ordNN).Trim(),
@@ -352,6 +354,7 @@ namespace ANS.Model.Services
 
                 while (await reader.ReadAsync())
                 {
+
                     var dto = new DtoAcreditacionesPorEmpresa
                     {
                         NN = reader.GetString(ordNN).Trim(),

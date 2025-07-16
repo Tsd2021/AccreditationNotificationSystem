@@ -83,7 +83,7 @@ namespace TAAS.Reports
 
             string inicioStr = fechaInicio.ToString("dd/MM/yyyy HH:mm");
             string cierreStr = fechaCierre.ToString("dd/MM/yyyy HH:mm");
-            string fechaRango = $"{inicioStr} al {cierreStr}";
+            string fechaRango = $"DEL {inicioStr} AL {cierreStr}";
 
             string exeFolder = AppContext.BaseDirectory;
             string reportPath = Path.Combine(exeFolder, "Reports", "TotalesyDepositosCC.rdlc");
@@ -145,7 +145,7 @@ namespace TAAS.Reports
                         5 => "EUR",
                         _ => "N/A"
                     },
-                    FECHA = a.FechaDep.ToString("yyyy-MM-dd HH:mm:ss"),
+                    FECHA = a.FechaDep.ToString("d/M/yyyy h:mm:ss tt", CultureInfo.InvariantCulture),
                     TOTAL = a.Monto.ToString("N2"),
                     USUARIO = a.Usuario,
                     EMPRESA = a.Empresa,
@@ -165,7 +165,7 @@ namespace TAAS.Reports
 
       
             report.SetParameters(new ReportParameter("FECHA1", fechaRango));
-            report.SetParameters(new ReportParameter("SUCURSAL", nombreBuzonParaUsar));
+            report.SetParameters(new ReportParameter("SUCURSAL", buzonDTO.NN));
 
     
             byte[] excelBytes = report.Render(
@@ -178,13 +178,11 @@ namespace TAAS.Reports
                 out Warning[] warnings
             );
 
+            fileName = $"Acreditacion{buzonDTO.NN}_{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}.{fileExt}";
 
+            subject = $"Acreditaciones Buzón Inteligente [{buzonDTO.NN}] - {cierreStr}";
 
-            fileName = $"Acreditacion{nombreBuzonParaUsar}_{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}.{fileExt}";
-
-            subject = $"Acreditaciones Buzón Inteligente [{nombreBuzonParaUsar}] - {inicioStr}";
-
-            body = $"Acreditaciones del Buzón Inteligente {nombreBuzonParaUsar} del <strong>{fechaRango}</strong>";
+            body = $"Acreditaciones del Buzón Inteligente {buzonDTO.NN} del <strong>{fechaRango}</strong>";
 
             return new MemoryStream(excelBytes);
         }
