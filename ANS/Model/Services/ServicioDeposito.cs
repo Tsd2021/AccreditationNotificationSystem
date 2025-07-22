@@ -57,6 +57,42 @@ namespace ANS.Model.Services
                         AND d.idoperacion > @ultimaOperacion                
                         AND t.Divisas = @divisaActual 
                         AND d.fechadep < @fechaCierre";
+
+                if(buzon.Banco.ToUpper() == VariablesGlobales.santander.ToUpper())
+                {
+                    if(buzon.Empresa == "BAS")
+                    {
+                        query = @"SELECT 
+                        d.iddeposito, 
+                        d.idoperacion, 
+                        d.codigo, 
+                        d.tipo, 
+                        CASE 
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
+                        END AS empresa, 
+                        d.fechadep         
+                        FROM 
+                        Depositos d
+                        INNER JOIN 
+                        relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
+                        INNER JOIN 
+                        Totales t ON rd.IdTotal = t.IdTotal
+                        WHERE 
+                        d.codigo = @nc
+                        AND (
+                        CASE 
+                        WHEN CHARINDEX('-', d.empresa) > 0 
+                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                        ELSE LTRIM(RTRIM(d.empresa))
+                        END
+                        ) = @empresa
+                        AND d.idoperacion > @ultimaOperacion                
+                        AND t.Divisas = @divisaActual 
+                        AND d.fechadep < @fechaCierre";
+                    }
+                }
                 //   AND d.FechaActualizacion < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))
 
             }

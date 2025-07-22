@@ -133,6 +133,7 @@ namespace TAAS.Reports
 
 
             var depositos = buzonDTO.Acreditaciones
+                .OrderByDescending(a => a.IdOperacion)
                 .Select(a => new DepositosCCImprimir
                 {
                     OPERACION = a.IdOperacion.ToString(),

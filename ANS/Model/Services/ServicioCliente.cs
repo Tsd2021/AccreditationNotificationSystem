@@ -43,6 +43,20 @@ namespace ANS.Model.Services
             }
             return null;
         }
+
+
+
+        public Cliente getByRut(string rut)
+        {
+            foreach (Cliente cli in ListaClientes)
+            {
+                if (cli.Rut != null && cli.Rut.ToUpper().Contains(rut.ToUpper()))
+                {
+                    return cli;
+                }
+            }
+            return null;
+        }
         public void getAllClientes()
         {
             using (SqlConnection conn = new SqlConnection(_conexionENCUESTA))

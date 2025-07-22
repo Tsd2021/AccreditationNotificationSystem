@@ -32,6 +32,8 @@ namespace ANS
 
             preCargarBancos();
 
+            preCargarCuentasBuzonesBugueadas();
+
             preCargarListaNC();
 
             preCargarEmailsTarea();
@@ -83,6 +85,13 @@ namespace ANS
             }
 
         }
+
+        private void preCargarCuentasBuzonesBugueadas()
+        {
+            //Este método precarga las cuentasbuzones que están bugueadas (no pueden ser acreditadas con mi app por tema de infraestructura)
+            //Por ejemplo BAS  y Multiahorro, cuyo nombre de Empresa no puede ser encontrado en Depositos por banco(misma empresa acredita en varios bancos)
+        }
+
         private void preCargarEmailsTarea()
         {
             ServicioEmailTarea.Instancia.ObtenerTodosLosEmailTarea();
