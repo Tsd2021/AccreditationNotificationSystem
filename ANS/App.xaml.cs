@@ -138,7 +138,7 @@ namespace ANS
 
             ITrigger triggerAcreditarItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerAcreditar", "GrupoTrabajoITAU")
-            .WithCronSchedule("30 31 16 ? * MON-FRI")
+            .WithCronSchedule("05 05 16 ? * MON-FRI")
             .Build();
             #endregion
 
@@ -151,7 +151,7 @@ namespace ANS
 
             ITrigger triggerEnviarExcelItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerEnviarExcel", "GrupoTrabajoITAU")
-            .WithCronSchedule("30 32 16 ? * MON-FRI")
+            .WithCronSchedule("06 06 16 ? * MON-FRI")
             .Build();
             #endregion
 
@@ -692,7 +692,7 @@ namespace ANS
         private async Task crearJobsBBVA(IScheduler scheduler)
         {
 
-            //Tarea 1: Acreditar punto a punto. de 6:30 a 20:30.
+            //Tarea 1: Acreditar punto a punto. de 8:15 a 19:45.
             #region TAREA_ACREDITAR_P2P
 
             IJobDetail jobPuntoAPuntoBBVA = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()

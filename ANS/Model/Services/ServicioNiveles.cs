@@ -51,8 +51,8 @@ namespace ANS.Model.Services
             int horasEnteras = (int)Math.Floor(buz.HorasDesconectado);
             var msg = new MimeMessage();
 
-            msg.From.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
-            msg.To.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
+            msg.From.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
+            msg.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
             msg.Subject = $"Notificación: Buzón [{buz.NN}] desconectado!";
 
             var builder = new BodyBuilder();

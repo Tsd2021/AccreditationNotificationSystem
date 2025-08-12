@@ -1,14 +1,8 @@
 ﻿using ANS.Model.Interfaces;
-using ClosedXML.Parser;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.Wordprocessing;
 using MailKit.Security;
 using Microsoft.Data.SqlClient;
 using MimeKit;
 using MimeKit.Utils;
-using Org.BouncyCastle.Bcpg.OpenPgp;
-using System.CodeDom;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Net;
@@ -122,9 +116,9 @@ namespace ANS.Model.Services
               "<body>" +
               "<p>Saludos cordiales.</p>" +
               // Agrega un contenedor para la firma con un margen superior para separar del texto
-              "<div style='margin-top:30px;'>" +
-              "<img src='cid:bannerImage' alt='Firma Diego Chiquiar' style='width:400px; height:750;'/>" +
-              "</div>" +
+              //"<div style='margin-top:30px;'>" +
+              //"<img src='cid:bannerImage' alt='Firma Diego Chiquiar' style='width:400px; height:750;'/>" +
+              //"</div>" +
               "</body>" +
               "</html>";
 
@@ -132,13 +126,13 @@ namespace ANS.Model.Services
                 AlternateView avHtml = AlternateView.CreateAlternateViewFromString(cuerpo, null, MediaTypeNames.Text.Html);
 
                 // Crea el recurso vinculado (imagen) y establece su ContentId para que coincida con el del HTML
-                LinkedResource inlineImage = new LinkedResource("Images/FirmaDiegoMail.png", MediaTypeNames.Image.Png)
-                {
-                    ContentId = "bannerImage",
-                    TransferEncoding = TransferEncoding.Base64
-                };
+                //LinkedResource inlineImage = new LinkedResource("Images/FirmaDiegoMail.png", MediaTypeNames.Image.Png)
+                //{
+                //    ContentId = "bannerImage",
+                //    TransferEncoding = TransferEncoding.Base64
+                //};
 
-                avHtml.LinkedResources.Add(inlineImage);
+                //avHtml.LinkedResources.Add(inlineImage);
 
                 // Configuración de remitente y destinatario
 
@@ -202,71 +196,6 @@ namespace ANS.Model.Services
             return retorno;
         }
 
-
-        private List<Email> ObtenerEmailsPorClienteBancoYConfig(
-           Cliente cliente,
-           Banco banco,
-           ConfiguracionAcreditacion config,
-           string ciudad)
-        {
-            var emails = new List<Email>();
-
-            // 1. Construyo la consulta base
-            var sb = new StringBuilder(@"
-            SELECT email, esprincipal, ciudad
-            FROM EmailDestinoEnvio
-            WHERE banco = @banco
-            ");
-
-            // 2. Filtro opcional por tipo de acreditación
-            if (config != null)
-                sb.Append(" AND tipoacreditacion = @tipoAcreditacion");
-
-            // 3. Filtro de cliente: genérico (NULL) o específico
-            if (cliente != null)
-                sb.Append(" AND (idcliente IS NULL OR idcliente = @idcliente)");
-            else
-                sb.Append(" AND idcliente IS NULL");
-
-            // 4. Filtro opcional de ciudad
-            if (!string.IsNullOrEmpty(ciudad))
-                sb.Append(" AND ciudad = @ciudad");
-
-            // 5. Creo el comando **después** de armar toda la cadena
-            using var conn = new SqlConnection(_conexionTSD);
-            using var cmd = new SqlCommand(sb.ToString(), conn);
-
-            // 6. Agrego los parámetros
-            cmd.Parameters.Add("@banco", SqlDbType.VarChar, 100)
-               .Value = banco.NombreBanco;
-
-            if (config != null)
-                cmd.Parameters.Add("@tipoAcreditacion", SqlDbType.VarChar, 50)
-                   .Value = config.TipoAcreditacion;
-
-            if (cliente != null)
-                cmd.Parameters.Add("@idcliente", SqlDbType.Int)
-                   .Value = cliente.IdCliente;
-
-            if (!string.IsNullOrEmpty(ciudad))
-                cmd.Parameters.Add("@ciudad", SqlDbType.VarChar, 50)
-                   .Value = ciudad;
-
-            // 7. Ejecución
-            conn.Open();
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                emails.Add(new Email
-                {
-                    Correo = reader.GetString(reader.GetOrdinal("email")),
-                    EsPrincipal = reader.GetBoolean(reader.GetOrdinal("esprincipal")),
-                    Ciudad = reader.GetString(reader.GetOrdinal("ciudad"))
-                });
-            }
-
-            return emails;
-        }
         public async Task<bool> EnviarMailDesconexion(MimeMessage msg, MailKit.Net.Smtp.SmtpClient smtpClient)
         {
             try
@@ -297,7 +226,7 @@ namespace ANS.Model.Services
                     message.To.Add(MailboxAddress.Parse(e.Correo));
                 }*/
                 message.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
-                message.To.Add(MailboxAddress.Parse("dchiquiar@tecnisegur.com.uy"));
+          
                 message.Subject = subject;
 
                 var builder = new BodyBuilder();

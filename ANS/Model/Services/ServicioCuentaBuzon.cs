@@ -818,6 +818,11 @@ namespace ANS.Model.Services
 
                 foreach (CuentaBuzon acc in cuentas)
                 {
+
+                    if(acc.NC == "EA24L1010N07000720")
+                    {
+                        Console.WriteLine("ES TAPES FARMACIA");
+                    }
                     int ultimoIdOperacion = await obtenerUltimaOperacionByNC(acc);
 
                     if (ultimoIdOperacion > 0)

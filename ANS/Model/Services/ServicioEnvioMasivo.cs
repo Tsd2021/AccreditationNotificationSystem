@@ -27,103 +27,103 @@ namespace ANS.Model.Services
         {
             try
             {
-          
-            List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
 
-            await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
+                List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
 
-            await obtenerUsuarioYFechaDelDeposito(buzones);
+                await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
 
-            await obtenerFechaUltimaConexionDelBuzon(buzones);
+                await obtenerUsuarioYFechaDelDeposito(buzones);
 
-            var buzonesConAcreditaciones = buzones
-                .Where(b => b.Acreditaciones != null && b.Acreditaciones.Count > 0)
-                .ToList();
+                await obtenerFechaUltimaConexionDelBuzon(buzones);
 
-            if (buzonesConAcreditaciones.Count == 0) return;
+                var buzonesConAcreditaciones = buzones
+                    .Where(b => b.Acreditaciones != null && b.Acreditaciones.Count > 0)
+                    .ToList();
 
-            var reportService = new TAAS.Reports.ReportService();
+                if (buzonesConAcreditaciones.Count == 0) return;
 
-            ObtenerMailsPorBuzon(buzonesConAcreditaciones);
+                var reportService = new TAAS.Reports.ReportService();
 
-            var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
-            var smtp = await ServicioEmail.instancia.getNewSmptClient();
-            var sendLock = new SemaphoreSlim(1, 1);
+                ObtenerMailsPorBuzon(buzonesConAcreditaciones);
 
-            var tasks = buzonesConAcreditaciones.Select(async b =>
-            {
-                // preparar excelStream, subject, body, fileName, destino…
-                b.MontoTotal = b.Acreditaciones.Sum(a => a.Monto);
+                var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
+                var smtp = await ServicioEmail.instancia.getNewSmptClient();
+                var sendLock = new SemaphoreSlim(1, 1);
 
-                var b2 = new BuzonDTO2
+                var tasks = buzonesConAcreditaciones.Select(async b =>
                 {
-                    NC = b.NC,
-                    NN = b.NN,
-                    Empresa = b.Empresa,
-                    FechaInicio = b.FechaInicio,
-                    Cierre = b.Cierre,
-                    MontoTotal = b.MontoTotal,
-                    Moneda = b.Moneda,
-                    Divisa = b.Divisa,
-                    IdOperacion = b.IdOperacion,
-                    Sucursal = b.Sucursal,
-                    IdOperacionFinal = b.IdOperacionFinal,
-                    IdOperacionInicio = b.IdOperacionInicio,
-                    NumeroEnvioMasivo = b.NumeroEnvioMasivo,
-                    UltimaFechaConexion = b.UltimaFechaConexion,
-                    EsHenderson = b.EsHenderson,
-                    NombreWS = b.NombreWS,
-                    // mapea Acreditaciones:
-                    Acreditaciones = b.Acreditaciones.Select(a => new AcreditacionDTO2
+                    // preparar excelStream, subject, body, fileName, destino…
+                    b.MontoTotal = b.Acreditaciones.Sum(a => a.Monto);
+
+                    var b2 = new BuzonDTO2
                     {
-                        NC = a.NC,
-                        IdOperacion = a.IdOperacion,
-                        Divisa = a.Divisa,
-                        Monto = a.Monto,
-                        Usuario = a.Usuario,
-                        FechaDep = a.FechaDep,
-                        Empresa = a.Empresa
-                    }).ToList()
-                };
+                        NC = b.NC,
+                        NN = b.NN,
+                        Empresa = b.Empresa,
+                        FechaInicio = b.FechaInicio,
+                        Cierre = b.Cierre,
+                        MontoTotal = b.MontoTotal,
+                        Moneda = b.Moneda,
+                        Divisa = b.Divisa,
+                        IdOperacion = b.IdOperacion,
+                        Sucursal = b.Sucursal,
+                        IdOperacionFinal = b.IdOperacionFinal,
+                        IdOperacionInicio = b.IdOperacionInicio,
+                        NumeroEnvioMasivo = b.NumeroEnvioMasivo,
+                        UltimaFechaConexion = b.UltimaFechaConexion,
+                        EsHenderson = b.EsHenderson,
+                        NombreWS = b.NombreWS,
+                        // mapea Acreditaciones:
+                        Acreditaciones = b.Acreditaciones.Select(a => new AcreditacionDTO2
+                        {
+                            NC = a.NC,
+                            IdOperacion = a.IdOperacion,
+                            Divisa = a.Divisa,
+                            Monto = a.Monto,
+                            Usuario = a.Usuario,
+                            FechaDep = a.FechaDep,
+                            Empresa = a.Empresa
+                        }).ToList()
+                    };
 
-                //var excelStream = ArmarExcelConReportViewer(b, out var subject, out var body, out var fileName);
-                var excelStream = reportService.ArmarExcelConReportViewer(b2, out var subject, out var body, out var fileName);
-                await semaphore.WaitAsync();
-                try
-                {
-                    // sólo UNO a la vez entra aquí:
-                    await sendLock.WaitAsync();
+                    //var excelStream = ArmarExcelConReportViewer(b, out var subject, out var body, out var fileName);
+                    var excelStream = reportService.ArmarExcelConReportViewer(b2, out var subject, out var body, out var fileName);
+                    await semaphore.WaitAsync();
                     try
                     {
+                        // sólo UNO a la vez entra aquí:
+                        await sendLock.WaitAsync();
+                        try
+                        {
 
-                        await ServicioEmail.instancia
-                            .EnviarExcelPorMailMasivoConMailKit(
-                               excelStream, fileName, subject, body, b._Emails, smtp);
+                            await ServicioEmail.instancia
+                                .EnviarExcelPorMailMasivoConMailKit(
+                                   excelStream, fileName, subject, body, b._Emails, smtp);
 
+                        }
+                        catch (Exception ex)
+                        {
+
+                            Console.WriteLine($"Error al enviar el correo: {ex.Message}");
+                        }
+
+                        finally
+                        {
+
+                            sendLock.Release();
+
+                        }
                     }
-                    catch (Exception ex)
-                    {
-
-                        Console.WriteLine($"Error al enviar el correo: {ex.Message}");
-                    }
-
                     finally
                     {
-
-                        sendLock.Release();
-
+                        semaphore.Release();
                     }
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            }).ToArray();
+                }).ToArray();
 
-            await Task.WhenAll(tasks);
-            await smtp.DisconnectAsync(true);
+                await Task.WhenAll(tasks);
+                await smtp.DisconnectAsync(true);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw e;
             }
@@ -148,7 +148,12 @@ namespace ANS.Model.Services
             if (deps == null || deps.Count == 0) return;
 
             // 1) Mapear buzones
-            var mapaBuzones = deps.ToDictionary(b => b.NC);
+            var mapaBuzones = deps
+     .GroupBy(b => b.NC)
+     .ToDictionary(
+         g => g.Key,
+         g => g.First()        // <-- aquí podrías usar .Last() si prefieres el último
+     );
 
             // 2) Separar NC según EsHenderson
             var hendersons = deps.Where(b => b.EsHenderson).Select(b => b.NC).Distinct().ToList();
@@ -287,7 +292,7 @@ namespace ANS.Model.Services
                 tvp.Rows.Add(nc, idOp);
 
             // 4. Ejecutar un solo SELECT
-            var sql =   @"
+            var sql = @"
                         SELECT 
                         d.codigo   AS NC,
                         d.idoperacion AS IdOperacion,
@@ -442,7 +447,7 @@ namespace ANS.Model.Services
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-                query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+            query =     @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
                         from
                         cc as c 
                         left join 
@@ -485,11 +490,11 @@ namespace ANS.Model.Services
                         dto.NN = reader.GetString(nnOrdinal);
                         dto.Sucursal = reader.GetString(sucursalOrdinal);
                         dto.Cierre = reader.GetDateTime(cierreOrdinal);
-                        dto.Email = "dchiquiar@tecnisegur.com.uy";
+                        dto.Email = "acreditaciones@tecnisegur.com.uy";
                         dto.IdCliente = reader.GetInt32(idClienteOrdinal);
                         dto.EsHenderson = dto.esHenderson();
                         dto.NumeroEnvioMasivo = numEnvioMasivo;
-                        if(!reader.IsDBNull(nombreWSOrdinal))
+                        if (!reader.IsDBNull(nombreWSOrdinal))
                         {
                             dto.NombreWS = reader.GetString(nombreWSOrdinal);
                         }
@@ -504,11 +509,13 @@ namespace ANS.Model.Services
                 if (numEnvioMasivo == 1)
                 {
 
-                    string queryParaObtenerHenderson = @"select distinct NC,NN,SUCURSAL,CIERRE,cc.IDCLIENTE from cc
-                                                         inner join ClientesRelacionadosTest as cr 
-                                                         on cc.IDCLIENTE = cr.IdRazonSocial 
-                                                         where cr.IdCliente = 164 
-                                                         and tanda = 1 and estado = 'alta' ";
+                    string queryParaObtenerHenderson = @"select distinct cc.NC,NN,SUCURSAL,CIERRE,cc.IDCLIENTE,cnws.NombreWS from cc
+                                                        inner join ClientesRelacionadosTest as cr 
+                                                        on cc.IDCLIENTE = cr.IdRazonSocial 
+                                                        left join CC_NombreWS cnws
+                                                        on cc.NC = cnws.NC
+                                                        where cr.IdCliente = 164 
+                                                        and tanda = 1 and estado = 'alta' ";
 
                     SqlCommand cmd2 = new SqlCommand(queryParaObtenerHenderson, conn);
 
@@ -524,6 +531,8 @@ namespace ANS.Model.Services
 
                         int idClienteOrdinal = reader2.GetOrdinal("IDCLIENTE");
 
+                        int nombreWSOrdinal = reader2.GetOrdinal("NombreWS");
+
                         while (await reader2.ReadAsync())
                         {
 
@@ -532,10 +541,18 @@ namespace ANS.Model.Services
                             dto.NN = reader2.GetString(nnOrdinal);
                             dto.Sucursal = reader2.GetString(sucursalOrdinal);
                             dto.Cierre = reader2.GetDateTime(cierreOrdinal);
-                            dto.Email = "dchiquiar@tecnisegur.com.uy";
+                            dto.Email = "acreditaciones@tecnisegur.com.uy";
                             dto.IdCliente = reader2.GetInt32(idClienteOrdinal);
                             dto.EsHenderson = true;
                             dto.NumeroEnvioMasivo = numEnvioMasivo;
+                            if (!reader2.IsDBNull(nombreWSOrdinal))
+                            {
+                                dto.NombreWS = reader2.GetString(nombreWSOrdinal);
+                            }
+                            else
+                            {
+                                dto.NombreWS = "NO_DEFINIDO";
+                            }
                             retorno.Add(dto);
                         }
                     }

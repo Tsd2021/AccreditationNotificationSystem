@@ -47,7 +47,6 @@
     <PackageReference Include="ReportViewerCore.NETCore" Version="15.1.26" />
 	<PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
     <PackageReference Include="CoreWCF.Http" Version="1.6.0" />
-    <PackageReference Include="EPPlus" Version="8.0.1" />
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739" />
     <PackageReference Include="MailKit" Version="4.11.0" />
     <PackageReference Include="MaterialDesignColors" Version="5.2.1" />
@@ -91,6 +90,10 @@
   <ItemGroup>
     <ProjectReference Include="..\SharedDTOs\SharedDTOs.csproj" />
     <ProjectReference Include="..\TAAS.Reports\TAAS.Reports.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 
 </Project>
