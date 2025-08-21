@@ -9,14 +9,18 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Copia siempre el RDLC al bin -->
-		<Content Include="Reports\TotalesyDepositosCC.rdlc">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+	  <None Remove="Reports\TotalesyDepositosCC.rdlc" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Reports\TotalesyDepositosCC.rdlc">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 	<ItemGroup>
 		<!-- Port del ReportViewer original de SSRS para .NET 8 -->
+		<PackageReference Include="NPOI" Version="2.7.4" />
 		<PackageReference Include="ReportViewerCore.NETCore" Version="15.1.26" />
 		<!-- Para procesar expresiones VB en el RDLC -->
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.7" />

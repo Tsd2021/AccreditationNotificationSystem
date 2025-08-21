@@ -62,7 +62,7 @@ namespace ANS
 
             await crearJobsEnviosMasivos(_scheduler);
 
-            await crearJobEnviosNiveles(_scheduler);    
+            await crearJobEnviosNiveles(_scheduler);
 
             if (!_scheduler.IsStarted)
             {
@@ -102,7 +102,7 @@ namespace ANS
             #region TAREA_ACREDITAR_DXD
             IJobDetail jobAcreditarHsbc = JobBuilder.Create<AcreditarPorBancoHSBC>()
             .WithIdentity("HSBCJobAcreditar", "GrupoTrabajoHSBC")
-           
+
             .Build();
 
             ITrigger triggerAcreditarHsbc = TriggerBuilder.Create()
@@ -323,7 +323,7 @@ namespace ANS
         private async Task crearJobsEnviosMasivos(IScheduler scheduler)
         {
             #region Tarea 1: ENVIO MASIVO 1  (7:30:0)
-         
+
             IJobDetail jobEnvioMasivo1 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo1Job", "GrupoEnvioMasivo")
                 .UsingJobData("numEnvioMasivo", 1)
@@ -340,10 +340,10 @@ namespace ANS
 
             IJobDetail jobEnvioMasivo2 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo2Job", "GrupoEnvioMasivo")
-                .UsingJobData("numEnvioMasivo", 2)  
+                .UsingJobData("numEnvioMasivo", 2)
                 .Build();
 
-     
+
             ITrigger triggerEnvioMasivo2 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo2Trigger", "GrupoEnvioMasivo")
                 .WithCronSchedule("10 05 15 ? * MON-FRI")
@@ -351,7 +351,7 @@ namespace ANS
             #endregion
 
             #region Tarea 3: ENVIO MASIVO 3 (16:10:00)
-       
+
             IJobDetail jobEnvioMasivo3 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo3Job", "GrupoEnvioMasivo")
                 .UsingJobData("numEnvioMasivo", 3)
@@ -394,7 +394,7 @@ namespace ANS
             {
                 Console.WriteLine(e);
             }
-        }  
+        }
         private async Task crearJobsScotiabank(IScheduler scheduler)
         {
             if (scheduler != null)
@@ -450,7 +450,7 @@ namespace ANS
                     .Build();
                 #endregion
                 #region Tarea 5: Acreditar DXD (16:05:50)
-                IJobDetail jobAcreditarDiaADiaScotiabank =  JobBuilder.Create<AcreditarDiaADiaScotiabank>()
+                IJobDetail jobAcreditarDiaADiaScotiabank = JobBuilder.Create<AcreditarDiaADiaScotiabank>()
                                                             .WithIdentity("ScotiabankJobAcreditarDXD", "GrupoTrabajoScotiabank")
                                                             .Build();
 
@@ -463,7 +463,7 @@ namespace ANS
                 #region Tarea 6: EXCEL DXD (16:10:20)
                 IJobDetail jobExcelDiaADiaScotiabank = JobBuilder.Create<ExcelScotiabankDiaADia>()
                     .WithIdentity("ScotiabankJobExcelDXD", "GrupoTrabajoScotiabank")
-                    .UsingJobData("tarea","DiaADia")
+                    .UsingJobData("tarea", "DiaADia")
                     .Build();
                 ITrigger triggerExcelDiaADiaScotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerExcelDXD", "GrupoTrabajoScotiabank")
@@ -485,7 +485,7 @@ namespace ANS
 
                     await scheduler.ScheduleJob(jobExcelTanda2Scotiabank, triggerExcelTanda2Scotiabank);
 
-                    await scheduler.ScheduleJob(jobAcreditarDiaADiaScotiabank,triggerAcreditarDiaADiaScotiabank);
+                    await scheduler.ScheduleJob(jobAcreditarDiaADiaScotiabank, triggerAcreditarDiaADiaScotiabank);
 
                     await scheduler.ScheduleJob(jobExcelDiaADiaScotiabank, triggerExcelDiaADiaScotiabank);
 
@@ -703,8 +703,20 @@ namespace ANS
                 .WithIdentity("BBVATriggerP2P", "GrupoTrabajoBBVA")
                 .WithSchedule(CronScheduleBuilder
                     // Segundos | Minutos    | Horas     | Day-of-month | Meses | Días-semana
-                    .CronSchedule("0 15,45 8-19 ? * MON-FRI"))
+                    .CronSchedule("0 15,45 11-19 ? * MON-FRI"))
                 .Build();
+
+            ITrigger triggerBBVAPuntoAPuntoExcepcion1635 = TriggerBuilder.Create()
+                .WithIdentity("BBVATriggerP2P_Extra1635", "GrupoTrabajoBBVA")
+                 .WithSchedule(CronScheduleBuilder
+                     .CronSchedule("0 35 16 ? * MON-FRI"))
+                 .Build();
+
+            ITrigger triggerBBVAPuntoAPuntoExcepcion2030 = TriggerBuilder.Create()
+           .WithIdentity("BBVATriggerP2P_Extra2030", "GrupoTrabajoBBVA")
+            .WithSchedule(CronScheduleBuilder
+                .CronSchedule("0 30 20 ? * MON-FRI"))
+            .Build();
             #endregion
 
             // Tarea 2: Acreditar dia a dia. 17:00
@@ -748,6 +760,14 @@ namespace ANS
             #endregion
 
             await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA, triggerBBVAPuntoAPunto);
+
+            await scheduler.ScheduleJob(jobPuntoAPuntoBBVA, new HashSet<ITrigger>
+                                                        {
+                                                            triggerBBVAPuntoAPunto,
+                                                            triggerBBVAPuntoAPuntoExcepcion1635,
+                                                            triggerBBVAPuntoAPuntoExcepcion2030
+                                                        }, true);
+
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelResumen, triggerBBVAEnviarExcelResumen);
 
