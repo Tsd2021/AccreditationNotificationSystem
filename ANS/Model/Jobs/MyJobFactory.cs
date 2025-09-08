@@ -24,6 +24,13 @@ namespace ANS.Model.Jobs
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
             Type jobType = bundle.JobDetail.JobType;
+
+            if (jobType == typeof(JobPrueba))
+            {
+                return new JobPrueba(); // no requiere servicios
+            }
+
+
             #region BBVA_JOBS
             #region JOBS_QUE_ACREDITAN
             if (jobType == typeof(AcreditarPuntoAPuntoBBVAJob))

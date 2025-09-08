@@ -1,0 +1,242 @@
+﻿<UserControl x:Class="ANS.UserControls.EnvioManualOperationControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             
+             mc:Ignorable="d"
+             d:DesignWidth="980" d:DesignHeight="640"
+             Background="Transparent"
+             xmlns:ui="clr-namespace:ANS.UserControls"
+             ui:OperationProps.ShowHostFilters="False">
+
+    <!-- ===== Recursos consistentes con la app ===== -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <SolidColorBrush x:Key="Brush.Border"        Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary"   Color="#212121"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#757575"/>
+        <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#FFFFFFFF"/>
+
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#D32F2F"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="MinWidth" Value="160"/>
+            <Setter Property="BorderBrush" Value="#C62828"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E53935"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#B71C1C"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="GhostButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#D32F2F"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="BorderBrush" Value="#D32F2F"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#10D32F2F"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- ===== Contenido ===== -->
+    <Grid>
+        <xctk:BusyIndicator IsBusy="{Binding IsLoading}"
+                            BusyContent="Procesando...">
+            <Border Style="{StaticResource CardStyle}">
+                <DockPanel LastChildFill="True">
+
+                    <!-- Título -->
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="Envío manual"
+                               Style="{StaticResource SectionTitle}"/>
+
+                    <!-- Header de selección -->
+                    <Border DockPanel.Dock="Top"
+                            CornerRadius="8"
+                            Padding="12"
+                            Margin="0,0,0,10"
+                            Background="#0FD32F2F"
+                            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="{Binding buzonSelected.NN}"  FontWeight="SemiBold" FontSize="15"/>
+                                <TextBlock Text="{Binding buzonSelected.NC}"  Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
+                                <TextBlock Text="{Binding buzonSelected.Empresa}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1"
+                                    Content="Cambiar buzón"
+                                    Style="{StaticResource GhostButton}"
+                                    Command="{Binding LimpiarSeleccionCommand}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Panel de filtros (oculto si ya hay selección) -->
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSelection}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <TextBlock Text="Buscar por nombre (NN / NC / Empresa)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   FontSize="13"
+                                   Margin="2,0,0,4"/>
+                        <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,2"/>
+                    </StackPanel>
+
+                    <!-- Controles inferiores (Fecha + Tanda) -->
+                    <StackPanel DockPanel.Dock="Bottom"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Margin="0,12,0,8">
+                        <!-- Fecha -->
+                        <StackPanel Orientation="Vertical" Width="220" Margin="0,0,16,0">
+                            <TextBlock Text="Fecha" Foreground="{StaticResource Brush.TextSecondary}" FontSize="13" Margin="2,0,0,4"/>
+                            <DatePicker SelectedDate="{Binding fechaSelected, Mode=TwoWay}"
+                                        SelectedDateFormat="Short"/>
+                        </StackPanel>
+
+                        <!-- Tanda (solo Henderson) -->
+                        <StackPanel Orientation="Vertical"
+                                    Width="200"
+                                    Visibility="{Binding IsHendersonSelected, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Tanda" Foreground="{StaticResource Brush.TextSecondary}" FontSize="13" Margin="2,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding Tandas}"
+                                      SelectedItem="{Binding numTandaSelected, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Botón Enviar (abajo centrado) -->
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                        <Button Content="Enviar"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarEnvioManualCommand}"/>
+                    </StackPanel>
+
+                    <!-- Lista de buzones (solo si NO hay selección) -->
+                    <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="8" Padding="8">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSelection}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+
+                        <ListBox ItemsSource="{Binding BuzonesView}"
+                                 SelectedItem="{Binding buzonSelected, Mode=TwoWay}"
+                                 Background="Transparent"
+                                 Margin="0"
+                                 MinHeight="160"
+                                 MaxHeight="420"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.CanContentScroll="True"
+                                 VirtualizingPanel.IsVirtualizing="True"
+                                 VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="10" Margin="4" CornerRadius="6" Background="#0A000000" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding NN}" FontWeight="SemiBold" FontSize="15" Foreground="{StaticResource Brush.TextPrimary}"/>
+                                            <TextBlock Text="{Binding NC}" FontSize="12" Foreground="{StaticResource Brush.TextSecondary}"/>
+                                            <TextBlock Text="{Binding Empresa}" FontSize="12" Foreground="{StaticResource Brush.TextSecondary}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                </DockPanel>
+            </Border>
+        </xctk:BusyIndicator>
+    </Grid>
+</UserControl>

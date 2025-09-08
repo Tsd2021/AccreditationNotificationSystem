@@ -3,48 +3,66 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-             mc:Ignorable="d" d:DesignWidth="944.504">
-    
+             mc:Ignorable="d"
+             xmlns:ui="clr-namespace:ANS.UserControls"
+             ui:OperationProps.ShowHostFilters="False"
+             d:DesignWidth="980" d:DesignHeight="420"
+             Background="Transparent">
+
+    <!-- ===== Recursos consistentes con la app ===== -->
     <UserControl.Resources>
-        <!-- Convertidor para visibilidad -->
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <!-- Estilo para botones modernos -->
-        <Style x:Key="ModernButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#FF2196F3"/>
+        <SolidColorBrush x:Key="Brush.Border"        Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary"   Color="#212121"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#757575"/>
+        <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#FFFFFFFF"/>
+
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Width" Value="100"/>
-            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="Background" Value="#D32F2F"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="MinWidth" Value="160"/>
+            <Setter Property="BorderBrush" Value="#C62828"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="3">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="3"
-                                                  ShadowDepth="2"
-                                                  Opacity="0.2"/>
-                            </Border.Effect>
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FF64B5F6"/>
+                    <Setter Property="Background" Value="#E53935"/>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#FF0D47A1"/>
+                    <Setter Property="Background" Value="#B71C1C"/>
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Opacity" Value="0.6"/>
@@ -53,61 +71,38 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- Grid raíz para contener el contenido y el overlay del ProgressBar -->
+    <!-- ===== Contenido ===== -->
     <Grid>
-        <xctk:BusyIndicator IsBusy="{Binding IsLoading}" 
-                            BusyContent="Cargando..."
-                            Background="#80FFFFFF">
-            <!-- Aquí va el contenido principal de la ventana -->
-            <!-- Contenido principal -->
+        <xctk:BusyIndicator IsBusy="{Binding IsLoading}"
+                            BusyContent="Procesando...">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                <Border Style="{StaticResource CardStyle}">
+                    <Grid Grid.IsSharedSizeScope="True">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="ColLabel"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ColAction"/>
+                        </Grid.ColumnDefinitions>
 
-                    <!-- Título -->
-                    <Border Margin="20,10,20,0">
-                        <TextBlock Text="ENVÍO NOTIFICACIONES POR DESCONEXIÓN"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               FontFamily="HP Simplified"
-                               HorizontalAlignment="Center"/>
-                    </Border>
-                    <materialDesign:ColorZone Grid.Row="1"
-                                          Mode="Dark"
-                                          HorizontalAlignment="Stretch"
-                                          VerticalAlignment="Stretch"
-                                          Margin="20">
+                        <TextBlock Text="Notificar desconexiones"
+                                   Style="{StaticResource SectionTitle}"
+                                   Grid.ColumnSpan="2"/>
 
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <Grid>
-                                <StackPanel>
-                                    <TextBlock Text="Notificar desconexiones"
-                                       FontSize="20"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"     
-                                       Grid.Row="0" Grid.Column="0"/>
-                                    <Button x:Name="btnEnvioDesconexiones"
-                                    Content="SEND"
-                                    Margin="10"
-                                    Command="{Binding EjecutarEnvioNiveles}"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center"
-                                    Grid.Row="0" Grid.Column="0"/>
-                                </StackPanel>
-                            </Grid>
-                        </ScrollViewer>
-                    </materialDesign:ColorZone>
-                </Grid>
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Enviar notificaciones por niveles/desconexión"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Content="Enviar"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarEnvioNiveles}"/>
+                    </Grid>
+                </Border>
             </Grid>
         </xctk:BusyIndicator>
     </Grid>

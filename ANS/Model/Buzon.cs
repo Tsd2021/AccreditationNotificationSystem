@@ -14,6 +14,8 @@ namespace ANS.Model
         public DateTime UltimaVezConectado { get; set; }
         public double HorasDesconectado { get; set; }
         public List<Email> _listaEmails { get; set; } = new List<Email>();
+        public DateTime Cierre { get; set; }
+        public bool EsHenderson { get; set; }
         public Buzon() { }
 
         public bool estaOnline()
@@ -26,5 +28,6 @@ namespace ANS.Model
             return diff <= TimeSpan.FromHours(4);
 
         }
+
     }
 }

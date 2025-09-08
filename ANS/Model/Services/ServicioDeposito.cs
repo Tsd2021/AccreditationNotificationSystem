@@ -1,6 +1,9 @@
 ﻿using ANS.Model.Interfaces;
+using DocumentFormat.OpenXml.Math;
 using Microsoft.Data.SqlClient;
+using NPOI.SS.Formula.Functions;
 using System.Data;
+using static NPOI.HSSF.Util.HSSFColor;
 
 namespace ANS.Model.Services
 {
@@ -18,197 +21,133 @@ namespace ANS.Model.Services
         }
         public async Task asignarDepositosAlBuzon(CuentaBuzon buzon, int ultIdOperacion, TimeSpan horaDeCierre)
         {
-            if (buzon == null)
-                throw new Exception("Error en método asignarDepositosAlBuzon: CuentaBuzon es null");
-
-            List<Deposito> depositosList = new List<Deposito>();
-
-            string query;
-
-            if (horaDeCierre != TimeSpan.Zero)
+            try
             {
 
-                        query = @"SELECT 
-                        d.iddeposito, 
-                        d.idoperacion, 
-                        d.codigo, 
-                        d.tipo, 
-                        CASE 
-                        WHEN CHARINDEX('-', d.empresa) > 0 
-                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                        ELSE LTRIM(RTRIM(d.empresa))
-                        END AS empresa, 
-                        d.fechadep         
-                        FROM 
-                        Depositos d
-                        INNER JOIN 
-                        relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
-                        INNER JOIN 
-                        Totales t ON rd.IdTotal = t.IdTotal
-                        WHERE 
-                        d.codigo = @nc
-                        AND (
-                        CASE 
-                        WHEN CHARINDEX('-', d.empresa) > 0 
-                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                        ELSE LTRIM(RTRIM(d.empresa))
-                        END
-                        ) LIKE '%' + @empresa + '%'
-                        AND d.idoperacion > @ultimaOperacion                
-                        AND t.Divisas = @divisaActual 
-                        AND d.fechadep < @fechaCierre";
 
-                if(buzon.Banco.ToUpper() == VariablesGlobales.santander.ToUpper())
+                List<Deposito> depositosList = new List<Deposito>();
+
+                string query;
+
+                if (horaDeCierre != TimeSpan.Zero)
                 {
-                    if(buzon.Empresa == "BAS")
+
+                    query = QueryBuscaDepositoConLike(buzon.Empresa);
+
+                    // <-- Casos excepcionales para aquellos buzones que acreditan en dos bancos distintos, y su cuentabuzon tiene distinto nombre de empresa -->
+                    if (buzon.Banco.ToUpper() == VariablesGlobales.santander.ToUpper())
                     {
-                        query = @"SELECT 
-                        d.iddeposito, 
-                        d.idoperacion, 
-                        d.codigo, 
-                        d.tipo, 
-                        CASE 
-                        WHEN CHARINDEX('-', d.empresa) > 0 
-                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                        ELSE LTRIM(RTRIM(d.empresa))
-                        END AS empresa, 
-                        d.fechadep         
-                        FROM 
-                        Depositos d
-                        INNER JOIN 
-                        relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
-                        INNER JOIN 
-                        Totales t ON rd.IdTotal = t.IdTotal
-                        WHERE 
-                        d.codigo = @nc
-                        AND (
-                        CASE 
-                        WHEN CHARINDEX('-', d.empresa) > 0 
-                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                        ELSE LTRIM(RTRIM(d.empresa))
-                        END
-                        ) = @empresa
-                        AND d.idoperacion > @ultimaOperacion                
-                        AND t.Divisas = @divisaActual 
-                        AND d.fechadep < @fechaCierre";
-                    }
-                }
-                //   AND d.FechaActualizacion < DATEADD(SECOND, DATEDIFF(SECOND, 0, @horaDeCierre),DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))
 
-            }
-            else
-            {
-                        query = @"SELECT 
-                        d.iddeposito, 
-                        d.idoperacion, 
-                        d.codigo, 
-                        d.tipo, 
-                        CASE 
-                        WHEN CHARINDEX('-', d.empresa) > 0 
-                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                        ELSE LTRIM(RTRIM(d.empresa))
-                        END AS empresa, 
-                        d.fechadep         
-                        FROM 
-                        Depositos d
-                        INNER JOIN 
-                        relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
-                        INNER JOIN 
-                        Totales t ON rd.IdTotal = t.IdTotal
-                        WHERE 
-                        d.codigo = @nc
-                        AND (
-                        CASE 
-                        WHEN CHARINDEX('-', d.empresa) > 0 
-                        THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
-                        ELSE LTRIM(RTRIM(d.empresa))
-                        END
-                        ) LIKE '%' + @empresa + '%'
-                        AND d.idoperacion > @ultimaOperacion                
-                        AND t.Divisas = @divisaActual;";
-            }
-
-            using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
-            {
-                await cnn.OpenAsync();
-
-                using (SqlCommand cmd = new SqlCommand(query, cnn))
-                {
-                    cmd.Parameters.AddWithValue("@nc", buzon.NC);
-
-                    cmd.Parameters.AddWithValue("@ultimaOperacion", ultIdOperacion);
-
-                    cmd.Parameters.AddWithValue("@empresa", buzon.Empresa);
-
-                    cmd.Parameters.AddWithValue("@divisaActual", buzon.Divisa);
+                        if (buzon.Empresa.ToUpper() == "BAS")
+                            query = QueryBuscaDepositoConIgual();
 
 
-                    //old
-                    //if (horaDeCierre != TimeSpan.Zero)
-                    //{
-                    //    cmd.Parameters.Add("@horaDeCierre", SqlDbType.Time).Value = horaDeCierre;
-                    //}
-
-                    if(horaDeCierre != TimeSpan.Zero)
-                    {
-                        cmd.Parameters.AddWithValue("@fechaCierre", DateTime.Today.Add(horaDeCierre));
+                        if (buzon.Empresa.ToUpper() == "SANTANDER ECHEDO")
+                            query = QueryBuscaDepositoConIgual();
                     }
 
-
-                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    if (buzon.Banco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                     {
-                        while (await reader.ReadAsync())
+
+                        if (buzon.Empresa.ToUpper() == "ECHEDO")
+                            query = QueryBuscaDepositoConIgual();
+
+                        if (buzon.Empresa.ToUpper() == "FERRECAR MARCELOFERRERO")
+                            query = QueryBuscaDepositoConIgual();
+
+                        if (buzon.Empresa.ToUpper() == "FERRECAR")
                         {
-
-                            Deposito deposito = new Deposito
-                            {
-                                IdDeposito = reader.GetInt32(0),
-                                IdOperacion = reader.GetInt32(1),
-                                Codigo = reader.GetString(2),
-                                Tipo = reader.GetString(3),
-                                Empresa = reader.GetString(4),
-                                FechaDep = reader.GetDateTime(5)
-                            };
-
-                            if (deposito.Tipo == "Validado")
-                            {
-                                depositosList.Add(deposito);
-                            }
-
+                            query = QueryBuscaDepositoConIgual();
                         }
+                         
+
                     }
                 }
-            }
 
-            object depositosLock = new object();
-
-            var semaphore = new SemaphoreSlim(10);
-
-            var tasks = depositosList.Select(async deposito =>
-            {
-                await semaphore.WaitAsync();
-                try
+                else
                 {
-                    await BuscaYAsignarTotalesPorDepositoYDivisa(deposito, buzon.Divisa, _conexionWebBuzones);
-                    Console.WriteLine("TOTAL POR DEPOSITO ASIGNADO OK");
+                    query = query = QueryBuscaDepositoConLikeSinCierre();
+                }
 
-                    lock (depositosLock)
+                using (SqlConnection cnn = new SqlConnection(_conexionWebBuzones))
+                {
+                    await cnn.OpenAsync();
+
+                    using (SqlCommand cmd = new SqlCommand(query, cnn))
                     {
-                        buzon.Depositos.Add(deposito);
-                    }
-                    Console.WriteLine("DEPOSITO AGREGADO A LA LISTA DE DEPOSITOS DEL BUZON OK");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error en depósito {deposito.IdDeposito}: {ex.Message}");
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            });
+                        cmd.Parameters.AddWithValue("@nc", buzon.NC);
 
-            await Task.WhenAll(tasks);
+                        cmd.Parameters.AddWithValue("@ultimaOperacion", ultIdOperacion);
+
+                        cmd.Parameters.AddWithValue("@empresa", buzon.Empresa);
+
+                        cmd.Parameters.AddWithValue("@divisaActual", buzon.Divisa);
+
+                        if (horaDeCierre != TimeSpan.Zero)
+                        {
+                            cmd.Parameters.AddWithValue("@fechaCierre", DateTime.Today.Add(horaDeCierre));
+                        }
+
+                        using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+
+                                Deposito deposito = new Deposito
+                                {
+                                    IdDeposito = reader.GetInt32(0),
+                                    IdOperacion = reader.GetInt32(1),
+                                    Codigo = reader.GetString(2),
+                                    Tipo = reader.GetString(3),
+                                    Empresa = reader.GetString(4),
+                                    FechaDep = reader.GetDateTime(5)
+                                };
+
+                                if (deposito.Tipo == "Validado")
+                                {
+                                    depositosList.Add(deposito);
+                                }
+
+                            }
+                        }        
+                    }
+                }
+
+                object depositosLock = new object();
+
+                var semaphore = new SemaphoreSlim(10);
+
+                var tasks = depositosList.Select(async deposito =>
+                {
+                    await semaphore.WaitAsync();
+                    try
+                    {
+                        await BuscaYAsignarTotalesPorDepositoYDivisa(deposito, buzon.Divisa, _conexionWebBuzones);
+                        Console.WriteLine("TOTAL POR DEPOSITO ASIGNADO OK");
+
+                        lock (depositosLock)
+                        {
+                            buzon.Depositos.Add(deposito);
+                        }
+                        Console.WriteLine("DEPOSITO AGREGADO A LA LISTA DE DEPOSITOS DEL BUZON OK");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error en depósito {deposito.IdDeposito}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                });
+
+                await Task.WhenAll(tasks);
+            }
+            catch
+            (Exception ex)
+            {
+                throw new Exception($"Error en método asignarDepositosAlBuzon: {ex.Message}");
+            }
         }
         private async Task BuscaYAsignarTotalesPorDepositoYDivisa(Deposito deposito, string divisa, string connectionString)
         {
@@ -246,5 +185,106 @@ namespace ANS.Model.Services
 
             }
         }
+
+
+        #region Queries Privadas
+        private string QueryBuscaDepositoConLike(string nombreEmpresa)
+        {
+            return
+                    @$"SELECT 
+                    d.iddeposito, 
+                    d.idoperacion, 
+                    d.codigo, 
+                    d.tipo, 
+                    CASE 
+                    WHEN CHARINDEX('-', d.empresa) > 0 
+                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                    ELSE LTRIM(RTRIM(d.empresa))
+                    END AS empresa, 
+                    d.fechadep         
+                    FROM 
+                    Depositos d
+                    INNER JOIN 
+                    relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
+                    INNER JOIN 
+                    Totales t ON rd.IdTotal = t.IdTotal
+                    WHERE 
+                    d.codigo = @nc
+                    AND (
+                    CASE 
+                    WHEN CHARINDEX('-', d.empresa) > 0 
+                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                    ELSE LTRIM(RTRIM(d.empresa))
+                    END
+                    ) LIKE '%' + @empresa + '%'
+                    AND d.idoperacion > @ultimaOperacion                
+                    AND t.Divisas = @divisaActual 
+                    AND d.fechadep < @fechaCierre";
+        }
+        private string QueryBuscaDepositoConIgual()
+        {
+            return
+                    @$"SELECT
+                    d.iddeposito, 
+                    d.idoperacion, 
+                    d.codigo, 
+                    d.tipo, 
+                    CASE
+                    WHEN CHARINDEX('-', d.empresa) > 0 
+                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                    ELSE LTRIM(RTRIM(d.empresa))
+                    END AS empresa, 
+                    d.fechadep
+                    FROM
+                    Depositos d
+                    INNER JOIN
+                    relaciondeposito rd ON d.IdDeposito = rd.IdDeposito
+                    INNER JOIN
+                    Totales t ON rd.IdTotal = t.IdTotal
+                    WHERE
+                    d.codigo = @nc
+                    AND (
+                    CASE
+                    WHEN CHARINDEX('-', d.empresa) > 0 
+                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                    ELSE LTRIM(RTRIM(d.empresa))
+                    END
+                    ) = @empresa
+                    AND d.idoperacion > @ultimaOperacion
+                    AND t.Divisas = @divisaActual;";
+        }
+        private string QueryBuscaDepositoConLikeSinCierre()
+        {
+            return
+                    @$"SELECT 
+                    d.iddeposito, 
+                    d.idoperacion, 
+                    d.codigo, 
+                    d.tipo, 
+                    CASE 
+                    WHEN CHARINDEX('-', d.empresa) > 0 
+                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                    ELSE LTRIM(RTRIM(d.empresa))
+                    END AS empresa, 
+                    d.fechadep         
+                    FROM 
+                    Depositos d
+                    INNER JOIN 
+                    relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
+                    INNER JOIN 
+                    Totales t ON rd.IdTotal = t.IdTotal
+                    WHERE 
+                    d.codigo = @nc
+                    AND (
+                    CASE 
+                    WHEN CHARINDEX('-', d.empresa) > 0 
+                    THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
+                    ELSE LTRIM(RTRIM(d.empresa))
+                    END
+                    ) LIKE '%' +  @empresa + '%'
+                    AND d.idoperacion > @ultimaOperacion                
+                    AND t.Divisas = @divisaActual ";
+        }
+        #endregion
     }
 }

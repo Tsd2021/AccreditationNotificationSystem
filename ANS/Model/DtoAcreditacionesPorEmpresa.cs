@@ -14,6 +14,7 @@ namespace ANS.Model
         public string NN { get; set; }
         public string NC { get; set; }
         public int IdCliente { get; set; }
+        public DateTime Fecha { get; set; }
 
 
         public DtoAcreditacionesPorEmpresa()

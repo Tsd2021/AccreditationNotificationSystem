@@ -25,29 +25,33 @@ namespace ANS.Model.Services
         }
         public async Task procesarEnvioMasivo(int numEnvioMasivo)
         {
+
             try
+                
             {
 
                 List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
 
                 await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
 
+                var buzonesConAcreditaciones = buzones
+                  .Where(b => b.Acreditaciones != null && b.Acreditaciones.Count > 0)
+                  .ToList();
+
+                if (buzonesConAcreditaciones.Count == 0) return;
+
                 await obtenerUsuarioYFechaDelDeposito(buzones);
 
                 await obtenerFechaUltimaConexionDelBuzon(buzones);
-
-                var buzonesConAcreditaciones = buzones
-                    .Where(b => b.Acreditaciones != null && b.Acreditaciones.Count > 0)
-                    .ToList();
-
-                if (buzonesConAcreditaciones.Count == 0) return;
 
                 var reportService = new TAAS.Reports.ReportService();
 
                 ObtenerMailsPorBuzon(buzonesConAcreditaciones);
 
                 var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
+
                 var smtp = await ServicioEmail.instancia.getNewSmptClient();
+
                 var sendLock = new SemaphoreSlim(1, 1);
 
                 var tasks = buzonesConAcreditaciones.Select(async b =>
@@ -147,19 +151,19 @@ namespace ANS.Model.Services
         {
             if (deps == null || deps.Count == 0) return;
 
-            // 1) Mapear buzones
+
             var mapaBuzones = deps
      .GroupBy(b => b.NC)
      .ToDictionary(
          g => g.Key,
-         g => g.First()        // <-- aquí podrías usar .Last() si prefieres el último
+         g => g.First()
      );
 
-            // 2) Separar NC según EsHenderson
+
             var hendersons = deps.Where(b => b.EsHenderson).Select(b => b.NC).Distinct().ToList();
             var normals = deps.Where(b => !b.EsHenderson).Select(b => b.NC).Distinct().ToList();
 
-            // 3) Construir cada TVP por separado
+
             DataTable BuildTvp(List<string> list)
             {
                 var tvp = new DataTable();
@@ -168,32 +172,35 @@ namespace ANS.Model.Services
                 return tvp;
             }
             var tvpH = BuildTvp(hendersons);
+
             var tvpN = BuildTvp(normals);
 
-            // 4) Calcular rangos horarios para Henderson
+
             DateTime today = DateTime.Today;
+
             DateTime startH, endH;
             if (numEnvioMasivo == 1)
             {
-                // 1ª tanda: de “ayer 14:30” a “hoy 07:00”, salvo lunes
+
                 switch (today.DayOfWeek)
                 {
                     case DayOfWeek.Monday:
-                        // Si hoy es lunes, restamos 3 días → viernes 14:30
+
                         startH = today.AddDays(-3).AddHours(14).AddMinutes(30);
                         break;
                     default:
-                        // Sábado o domingo (si alguna vez aplicara): tomamos viernes
+
                         startH = today.AddDays(-1).AddHours(14).AddMinutes(30);
                         break;
                 }
 
-                // Siempre a las 07:00 del día “today”
+
                 endH = today.AddHours(7);
             }
-            else // numEnvioMasivo == 2
+            else
             {
                 startH = today.AddHours(7);
+
                 endH = today.AddHours(14).AddMinutes(30);
             }
 
@@ -271,7 +278,7 @@ namespace ANS.Model.Services
         }
 
 
-        private async Task obtenerUsuarioYFechaDelDeposito(List<BuzonDTO> buzones)
+        public async Task obtenerUsuarioYFechaDelDeposito(List<BuzonDTO> buzones)
         {
             // 1. Early exit
             if (buzones == null || buzones.Count == 0) return;
@@ -447,7 +454,7 @@ namespace ANS.Model.Services
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-            query =     @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+            query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
                         from
                         cc as c 
                         left join 
@@ -581,77 +588,6 @@ namespace ANS.Model.Services
             public string USUARIO { get; set; }
             public string EMPRESA { get; set; }
             public string SUCURSAL { get; set; }
-        }
-
-        public class BuzonDTO
-        {
-
-            public string NC { get; set; }
-            public string NN { get; set; }
-            public string Empresa { get; set; }
-            public DateTime FechaInicio { get; set; }
-            public DateTime Cierre { get; set; }
-            public double MontoTotal { get; set; }
-            public string Moneda { get; set; }
-            public string Email { get; set; }
-            public int Divisa { get; set; }
-            public int IdOperacion { get; set; }
-            public string Sucursal { get; set; }
-            public long IdOperacionFinal { get; set; }
-            public long IdOperacionInicio { get; set; }
-            public string NombreWS { get; set; }
-            public List<AcreditacionDTO> Acreditaciones { get; set; } = new List<AcreditacionDTO>();
-            public DateTime UltimaFechaConexion { get; set; }
-            public int IdCliente { get; set; }
-            public bool EsHenderson { get; set; }
-            public int NumeroEnvioMasivo { get; set; }
-            public List<Email> _Emails { get; set; } = new List<Email>();
-            public BuzonDTO()
-            {
-
-            }
-            public bool esHenderson()
-            {
-
-                if (IdCliente == 164)
-                {
-                    return true;
-                }
-                Cliente c = ServicioCliente.getInstancia().getById(164);
-
-                foreach (Cliente unCli in c.ClientesRelacionados)
-                {
-                    if (IdCliente == unCli.IdCliente)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-        public class AcreditacionDTO
-        {
-
-            public long IdOperacion { get; set; }
-            public double Monto { get; set; }
-            public string Moneda { get; set; }
-            public int Divisa { get; set; }
-            public int IdCuenta { get; set; }
-            public string NC { get; set; }
-            public string Usuario { get; set; }
-            public DateTime FechaDep { get; set; }
-            public string Empresa { get; set; }
-            public void setMoneda()
-            {
-                if (Divisa == 1)
-                {
-                    Moneda = "UYU";
-                }
-                if (Divisa == 2)
-                {
-                    Moneda = "USD";
-                }
-            }
         }
     }
 }

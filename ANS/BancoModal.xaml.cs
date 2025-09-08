@@ -25,45 +25,32 @@ namespace ANS
             switch (banco)
             {
                 case "Santander":
-                    BankOperationsContent.Content = new SantanderOperationControl();
-                    break;
+                    BankOperationsContent.Content = new SantanderOperationControl(); break;
                 case "BBVA":
-                    BankOperationsContent.Content = new BBVAOperationControl();
-                    break;
+                    BankOperationsContent.Content = new BBVAOperationControl(); break;
                 case "Scotiabank":
-                    BankOperationsContent.Content = new ScotiabankOperationControl();
-                    break;
+                    BankOperationsContent.Content = new ScotiabankOperationControl(); break;
                 case "Itau":
-                    BankOperationsContent.Content = new ItauOperationControl();
-                    break;
+                    BankOperationsContent.Content = new ItauOperationControl(); break;
                 case "Hsbc":
-                    BankOperationsContent.Content = new HsbcOperationControl();
-                    break;
+                    BankOperationsContent.Content = new HsbcOperationControl(); break;
                 case "Bandes":
-                    BankOperationsContent.Content = new BandesOperationControl();
-                    break;
+                    BankOperationsContent.Content = new BandesOperationControl(); break;
                 case "EnvioMasivo":
-                    BankOperationsContent.Content = new EnvioMasivoOperationControl();
-                    break;
+                    BankOperationsContent.Content = new EnvioMasivoOperationControl(); break;
+                case "EnvioManual":
+                    BankOperationsContent.Content = new EnvioManualOperationControl(); break;
                 case "EnvioNiveles":
-                    BankOperationsContent.Content = new EnvioNivelesOperationControl();
-                    break;
+                    BankOperationsContent.Content = new EnvioNivelesOperationControl(); break;
                 case "AltaEmailDestino":
                     var altaWin = new AltaEmailDestino();
-                    // No asignamos Owner para evitar InvalidOperationException
                     altaWin.ShowDialog();
-                    // Una vez que altaWin se cierra, el ShowDialog() retorna,
-                    // así que aquí cerramos BancoModal
                     this.Close();
                     break;
-
-
             }
         }
 
-        private void Cerrar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
     }
 }

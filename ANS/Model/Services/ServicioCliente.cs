@@ -78,7 +78,7 @@ namespace ANS.Model.Services
 
                         if (cli.IdCliente == 164)
                         {
-                            // Aquí se abre una nueva conexión para obtener los clientes relacionados.
+              
                             cli.ClientesRelacionados = getClientesRelacionados(cli);
                         }
                         ListaClientes.Add(cli);

@@ -1,5 +1,6 @@
 ﻿using ANS.Model.Interfaces;
 using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ANS.Model.Services
 {
@@ -263,7 +264,7 @@ namespace ANS.Model.Services
                 ON acc.IDBUZON   = config.NC
                AND acc.IDCUENTA  = cb.ID
             WHERE UPPER(cb.BANCO)     = UPPER(@banco)
-              AND cb.IDCLIENTE        = @idCliente
+              AND cb.IDCLIENTE        in (@idCliente,262) --262 es SANROQUE QUE DEBE IR INCLUIDO
               AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
             GROUP BY
                 cc.NN, cb.CUENTA, acc.MONEDA, cc.SUCURSAL;"
@@ -373,7 +374,7 @@ namespace ANS.Model.Services
             return retorno;
         }
 
-        public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesParaExcelTesoreria(Banco banco,int numTanda, ConfiguracionAcreditacion configuracionAcreditacion)
+        public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesParaExcelTesoreria_BackUp(Banco banco,int numTanda, ConfiguracionAcreditacion configuracionAcreditacion,DateTime? diaFiltro)
         {
             if(banco == null || configuracionAcreditacion == null)
             {
@@ -391,6 +392,7 @@ namespace ANS.Model.Services
                 {
                     //Si numTanda es 1, entonces debemos incluir DELASSIERRAS que es día a día en el excel para tesorería.
                     query = @"SELECT
+                            acc.FECHA, 
                             cb.EMPRESA,
                             cb.CUENTA,
                             cb.SUCURSAL,
@@ -410,16 +412,19 @@ namespace ANS.Model.Services
                             AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
                             AND CONVERT(time, acc.FECHA) = '07:00:00'
                             GROUP BY
+                            acc.FECHA,
                             cb.EMPRESA,
                             cb.CUENTA,
                             cb.SUCURSAL,
                             acc.MONEDA,
                             cc.SUCURSAL;";
+                    
                 }
 
                 else
                 {
                     query = @"SELECT
+                            acc.FECHA, 
                             cb.EMPRESA,
                             cb.CUENTA,
                             cb.SUCURSAL,
@@ -440,6 +445,7 @@ namespace ANS.Model.Services
                             and config.TipoAcreditacion = @tipoAcreditacion
                             AND CONVERT(time, acc.FECHA) = '14:30:00'
                             GROUP BY
+                            acc.FECHA,
                             cb.EMPRESA,
                             cb.CUENTA,
                             cb.SUCURSAL,
@@ -469,6 +475,8 @@ namespace ANS.Model.Services
 
                     int totalMontoOrdinal = r.GetOrdinal("TotalMonto");
 
+                    int fechaOrdinal = r.GetOrdinal("FECHA");
+
                     while (r.Read())
                     {
                         DtoAcreditacionesPorEmpresa dto  = new DtoAcreditacionesPorEmpresa
@@ -478,7 +486,8 @@ namespace ANS.Model.Services
                             Sucursal = r.GetString(sucursalOrdinal).Trim(),
                             Divisa = r.GetInt32(monedaOrdinal),
                             Ciudad = r.GetString(ciudadOrdinal).Trim(),
-                            Monto = r.GetDouble(totalMontoOrdinal)
+                            Monto = r.GetDouble(totalMontoOrdinal),
+                            Fecha = r.GetDateTime(fechaOrdinal)
                         };
                         dto.setMoneda();
                         retorno.Add(dto);
@@ -488,5 +497,146 @@ namespace ANS.Model.Services
                 return retorno;
             }
         }
+
+
+        public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesParaExcelTesoreria(
+    Banco banco,
+    int numTanda,
+    ConfiguracionAcreditacion configuracionAcreditacion,
+    DateTime? diaFiltro // <- ahora nullable (puede venir null)
+)
+        {
+            if (banco == null || configuracionAcreditacion == null)
+                throw new Exception("Banco o Configuración vacías");
+
+            var retorno = new List<DtoAcreditacionesPorEmpresa>();
+
+            // Día base (solo fecha, sin hora). Si no viene, uso hoy.
+            DateTime baseDate = (diaFiltro?.Date) ?? DateTime.Today;
+            DateTime inicioDia = baseDate;               // 00:00
+            DateTime finDia = baseDate.AddDays(1);       // 00:00 del día siguiente
+
+            // Hora por tanda
+            TimeSpan horaTanda = (numTanda == 1) ? new TimeSpan(7, 0, 0)
+                                                 : new TimeSpan(14, 30, 0);
+
+            // Consulta: filtro por rango de fecha del día y por hora exacta de la tanda
+            string query;
+            if (numTanda == 1)
+            {
+                query = @"
+            SELECT
+                acc.FECHA,
+                cb.EMPRESA,
+                cb.CUENTA,
+                cb.SUCURSAL,
+                acc.MONEDA      AS MonedaCode,
+                cc.SUCURSAL     AS Ciudad,
+                SUM(acc.MONTO)  AS TotalMonto
+            FROM ConfiguracionAcreditacion AS config
+            INNER JOIN CUENTASBUZONES AS cb
+                ON config.CuentasBuzonesId = cb.ID
+            INNER JOIN CC AS cc
+                ON config.NC = cc.NC
+            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+                ON acc.IDBUZON   = config.NC
+               AND acc.IDCUENTA  = cb.ID
+            WHERE
+                UPPER(cb.BANCO) = @banco
+                AND acc.FECHA >= @inicioDia AND acc.FECHA < @finDia
+                AND CONVERT(time, acc.FECHA) = @horaTanda
+            GROUP BY
+                acc.FECHA,
+                cb.EMPRESA,
+                cb.CUENTA,
+                cb.SUCURSAL,
+                acc.MONEDA,
+                cc.SUCURSAL;";
+            }
+            else
+            {
+                query = @"
+            SELECT
+                acc.FECHA,
+                cb.EMPRESA,
+                cb.CUENTA,
+                cb.SUCURSAL,
+                acc.MONEDA      AS MonedaCode,
+                cc.SUCURSAL     AS Ciudad,
+                SUM(acc.MONTO)  AS TotalMonto
+            FROM ConfiguracionAcreditacion AS config
+            INNER JOIN CUENTASBUZONES AS cb
+                ON config.CuentasBuzonesId = cb.ID
+            INNER JOIN CC AS cc
+                ON config.NC = cc.NC
+            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+                ON acc.IDBUZON   = config.NC
+               AND acc.IDCUENTA  = cb.ID
+            WHERE
+                UPPER(cb.BANCO) = @banco
+                AND acc.FECHA >= @inicioDia AND acc.FECHA < @finDia
+                AND config.TipoAcreditacion = @tipoAcreditacion
+                AND CONVERT(time, acc.FECHA) = @horaTanda
+            GROUP BY
+                acc.FECHA,
+                cb.EMPRESA,
+                cb.CUENTA,
+                cb.SUCURSAL,
+                acc.MONEDA,
+                cc.SUCURSAL;";
+            }
+
+            using (var conn = new SqlConnection(_conexionTSD))
+            {
+                await conn.OpenAsync();
+
+                using (var cmd = new SqlCommand(query, conn))
+                {
+                    // Parámetros (evito AddWithValue)
+                    cmd.Parameters.Add("@banco", SqlDbType.VarChar, 100)
+                        .Value = banco.NombreBanco.ToUpperInvariant();
+
+                    cmd.Parameters.Add("@inicioDia", SqlDbType.DateTime2).Value = inicioDia;
+                    cmd.Parameters.Add("@finDia", SqlDbType.DateTime2).Value = finDia;
+                    cmd.Parameters.Add("@horaTanda", SqlDbType.Time).Value = horaTanda;
+
+                    if (numTanda != 1)
+                    {
+                        cmd.Parameters.Add("@tipoAcreditacion", SqlDbType.VarChar, 50)
+                            .Value = configuracionAcreditacion.TipoAcreditacion;
+                    }
+
+                    using (var r = await cmd.ExecuteReaderAsync())
+                    {
+                        int empresaOrdinal = r.GetOrdinal("EMPRESA");
+                        int cuentaOrdinal = r.GetOrdinal("CUENTA");
+                        int sucursalOrdinal = r.GetOrdinal("SUCURSAL");
+                        int monedaOrdinal = r.GetOrdinal("MonedaCode");
+                        int ciudadOrdinal = r.GetOrdinal("Ciudad");
+                        int totalMontoOrdinal = r.GetOrdinal("TotalMonto");
+                        int fechaOrdinal = r.GetOrdinal("FECHA");
+
+                        while (await r.ReadAsync())
+                        {
+                            var dto = new DtoAcreditacionesPorEmpresa
+                            {
+                                Empresa = r.GetString(empresaOrdinal).Trim(),
+                                NumeroCuenta = r.GetString(cuentaOrdinal).Trim(),
+                                Sucursal = r.GetString(sucursalOrdinal).Trim(),
+                                Divisa = r.GetInt32(monedaOrdinal),
+                                Ciudad = r.GetString(ciudadOrdinal).Trim(),
+                                Monto = r.GetDouble(totalMontoOrdinal),
+                                Fecha = r.GetDateTime(fechaOrdinal)
+                            };
+                            dto.setMoneda();
+                            retorno.Add(dto);
+                        }
+                    }
+                }
+            }
+
+            return retorno;
+        }
+
     }
 }

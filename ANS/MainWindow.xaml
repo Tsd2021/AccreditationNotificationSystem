@@ -1,190 +1,381 @@
 ﻿<Window x:Class="ANS.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:ANS.Model"
-        Title="TAAS" 
-        Icon="/Images/favicon.ico"  
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="TAAS"
+        Icon="/Images/favicon.ico"
         WindowState="Maximized"
-        Closing="Window_Closing"
-        >
+        Background="#FFF5F6F8"
+        Closing="Window_Closing">
+
+    <!-- ==================  RECURSOS  ================== -->
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-            <!-- Estilo para un botón circular -->
-        <Style x:Key="CircularButtonStyle" TargetType="Button">
+        <!-- Paleta básica -->
+        <SolidColorBrush x:Key="Brush.AppBar" Color="#D32F2F"/>
+        <SolidColorBrush x:Key="Brush.Card" Color="White"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary" Color="#1F2937"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#6B7280"/>
+        <SolidColorBrush x:Key="Brush.RowAlt" Color="#0F000000"/>
+        <SolidColorBrush x:Key="Brush.Border" Color="#FFE5E7EB"/>
 
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="LightBlue"/>
-            <Setter Property="BorderThickness" Value="2"/>
+        <!-- Card contenedor -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="0,0,16,16"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.15"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Título de sección -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- Botón ícono para AppBar -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="White"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="18" 
-                            SnapsToDevicePixels="True">
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="18">
                             <ContentPresenter HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          RecognizesAccessKey="True"/>
+                                              VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <DataTemplate DataType="{x:Type local:SnackbarMsg}">
-            <Border Background="{Binding Fondo}"
-                    Padding="6"
-                    CornerRadius="8">
-                <TextBlock Text="{Binding Texto}" 
-                           Foreground="White"
-                           FontSize="18"
-                           FontWeight="Normal"
-                           TextWrapping="Wrap"
-                           TextAlignment="Center" />
+
+        <!-- DataGrid look limpio -->
+        <Style x:Key="GridBase" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="HeadersVisibility" Value="All"/>
+            <Setter Property="RowHeaderWidth" Value="0"/>
+            <Setter Property="RowHeight" Value="34"/>
+            <Setter Property="AlternationCount" Value="2"/>
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource Brush.RowAlt}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+
+        <!-- Pill/Chip para estados (Programados & Historial) -->
+        <DataTemplate x:Key="EstadoPillTemplate">
+            <Border Padding="6,2" CornerRadius="12" Background="#FFE5E7EB">
+                <TextBlock Text="{Binding}" FontSize="12" Foreground="#374151"/>
             </Border>
         </DataTemplate>
+
+        <!-- Columna “Último estado” con colores por texto -->
+        <Style x:Key="EstadoCellStyle" TargetType="Border">
+            <Setter Property="Background" Value="#FFE5E7EB"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding EstadoUi}" Value="OK">
+                    <Setter Property="Background" Value="#D1FAE5"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding EstadoUi}" Value="ERROR">
+                    <Setter Property="Background" Value="#FEE2E2"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding EstadoUi}" Value="MISFIRE">
+                    <Setter Property="Background" Value="#FFF7D6"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding EstadoUi}" Value="Ventana activa">
+                    <Setter Property="Background" Value="#DBEAFE"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding EstadoUi}" Value="Pendiente">
+                    <Setter Property="Background" Value="#E5E7EB"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding EstadoUi}" Value="No ejecutada por app cerrada">
+                    <Setter Property="Background" Value="#EDE9FE"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding EstadoUi}" Value="Inicio omitido (ventana activa)">
+                    <Setter Property="Background" Value="#FFEFD5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Para colorear Status del historial -->
+        <Style x:Key="StatusTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Succeeded">
+                    <Setter Property="Foreground" Value="#065F46"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter Property="Foreground" Value="#991B1B"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Misfired">
+                    <Setter Property="Foreground" Value="#92400E"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="SkippedByShutdown">
+                    <Setter Property="Foreground" Value="#4C1D95"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
-    <!-- Grid raíz -->
+    <!-- ==================  LAYOUT  ================== -->
     <Grid>
-        <materialDesign:ColorZone Mode="Dark"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Stretch">
-            <Grid Margin="10">
-                <Grid.RowDefinitions>
-                    <!-- Encabezado (hora y botón de configuración) -->
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+      
 
-                <!-- Encabezado con reloj y botón de configuración -->
-                <Grid Grid.Row="0">
-                    <!-- Reloj centrado -->
-                    <TextBlock Text="{Binding CurrentTime, StringFormat=yyyy-MM-dd HH:mm:ss}"
-                               FontSize="48"
-                               FontWeight="Bold"
-                               Foreground="White"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
-                    <!-- Botón de configuración en la esquina superior derecha -->
-                    <!-- Botón de configuración flotante -->
-                    <Button x:Name="SettingsButton"
-                        Width="36" Height="36"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="16"
-                        Style="{StaticResource CircularButtonStyle}"
-                        Click="SettingsButton_Click">
-                        <materialDesign:PackIcon Kind="Settings" Width="28" Height="28" Foreground="LightGoldenrodYellow"/>
-                    </Button>
-                </Grid>
 
-                <!-- Contenido principal -->
-                <Grid Grid.Row="1">
+            <Border Background="{StaticResource Brush.AppBar}" Height="56" VerticalAlignment="Top">
+                <Grid Margin="16,0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Izquierda -->
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <!-- Centro -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Derecha -->
                     </Grid.ColumnDefinitions>
 
-                    <!-- Columna izquierda: Título y Snackbar -->
-                    <Grid Grid.Column="0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                    <!-- Izquierda: icono + título -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="CalendarClock" Width="22" Height="22" Foreground="White" Margin="0,0,8,0"/>
+                        <TextBlock Text="Tecnisegur Automatic Accreditation System"
+                       Foreground="White" FontSize="16" FontWeight="SemiBold"
+                       VerticalAlignment="Center"/>
+                    </StackPanel>
 
-                        <!-- Título -->
-                        <TextBlock Text="Tecnisegur Automatic Accreditation System" 
-                                   Foreground="White"
-                                   FontSize="26"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Top"
-                                   Grid.Row="0" Margin="0,50,0,0"/>
+                    <!-- Centro: reloj -->
+                    <TextBlock Grid.Column="1"
+                   Text="{Binding CurrentTime, StringFormat=yyyy-MM-dd HH:mm:ss}"
+                   Foreground="White" FontSize="22" FontWeight="Bold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                        <!-- Snackbar justo debajo del título -->
-                        <materialDesign:Snackbar
-                             x:Name="JobSnackbar"
-                             MessageQueue="{materialDesign:MessageQueue}"
-                             Background="Transparent"
-                             HorizontalAlignment="Center"
-                             VerticalAlignment="Top"
-                             Panel.ZIndex="999"
-                             Margin="0,10,0,0"
-                             Grid.Row="1"/>
-                    </Grid>
-
-                    <!-- Columna derecha: Lista de mensajes -->
-                    <Border Grid.Column="1"
-                            Grid.RowSpan="3"
-                            Padding="10"
-                            BorderBrush="Gray"
-                            BorderThickness="2"
-                            Background="{DynamicResource MaterialDesignPaper}"
-                            CornerRadius="8"
-                            Margin="10">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ListView ItemsSource="{Binding TuplaMensajes}" 
-                                      Background="WhiteSmoke"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Stretch">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Padding="5" 
-                                                Background="LightGray"
-                                                CornerRadius="10"
-                                                Margin="5"
-                                                HorizontalAlignment="Stretch">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <!-- Icono -->
-                                                <materialDesign:PackIcon 
-                                                    Kind="{Binding Icon}" 
-                                                    Width="19" Height="19" 
-                                                    Margin="10" 
-                                                    VerticalAlignment="Center" 
-                                                    Grid.Column="0"/>
-                                                <TextBlock Text="{Binding Estado}" 
-                                                           FontSize="16"
-                                                           FontWeight="Bold"
-                                                           Foreground="Black"
-                                                           Margin="10"
-                                                           VerticalAlignment="Center"
-                                                           Grid.Column="1"/>
-                                                <TextBlock Text="{Binding Tipo}" 
-                                                           FontSize="14"
-                                                           Foreground="DarkGray"
-                                                           Margin="10"
-                                                           VerticalAlignment="Center"
-                                                           Grid.Column="2"/>
-                                                <TextBlock Text="{Binding Banco}" 
-                                                           FontSize="14"
-                                                           Foreground="{Binding Color, Converter={StaticResource ColorToBrushConverter}}"
-                                                           Margin="10"
-                                                           VerticalAlignment="Center"
-                                                           Grid.Column="3"/>
-                                                <TextBlock Text="{Binding Fecha, StringFormat=yyyy-MM-dd HH:mm:ss}" 
-                                                           FontSize="12"
-                                                           Foreground="Gray"
-                                                           Margin="10"
-                                                           VerticalAlignment="Center"
-                                                           Grid.Column="4"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </ScrollViewer>
-                    </Border>
+                    <!-- Derecha: settings -->
+                    <Button Grid.Column="2" Style="{StaticResource IconButton}"
+                Click="SettingsButton_Click" ToolTip="Configuración"
+                VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Cog" Width="20" Height="20" Foreground="White"/>
+                    </Button>
                 </Grid>
-            </Grid>
-        </materialDesign:ColorZone>
+            </Border>
+
+   
+        <!-- CONTENIDO -->
+        <Grid Margin="20,76,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.25*"/>
+                <ColumnDefinition Width="0.75*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <materialDesign:Snackbar x:Name="JobSnackbar"
+                             Grid.RowSpan="2"         
+                HorizontalAlignment="Center"
+                             VerticalAlignment="Top"
+                             Margin="0,72,0,0"
+             
+                Background="Transparent"
+                             Panel.ZIndex="999"/>
+
+                <!-- PANEL IZQUIERDO: Agenda -->
+            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Agenda" Style="{StaticResource SectionTitle}"/>
+
+                    <TabControl Grid.Row="1">
+                        <!-- PROGRAMADOS -->
+                        <TabItem Header="Programados">
+                            <DataGrid ItemsSource="{Binding Programados}" Style="{StaticResource GridBase}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Job" Binding="{Binding Job}" Width="2*"/>
+                                    <DataGridTextColumn Header="Próximo (local)"
+                                                        Binding="{Binding NextFireLocal, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
+                                                        Width="1.2*"/>
+                                    <DataGridTextColumn Header="Último fin (Local)"
+                                                        Binding="{Binding LastCompletedLocal, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
+                                                        Width="1.2*"/>
+                                    <!-- Estado con “pill” -->
+                                    <DataGridTemplateColumn Header="Último estado" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource EstadoCellStyle}">
+                                                    <TextBlock Text="{Binding EstadoUi}" FontSize="12" Margin="2,0,2,0"
+                                                               HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- OCULTAS: Grupo/Trigger/Tipo (no se agregan) -->
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <!-- HISTORIAL -->
+                        <TabItem Header="Historial">
+                            <DataGrid ItemsSource="{Binding Historial}" Style="{StaticResource GridBase}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="1.6*"/>
+                                    <DataGridTextColumn Header="Grupo" Binding="{Binding JobGroup}" Width="1*"/>
+                                    <DataGridTextColumn Header="Trigger" Binding="{Binding TriggerName}" Width="1*"/>
+                                    <DataGridTextColumn Header="Programado" Binding="{Binding ScheduledFireTimeUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Inicio" Binding="{Binding ActualFireTimeUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Fin" Binding="{Binding CompletedTimeUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="1.2*"/>
+                                    <DataGridTemplateColumn Header="Estado" Width="0.9*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="6,2" CornerRadius="12" Background="#E5E7EB">
+                                                    <TextBlock Text="{Binding Status}" Style="{StaticResource StatusTextStyle}" FontSize="12" HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Mensaje" Binding="{Binding Message}" Width="2*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </Border>
+
+            <!-- PANEL DERECHO: Mensajes -->
+            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Mensajes" Style="{StaticResource SectionTitle}"/>
+
+                    <ScrollViewer Grid.Row="1"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  CanContentScroll="True">
+                        <ItemsControl ItemsSource="{Binding TuplaMensajes}"
+                    HorizontalContentAlignment="Stretch">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="10,10,10,0"
+                    Padding="12"
+                    CornerRadius="8"
+                    Background="#FAFAFA"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    SnapsToDevicePixels="True">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <!-- Icono -->
+                                                <ColumnDefinition Width="Auto" MinWidth="90"/>
+                                                <!-- Estado -->
+                                                <ColumnDefinition Width="3*"/>
+                                                <!-- TIPO: se lleva casi todo -->
+                                                <ColumnDefinition Width="Auto" MinWidth="120"/>
+                                                <!-- Banco -->
+                                                <ColumnDefinition Width="160"/>
+                                                <!-- Fecha fija -->
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Ícono -->
+                                            <materialDesign:PackIcon Grid.Column="0"
+                                         Kind="{Binding Icon}"
+                                         Width="18" Height="18"
+                                         Foreground="#D32F2F"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,10,0"/>
+
+                                            <!-- Estado -->
+                                            <TextBlock Grid.Column="1"
+                           Text="{Binding Estado}"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource Brush.TextPrimary}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,0"
+                           TextWrapping="NoWrap"/>
+
+                                            <!-- Tipo: sin wrap ni ellipsis; tooltip con el texto completo -->
+                                            <TextBlock Grid.Column="2"
+                           Text="{Binding Tipo}"
+                           Foreground="{StaticResource Brush.TextSecondary}"
+                           VerticalAlignment="Center"
+                           TextWrapping="NoWrap"
+                           TextTrimming="None"
+                           ToolTip="{Binding Tipo}"/>
+
+                                            <!-- Banco -->
+                                            <TextBlock Grid.Column="3"
+                           Text="{Binding Banco}"
+                           VerticalAlignment="Center"
+                           Margin="12,0,12,0"
+                           Foreground="{Binding Color, Converter={StaticResource ColorToBrushConverter}}"
+                           TextWrapping="NoWrap"/>
+
+                                            <!-- Fecha -->
+                                            <TextBlock Grid.Column="4"
+                           Text="{Binding Fecha, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"
+                           Foreground="{StaticResource Brush.TextSecondary}"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Right"
+                           TextAlignment="Right"
+                           TextWrapping="NoWrap"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+
+
+
+            <!-- PROGRESS BAR global -->
+            <ProgressBar Grid.Row="2" Grid.ColumnSpan="2" Height="6"
+                         Minimum="0" Maximum="1"
+                         Value="{Binding ProgressValue, Mode=OneWay}"
+                         IsIndeterminate="{Binding IsAnyRunning, Mode=OneWay}"
+                         Visibility="{Binding IsAnyRunning, Converter={StaticResource BoolToVis}}"
+                         Background="#FFE5E7EB" Foreground="#D32F2F" />
+        </Grid>
     </Grid>
 </Window>

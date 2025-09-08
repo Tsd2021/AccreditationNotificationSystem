@@ -3,334 +3,307 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-             mc:Ignorable="d" d:DesignWidth="944.504"
-  
-             >
+             mc:Ignorable="d"
+             d:DesignWidth="2000" d:DesignHeight="560"
+             Background="Transparent">
+
+    <!-- =================== Recursos locales (alineados a la app) =================== -->
     <UserControl.Resources>
+        <!-- Colores base -->
+        <SolidColorBrush x:Key="Brush.Border"        Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary"   Color="#212121"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#757575"/>
+        <SolidColorBrush x:Key="MaterialDesignPaper" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#FFFFFFFF"/>
 
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <!-- Card -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
 
-        <Style x:Key="ModernButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#FF2196F3"/>
+        <!-- Título de sección -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <!-- Botón primario (rojo app) -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Width" Value="100"/>
-            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="Background" Value="#D32F2F"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="MinWidth" Value="140"/>
+            <Setter Property="BorderBrush" Value="#C62828"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="3">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="3"
-                                                  ShadowDepth="2"
-                                                  Opacity="0.2"/>
-                            </Border.Effect>
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FF64B5F6"/>
+                    <Setter Property="Background" Value="#E53935"/>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#FF0D47A1"/>
+                    <Setter Property="Background" Value="#B71C1C"/>
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Opacity" Value="0.6"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Botón ghost (auxiliar) -->
+        <Style x:Key="GhostButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#D32F2F"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="BorderBrush" Value="#D32F2F"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#10D32F2F"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
-    <!-- Grid raíz para contener el contenido y el overlay del ProgressBar -->
+    <!-- =================== Contenido =================== -->
     <Grid>
-        <Button x:Name="btnAsociarMails"
-                Content="Asociar Mails"
-                Background="Black"
-                Style="{StaticResource ModernButtonStyle}"
-               
-                Command="{Binding EjecutarAltaEmailDestinoCommand}"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                BorderThickness="5"
-                BorderBrush="Black"            
-                Margin="10"
-                Grid.Row="0"/>
-        <xctk:BusyIndicator IsBusy="{Binding IsLoading}" 
-                            BusyContent="Cargando..."
-                            Background="#80FFFFFF">
-            <!-- Aquí va el contenido principal de la ventana -->
-            <!-- Contenido principal -->
+        <!-- Acción auxiliar arriba a la derecha -->
+        <DockPanel LastChildFill="False" Margin="0,0,0,8">
+            <Button Content="Asociar mails"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource GhostButton}"
+                    Command="{Binding EjecutarAltaEmailDestinoCommand}"
+                    Margin="0,0,4,0"/>
+        </DockPanel>
+
+        <!-- Busy overlay + layout principal -->
+        <xctk:BusyIndicator IsBusy="{Binding IsLoading}"
+                            BusyContent="Procesando..."
+                           >
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Columna Izquierda: ACREDITACIONES -->
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                <!-- =================== Columna Izquierda: Acreditaciones =================== -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,8,0">
+                    <Grid Grid.IsSharedSizeScope="True">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
+                            <ColumnDefinition Width="*" SharedSizeGroup="ColAction"/>
+                        </Grid.ColumnDefinitions>
 
-                    <!-- Título -->
-                    <Border Margin="20,10,20,0">
-                        <TextBlock Text="ACREDITACIONES"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               FontFamily="HP Simplified"
-                               HorizontalAlignment="Center"/>
-                    </Border>
+                        <TextBlock Text="Acreditaciones" Style="{StaticResource SectionTitle}" Grid.ColumnSpan="2"/>
 
-                    <!-- Contenido con scroll -->
-                    <materialDesign:ColorZone Grid.Row="1"
-                                          Mode="Dark"
-                                          HorizontalAlignment="Stretch"
-                                          VerticalAlignment="Stretch"
-                                          Margin="20">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Fila 1 -->
-                                <TextBlock Text="Acreditar Punto a Punto"
-                                       FontSize="20"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="0" Grid.Column="0"/>
-                                <Button x:Name="btnEjecutarPuntoAPunto"
-                                    Content="P2P"
-                                    Margin="10"
-                                    Command="{Binding EjecutarPuntoAPuntoTXTCommand}"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="0" Grid.Column="1"/>
-
-                                <!-- Fila 2 -->
-                                <TextBlock Text="Acreditar Tanda 1 Henderson"
-                                       FontSize="20"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="1" Grid.Column="0"/>
-                                <Button x:Name="btnEjecutarTanda1Henderson"
-                                    Content="TANDA 1"
-                                    Margin="10"
-                                    Command="{Binding EjecutarTanda1HendersonTXTCommand}"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="1" Grid.Column="1"/>
-
-                                <!-- Fila 3 -->
-                                <TextBlock Text="Acreditar Tanda 2 Henderson"
-                                       FontSize="20"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="2" Grid.Column="0"/>
-                                <Button x:Name="btnEjecutarTanda2Henderson"
-                                    Content="TANDA 2"
-                                    Margin="10"
-                                    Command="{Binding EjecutarTanda2HendersonTXTCommand}"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="2" Grid.Column="1"/>
-
-                                <!-- Fila 4 -->
-                                <TextBlock Text="Acreditar Día a Día"
-                                       FontSize="20"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="3" Grid.Column="0"/>
-                                <Button x:Name="btnEjecutarDiaADia"
-                                    Content="DXD"
-                                    Margin="10"
-                                    Command="{Binding EjecutarDiaADiaTXTCommand}"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="3" Grid.Column="1"/>
-
-                                <!-- Fila 5 -->
-                                <TextBlock Text="Acreditar De las Sierras (Día a día)"
-                                       FontSize="20"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="4" Grid.Column="0"/>
-                                <Button x:Name="btnEjecutarDeLasSierras"
-                                    Content="DXD SIERRAS"
-                                    Margin="10"
-                                    Command="{Binding EjecutarDeLasSierrasTXTCommand}"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="4" Grid.Column="1"/>
-                            </Grid>
-                        </ScrollViewer>
-                    </materialDesign:ColorZone>
-                </Grid>
-
-                <!-- Columna Derecha: EXCEL -->
-                <Grid Grid.Column="1">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Título -->
-                    <Border Margin="20,10,20,0">
-                        <TextBlock Text="EXCEL"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               FontFamily="HP Simplified"
-                               HorizontalAlignment="Center"/>
-                    </Border>
-
-                    <!-- Contenido con scroll -->
-                    <materialDesign:ColorZone Grid.Row="1"
-                                          Mode="Dark"
-                                          HorizontalAlignment="Stretch"
-                                          VerticalAlignment="Stretch"
-                                          Margin="20">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Fila 1 -->
-                                <TextBlock Text="Tanda 1 Henderson"
-                                       FontSize="16"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="0" Grid.Column="0"/>
-                                <Button Content="Generar Excel T1"
-                                    Margin="10"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarTanda1HendersonExcelCommand}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="0" Grid.Column="1"/>
-
-                                <!-- Fila 2 -->
-                                <TextBlock Text="Tanda 2 Henderson"
-                                       FontSize="16"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="1" Grid.Column="0"/>
-                                <Button Content="Generar Excel T2"
-                                    Margin="10"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarTanda2HendersonExcelCommand}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="1" Grid.Column="1"/>
-
-                                <!-- Fila 3 -->
-                                <TextBlock Text="Tanda 1 TESORERÍA"
-                                       FontSize="16"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="2" Grid.Column="0"/>
-                                <Button Content="Generar Excel T1 TESO"
-                                    Margin="10"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarTanda1ExcelTesoreriaCommand}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="2" Grid.Column="1"/>
-
-                                <!-- Fila 4 -->
-                                <TextBlock Text="Tanda 2 TESORERÍA"
-                                       FontSize="16"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="3" Grid.Column="0"/>
-                                <Button Content="Generar Excel T2 TESO"
-                                    Margin="10"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="3" Grid.Column="1"/>
-
-                                <!-- Fila 5 -->
-                                <TextBlock Text="Día a Día"
-                                       FontSize="16"
-                                       FontFamily="HP Simplified"
-                                       Margin="10"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       Grid.Row="4" Grid.Column="0"/>
-                                <Button Content="Generar Excel DXD"
-                                    Margin="10"
-                                    Style="{StaticResource ModernButtonStyle}"
-                                    Command="{Binding EjecutarDiaADiaExcelCommand}"
-                                    VerticalAlignment="Center"
-                                    Grid.Row="4" Grid.Column="1"/>
-                                <!-- Fila 6 -->
-                                <TextBlock Text="Reporte Diario"
-                                   FontSize="16"
-                                   FontFamily="HP Simplified"
-                                   Margin="10"
-                                   HorizontalAlignment="Right"
+                        <!-- P2P -->
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Acreditar punto a punto (TXT)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
-                                   Grid.Row="5" Grid.Column="0"/>
-                                <Button Content="Generar Excel DXD"
-                                Margin="10"
-                                Style="{StaticResource ModernButtonStyle}"
-                                Command="{Binding EjecutarReporteDiarioCommand}"
-                                VerticalAlignment="Center"
-                                Grid.Row="5" Grid.Column="1"/>
-                            </Grid>
-                        </ScrollViewer>
-                    </materialDesign:ColorZone>
-                </Grid>
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Content="P2P"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarPuntoAPuntoTXTCommand}"/>
+
+                        <!-- Tanda 1 Henderson -->
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Text="Acreditar Tanda 1 (Henderson)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="2" Grid.Column="1"
+                                Content="TANDA 1"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda1HendersonTXTCommand}"/>
+
+                        <!-- Tanda 2 Henderson -->
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Text="Acreditar Tanda 2 (Henderson)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="3" Grid.Column="1"
+                                Content="TANDA 2"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda2HendersonTXTCommand}"/>
+
+                        <!-- Día a Día -->
+                        <TextBlock Grid.Row="4" Grid.Column="0"
+                                   Text="Acreditar Día a Día (TXT)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="4" Grid.Column="1"
+                                Content="DXD"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarDiaADiaTXTCommand}"/>
+
+                        <!-- De las Sierras -->
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                   Text="Acreditar De las Sierras (Día a Día)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="5" Grid.Column="1"
+                                Content="DXD SIERRAS"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarDeLasSierrasTXTCommand}"/>
+                    </Grid>
+                </Border>
+
+                <!-- =================== Columna Derecha: Excel (alineada y sin mezclar filas) =================== -->
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,0,0,0">
+                    <Grid Grid.IsSharedSizeScope="True">
+                        <!-- Filas: header + T1 + T2 + T1 Teso + T2 Teso + DXD + Reporte -->
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- Header -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Tanda 1 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Tanda 2 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Tanda 1 Tesorería -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Tanda 2 Tesorería -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Día a Día -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Reporte Diario -->
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="ColLabel"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ColAction"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Header -->
+                        <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
+               Text="Excel"
+               Style="{StaticResource SectionTitle}"/>
+
+                        <!-- Fila 1: Tanda 1 -->
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+               Text="Tanda 1 (Henderson)"
+               Foreground="{StaticResource Brush.TextSecondary}"
+               VerticalAlignment="Center"
+               Margin="0,4,16,4"/>
+                        <Button Grid.Row="1" Grid.Column="1"
+            Content="Generar Excel T1"
+            Style="{StaticResource PrimaryButton}"
+            Command="{Binding EjecutarTanda1HendersonExcelCommand}"/>
+
+                        <!-- Fila 2: Tanda 2 -->
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+               Text="Tanda 2 (Henderson)"
+               Foreground="{StaticResource Brush.TextSecondary}"
+               VerticalAlignment="Center"
+               Margin="0,4,16,4"/>
+                        <Button Grid.Row="2" Grid.Column="1"
+            Content="Generar Excel T2"
+            Style="{StaticResource PrimaryButton}"
+            Command="{Binding EjecutarTanda2HendersonExcelCommand}"/>
+
+                        <!-- Fila 3: Tanda 1 Tesorería -->
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+               Text="Tanda 1 (Tesorería)"
+               Foreground="{StaticResource Brush.TextSecondary}"
+               VerticalAlignment="Center"
+               Margin="0,4,16,4"/>
+                        <Button Grid.Row="3" Grid.Column="1"
+            Content="Generar Excel T1 TESO"
+            Style="{StaticResource PrimaryButton}"
+            Command="{Binding EjecutarTanda1ExcelTesoreriaCommand}"/>
+
+                        <!-- Fila 4: Tanda 2 Tesorería -->
+                        <TextBlock Grid.Row="4" Grid.Column="0"
+               Text="Tanda 2 (Tesorería)"
+               Foreground="{StaticResource Brush.TextSecondary}"
+               VerticalAlignment="Center"
+               Margin="0,4,16,4"/>
+                        <Button Grid.Row="4" Grid.Column="1"
+            Content="Generar Excel T2 TESO"
+            Style="{StaticResource PrimaryButton}"
+            Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"/>
+
+                        <!-- Fila 5: Día a Día (separado) -->
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+               Text="Día a Día"
+               Foreground="{StaticResource Brush.TextSecondary}"
+               VerticalAlignment="Center"
+               Margin="0,4,16,4"/>
+                        <Button Grid.Row="5" Grid.Column="1"
+            Content="Excel DXD"
+            Style="{StaticResource PrimaryButton}"
+            Command="{Binding EjecutarDiaADiaExcelCommand}"/>
+
+                        <!-- Fila 6: Reporte Diario (separado) -->
+                        <TextBlock Grid.Row="6" Grid.Column="0"
+               Text="Reporte Diario"
+               Foreground="{StaticResource Brush.TextSecondary}"
+               VerticalAlignment="Center"
+               Margin="0,4,16,0"/>
+                        <Button Grid.Row="6" Grid.Column="1"
+            Content="Reporte Diario"
+            Style="{StaticResource PrimaryButton}"
+            Command="{Binding EjecutarReporteDiarioCommand}"/>
+                    </Grid>
+                </Border>
+
+
             </Grid>
-
-
         </xctk:BusyIndicator>
     </Grid>
 </UserControl>

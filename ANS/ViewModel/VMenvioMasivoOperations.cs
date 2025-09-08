@@ -94,7 +94,6 @@ namespace ANS.ViewModel
                 IsLoading = false;
             }
         }
-
         private async Task ejecutarEnvioMasivo4()
         {
 

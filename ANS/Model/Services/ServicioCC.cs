@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Dynamitey;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,8 @@ namespace ANS.Model.Services
         private string _conexionTSD22 = ConfiguracionGlobal.Conexion22;
         private string _conexionTSD20 = ConfiguracionGlobal.ConexionTSD;
         public List<Buzon> listaBuzones { get; private set; } = new List<Buzon>();
-        public static ServicioCC instancia { get; set; }
+        public List<BuzonDTO> listaBuzonesDTO { get; private set; } = new List<BuzonDTO>();
+        public static ServicioCC instancia { get; set; } 
 
         public static ServicioCC getInstancia()
         {
@@ -39,7 +41,7 @@ namespace ANS.Model.Services
                 {
                     c.Open();
 
-                    string query = "select distinct nc,nn,email from cc where estado = 'alta';";
+                    string query = "select distinct nc,nn,email,cierre from cc where estado = 'alta';";
 
                     SqlCommand cmd = new SqlCommand(query, c);
 
@@ -49,6 +51,7 @@ namespace ANS.Model.Services
                         int nnOrdinal = r.GetOrdinal("nn");
                         int ncOrdinal = r.GetOrdinal("nc");
                         int emailOrdinal = r.GetOrdinal("email");
+                        int cierreOrdinal = r.GetOrdinal("cierre");
 
                         while (r.Read())
                         {
@@ -56,9 +59,79 @@ namespace ANS.Model.Services
                             {
                                 NN = r.GetString(nnOrdinal),
                                 NC = r.GetString(ncOrdinal),
-                                Email = r.GetString(emailOrdinal)
+                                Email = r.GetString(emailOrdinal),
+                                Cierre = r.GetDateTime(cierreOrdinal),
                             };
                             listaBuzones.Add(b);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        public void loadBuzonDTO()
+        {
+
+            if (listaBuzonesDTO != null)
+            {
+
+                using (SqlConnection c = new SqlConnection(_conexionTSD22))
+                {
+                    if (c.State == System.Data.ConnectionState.Closed)
+                        c.Open();
+
+                    string query =
+                        @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+                        from
+                        cc as c 
+                        left join 
+                        cc_nombrews as ws 
+                        on ws.NC = c.NC 
+                        where c.estado = 'alta'";
+
+                    SqlCommand cmd = new SqlCommand(query, c);
+
+                    using (SqlConnection conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
+                    {
+
+                        conn.Open();
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+
+                            int ncOrdinal = reader.GetOrdinal("NC");
+
+                            int nnOrdinal = reader.GetOrdinal("NN");
+
+                            int sucursalOrdinal = reader.GetOrdinal("SUCURSAL");
+
+                            int cierreOrdinal = reader.GetOrdinal("CIERRE");
+
+                            int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
+
+                            int nombreWSOrdinal = reader.GetOrdinal("NombreWS");
+
+                            while (reader.Read())
+                            {
+                                BuzonDTO dto = new BuzonDTO();
+                                dto.NC = reader.GetString(ncOrdinal);
+                                dto.NN = reader.GetString(nnOrdinal);
+                                dto.Sucursal = reader.GetString(sucursalOrdinal);
+                                dto.Cierre = reader.GetDateTime(cierreOrdinal);
+                                dto.Email = "acreditaciones@tecnisegur.com.uy";
+                                dto.IdCliente = reader.GetInt32(idClienteOrdinal);
+                                dto.EsHenderson = dto.esHenderson();                
+                                if (!reader.IsDBNull(nombreWSOrdinal))
+                                {
+                                    dto.NombreWS = reader.GetString(nombreWSOrdinal);
+                                }
+                                else
+                                {
+                                    dto.NombreWS = "NO_DEFINIDO";
+                                }
+                                listaBuzonesDTO.Add(dto);
+                            }
                         }
                     }
                 }

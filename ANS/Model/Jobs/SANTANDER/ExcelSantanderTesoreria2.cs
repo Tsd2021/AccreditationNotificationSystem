@@ -45,7 +45,7 @@ namespace ANS.Model.Jobs.SANTANDER
 
                 Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
 
-                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta,_tarea);
+                await _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta,_tarea,null);
 
             }
             catch (Exception ex)

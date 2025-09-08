@@ -22,11 +22,13 @@
     <None Remove="Images\bbva.png" />
     <None Remove="Images\disconnected.png" />
     <None Remove="Images\emailIcon.png" />
+    <None Remove="Images\enviomanual.png" />
     <None Remove="Images\envioMasivo.png" />
     <None Remove="Images\favicon.ico" />
     <None Remove="Images\FirmaDiegoMail.png" />
     <None Remove="Images\hsbc.png" />
     <None Remove="Images\itau.png" />
+    <None Remove="Images\itau2.png" />
     <None Remove="Images\logoTecniExcel.png" />
     <None Remove="Images\logoTecniFinal.png" />
     <None Remove="Images\santander.png" />
@@ -44,6 +46,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.8" />
     <PackageReference Include="ReportViewerCore.NETCore" Version="15.1.26" />
 	<PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
     <PackageReference Include="CoreWCF.Http" Version="1.6.0" />
@@ -70,10 +73,16 @@
     <Resource Include="Images\bbva.png" />
     <Resource Include="Images\disconnected.png" />
     <Resource Include="Images\emailIcon.png" />
+    <Resource Include="Images\enviomanual.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\envioMasivo.png" />
     <Resource Include="Images\favicon.ico" />
     <Resource Include="Images\hsbc.png" />
     <Resource Include="Images\itau.png" />
+    <Resource Include="Images\itau2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\santander.png" />
     <Resource Include="Images\scotiabank.png" />
     <EmbeddedResource Include="Images\logoTecniExcel.png">
@@ -94,6 +103,12 @@
 
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="UserControls\EnvioManualOperationControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
 </Project>

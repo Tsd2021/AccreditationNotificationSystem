@@ -2,28 +2,154 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Funciones por banco" WindowStartupLocation="CenterOwner"
-        WindowState="Maximized"
-        >
-    <Grid>
-        
-        <materialDesign:ColorZone Mode="Dark"
-       HorizontalAlignment="Stretch"
-       VerticalAlignment="Stretch">
-            <Grid Margin="20">
-                <!-- Control Card que actúa como CardView -->
-                <materialDesign:Card  Margin="10" Background="{DynamicResource MaterialDesignPaper}">
-                    <StackPanel>
-                        <TextBlock x:Name="BancoTitle"
-                                   Text="Operaciones" 
-                                   FontSize="20" 
-                                   FontWeight="Bold" 
-                                   Margin="0,0,0,12" 
-                                   HorizontalAlignment="Center"/>
-                        <ContentControl x:Name="BankOperationsContent"/>
-                    </StackPanel>
-                </materialDesign:Card>
+        Title="Funciones por banco"
+        Width="1300" Height="700"
+        WindowStartupLocation="CenterOwner"
+        xmlns:ui="clr-namespace:ANS.UserControls"
+        WindowState="Normal"
+        Background="White">
+
+    <!-- ====== Recursos locales (mínimos y compatibles) ====== -->
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <!--<ui:ShowFiltersToVisibilityConverter x:Key="ShowFiltersToVisibility"/>-->
+        <!-- Colores base (mismos que venimos usando) -->
+        <SolidColorBrush x:Key="Brush.AppBar"        Color="#D32F2F"/>
+        <SolidColorBrush x:Key="Brush.Border"        Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary"   Color="#212121"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#757575"/>
+        <SolidColorBrush x:Key="MaterialDesignPaper" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#FFFFFFFF"/>
+
+        <!-- Botón de icono simple (sin dependencias raras) -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Card básica -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <!-- Título de sección -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- ====== Layout ====== -->
+    <Grid Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56"/>
+            <!-- App bar -->
+            <RowDefinition Height="*"/>
+            <!-- Contenido -->
+        </Grid.RowDefinitions>
+
+        <!-- APP BAR -->
+        <Border Grid.Row="0" Background="{StaticResource Brush.AppBar}">
+            <Grid Margin="16,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Izquierda: icono + marca -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Bank" Width="22" Height="22" Foreground="White" Margin="0,0,8,0"/>
+                    <TextBlock Text="Tecnisegur Automatic Accreditation System"
+                 Foreground="White" FontSize="16" FontWeight="SemiBold"
+                 VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Centro: título dinámico -->
+                <TextBlock x:Name="BancoTitle"
+               Grid.Column="1"
+               Text="Operaciones"
+               Foreground="White" FontSize="18" FontWeight="Bold"
+               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!-- Derecha: cerrar -->
+                <Button Grid.Column="2"
+            Style="{StaticResource IconButton}"
+            ToolTip="Cerrar"
+            Click="Close_Click"
+            VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="White"/>
+                </Button>
             </Grid>
-        </materialDesign:ColorZone>
+        </Border>
+
+
+
+        <!-- Contenido -->
+        <Grid Grid.Row="1" Margin="16">
+       
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Panel principal: donde se alojan los UserControls -->
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Operaciones disponibles" Style="{StaticResource SectionTitle}"/>
+
+                    <!-- Aquí insertás el UserControl correspondiente al banco -->
+                    <ContentControl x:Name="BankOperationsContent" Grid.Row="1"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="RightFiltersCard"
+                    Grid.Column="1"
+                    Style="{StaticResource CardStyle}"
+                    Visibility="{Binding ElementName=BankOperationsContent,
+                                         Path=Content.(ui:OperationProps.ShowHostFilters),
+                             Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Filtros" Style="{StaticResource SectionTitle}" />
+                    <StackPanel Margin="0,8,0,0"  Grid.Row="1">
+                        <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                        SelectedDateFormat="Short"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
     </Grid>
 </Window>

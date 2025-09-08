@@ -984,8 +984,6 @@ namespace ANS.Model.Services
                     config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
                 }
 
-
-
                 List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank, config);
 
                 List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
@@ -995,11 +993,14 @@ namespace ANS.Model.Services
                 generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config, tarea);
 
             }
+
             catch (Exception e)
             {
                 throw e;
             }
+
         }
+
         private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config, string tarea)
         {
             // Colores para el formato
@@ -1219,7 +1220,7 @@ namespace ANS.Model.Services
             }
             return null;
         }
-        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta, string tarea)
+        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta, string tarea , DateTime? dia)
         {
 
             DateTime fechaDesde = DateTime.Today.Add(desde);
@@ -1228,10 +1229,16 @@ namespace ANS.Model.Services
 
             try
             {
-                List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco, numTanda, new ConfiguracionAcreditacion("Tanda"));
+                List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco, numTanda, new ConfiguracionAcreditacion("Tanda"),dia);
 
 
-                generarExcelTesoreriaTanda(lista, numTanda, banco, tarea);
+                if (dia != null)
+                {
+                //filtro la lista por fecha si vino con un valor de fecha filtrada.
+                    lista = lista.Where(x => x.Fecha.Date == dia.Value.Date).ToList();
+                }
+
+                generarExcelTesoreriaTanda(lista, numTanda, banco, tarea,dia);
 
             }
 
@@ -1240,12 +1247,119 @@ namespace ANS.Model.Services
                 throw ex;
             }
         }
-
         public static void generarExcelTesoreriaTanda(
+    List<DtoAcreditacionesPorEmpresa> datos,
+    int numTanda,
+    Banco banco,
+    string tarea,
+    DateTime? fechaFiltro)
+        {
+            var ciudades = new[] { "MONTEVIDEO", "MALDONADO" };
+
+            // fecha base solo con día/mes/año
+            var fechaBase = (fechaFiltro?.Date) ?? DateTime.Today;
+            var fechaTexto = fechaBase.ToString("dd/MM/yyyy");
+
+            foreach (var ciudad in ciudades)
+            {
+                var datosCiudad = datos.Where(d => d.Ciudad.Equals(ciudad, StringComparison.OrdinalIgnoreCase));
+
+                var pesos = datosCiudad.Where(d => d.Divisa == 1).OrderBy(d => d.Empresa).ToList();
+                var dolares = datosCiudad.Where(d => d.Divisa != 1).OrderBy(d => d.Empresa).ToList();
+
+                using var wb = new XLWorkbook();
+                var ws = wb.Worksheets.Add(ciudad);
+                int row = 1;
+
+                // Logo
+                InsertarLogoParaTesoreriaExcel(ws, ref row);
+
+                // Título (fecha sin hora)
+                ws.Range(row, 1, row, 6).Merge().Value =
+                    $"TECNISEGUR - Excel para tesorería {numTanda} - {ciudad.ToUpper()} - {fechaTexto}";
+                var titleCell = ws.Cell(row, 1);
+                titleCell.Style.Font.Bold = true;
+                titleCell.Style.Font.FontSize = 14;
+                titleCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                titleCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                row += 2;
+
+                // Encabezados
+                var headers = new[] { "Empresa", "Cuenta", "Sucursal", "Moneda", "Ciudad", "TotalMonto" };
+                for (int c = 0; c < headers.Length; c++) ws.Cell(row, c + 1).Value = headers[c];
+                row++;
+
+                // Filas PESOS
+                foreach (var d in pesos)
+                {
+                    ws.Cell(row, 1).Value = d.Empresa;
+                    ws.Cell(row, 2).Value = d.NumeroCuenta;
+                    ws.Cell(row, 3).Value = d.Sucursal;
+                    ws.Cell(row, 4).Value = d.Divisa;
+                    ws.Cell(row, 5).Value = d.Ciudad;
+                    ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(d.Monto);
+                    row++;
+                }
+
+                // Total PESOS
+                ws.Range(row, 1, row, 5).Merge().Value = "TOTAL PESOS";
+                ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(pesos.Sum(d => d.Monto));
+                ws.Range(row, 1, row, 6).Style.Font.SetBold();
+                row += 2;
+
+                // Filas DÓLARES
+                foreach (var d in dolares)
+                {
+                    ws.Cell(row, 1).Value = d.Empresa;
+                    ws.Cell(row, 2).Value = d.NumeroCuenta;
+                    ws.Cell(row, 3).Value = d.Sucursal;
+                    ws.Cell(row, 4).Value = d.Divisa;
+                    ws.Cell(row, 5).Value = d.Ciudad;
+                    ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(d.Monto);
+                    row++;
+                }
+
+                // Total DÓLARES
+                ws.Range(row, 1, row, 5).Merge().Value = "TOTAL DÓLARES";
+                ws.Cell(row, 6).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(dolares.Sum(d => d.Monto));
+                ws.Range(row, 1, row, 6).Style.Font.SetBold();
+
+                // Ajuste y guardado
+                ws.Columns().AdjustToContents();
+
+                // (opcional) usar fechaBase para el nombre de archivo en vez de Now
+                var nombreArchivo = $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{fechaBase:yyyyMMdd}.xlsx";
+
+                var filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+                // Producción:
+                // var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+                wb.SaveAs(filePath);
+
+                // Envío por correo
+                try
+                {
+                    var asuntoBase = $"Acreditaciones TESORERÍA {banco.NombreBanco} Tanda {numTanda} - {ciudad}";
+                    // Solo agrego la fecha al asunto si el filtro es HOY (comparando por fecha)
+                    var asunto = (fechaFiltro.HasValue && fechaFiltro.Value.Date == DateTime.Today)
+                        ? $"{asuntoBase} - {fechaTexto}"
+                        : asuntoBase;
+
+                    var cuerpo = $"Adjunto acreditaciones de la tanda {numTanda} para {ciudad}.";
+                    ServicioEmail.getInstancia().enviarExcelPorMail(filePath, asunto, cuerpo, null, banco, tarea, ciudad);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al enviar correo para {ciudad}: {ex.Message}");
+                }
+            }
+        }
+
+        public static void generarExcelTesoreriaTanda_BACKUP(
                  List<DtoAcreditacionesPorEmpresa> datos,
                  int numTanda,
                  Banco banco,
-                 string tarea)
+                 string tarea,
+                 DateTime? fechaFiltro)
         {
             var ciudades = new[] { "MONTEVIDEO", "MALDONADO" };
 
@@ -1272,7 +1386,7 @@ namespace ANS.Model.Services
 
                 // Insertar título
                 ws.Range(row, 1, row, 6).Merge().Value =
-                    $"TECNISEGUR - Excel para tesorería {numTanda} - {ciudad.ToUpper()} -";
+                    $"TECNISEGUR - Excel para tesorería {numTanda} - {ciudad.ToUpper()} - {fechaFiltro}";
                 var titleCell = ws.Cell(row, 1);
                 titleCell.Style.Font.Bold = true;
                 titleCell.Style.Font.FontSize = 14;
@@ -1334,16 +1448,31 @@ namespace ANS.Model.Services
 
                 //Testing
 
-                //var filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+                var filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+
                 //Produccion:
-                var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
-                wb.SaveAs(filePath);
+
+                //var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+                wb.SaveAs(filePath); 
 
                 // Envío por correo
                 try
                 {
-                    var asunto =
+                    var asunto = "";
+                    if(fechaFiltro!= null)
+                    {
+                        if(fechaFiltro == DateTime.Now.Date)
+                        {
+                            asunto =
+                        $"Acreditaciones TESORERÍA {banco.NombreBanco} Tanda {numTanda} - {ciudad} - {fechaFiltro}";
+                        }
+                        else
+                        {
+                            asunto =
                         $"Acreditaciones TESORERÍA {banco.NombreBanco} Tanda {numTanda} - {ciudad}";
+                        }
+                    }
+                    
                     var cuerpo =
                         $"Adjunto acreditaciones de la tanda {numTanda} para {ciudad}.";
                     ServicioEmail.getInstancia().enviarExcelPorMail(
@@ -1399,17 +1528,21 @@ namespace ANS.Model.Services
 
             }
             if (acreditacionesPesosMvd.Count > 0 || acreditacionesDolaresMvd.Count > 0)
-                GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco, tarea);
+                GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco, tarea,null);
 
             if (acreditacionesPesosMaldonado.Count > 0 || acreditacionesDolaresMaldonado.Count > 0)
-                GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco, tarea);
+                GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco, tarea,null);
 
             await Task.CompletedTask;
 
         }
-        private void GenerarExcelFormatoDiaADia(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco, string tarea)
+        private void GenerarExcelFormatoDiaADia(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco, string tarea, DateTime? fechaFiltro)
         {
             var fechaHoy = DateTime.Now.ToString("dd - MM - yy");
+            if (fechaFiltro!=null)
+            {
+                fechaHoy = fechaFiltro.ToString();
+            }
             var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Acreditaciones");
 
@@ -1528,63 +1661,63 @@ namespace ANS.Model.Services
                 isBBVA = true;
 
                 query = @"SELECT 
-                        cb.CUENTA,
-                        cb.EMPRESA,
-                        cb.SUCURSAL,
-                        acc.MONEDA,
-                        cc.SUCURSAL as CIUDAD, 
-                        cb.IDCLIENTE as IDCLIENTE,
-                        SUM(acc.MONTO) AS TotalMonto 
-                        FROM ConfiguracionAcreditacion AS config 
-                        INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
-                        INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
-                        INNER JOIN AcreditacionDepositoDiegoTest AS acc  
-                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
-                        WHERE cb.BANCO = @banco 
-                        and config.TipoAcreditacion not in ('tanda') 
-                        AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE()) 
-                        GROUP BY 
-                        cb.CUENTA,
-                        cb.EMPRESA,
-                        cb.SUCURSAL,
-                        cc.SUCURSAL,
-                        acc.MONEDA,
-                        cb.IDCLIENTE
-                        ORDER BY cb.empresa asc;";
+                cb.CUENTA,
+                cb.EMPRESA,
+                cb.SUCURSAL,
+                acc.MONEDA,
+                cc.SUCURSAL as CIUDAD, 
+                cb.IDCLIENTE as IDCLIENTE,
+                SUM(acc.MONTO) AS TotalMonto 
+                FROM ConfiguracionAcreditacion AS config 
+                INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
+                INNER JOIN cc ON cc.nc = config.NC 
+                INNER JOIN AcreditacionDepositoDiegoTest AS acc  
+                ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
+                WHERE cb.BANCO =  @banco
+                and config.TipoAcreditacion not in ('tanda') 
+                AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE()) 
+                GROUP BY 
+                cb.CUENTA,
+                cb.EMPRESA,
+                cb.SUCURSAL,
+                cc.SUCURSAL,
+                acc.MONEDA,
+                cb.IDCLIENTE
+                ORDER BY cb.empresa asc";
             }
 
             if (banco.NombreBanco == VariablesGlobales.santander.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())
             {
                 query = @"SELECT 
-                        cb.EMPRESA,
-                        cc.nn,
-                        cc.SUCURSAL as CIUDAD,
-                        cb.CUENTA,
-                        acc.MONEDA,
-                        cb.SUCURSAL,
-                        config.TipoAcreditacion,
-                        cb.IDCLIENTE as IDCLIENTE,
-                        SUM(acc.MONTO) AS TOTAL
-                        FROM ConfiguracionAcreditacion AS config
-                        INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID
-                        INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC
-                        INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc 
-                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID
-                        WHERE config.TipoAcreditacion = @tipoAcreditacion
-                        AND cb.BANCO = @banco
-                        AND cc.IDCLIENTE NOT IN ('268')
-                        AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE())
-                        GROUP BY 
-                        cb.BANCO,
-                        cb.CUENTA,
-                        cb.EMPRESA,
-                        cb.SUCURSAL,
-                        acc.MONEDA,
-                        cc.sucursal,
-                        cc.NN,   
-                        cb.IDCLIENTE,
-                        config.TipoAcreditacion
-                        ORDER BY cb.EMPRESA ASC";
+                cb.EMPRESA,
+                cc.nn,
+                cc.SUCURSAL as CIUDAD,
+                cb.CUENTA,
+                acc.MONEDA,
+                cb.SUCURSAL,
+                config.TipoAcreditacion,
+                cb.IDCLIENTE as IDCLIENTE,
+                SUM(acc.MONTO) AS TOTAL
+                FROM ConfiguracionAcreditacion AS config
+                INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID
+                INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC
+                INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc 
+                ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID
+                WHERE config.TipoAcreditacion = @tipoAcreditacion
+                AND cb.BANCO = @banco
+                AND cc.IDCLIENTE NOT IN ('268')
+                AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE())
+                GROUP BY 
+                cb.BANCO,
+                cb.CUENTA,
+                cb.EMPRESA,
+                cb.SUCURSAL,
+                acc.MONEDA,
+                cc.sucursal,
+                cc.NN,   
+                cb.IDCLIENTE,
+                config.TipoAcreditacion
+                ORDER BY cb.EMPRESA ASC";
             }
 
             if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToLower() == VariablesGlobales.diaxdia.ToLower())
@@ -1592,36 +1725,36 @@ namespace ANS.Model.Services
 
                 //Si es Scotia,sacar 
                 query = @"SELECT 
-                        cC.NN,
-                        CB.EMPRESA,
-                        cc.SUCURSAL as CIUDAD,
-                        cb.CUENTA,
-                        acc.MONEDA,
-                        cb.SUCURSAL,
-                        cb.IDCLIENTE as IDCLIENTE,
-                        config.TipoAcreditacion,
-                        SUM(acc.MONTO) AS TOTAL 
-                        FROM ConfiguracionAcreditacion AS config 
-                        INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
-                        INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
-                        INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
-                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
-                        WHERE config.TipoAcreditacion = @tipoAcreditacion 
-                        AND cb.BANCO = @banco 
-                        AND cc.IDCLIENTE NOT IN ('268') 
-                        AND CB.IDCLIENTE NOT IN('164') 
-                        AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE()) 
-                        GROUP BY 
-                        cb.BANCO, 
-                        cb.CUENTA,
-                        cC.NN,
-                        cb.SUCURSAL,
-                        acc.MONEDA,
-                        cc.sucursal,
-                        CB.EMPRESA,
-                        cb.IDCLIENTE,
-                        config.TipoAcreditacion 
-                        ORDER BY cc.NN ASC";
+                cC.NN,
+                CB.EMPRESA,
+                cc.SUCURSAL as CIUDAD,
+                cb.CUENTA,
+                acc.MONEDA,
+                cb.SUCURSAL,
+                cb.IDCLIENTE as IDCLIENTE,
+                config.TipoAcreditacion,
+                SUM(acc.MONTO) AS TOTAL 
+                FROM ConfiguracionAcreditacion AS config 
+                INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
+                INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
+                INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
+                ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
+                WHERE config.TipoAcreditacion = @tipoAcreditacion 
+                AND cb.BANCO = @banco 
+                AND cc.IDCLIENTE NOT IN ('268') 
+                AND CB.IDCLIENTE NOT IN('164') 
+                AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE()) 
+                GROUP BY 
+                cb.BANCO, 
+                cb.CUENTA,
+                cC.NN,
+                cb.SUCURSAL,
+                acc.MONEDA,
+                cc.sucursal,
+                CB.EMPRESA,
+                cb.IDCLIENTE,
+                config.TipoAcreditacion 
+                ORDER BY cc.NN ASC";
             }
 
             if (banco.NombreBanco.ToUpper() == VariablesGlobales.hsbc.ToUpper() ||
@@ -1629,34 +1762,34 @@ namespace ANS.Model.Services
                 banco.NombreBanco.ToUpper() == VariablesGlobales.bandes.ToUpper())
             {
                 query = @"SELECT  
-                        cb.EMPRESA, 
-                        cc.nn, 
-                        cc.SUCURSAL as CIUDAD, 
-                        cb.CUENTA, 
-                        acc.MONEDA, 
-                        cb.SUCURSAL, 
-                        config.TipoAcreditacion,
-                        cb.IDCLIENTE as IDCLIENTE,
-                        SUM(acc.MONTO) AS TOTAL 
-                        FROM ConfiguracionAcreditacion AS config 
-                        INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
-                        INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
-                        INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
-                        ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
-                        WHERE config.TipoAcreditacion = @tipoAcreditacion 
-                        AND cb.BANCO = @banco 
-                        AND convert(date,acc.FECHA) = convert(date,getdate()) 
-                        GROUP BY 
-                        cb.BANCO, 
-                        cb.CUENTA, 
-                        cb.EMPRESA, 
-                        cb.SUCURSAL, 
-                        acc.MONEDA, 
-                        cc.sucursal, 
-                        cc.NN, 
-                        config.TipoAcreditacion,
-                        cb.IDCLIENTE
-                        ORDER BY cb.EMPRESA ASC";
+                cb.EMPRESA, 
+                cc.nn, 
+                cc.SUCURSAL as CIUDAD, 
+                cb.CUENTA, 
+                acc.MONEDA, 
+                cb.SUCURSAL, 
+                config.TipoAcreditacion,
+                cb.IDCLIENTE as IDCLIENTE,
+                SUM(acc.MONTO) AS TOTAL 
+                FROM ConfiguracionAcreditacion AS config 
+                INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
+                INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
+                INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
+                ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
+                WHERE config.TipoAcreditacion = @tipoAcreditacion 
+                AND cb.BANCO = @banco 
+                AND convert(date,acc.FECHA) = convert(date,getdate()) 
+                GROUP BY 
+                cb.BANCO, 
+                cb.CUENTA, 
+                cb.EMPRESA, 
+                cb.SUCURSAL, 
+                acc.MONEDA, 
+                cc.sucursal, 
+                cc.NN, 
+                config.TipoAcreditacion,
+                cb.IDCLIENTE
+                ORDER BY cb.EMPRESA ASC";
             }
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))

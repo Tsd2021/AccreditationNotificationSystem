@@ -1,17 +1,21 @@
-﻿using ANS.Model.Jobs;
-using Quartz.Impl;
-using Quartz;
-using System.Windows;
-using ANS.Model.Services;
-using ANS.Model.Jobs.BBVA;
-using ANS.Model.Jobs.SANTANDER;
-using ANS.Model;
-using ANS.ViewModel;
-using ANS.Model.Jobs.SCOTIABANK;
-using ANS.Model.Jobs.ENVIO_MASIVO;
+﻿using ANS.Model;
+using ANS.Model.Jobs;
 using ANS.Model.Jobs.BANDES;
+using ANS.Model.Jobs.BBVA;
+using ANS.Model.Jobs.ENVIO_MASIVO;
 using ANS.Model.Jobs.HSBC;
 using ANS.Model.Jobs.ITAU;
+using ANS.Model.Jobs.SANTANDER;
+using ANS.Model.Jobs.SCOTIABANK;
+using ANS.Model.Services;
+using ANS.Scheduling;
+using ANS.ViewModel;
+using DocumentFormat.OpenXml.Drawing;
+using Quartz;
+using Quartz.Impl;
+using Quartz.Impl.Matchers;
+using System.IO;
+using System.Windows;
 
 
 namespace ANS
@@ -21,18 +25,22 @@ namespace ANS
     public partial class App : System.Windows.Application
     {
         private IScheduler _scheduler;
+
+        private IJobHistoryStore _historyStore;
+
+        public TimeZoneInfo tzMvd;
         protected override async void OnStartup(StartupEventArgs e)
         {
 
             base.OnStartup(e);
+
+            QuartzTime.SetDefault("Montevideo Standard Time");
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
             cargarClientes();
 
             preCargarBancos();
-
-            preCargarCuentasBuzonesBugueadas();
 
             preCargarListaNC();
 
@@ -47,6 +55,30 @@ namespace ANS
             var servicioCuentaBuzon = new ServicioCuentaBuzon();
 
             _scheduler.JobFactory = new MyJobFactory(servicioCuentaBuzon);
+
+            // 2) Store SQLite (persistencia del historial + marca último cierre)
+
+            //TESTING:
+            //var dbPath = System.IO.Path.Combine(
+            //    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            //    "ANS", "QuartzRuns.db");
+            //_historyStore = new RepositorioJobHistory(dbPath);
+            //await _historyStore.InitializeAsync();
+
+            //PRODUCTION:
+            var baseDir = System.IO.Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop", "TAAS");
+            System.IO.Directory.CreateDirectory(baseDir);
+
+            var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
+            _historyStore = new RepositorioJobHistory(dbPath);
+            await _historyStore.InitializeAsync();
+
+            // 3) Listeners (antes de programar jobs)
+            var tracking = new JobTrackingListener(_historyStore);
+            _scheduler.ListenerManager.AddJobListener(tracking, GroupMatcher<JobKey>.AnyGroup());
+            _scheduler.ListenerManager.AddTriggerListener(tracking, GroupMatcher<TriggerKey>.AnyGroup());
+
+            //await crearJobsPrueba(_scheduler);
 
             await crearJobsBBVA(_scheduler);
 
@@ -64,8 +96,28 @@ namespace ANS
 
             await crearJobEnviosNiveles(_scheduler);
 
+            // 5) Detectar ejecuciones omitidas entre el último cierre y ahora
+            var lastShutdownUtc = await _historyStore.GetLastShutdownUtcAsync();
+            var nowUtc = DateTimeOffset.UtcNow;
+
+            if (lastShutdownUtc.HasValue && lastShutdownUtc.Value < nowUtc)
+            {
+                try
+                {
+                    await MissedRunDetector.DetectMissedFirings(_scheduler, _historyStore, lastShutdownUtc.Value, nowUtc);
+                }
+                catch (Exception ex)
+                {
+                    // Log “suave”: no bloquea el inicio
+                    ServicioLog.instancia.WriteLog(ex, "DetectMissedFirings", "warning");
+                }
+            }
+
             if (!_scheduler.IsStarted)
             {
+
+
+
                 await _scheduler.Start();
 
                 ServicioMensajeria.getInstancia().agregar(new Mensaje
@@ -75,22 +127,72 @@ namespace ANS
                     Fecha = DateTime.Now
                 });
 
-                VMmainWindow vMmain = new VMmainWindow();
-
-                vMmain.CargarMensajes();
-
-                //List<Tarea> tareas = await ServicioTarea.getInstancia().obtenerTareasDelScheduler(_scheduler);
-
+                var vm = new VMmainWindow(_scheduler, _historyStore, tracking);
+                var win = new MainWindow { DataContext = vm };
+                await vm.InitializeAsync();   // 👈 carga inicial
+                vm.CargarMensajes();
+                win.Show();
                 Console.WriteLine("Scheduler iniciado correctamente.");
             }
 
         }
 
-        private void preCargarCuentasBuzonesBugueadas()
+        private async Task crearJobsPrueba(IScheduler scheduler)
         {
-            //Este método precarga las cuentasbuzones que están bugueadas (no pueden ser acreditadas con mi app por tema de infraestructura)
-            //Por ejemplo BAS  y Multiahorro, cuyo nombre de Empresa no puede ser encontrado en Depositos por banco(misma empresa acredita en varios bancos)
+            // (A) Job OK: corre una vez en ~10s
+            var jobOk = JobBuilder.Create<JobPrueba>()
+                .WithIdentity("TestJob_OK", "TEST")
+                .UsingJobData("steps", 15)
+                .UsingJobData("delayMs", 200)
+                .UsingJobData("shouldFail", false)
+                .Build();
+
+            var trigOk = TriggerBuilder.Create()
+                .WithIdentity("TestTrigger_OK", "TEST")
+                .StartAt(DateBuilder.FutureDate(10, IntervalUnit.Second))
+                .WithDescription("Disparo único para validar 'Succeeded'")
+
+                .Build();
+
+            // (B) Job FAIL: corre una vez en ~20s y falla
+            var jobFail = JobBuilder.Create<JobPrueba>()
+                .WithIdentity("TestJob_FAIL", "TEST")
+                .UsingJobData("steps", 5)
+                .UsingJobData("delayMs", 150)
+                .UsingJobData("shouldFail", true)
+                .Build();
+
+            var trigFail = TriggerBuilder.Create()
+                .WithIdentity("TestTrigger_FAIL", "TEST")
+                .StartAt(DateBuilder.FutureDate(20, IntervalUnit.Second))
+                .WithDescription("Disparo único para validar 'Failed'")
+                .Build();
+
+            // (C) Job INTERVAL: cada 1 minuto todo el día -> sirve para ver omitidas al cerrar la app
+            var jobInterval = JobBuilder.Create<JobPrueba>()
+                .WithIdentity("TestJob_INTERVAL", "TEST")
+                .UsingJobData("steps", 1)      // casi instantáneo
+                .UsingJobData("delayMs", 10)
+                .UsingJobData("shouldFail", false)
+                .Build();
+
+            var diSchedule = DailyTimeIntervalScheduleBuilder.Create()
+                .WithIntervalInMinutes(1)
+                .OnEveryDay()
+                .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(0, 0))
+                .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(23, 59));
+
+            var trigInterval = TriggerBuilder.Create()
+                .WithIdentity("TestTrigger_INTERVAL", "TEST")
+                .WithSchedule(diSchedule)
+                .WithDescription("Cada 1 min; útil para marcar omitidas por cierre")
+                .Build();
+
+            await scheduler.ScheduleJob(jobOk, trigOk);
+            await scheduler.ScheduleJob(jobFail, trigFail);
+            await scheduler.ScheduleJob(jobInterval, trigInterval);
         }
+
 
         private void preCargarEmailsTarea()
         {
@@ -108,7 +210,10 @@ namespace ANS
             ITrigger triggerAcreditarHsbc = TriggerBuilder.Create()
             .WithIdentity("HSBCTriggerAcreditar", "GrupoTrabajoHSBC")
             .WithCronSchedule("10 31 16 ? * MON-FRI")
-            .Build();
+              .Build();
+
+
+
             #endregion
 
             //Tarea 2: Enviar excel dia a dia HSBC  (16:32:10)
@@ -164,11 +269,11 @@ namespace ANS
             //Tarea 1: Acreditar dia a dia BANDES  (16:31:20)
             #region TAREA_ACREDITAR_DXD
             IJobDetail jobAcreditarBandes = JobBuilder.Create<AcreditarPorBancoBANDES>()
-            .WithIdentity("ItauJobAcreditar", "GrupoTrabajoBANDES")
+            .WithIdentity("BandesJobAcreditar", "GrupoTrabajoBANDES")
             .Build();
 
             ITrigger triggerAcreditarBandes = TriggerBuilder.Create()
-            .WithIdentity("ItauTriggerAcreditar", "GrupoTrabajoBANDES")
+            .WithIdentity("BandesTriggerAcreditar", "GrupoTrabajoBANDES")
             .WithCronSchedule("20 31 16 ? * MON-FRI")
             .Build();
             #endregion
@@ -236,6 +341,8 @@ namespace ANS
             if (s != null)
             {
                 s.loadCC();
+
+                s.loadBuzonDTO();
 
                 s.loadEmails();
             }
@@ -695,22 +802,41 @@ namespace ANS
             //Tarea 1: Acreditar punto a punto. de 8:15 a 19:45.
             #region TAREA_ACREDITAR_P2P
 
+            // Job
             IJobDetail jobPuntoAPuntoBBVA = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
                 .WithIdentity("BBVAJobP2P", "GrupoTrabajoBBVA")
                 .Build();
 
+            // Trigger equivalente al cron 0 15,45 11-19 ? * MON-FRI
             ITrigger triggerBBVAPuntoAPunto = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerP2P", "GrupoTrabajoBBVA")
-                .WithSchedule(CronScheduleBuilder
-                    // Segundos | Minutos    | Horas     | Day-of-month | Meses | Días-semana
-                    .CronSchedule("0 15,45 11-19 ? * MON-FRI"))
+                .WithDailyTimeIntervalSchedule(x => x
+                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(11, 15)) // arranca 11:15
+                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 45)) // última a 19:45
+                    .WithIntervalInMinutes(30)                              // 11:15, 11:45, 12:15, ...
+                    .OnDaysOfTheWeek(
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday))
                 .Build();
+
+
+
+            IJobDetail jobPuntoAPuntoBBVA_Excepcion1635 = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
+               .WithIdentity("BBVAJobP2P_Extra1635", "GrupoTrabajoBBVA")
+               .Build();
 
             ITrigger triggerBBVAPuntoAPuntoExcepcion1635 = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerP2P_Extra1635", "GrupoTrabajoBBVA")
                  .WithSchedule(CronScheduleBuilder
                      .CronSchedule("0 35 16 ? * MON-FRI"))
                  .Build();
+
+            IJobDetail jobPuntoAPuntoBBVA_Excepcion2030 = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
+         .WithIdentity("BBVAJobP2P_Extra2030", "GrupoTrabajoBBVA")
+         .Build();
 
             ITrigger triggerBBVAPuntoAPuntoExcepcion2030 = TriggerBuilder.Create()
            .WithIdentity("BBVATriggerP2P_Extra2030", "GrupoTrabajoBBVA")
@@ -761,13 +887,16 @@ namespace ANS
 
             await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA, triggerBBVAPuntoAPunto);
 
-            await scheduler.ScheduleJob(jobPuntoAPuntoBBVA, new HashSet<ITrigger>
-                                                        {
-                                                            triggerBBVAPuntoAPunto,
-                                                            triggerBBVAPuntoAPuntoExcepcion1635,
-                                                            triggerBBVAPuntoAPuntoExcepcion2030
-                                                        }, true);
+            //await scheduler.ScheduleJob(jobPuntoAPuntoBBVA, new HashSet<ITrigger>
+            //                                            {
+            //                                                triggerBBVAPuntoAPunto,
+            //                                                triggerBBVAPuntoAPuntoExcepcion1635,
+            //                                                triggerBBVAPuntoAPuntoExcepcion2030
+            //                                            }, true);
 
+            await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA_Excepcion1635, triggerBBVAPuntoAPuntoExcepcion1635);
+
+            await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA_Excepcion2030, triggerBBVAPuntoAPuntoExcepcion2030);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelResumen, triggerBBVAEnviarExcelResumen);
 
@@ -776,14 +905,26 @@ namespace ANS
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 
         }
+
         protected override async void OnExit(ExitEventArgs e)
         {
-            if (_scheduler != null)
+            try
             {
-                await _scheduler.Shutdown();
-            }
+                // Guardamos el momento de cierre (para detectar omitidas al próximo inicio)
+                if (_historyStore != null)
+                    await _historyStore.SaveLastShutdownUtcAsync(DateTimeOffset.UtcNow);
 
-            base.OnExit(e);
+                if (_scheduler != null)
+                    await _scheduler.Shutdown(waitForJobsToComplete: false);
+            }
+            catch (Exception ex)
+            {
+                ServicioLog.instancia.WriteLog(ex, "AppExit", "error");
+            }
+            finally
+            {
+                base.OnExit(e);
+            }
         }
     }
 }

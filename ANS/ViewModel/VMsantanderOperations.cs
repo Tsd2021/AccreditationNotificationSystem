@@ -16,6 +16,12 @@ namespace ANS.ViewModel
             get => _isLoading;
             set => Set(ref _isLoading, value);
         }
+        private DateTime? _fechaSeleccionada = DateTime.Today;
+        public DateTime? FechaSeleccionada
+        {
+            get => _fechaSeleccionada;
+            set => Set(ref _fechaSeleccionada, value);
+        }
         public ICommand EjecutarPuntoAPuntoTXTCommand { get; }
         public ICommand EjecutarDiaADiaTXTCommand { get; }
         public ICommand EjecutarTanda1HendersonTXTCommand { get; }
@@ -62,7 +68,6 @@ namespace ANS.ViewModel
             EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
 
         }
-
         private async Task ejecutarAltaEmailDestino()
         {
 
@@ -76,7 +81,6 @@ namespace ANS.ViewModel
 
             alta.ShowDialog();
         }
-
         private async Task ejecutarDiaADiaTXT()
         {
 
@@ -264,7 +268,7 @@ namespace ANS.ViewModel
 
             try
             {
-                await Task.Run(() => { _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, desde, hasta, tarea).Wait(); });
+                await Task.Run(() => { _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 1, desde, hasta, tarea, FechaSeleccionada?.Date).Wait(); });
             }
             catch (Exception e)
             {
@@ -296,7 +300,7 @@ namespace ANS.ViewModel
             try
             {
 
-                await Task.Run(() => {  _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta,tarea).Wait(); });
+                await Task.Run(() => {  _servicioCuentaBuzon.enviarExcelTesoreria(bank, "MONTEVIDEO", 2, desde, hasta,tarea, FechaSeleccionada?.Date).Wait(); });
 
             }
 
