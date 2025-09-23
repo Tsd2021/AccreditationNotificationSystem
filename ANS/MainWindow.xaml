@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:ANS.Model"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:conv="clr-namespace:ANS.Scheduling"
         Title="TAAS"
         Icon="/Images/favicon.ico"
         WindowState="Maximized"
@@ -11,6 +12,8 @@
 
     <!-- ==================  RECURSOS  ================== -->
     <Window.Resources>
+        <conv:UtcToMontevideoConverter x:Key="UtcToMontevideo" />
+
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <!-- Paleta básica -->
@@ -248,11 +251,24 @@
                             <DataGrid ItemsSource="{Binding Historial}" Style="{StaticResource GridBase}">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="1.6*"/>
-                                    <DataGridTextColumn Header="Grupo" Binding="{Binding JobGroup}" Width="1*"/>
-                                    <DataGridTextColumn Header="Trigger" Binding="{Binding TriggerName}" Width="1*"/>
-                                    <DataGridTextColumn Header="Programado" Binding="{Binding ScheduledFireTimeUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="1.2*"/>
-                                    <DataGridTextColumn Header="Inicio" Binding="{Binding ActualFireTimeUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="1.2*"/>
-                                    <DataGridTextColumn Header="Fin" Binding="{Binding CompletedTimeUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="1.2*"/>
+
+                                    <!-- Fechas mostradas en Montevideo -->
+                                    <DataGridTextColumn Header="Programado"
+                          Binding="{Binding ScheduledFireTimeUtc,
+                                            Converter={StaticResource UtcToMontevideo},
+                                            StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
+                          Width="1.2*"/>
+                                    <DataGridTextColumn Header="Inicio"
+                          Binding="{Binding ActualFireTimeUtc,
+                                            Converter={StaticResource UtcToMontevideo},
+                                            StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
+                          Width="1.2*"/>
+                                    <DataGridTextColumn Header="Fin"
+                          Binding="{Binding CompletedTimeUtc,
+                                            Converter={StaticResource UtcToMontevideo},
+                                            StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
+                          Width="1.2*"/>
+
                                     <DataGridTemplateColumn Header="Estado" Width="0.9*">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -262,10 +278,12 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
+
                                     <DataGridTextColumn Header="Mensaje" Binding="{Binding Message}" Width="2*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </TabItem>
+
                     </TabControl>
                 </Grid>
             </Border>
@@ -365,9 +383,6 @@
                     </ScrollViewer>
                 </Grid>
             </Border>
-
-
-
 
             <!-- PROGRESS BAR global -->
             <ProgressBar Grid.Row="2" Grid.ColumnSpan="2" Height="6"

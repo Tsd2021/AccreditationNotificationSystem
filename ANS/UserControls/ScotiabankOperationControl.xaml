@@ -108,18 +108,26 @@
     </UserControl.Resources>
 
     <!-- =================== Contenido =================== -->
+    <!-- Separado en dos filas: el botón queda fuera del BusyIndicator -->
     <Grid>
-        <!-- Acción auxiliar arriba a la derecha -->
-        <DockPanel LastChildFill="False" Margin="0,0,0,8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Acción auxiliar arriba a la derecha (siempre visible) -->
+        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,8">
             <Button Content="Asociar mails"
                     DockPanel.Dock="Right"
                     Style="{StaticResource GhostButton}"
                     Command="{Binding EjecutarAltaEmailDestinoCommand}"
+                    ToolTip="Asociar correos destino para avisos"
                     Margin="0,0,4,0"/>
         </DockPanel>
 
         <!-- Busy overlay + layout principal -->
-        <xctk:BusyIndicator IsBusy="{Binding IsLoading}"
+        <xctk:BusyIndicator Grid.Row="1"
+                            IsBusy="{Binding IsLoading}"
                             BusyContent="Procesando...">
             <Grid>
                 <!-- Más aire a Acreditaciones -->
@@ -133,7 +141,6 @@
                     <Grid Grid.IsSharedSizeScope="True">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <!-- Header -->
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -185,7 +192,6 @@
                     <Grid Grid.IsSharedSizeScope="True">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <!-- Header -->
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>

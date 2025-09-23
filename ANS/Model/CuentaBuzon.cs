@@ -57,11 +57,11 @@ namespace ANS.Model
         }
         public int getIdMoneda()
         {
-            if(this.Moneda == VariablesGlobales.pesos)
+            if (this.Moneda == VariablesGlobales.pesos)
             {
                 return 1;
             }
-            if(this.Moneda == VariablesGlobales.dolares)
+            if (this.Moneda == VariablesGlobales.dolares)
             {
                 return 2;
             }
@@ -72,12 +72,35 @@ namespace ANS.Model
         {
             bool es = false;
 
-            if(ServicioCliente.getInstancia().getClientesRelacionados(new Cliente { IdCliente = this.IdCliente }).Where(c => c.IdCliente == IdCliente).Any(c => c.Nombre.ToUpper().Contains("HENDERSON")))
+            if (ServicioCliente.getInstancia().getClientesRelacionados(new Cliente { IdCliente = this.IdCliente }).Where(c => c.IdCliente == IdCliente).Any(c => c.Nombre.ToUpper().Contains("HENDERSON")))
             {
                 es = true;
             }
 
             return es;
+        }
+
+        public double getTotalPesos()
+        {
+            double totalPesos = 0;
+
+            foreach (var deposito in Depositos)
+            {
+                totalPesos += deposito.getTotalPesos();
+            }
+
+            return totalPesos;
+        }
+
+        public double getTotalDolares()
+        {
+            double totalDolares = 0;
+
+            foreach (var deposito in Depositos)
+            {
+                totalDolares += deposito.getTotalDolares();
+            }
+            return totalDolares;
         }
     }
 }

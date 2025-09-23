@@ -51,7 +51,7 @@ namespace ANS.Model.Jobs
                 return new ExcelBBVAReporteDiario(_servicioCuentaBuzon);
             }
 
-            if (jobType == typeof(ExcelBBVATata))
+            if (jobType == typeof(ExcelCash))
             {
                 return new ExcelBBVATata(_servicioCuentaBuzon);
             }

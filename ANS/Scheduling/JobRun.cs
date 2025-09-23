@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Office2013.Excel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,12 @@ namespace ANS.Scheduling
     }
 
 
+    public static class TimeZones
+    {
+        public static readonly TimeZoneInfo Montevideo =
+            TimeZoneInfo.FindSystemTimeZoneById("Montevideo Standard Time");
+    }
+
     public sealed class JobRun
     {
         public long Id { get; set; }
@@ -24,12 +31,23 @@ namespace ANS.Scheduling
         public string JobGroup { get; set; } = "";
         public string TriggerName { get; set; } = "";
         public string TriggerGroup { get; set; } = "";
-
+        public JobRunStatus Status { get; set; }
+        public string? Message { get; set; }  // error/observación
         public DateTimeOffset ScheduledFireTimeUtc { get; set; }
         public DateTimeOffset? ActualFireTimeUtc { get; set; }
         public DateTimeOffset? CompletedTimeUtc { get; set; }
 
-        public JobRunStatus Status { get; set; }
-        public string? Message { get; set; }  // error/observación
+        public DateTimeOffset Scheduled_MVD =>
+            TimeZoneInfo.ConvertTime(ScheduledFireTimeUtc, TimeZones.Montevideo);
+
+        public DateTimeOffset? Actual_MVD =>
+            ActualFireTimeUtc.HasValue
+                ? TimeZoneInfo.ConvertTime(ActualFireTimeUtc.Value, TimeZones.Montevideo)
+                : (DateTimeOffset?)null;
+
+        public DateTimeOffset? Completed_MVD =>
+            CompletedTimeUtc.HasValue
+                ? TimeZoneInfo.ConvertTime(CompletedTimeUtc.Value, TimeZones.Montevideo)
+                : (DateTimeOffset?)null;
     }
 }

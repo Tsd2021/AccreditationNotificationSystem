@@ -49,90 +49,67 @@ namespace ANS
             initServicios();
 
             var factory = new StdSchedulerFactory();
-
             _scheduler = await factory.GetScheduler();
+            _scheduler.JobFactory = new MyJobFactory(new ServicioCuentaBuzon());
 
-            var servicioCuentaBuzon = new ServicioCuentaBuzon();
+            // 0) Capturamos el instante de arranque (UTC) para tope superior EXCLUSIVO
+            var appStartUtc = DateTimeOffset.UtcNow;
 
-            _scheduler.JobFactory = new MyJobFactory(servicioCuentaBuzon);
-
-            // 2) Store SQLite (persistencia del historial + marca último cierre)
-
-            //TESTING:
+            // 1) Store SQLite
+            // --- TEST ---
             //var dbPath = System.IO.Path.Combine(
             //    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             //    "ANS", "QuartzRuns.db");
-            //_historyStore = new RepositorioJobHistory(dbPath);
-            //await _historyStore.InitializeAsync();
-
-            //PRODUCTION:
+            // ---PROD-- -
             var baseDir = System.IO.Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop", "TAAS");
-            System.IO.Directory.CreateDirectory(baseDir);
-
+            Directory.CreateDirectory(baseDir);
             var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
+
             _historyStore = new RepositorioJobHistory(dbPath);
             await _historyStore.InitializeAsync();
 
-            // 3) Listeners (antes de programar jobs)
+            // 2) Listeners
             var tracking = new JobTrackingListener(_historyStore);
             _scheduler.ListenerManager.AddJobListener(tracking, GroupMatcher<JobKey>.AnyGroup());
             _scheduler.ListenerManager.AddTriggerListener(tracking, GroupMatcher<TriggerKey>.AnyGroup());
 
+            // 3) Programar TODOS los jobs
             //await crearJobsPrueba(_scheduler);
-
             await crearJobsBBVA(_scheduler);
-
             await crearJobsSantander(_scheduler);
-
             await crearJobsScotiabank(_scheduler);
-
             await crearJobsHSBC(_scheduler);
-
             await crearJobsBandes(_scheduler);
-
             await crearJobsItau(_scheduler);
-
             await crearJobsEnviosMasivos(_scheduler);
 
-            await crearJobEnviosNiveles(_scheduler);
+            //EL JOB NIVELES AUN SE DEBE TESTEAR
+            //await crearJobEnviosNiveles(_scheduler);
 
-            // 5) Detectar ejecuciones omitidas entre el último cierre y ahora
+            // 4) Detectar ejecuciones omitidas entre el cierre anterior y appStartUtc (exclusivo)
             var lastShutdownUtc = await _historyStore.GetLastShutdownUtcAsync();
-            var nowUtc = DateTimeOffset.UtcNow;
-
-            if (lastShutdownUtc.HasValue && lastShutdownUtc.Value < nowUtc)
+            if (lastShutdownUtc.HasValue && lastShutdownUtc.Value < appStartUtc)
             {
                 try
                 {
-                    await MissedRunDetector.DetectMissedFirings(_scheduler, _historyStore, lastShutdownUtc.Value, nowUtc);
+                    await MissedRunDetector.DetectMissedFirings(
+                        _scheduler, _historyStore, lastShutdownUtc.Value, appStartUtc);
                 }
                 catch (Exception ex)
                 {
-                    // Log “suave”: no bloquea el inicio
                     ServicioLog.instancia.WriteLog(ex, "DetectMissedFirings", "warning");
                 }
             }
 
+            // 5) Arrancar el scheduler
             if (!_scheduler.IsStarted)
             {
-
-
-
                 await _scheduler.Start();
-
-                ServicioMensajeria.getInstancia().agregar(new Mensaje
-                {
-                    Estado = "Éxito",
-                    Tipo = "Agenda",
-                    Fecha = DateTime.Now
-                });
-
                 var vm = new VMmainWindow(_scheduler, _historyStore, tracking);
                 var win = new MainWindow { DataContext = vm };
-                await vm.InitializeAsync();   // 👈 carga inicial
+                await vm.InitializeAsync();
                 vm.CargarMensajes();
                 win.Show();
-                Console.WriteLine("Scheduler iniciado correctamente.");
             }
 
         }
@@ -874,7 +851,7 @@ namespace ANS
 
             //Tarea 4: Enviar excel solo Tata formato Henderson ( por nn y empresa )
             #region TAREA_EXCEL_TATA 21:06
-            IJobDetail jobBBVAEnviarExcelTata = JobBuilder.Create<ExcelBBVATata>()
+            IJobDetail jobBBVAEnviarExcelTata = JobBuilder.Create<ExcelCash>()
             .WithIdentity("BBVAJobExcelTata", "GrupoTrabajoBBVA")
             .UsingJobData("tarea", "ExcelTata")
             .Build();

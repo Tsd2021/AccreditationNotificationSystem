@@ -15,5 +15,28 @@ namespace ANS.Model
         public DateTime FechaDep { get; set; }
         public string Tipo { get; set; }
         public List<Total> Totales { get; set; } = new List<Total>();
+        public double getTotalPesos() {             double totalPesos = 0;
+            foreach (var total in Totales)
+            {
+                if (total.Divisa == "UYU") // Suponiendo que 0 representa pesos
+                {
+                    totalPesos += total.ImporteTotal;
+                }
+            }
+            return totalPesos;
+        }
+
+        public double getTotalDolares()
+        {
+            double totalDolares = 0;
+            foreach (var total in Totales)
+            {
+                if (total.Divisa == "USD") // Suponiendo que 1 representa dólares
+                {
+                    totalDolares += total.ImporteTotal;
+                }
+            }
+            return totalDolares;
+        }
     }
 }

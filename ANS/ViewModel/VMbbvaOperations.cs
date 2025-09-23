@@ -1,5 +1,7 @@
 ﻿
 using ANS.Model;
+using ANS.Model.GeneradorArchivoPorBanco;
+using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using ANS.Views;
 using GalaSoft.MvvmLight;
@@ -26,9 +28,9 @@ namespace ANS.ViewModel
         public ICommand EjecutarExcelTataCommand { get; }
         public ICommand EjecutarExcelDiaADia { get; }
         public ICommand EjecutarAltaEmailDestinoCommand { get; }
-
-
+        public ICommand EjecutarTxtTest { get; }
         #endregion
+
         public VMbbvaOperations(Banco b)
         {
 
@@ -46,21 +48,50 @@ namespace ANS.ViewModel
 
             EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
 
+            EjecutarTxtTest = new RelayCommand(async () => await ejecutarTxtDePrueba());
+
         }
 
+        private async Task ejecutarTxtDePrueba()
+        {
+
+            Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
+
+            BBVAFileGenerator bbvaGenerator = new BBVAFileGenerator();
+            try
+            {
+
+            await bbvaGenerator.generarArchivoTest();
+
+            }
+            catch(Exception ex)
+            {
+
+                throw ex;
+
+            }
+
+        }
 
         private async Task ejecutarAltaEmailDestino()
         {
 
-            Banco b = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
+            try
+            {
+                Banco b = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
 
-            Cliente c = null;
+                Cliente c = null;
 
-            ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
+                ConfiguracionAcreditacion t = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
-            var alta = new AltaEmailDestino(b, c, t);
+                var alta = new AltaEmailDestino(b, c, t);
 
-            alta.ShowDialog();
+                alta.ShowDialog();
+            }
+            catch(Exception ex)
+            {
+              throw ex;
+            }
 
         }
         private async Task ejecutarPuntoAPuntoTXT()

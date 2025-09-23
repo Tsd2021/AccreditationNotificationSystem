@@ -108,20 +108,27 @@
     </UserControl.Resources>
 
     <!-- =================== Contenido =================== -->
+    <!-- Creamos dos filas: barra superior (Auto) y contenido principal (*) -->
     <Grid>
-        <!-- Botón auxiliar arriba a la derecha -->
-        <DockPanel LastChildFill="False" Margin="0,0,0,8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Barra superior con el botón (visible y fuera del BusyIndicator) -->
+        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,8">
             <Button Content="Asociar mails"
                     DockPanel.Dock="Right"
                     Style="{StaticResource GhostButton}"
                     Command="{Binding EjecutarAltaEmailDestinoCommand}"
+                    ToolTip="Asociar correos destino para avisos"
                     Margin="0,0,4,0"/>
         </DockPanel>
 
         <!-- Busy overlay + layout principal -->
-        <xctk:BusyIndicator IsBusy="{Binding IsLoading}"
-                            BusyContent="Procesando..."
-                            >
+        <xctk:BusyIndicator Grid.Row="1"
+                            IsBusy="{Binding IsLoading}"
+                            BusyContent="Procesando...">
             <Grid Margin="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -135,11 +142,10 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <!-- Etiquetas alineadas -->
                             <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
-                            <!-- Botones al tamaño del contenido -->
                             <ColumnDefinition Width="Auto" SharedSizeGroup="ColAction"/>
                         </Grid.ColumnDefinitions>
 
@@ -166,6 +172,17 @@
                                 Content="TXT DXD"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarDiaADiaTXTCommand}"/>
+
+                        <!-- Test PROD -->
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Text="Test PROD (TXT)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="3" Grid.Column="1"
+                                Content="TXT TEST"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTxtTest}"/>
                     </Grid>
                 </Border>
 

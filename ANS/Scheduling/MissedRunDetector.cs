@@ -1,66 +1,94 @@
-﻿using Quartz;
+﻿using ANS.Scheduling;
+using Quartz;
 using Quartz.Impl.Matchers;
-using System;
-using System.Threading.Tasks;
+using Quartz.Impl.Triggers;
+using Quartz.Spi;
 
-namespace ANS.Scheduling
+public static class MissedRunDetector
 {
-    public static class MissedRunDetector
+    // Límite para no calcular infinitas ocurrencias si la app estuvo apagada días
+    private const int MaxPerTrigger = 5000;
+
+    public static async Task DetectMissedFirings(
+    IScheduler scheduler,
+    IJobHistoryStore store,
+    DateTimeOffset lastShutdownUtc,
+    DateTimeOffset nowUtc)
     {
-        public static async Task DetectMissedFirings(
-            IScheduler scheduler,
-            IJobHistoryStore store,
-            DateTimeOffset fromUtc,
-            DateTimeOffset toUtc)
+        // Nos aseguramos de no marcar futuros
+        if (nowUtc < DateTimeOffset.UtcNow) nowUtc = DateTimeOffset.UtcNow;
+
+        var jobKeys = await scheduler.GetJobKeys(Quartz.Impl.Matchers.GroupMatcher<JobKey>.AnyGroup());
+
+        foreach (var jobKey in jobKeys)
         {
-            var jobKeys = await scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup());
+            var triggers = await scheduler.GetTriggersOfJob(jobKey);
 
-            foreach (var jk in jobKeys)
+            foreach (var trig in triggers)
             {
-                var triggers = await scheduler.GetTriggersOfJob(jk);
+                if (trig is not IOperableTrigger opt) continue;
 
-                foreach (var trig in triggers)
+                ICalendar? cal = null;
+                if (!string.IsNullOrEmpty(trig.CalendarName))
+                    cal = await scheduler.GetCalendar(trig.CalendarName);
+
+                // Rango SIEMPRE en UTC
+                var missed = ComputeFireTimesBetween(opt, cal, lastShutdownUtc, nowUtc);
+
+                foreach (var ftUtc in missed)
                 {
-                    if (trig is IDailyTimeIntervalTrigger dt)
-                    {
-                        var tz = dt.TimeZone ?? QuartzTime.DefaultTz;
-                        var startDate = TimeZoneInfo.ConvertTime(fromUtc, tz).Date;
-                        var endDate = TimeZoneInfo.ConvertTime(toUtc, tz).Date;
-
-                        for (var d = startDate; d <= endDate; d = d.AddDays(1))
-                        {
-                            if (!dt.DaysOfWeek.Contains(d.DayOfWeek)) continue;
-
-                            var firstUtc = TriggerUtil.GetWindowStartUtc(dt, d);
-                            if (firstUtc > fromUtc && firstUtc <= toUtc)
-                            {
-                                if (!await store.ExistsAsync(jk, firstUtc))
-                                {
-                                    await store.MarkSkippedAsync(jk, trig.Key, firstUtc,
-                                        "Inicio de ventana omitido (app cerrada). Trigger sigue activo.");
-                                }
-                            }
-                        }
-                    }
-                    else if (trig is ICronTrigger ct && TriggerUtil.IsOncePerDay(ct))
-                    {
-                        var cur = trig.GetFireTimeAfter(fromUtc);
-                        while (cur.HasValue && cur.Value <= toUtc)
-                        {
-                            var sch = cur.Value;
-                            if (!await store.ExistsAsync(jk, sch))
-                            {
-                                await store.MarkSkippedAsync(jk, trig.Key, sch, "No ejecutada por app cerrada");
-                            }
-                            cur = trig.GetFireTimeAfter(sch);
-                        }
-                    }
-                    else
-                    {
-                        // Cron frecuentes: evitamos “spam”. Si quisieras, marcá solo el primer del día.
-                    }
+                    if (ftUtc >= DateTimeOffset.UtcNow) continue; // jamás marcar futuros
+                    await store.MarkSkippedAsync(jobKey, trig.Key, ftUtc, "Omitido: aplicación apagada");
                 }
             }
         }
     }
+
+
+
+
+    public static IReadOnlyList<DateTimeOffset> ComputeFireTimesBetween(
+    IOperableTrigger trigg, ICalendar? cal, DateTimeOffset from, DateTimeOffset to)
+    {
+        var lst = new List<DateTimeOffset>();
+
+        // Clon independiente para no alterar el trigger real
+        var t = (IOperableTrigger)trigg.Clone();
+
+        // Fuerza el rango de búsqueda SIEMPRE
+        t.StartTimeUtc = from;
+        t.EndTimeUtc = to;
+
+        // Recalcular el primer disparo a partir de 'from'
+        if (!t.ComputeFirstFireTimeUtc(cal).HasValue)
+            return lst.AsReadOnly(); // no hay disparos en el rango
+
+        // Seguridad ante triggers muy frecuentes
+        const int hardLimit = 10000;
+        int count = 0;
+
+        while (true)
+        {
+            var d = t.GetNextFireTimeUtc();
+            if (!d.HasValue) break;
+
+            // Si está antes del 'from', avanzar
+            if (d.Value < from)
+            {
+                t.Triggered(cal);
+                continue;
+            }
+
+            // Si se pasa del 'to', cortar
+            if (d.Value > to) break;
+
+            lst.Add(d.Value);
+            t.Triggered(cal);
+
+            if (++count >= hardLimit) break; // protección
+        }
+
+        return lst.AsReadOnly();
+    }
+
 }

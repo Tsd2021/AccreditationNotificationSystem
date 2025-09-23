@@ -108,20 +108,27 @@
     </UserControl.Resources>
 
     <!-- =================== Contenido =================== -->
+    <!-- Separado en dos filas: el botón superior queda fuera del BusyIndicator -->
     <Grid>
-        <!-- Acción auxiliar arriba a la derecha -->
-        <DockPanel LastChildFill="False" Margin="0,0,0,8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Acción auxiliar arriba a la derecha (siempre visible) -->
+        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,8">
             <Button Content="Asociar mails"
                     DockPanel.Dock="Right"
                     Style="{StaticResource GhostButton}"
                     Command="{Binding EjecutarAltaEmailDestinoCommand}"
+                    ToolTip="Asociar correos destino para avisos"
                     Margin="0,0,4,0"/>
         </DockPanel>
 
         <!-- Busy overlay + layout principal -->
-        <xctk:BusyIndicator IsBusy="{Binding IsLoading}"
-                            BusyContent="Procesando..."
-                           >
+        <xctk:BusyIndicator Grid.Row="1"
+                            IsBusy="{Binding IsLoading}"
+                            BusyContent="Procesando...">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -140,8 +147,8 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
-                            <ColumnDefinition Width="*" SharedSizeGroup="ColAction"/>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="ColLabel"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ColAction"/>
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Text="Acreditaciones" Style="{StaticResource SectionTitle}" Grid.ColumnSpan="2"/>
@@ -203,25 +210,18 @@
                     </Grid>
                 </Border>
 
-                <!-- =================== Columna Derecha: Excel (alineada y sin mezclar filas) =================== -->
+                <!-- =================== Columna Derecha: Excel =================== -->
                 <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,0,0,0">
                     <Grid Grid.IsSharedSizeScope="True">
                         <!-- Filas: header + T1 + T2 + T1 Teso + T2 Teso + DXD + Reporte -->
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <!-- Header -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Tanda 1 -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Tanda 2 -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Tanda 1 Tesorería -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Tanda 2 Tesorería -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Día a Día -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Reporte Diario -->
                         </Grid.RowDefinitions>
 
                         <Grid.ColumnDefinitions>
@@ -231,77 +231,76 @@
 
                         <!-- Header -->
                         <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
-               Text="Excel"
-               Style="{StaticResource SectionTitle}"/>
+                                   Text="Excel"
+                                   Style="{StaticResource SectionTitle}"/>
 
                         <!-- Fila 1: Tanda 1 -->
                         <TextBlock Grid.Row="1" Grid.Column="0"
-               Text="Tanda 1 (Henderson)"
-               Foreground="{StaticResource Brush.TextSecondary}"
-               VerticalAlignment="Center"
-               Margin="0,4,16,4"/>
+                                   Text="Tanda 1 (Henderson)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
                         <Button Grid.Row="1" Grid.Column="1"
-            Content="Generar Excel T1"
-            Style="{StaticResource PrimaryButton}"
-            Command="{Binding EjecutarTanda1HendersonExcelCommand}"/>
+                                Content="Generar Excel T1"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda1HendersonExcelCommand}"/>
 
                         <!-- Fila 2: Tanda 2 -->
                         <TextBlock Grid.Row="2" Grid.Column="0"
-               Text="Tanda 2 (Henderson)"
-               Foreground="{StaticResource Brush.TextSecondary}"
-               VerticalAlignment="Center"
-               Margin="0,4,16,4"/>
+                                   Text="Tanda 2 (Henderson)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
                         <Button Grid.Row="2" Grid.Column="1"
-            Content="Generar Excel T2"
-            Style="{StaticResource PrimaryButton}"
-            Command="{Binding EjecutarTanda2HendersonExcelCommand}"/>
+                                Content="Generar Excel T2"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda2HendersonExcelCommand}"/>
 
                         <!-- Fila 3: Tanda 1 Tesorería -->
                         <TextBlock Grid.Row="3" Grid.Column="0"
-               Text="Tanda 1 (Tesorería)"
-               Foreground="{StaticResource Brush.TextSecondary}"
-               VerticalAlignment="Center"
-               Margin="0,4,16,4"/>
+                                   Text="Tanda 1 (Tesorería)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
                         <Button Grid.Row="3" Grid.Column="1"
-            Content="Generar Excel T1 TESO"
-            Style="{StaticResource PrimaryButton}"
-            Command="{Binding EjecutarTanda1ExcelTesoreriaCommand}"/>
+                                Content="Generar Excel T1 TESO"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda1ExcelTesoreriaCommand}"/>
 
                         <!-- Fila 4: Tanda 2 Tesorería -->
                         <TextBlock Grid.Row="4" Grid.Column="0"
-               Text="Tanda 2 (Tesorería)"
-               Foreground="{StaticResource Brush.TextSecondary}"
-               VerticalAlignment="Center"
-               Margin="0,4,16,4"/>
+                                   Text="Tanda 2 (Tesorería)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
                         <Button Grid.Row="4" Grid.Column="1"
-            Content="Generar Excel T2 TESO"
-            Style="{StaticResource PrimaryButton}"
-            Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"/>
+                                Content="Generar Excel T2 TESO"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"/>
 
-                        <!-- Fila 5: Día a Día (separado) -->
+                        <!-- Fila 5: Día a Día -->
                         <TextBlock Grid.Row="5" Grid.Column="0"
-               Text="Día a Día"
-               Foreground="{StaticResource Brush.TextSecondary}"
-               VerticalAlignment="Center"
-               Margin="0,4,16,4"/>
+                                   Text="Día a Día"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
                         <Button Grid.Row="5" Grid.Column="1"
-            Content="Excel DXD"
-            Style="{StaticResource PrimaryButton}"
-            Command="{Binding EjecutarDiaADiaExcelCommand}"/>
+                                Content="Excel DXD"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarDiaADiaExcelCommand}"/>
 
-                        <!-- Fila 6: Reporte Diario (separado) -->
+                        <!-- Fila 6: Reporte Diario -->
                         <TextBlock Grid.Row="6" Grid.Column="0"
-               Text="Reporte Diario"
-               Foreground="{StaticResource Brush.TextSecondary}"
-               VerticalAlignment="Center"
-               Margin="0,4,16,0"/>
+                                   Text="Reporte Diario"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
                         <Button Grid.Row="6" Grid.Column="1"
-            Content="Reporte Diario"
-            Style="{StaticResource PrimaryButton}"
-            Command="{Binding EjecutarReporteDiarioCommand}"/>
+                                Content="Reporte Diario"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarReporteDiarioCommand}"/>
                     </Grid>
                 </Border>
-
 
             </Grid>
         </xctk:BusyIndicator>
