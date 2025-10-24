@@ -8,6 +8,7 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System.Diagnostics;
 using System.Windows.Input;
+using static System.Windows.Forms.MonthCalendar;
 
 namespace ANS.ViewModel
 {
@@ -113,7 +114,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Debug.WriteLine("Hubo un error: " + e.Message);
-
+                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] Ejecutar P2P TXT");
                 throw;
             }
             finally
@@ -139,6 +140,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Debug.WriteLine("Hubo un error: " + e.Message);
+                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] Ejecutar DXD TXT");
 
                 throw;
             }
@@ -175,7 +177,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Debug.WriteLine("Hubo un error: " + e.Message);
-
+                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] ENVIAR EXCEL TATA");
                 throw;
             }
             finally
@@ -190,14 +192,14 @@ namespace ANS.ViewModel
 
             ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
-            string tarea = "DiaADia";
-
+            string tarea = "ReporteDiario";
+ 
             try
             {
 
                 await Task.Run(async () =>
                 {
-
+                
                     await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco, config, tarea);
 
                 });
@@ -206,7 +208,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Debug.WriteLine("Hubo un error: " + e.Message);
-
+                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] ENVIAR EXCEL reporte diario");
                 throw;
             }
 

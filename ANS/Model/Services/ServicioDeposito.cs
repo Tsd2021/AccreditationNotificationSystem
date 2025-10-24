@@ -1,9 +1,6 @@
 ﻿using ANS.Model.Interfaces;
-using DocumentFormat.OpenXml.Math;
 using Microsoft.Data.SqlClient;
-using NPOI.SS.Formula.Functions;
 using System.Data;
-using static NPOI.HSSF.Util.HSSFColor;
 
 namespace ANS.Model.Services
 {
@@ -24,7 +21,6 @@ namespace ANS.Model.Services
             try
             {
 
-
                 List<Deposito> depositosList = new List<Deposito>();
 
                 string query;
@@ -34,34 +30,49 @@ namespace ANS.Model.Services
 
                     query = QueryBuscaDepositoConLike(buzon.Empresa);
 
-                    // <-- Casos excepcionales para aquellos buzones que acreditan en dos bancos distintos, y su cuentabuzon tiene distinto nombre de empresa -->
+                    #region Casos Excepcionales para aquellas cuentabuzon que tienen nombre de empresas parecidos pero distintos.
+
+                    // EXCEPCIONES SANTANDER
+
                     if (buzon.Banco.ToUpper() == VariablesGlobales.santander.ToUpper())
                     {
 
-                        if (buzon.Empresa.ToUpper() == "BAS")
+                        if (buzon.Empresa.ToUpper() == "BAS".ToUpper())
                             query = QueryBuscaDepositoConIgual();
 
-
-                        if (buzon.Empresa.ToUpper() == "SANTANDER ECHEDO")
+                        if (buzon.Empresa.ToUpper() == "SANTANDER ECHEDO".ToUpper())
                             query = QueryBuscaDepositoConIgual();
+
+                        if(buzon.Empresa.ToUpper() == "PONILOR".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
+                        if (buzon.Empresa.ToUpper() == "PONILOR PUNTA DE SANTIAGO".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
+                        if (buzon.Empresa.ToUpper() == "PONILOR SAS LIBERTADOR".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
+                        if (buzon.Empresa.ToUpper() == "PONILOR SAS".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
                     }
-
+                    //EXCEPCIONES BBVA
                     if (buzon.Banco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                     {
 
-                        if (buzon.Empresa.ToUpper() == "ECHEDO")
+                        if (buzon.Empresa.ToUpper() == "ECHEDO".ToUpper())
                             query = QueryBuscaDepositoConIgual();
 
-                        if (buzon.Empresa.ToUpper() == "FERRECAR MARCELOFERRERO")
+                        if (buzon.Empresa.ToUpper() == "FERRECAR MARCELOFERRERO".ToUpper())
                             query = QueryBuscaDepositoConIgual();
 
-                        if (buzon.Empresa.ToUpper() == "FERRECAR")
+                        if (buzon.Empresa.ToUpper() == "FERRECAR".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
-                        }
-                         
-
+                        }                      
                     }
+
+                    #endregion
                 }
 
                 else
@@ -83,33 +94,51 @@ namespace ANS.Model.Services
 
                         cmd.Parameters.AddWithValue("@divisaActual", buzon.Divisa);
 
-                        if (horaDeCierre != TimeSpan.Zero)
+                        if (buzon.Banco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && buzon.IdCliente == 179)
+                        {
+                            if (buzon.Cierre.HasValue)
+                            {
+                                TimeSpan horaCierre = buzon.Cierre.Value.TimeOfDay; // <-- TimeSpan
+                                DateTime hoyAHoraCierre = DateTime.Today.Add(horaCierre);
+
+                                // Mejor tipar el parámetro (evitá AddWithValue cuando puedas)
+                                cmd.Parameters.Add("@fechaCierre", SqlDbType.DateTime).Value = hoyAHoraCierre;
+                            }
+                            else
+                            {
+                                // Fallback, por ejemplo 02:00
+                                TimeSpan dosAm = TimeSpan.FromHours(2);
+                                DateTime hoyDosAm = DateTime.Today.Add(dosAm);
+                                cmd.Parameters.Add("@fechaCierre", SqlDbType.DateTime).Value = hoyDosAm;
+                            }
+                        }
+                        else if (horaDeCierre != TimeSpan.Zero)
                         {
                             cmd.Parameters.AddWithValue("@fechaCierre", DateTime.Today.Add(horaDeCierre));
                         }
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
                             {
-
-                                Deposito deposito = new Deposito
+                                while (await reader.ReadAsync())
                                 {
-                                    IdDeposito = reader.GetInt32(0),
-                                    IdOperacion = reader.GetInt32(1),
-                                    Codigo = reader.GetString(2),
-                                    Tipo = reader.GetString(3),
-                                    Empresa = reader.GetString(4),
-                                    FechaDep = reader.GetDateTime(5)
-                                };
 
-                                if (deposito.Tipo == "Validado")
-                                {
-                                    depositosList.Add(deposito);
+                                    Deposito deposito = new Deposito
+                                    {
+                                        IdDeposito = reader.GetInt32(0),
+                                        IdOperacion = reader.GetInt32(1),
+                                        Codigo = reader.GetString(2),
+                                        Tipo = reader.GetString(3),
+                                        Empresa = reader.GetString(4),
+                                        FechaDep = reader.GetDateTime(5)
+                                    };
+
+                                    if (deposito.Tipo == "Validado")
+                                    {
+                                        depositosList.Add(deposito);
+                                    }
+
                                 }
-
-                            }
-                        }        
+                            }        
                     }
                 }
 

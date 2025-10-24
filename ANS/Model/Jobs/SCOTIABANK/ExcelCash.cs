@@ -21,96 +21,58 @@ namespace ANS.Model.Jobs.SCOTIABANK
         }
         public async Task Execute(IJobExecutionContext context)
         {
-
-            string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
+            var data = context.MergedJobDataMap;
+            string _tarea = data.GetString("tarea") ?? string.Empty;
 
             Exception e = null;
             try
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    MainWindow main = (MainWindow)Application.Current.MainWindow;
+                    var main = (MainWindow)Application.Current.MainWindow;
+                    main.MostrarAviso("Ejecutando tarea EXCEL SCBK CASH", Color.FromRgb(255, 102, 102));
+                }));
 
-                    main.MostrarAviso("Ejecutando tarea EXCEL SCBK CASH", Color.FromRgb(0, 68, 129));
-                });
-
-                Banco banco = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.scotiabank);
-
-                TimeSpan desde = new TimeSpan(6, 30, 0);
-
-                TimeSpan hasta = new TimeSpan(20, 30, 0);
-
-                // ID TATA : 242
-
-                Cliente cliente = ServicioCliente.getInstancia().getById(40);
-
+                var banco = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.scotiabank);
+                var desde = new TimeSpan(16, 0, 0);
+                var hasta = new TimeSpan(16, 6, 0);
+                var cliente = ServicioCliente.getInstancia().getById(40); // CASH
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, cliente, banco, "MONTEVIDEO", numTanda,_tarea);
-
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, cliente, banco, "MONTEVIDEO", numTanda, _tarea);
             }
             catch (Exception ex)
             {
                 e = ex;
-                Console.WriteLine($"Error al ejecutar la tarea de BBVA: {ex.Message}");
-                //ACA GUARDAR EN UN LOG
-                ServicioLog.instancia.WriteLog(ex, "BBVA", "Envío excel TATA");
+                ServicioLog.instancia.WriteLog(ex, "SCOTIABANK", "Envío excel CASH");
             }
             finally
             {
-
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                 {
+                    var main = (MainWindow)Application.Current.MainWindow;
+                    var vm = main.DataContext as VMmainWindow ?? new VMmainWindow();
+                    main.DataContext = vm;
 
-                    MainWindow main = (MainWindow)Application.Current.MainWindow;
-
-                    VMmainWindow vm = main.DataContext as VMmainWindow;
-                    if (vm == null)
+                    var mensaje = new Mensaje
                     {
-                        vm = new VMmainWindow();
+                        Color = Color.FromRgb(255, 102, 102),
+                        Banco = "SCOTIABANK",
+                        Tipo = "EXCEL SCOTIABANK CASH",
+                        Icon = PackIconKind.Bank,
+                        Estado = e != null ? "Error" : "Success"
+                    };
 
-                        main.DataContext = vm;
-                    }
+                    main.MostrarAviso(
+                        e != null ? "Error Job EXCEL CASH - SCOTIABANK" : "Success Job EXCEL CASH - SCOTIABANK",
+                        e != null ? Colors.Red : Colors.Green);
 
-                    Mensaje mensaje = new Mensaje();
-
-                    mensaje.Color = Color.FromRgb(0, 68, 129);
-
-                    mensaje.Banco = "BBVA";
-
-                    mensaje.Tipo = "EXCEL BBVA TATA";
-
-                    mensaje.Icon = PackIconKind.Bank;
-
-                    if (e != null)
-                    {
-
-                        main.MostrarAviso("Error Job EXCEL BBVA TATA - BBVA", Colors.Red);
-
-                        mensaje.Estado = "Error";
-
-                    }
-
-                    else
-                    {
-
-                        main.MostrarAviso("Success Job EXCEL BBVA TATA - BBVA", Colors.Green);
-
-                        mensaje.Estado = "Success";
-
-                    }
                     ServicioMensajeria.getInstancia().agregar(mensaje);
-
                     vm.CargarMensajes();
-
-                });
-
-
+                }));
             }
-
-            await Task.CompletedTask;
-
         }
+
     }
 }
 

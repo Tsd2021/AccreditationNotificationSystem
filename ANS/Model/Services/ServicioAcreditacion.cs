@@ -30,7 +30,7 @@ namespace ANS.Model.Services
             using (var conn = new SqlConnection(_conexionTSD))
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText =   @"
+                cmd.CommandText = @"
                                     IF NOT EXISTS (
                                     SELECT 1
                                     FROM AcreditacionDepositoDiegoTest
@@ -66,7 +66,7 @@ namespace ANS.Model.Services
             {
                 foreach (var _acc in accounts)
                 {
-                    if(_acc.NC == "EA23L0410N12000062")
+                    if (_acc.NC == "EA23L0410N12000062")
                     {
                         Console.WriteLine("es el que se repite de fonbay");
                     }
@@ -162,7 +162,7 @@ namespace ANS.Model.Services
             }
             return 0;
         }
-        
+
         //DEVUELVE MONTO TOTAL AGRUPADO POR EMPRESA
         public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesByFechaYBanco(DateTime desde, DateTime hasta, Banco bank)
         {
@@ -240,9 +240,11 @@ namespace ANS.Model.Services
         DateTime hasta,
         Cliente cli,
         Banco bank,
-        ConfiguracionAcreditacion tipoAcreditacion)
+        ConfiguracionAcreditacion tipoAcreditacion  
+        )
         {
             var retorno = new List<DtoAcreditacionesPorEmpresa>();
+            bool esCASH = cli.IdCliente == 40;
             bool esBBVA = bank.NombreBanco
                 .Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase);
 
@@ -297,13 +299,46 @@ namespace ANS.Model.Services
                 acc.MONEDA,
                 cc.SUCURSAL;";
 
+            if(esCASH)
+            {
+                //Entonces la tarea es Excel Cash y debo filtrar
+              
+                sql =   @" SELECT
+                        cc.NN,
+                        cb.EMPRESA,
+                        cb.CUENTA,
+                        cb.SUCURSAL,
+                        acc.MONEDA    AS MonedaCode,
+                        cc.SUCURSAL  AS Ciudad,
+                        SUM(acc.MONTO) AS TotalMonto
+                        FROM ConfiguracionAcreditacion config
+                        INNER JOIN CUENTASBUZONES cb
+                        ON config.CuentasBuzonesId = cb.ID
+                        INNER JOIN cc
+                        ON config.NC = cc.NC
+                        INNER JOIN AcreditacionDepositoDiegoTest acc
+                        ON acc.IDBUZON   = config.NC
+                        AND acc.IDCUENTA  = cb.ID
+                        WHERE 
+                        UPPER(cb.BANCO)                 = UPPER(@banco)
+                        AND CB.IDCLIENTE = @idCliente
+                        AND CONVERT(DATE,ACC.FECHA) = CONVERT(DATE,GETDATE())
+                        GROUP BY
+                        cc.NN,
+                        cb.EMPRESA,
+                        cb.CUENTA,
+                        cb.SUCURSAL,
+                        acc.MONEDA,
+                        cc.SUCURSAL";
+            }
+
             using var conn = new SqlConnection(_conexionTSD);
             using var cmd = new SqlCommand(sql, conn);
 
             // 2) Parámetros comunes
             cmd.Parameters.AddWithValue("@banco", bank.NombreBanco);
 
-            if (esBBVA)
+            if (esBBVA || esCASH)
             {
                 cmd.Parameters.AddWithValue("@idCliente", cli.IdCliente);
             }
@@ -497,7 +532,6 @@ namespace ANS.Model.Services
                 return retorno;
             }
         }
-
 
         public async Task<List<DtoAcreditacionesPorEmpresa>> getAcreditacionesParaExcelTesoreria(
     Banco banco,

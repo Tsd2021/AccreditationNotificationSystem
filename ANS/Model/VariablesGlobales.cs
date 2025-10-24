@@ -47,6 +47,8 @@ namespace ANS.Model
         public static TimeSpan horaCierreScotiabankHendersonTanda2_TXT = new TimeSpan(14, 30, 0);
 
         public static TimeSpan horaCierreScotiabankHendersonTanda2_EXCEL = new TimeSpan(14, 35, 0);
+
+        public static TimeSpan horaCierreScotiabankCoboe_TXT = new TimeSpan(2, 0, 0);
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // ITAU //

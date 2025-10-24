@@ -1,10 +1,6 @@
-﻿using ClosedXML.Excel;
+﻿
 using Microsoft.Data.SqlClient;
-using Microsoft.Reporting.NETCore;
 using System.Data;
-using System.IO;
-using System.Reflection;
-using TAAS.Reports;
 using SharedDTOs;
 
 namespace ANS.Model.Services
@@ -454,7 +450,7 @@ namespace ANS.Model.Services
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-            query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+            query =     @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
                         from
                         cc as c 
                         left join 

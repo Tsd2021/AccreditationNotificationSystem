@@ -1,4 +1,5 @@
 ﻿using ANS.Model;
+using ANS.Model.GeneradorArchivoPorBanco;
 using ANS.Model.Jobs;
 using ANS.Model.Jobs.BANDES;
 using ANS.Model.Jobs.BBVA;
@@ -10,7 +11,7 @@ using ANS.Model.Jobs.SCOTIABANK;
 using ANS.Model.Services;
 using ANS.Scheduling;
 using ANS.ViewModel;
-using DocumentFormat.OpenXml.Drawing;
+using Dynamitey;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Impl.Matchers;
@@ -60,8 +61,10 @@ namespace ANS
             //var dbPath = System.IO.Path.Combine(
             //    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             //    "ANS", "QuartzRuns.db");
+
+
             // ---PROD-- -
-            var baseDir = System.IO.Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop", "TAAS");
+            var baseDir = System.IO.Path.Combine(@"D:\", "TAAS");
             Directory.CreateDirectory(baseDir);
             var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
 
@@ -74,7 +77,9 @@ namespace ANS
             _scheduler.ListenerManager.AddTriggerListener(tracking, GroupMatcher<TriggerKey>.AnyGroup());
 
             // 3) Programar TODOS los jobs
+
             //await crearJobsPrueba(_scheduler);
+            //await correrTestBbva();
             await crearJobsBBVA(_scheduler);
             await crearJobsSantander(_scheduler);
             await crearJobsScotiabank(_scheduler);
@@ -112,6 +117,12 @@ namespace ANS
                 win.Show();
             }
 
+        }
+
+        private async Task correrTestBbva()
+        {
+            var gen = new BBVAFileGenerator();      
+            await gen.RunBbvaLocalTestsAsync();
         }
 
         private async Task crearJobsPrueba(IScheduler scheduler)
@@ -348,7 +359,8 @@ namespace ANS
             {
                 "Tanda1",
                 "Tanda2",
-                "DiaADia"
+                "DiaADia",
+                "ExcelScotiabankCash"
             }
             };
             Banco hsbc = new Banco(3, VariablesGlobales.hsbc.ToUpper())
@@ -483,6 +495,17 @@ namespace ANS
         {
             if (scheduler != null)
             {
+                #region Tarea 0: FARMASHOP SCOTIA (06:58)
+                IJobDetail jobDiaADiaFarmashop = JobBuilder.Create<AcreditarDiaADiaFarmashop>()
+                .WithIdentity("ScotiabankFarmashopJob", "GrupoTrabajoScotiabank")
+                .Build();
+
+                ITrigger triggerDiaADiaFarmashop = TriggerBuilder.Create()
+                .WithIdentity("ScotiabankFarmashopTrigger", "GrupoTrabajoScotiabank")
+                .WithSchedule(CronScheduleBuilder.CronSchedule("0 58 6 ? * MON-FRI"))
+                .Build();
+
+                #endregion
                 #region Tarea 1: ACREDITAR TANDA 1 (7:02 AM)
                 // Job para acreditar (método implementado en la clase AcreditarTanda1HendersonScotiabank)
                 IJobDetail jobAcreditarTanda1Scotiabank = JobBuilder.Create<AcreditarTanda1HendersonScotiabank>()
@@ -533,7 +556,7 @@ namespace ANS
                     .WithCronSchedule("50 51 14 ? * MON-FRI")
                     .Build();
                 #endregion
-                #region Tarea 5: Acreditar DXD (16:05:50)
+                #region Tarea 5: Acreditar DXD (16:10:50)
                 IJobDetail jobAcreditarDiaADiaScotiabank = JobBuilder.Create<AcreditarDiaADiaScotiabank>()
                                                             .WithIdentity("ScotiabankJobAcreditarDXD", "GrupoTrabajoScotiabank")
                                                             .Build();
@@ -541,17 +564,29 @@ namespace ANS
                 // Trigger que dispara la ejecución a las 14:35:36 de lunes a viernes.
                 ITrigger triggerAcreditarDiaADiaScotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerAcreditarDXD", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("50 5 16 ? * MON-FRI")
+                    .WithCronSchedule("50 10 16 ? * MON-FRI")
                     .Build();
                 #endregion
-                #region Tarea 6: EXCEL DXD (16:10:20)
+                #region Tarea 6: EXCEL DXD (16:11:20)
                 IJobDetail jobExcelDiaADiaScotiabank = JobBuilder.Create<ExcelScotiabankDiaADia>()
                     .WithIdentity("ScotiabankJobExcelDXD", "GrupoTrabajoScotiabank")
                     .UsingJobData("tarea", "DiaADia")
                     .Build();
                 ITrigger triggerExcelDiaADiaScotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerExcelDXD", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("20 10 16 ? * MON-FRI")
+                    .WithCronSchedule("20 11 16 ? * MON-FRI")
+                    .Build();
+                #endregion
+                #region Tarea 7: EXCEL CASH (16:30:00)
+
+                IJobDetail jobExcelCashScotiabank = JobBuilder.Create<ExcelCash>()
+                    .WithIdentity("ScotiabankJobExcelCASH", "GrupoTrabajoScotiabank")
+                    .UsingJobData("tarea", "ExcelScotiabankCash")
+                    .Build();
+
+                ITrigger triggerExcelCashScotiabank = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerExcelCASH", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("0 30 16 ? * MON-FRI")
                     .Build();
                 #endregion
 
@@ -560,6 +595,8 @@ namespace ANS
 
                 try
                 {
+
+                    await scheduler.ScheduleJob(jobDiaADiaFarmashop, triggerDiaADiaFarmashop);
 
                     await scheduler.ScheduleJob(jobAcreditarTanda1Scotiabank, triggerAcreditarTanda1Scotiabank);
 
@@ -572,6 +609,8 @@ namespace ANS
                     await scheduler.ScheduleJob(jobAcreditarDiaADiaScotiabank, triggerAcreditarDiaADiaScotiabank);
 
                     await scheduler.ScheduleJob(jobExcelDiaADiaScotiabank, triggerExcelDiaADiaScotiabank);
+
+                    await scheduler.ScheduleJob(jobExcelCashScotiabank, triggerExcelCashScotiabank);
 
                 }
                 catch (Exception ex)
@@ -777,6 +816,7 @@ namespace ANS
         {
 
             //Tarea 1: Acreditar punto a punto. de 8:15 a 19:45.
+
             #region TAREA_ACREDITAR_P2P
 
             // Job
@@ -788,9 +828,9 @@ namespace ANS
             ITrigger triggerBBVAPuntoAPunto = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerP2P", "GrupoTrabajoBBVA")
                 .WithDailyTimeIntervalSchedule(x => x
-                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(11, 15)) // arranca 11:15
-                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 45)) // última a 19:45
-                    .WithIntervalInMinutes(30)                              // 11:15, 11:45, 12:15, ...
+                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(8, 10)) // arranca 8:11
+                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(19, 50)) // última a 19:50
+                    .WithIntervalInMinutes(30)                              
                     .OnDaysOfTheWeek(
                         DayOfWeek.Monday,
                         DayOfWeek.Tuesday,
@@ -800,26 +840,28 @@ namespace ANS
                 .Build();
 
 
+         //Por ahora quitadas las excepciones.
 
-            IJobDetail jobPuntoAPuntoBBVA_Excepcion1635 = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
-               .WithIdentity("BBVAJobP2P_Extra1635", "GrupoTrabajoBBVA")
-               .Build();
+         //   IJobDetail jobPuntoAPuntoBBVA_Excepcion1635 = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
+         //      .WithIdentity("BBVAJobP2P_Extra1635", "GrupoTrabajoBBVA")
+         //      .Build();
 
-            ITrigger triggerBBVAPuntoAPuntoExcepcion1635 = TriggerBuilder.Create()
-                .WithIdentity("BBVATriggerP2P_Extra1635", "GrupoTrabajoBBVA")
-                 .WithSchedule(CronScheduleBuilder
-                     .CronSchedule("0 35 16 ? * MON-FRI"))
-                 .Build();
+         //   ITrigger triggerBBVAPuntoAPuntoExcepcion1635 = TriggerBuilder.Create()
+         //       .WithIdentity("BBVATriggerP2P_Extra1635", "GrupoTrabajoBBVA")
+         //        .WithSchedule(CronScheduleBuilder
+         //            .CronSchedule("0 35 16 ? * MON-FRI"))
+         //        .Build();
 
-            IJobDetail jobPuntoAPuntoBBVA_Excepcion2030 = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
-         .WithIdentity("BBVAJobP2P_Extra2030", "GrupoTrabajoBBVA")
-         .Build();
+         //   IJobDetail jobPuntoAPuntoBBVA_Excepcion2030 = JobBuilder.Create<AcreditarPuntoAPuntoBBVAJob>()
+         //.WithIdentity("BBVAJobP2P_Extra2030", "GrupoTrabajoBBVA")
+         //.Build();
 
-            ITrigger triggerBBVAPuntoAPuntoExcepcion2030 = TriggerBuilder.Create()
-           .WithIdentity("BBVATriggerP2P_Extra2030", "GrupoTrabajoBBVA")
-            .WithSchedule(CronScheduleBuilder
-                .CronSchedule("0 30 20 ? * MON-FRI"))
-            .Build();
+         //   ITrigger triggerBBVAPuntoAPuntoExcepcion2030 = TriggerBuilder.Create()
+         //  .WithIdentity("BBVATriggerP2P_Extra2030", "GrupoTrabajoBBVA")
+         //   .WithSchedule(CronScheduleBuilder
+         //       .CronSchedule("0 30 20 ? * MON-FRI"))
+         //   .Build();
+
             #endregion
 
             // Tarea 2: Acreditar dia a dia. 17:00
@@ -845,35 +887,30 @@ namespace ANS
 
             ITrigger triggerBBVAEnviarExcelResumen = TriggerBuilder.Create()
             .WithIdentity("BBVAJTriggerReporteDiario", "GrupoTrabajoBBVA")
-            .WithCronSchedule("10 05 21 ? * MON-FRI")
+            .WithCronSchedule("10 30 20 ? * MON-FRI")
             .Build();
             #endregion
 
             //Tarea 4: Enviar excel solo Tata formato Henderson ( por nn y empresa )
-            #region TAREA_EXCEL_TATA 21:06
-            IJobDetail jobBBVAEnviarExcelTata = JobBuilder.Create<ExcelCash>()
+            #region TAREA_EXCEL_TATA 20:32
+            IJobDetail jobBBVAEnviarExcelTata = JobBuilder.Create<ExcelBBVATata>()
             .WithIdentity("BBVAJobExcelTata", "GrupoTrabajoBBVA")
             .UsingJobData("tarea", "ExcelTata")
             .Build();
 
             ITrigger triggerBBVAEnviarExcelTata = TriggerBuilder.Create()
             .WithIdentity("BBVAJTriggerTata", "GrupoTrabajoBBVA")
-            .WithCronSchedule("40 6 21 ? * MON-FRI")
+            .WithCronSchedule("10 32 20 ? * MON-FRI")
             .Build();
             #endregion
 
             await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA, triggerBBVAPuntoAPunto);
 
-            //await scheduler.ScheduleJob(jobPuntoAPuntoBBVA, new HashSet<ITrigger>
-            //                                            {
-            //                                                triggerBBVAPuntoAPunto,
-            //                                                triggerBBVAPuntoAPuntoExcepcion1635,
-            //                                                triggerBBVAPuntoAPuntoExcepcion2030
-            //                                            }, true);
 
-            await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA_Excepcion1635, triggerBBVAPuntoAPuntoExcepcion1635);
+            //Por ahora quitadas las excepciones.
+            //await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA_Excepcion1635, triggerBBVAPuntoAPuntoExcepcion1635);
 
-            await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA_Excepcion2030, triggerBBVAPuntoAPuntoExcepcion2030);
+            //await _scheduler.ScheduleJob(jobPuntoAPuntoBBVA_Excepcion2030, triggerBBVAPuntoAPuntoExcepcion2030);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelResumen, triggerBBVAEnviarExcelResumen);
 

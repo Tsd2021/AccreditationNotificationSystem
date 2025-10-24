@@ -35,11 +35,40 @@ namespace ANS.ViewModel
             EjecutarDiaADiaExcelCommand = new RelayCommand(async () => await ejecutarExcelDiAADia());
 
             EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
+
+            EjecutarDiaADiaFarmashopTXTCommand = new RelayCommand(async () => await ejecutarTXTFarmashop());
         }
+
         public bool IsLoading
         {
             get => _isLoading;
             set => Set(ref _isLoading, value);
+        }
+
+        private async Task ejecutarTXTFarmashop()
+        {
+            IsLoading = true;
+
+            Cliente cli = ServicioCliente.getInstancia().getById(179); //FARMASHOP
+
+            try
+            {
+                await _servicioCuentaBuzon.acreditarDiaADiaPorCliente(cli, banco, VariablesGlobales.horaCierreScotiabankCoboe_TXT);
+            }
+
+            catch (Exception e)
+            {
+
+                Console.WriteLine(e);
+
+                ServicioLog.instancia.WriteLog(e, "Scotiabank", "[MANUAL] Acreditar Coboe");
+
+            }
+
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
 
@@ -228,6 +257,7 @@ namespace ANS.ViewModel
         public ICommand EjecutarDiaADiaTXTCommand { get; set; }
         public ICommand EjecutarDiaADiaExcelCommand { get; set; }
         public ICommand EjecutarAltaEmailDestinoCommand { get; }
+        public ICommand EjecutarDiaADiaFarmashopTXTCommand { get; }
 
 
         #endregion

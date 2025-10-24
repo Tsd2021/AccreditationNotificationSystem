@@ -51,7 +51,7 @@ namespace ANS.Model.Jobs
                 return new ExcelBBVAReporteDiario(_servicioCuentaBuzon);
             }
 
-            if (jobType == typeof(ExcelCash))
+            if (jobType == typeof(ExcelBBVATata))
             {
                 return new ExcelBBVATata(_servicioCuentaBuzon);
             }
@@ -146,6 +146,13 @@ namespace ANS.Model.Jobs
             {
                 return new AcreditarDiaADiaScotiabank(_servicioCuentaBuzon);
             }
+
+
+            if (jobType == typeof(AcreditarDiaADiaFarmashop))
+            {
+                return new AcreditarDiaADiaFarmashop(_servicioCuentaBuzon);
+            }
+
             #endregion
 
             #region JOBS_QUE_ENVIAN_EXCEL
@@ -163,6 +170,11 @@ namespace ANS.Model.Jobs
             if(jobType == typeof(ExcelScotiabankDiaADia))
             {
                 return new ExcelScotiabankDiaADia(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(ExcelCash))
+            {
+                return new ExcelCash(_servicioCuentaBuzon);
             }
             #endregion
             #endregion
