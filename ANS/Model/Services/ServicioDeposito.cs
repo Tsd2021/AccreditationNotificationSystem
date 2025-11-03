@@ -69,7 +69,12 @@ namespace ANS.Model.Services
                         if (buzon.Empresa.ToUpper() == "FERRECAR".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
-                        }                      
+                        }
+
+                        if (buzon.Empresa.ToUpper() == "EUROPEAN".ToUpper())
+                        {
+                            query = QueryBuscaDepositoConIgual();
+                        }                        
                     }
 
                     #endregion
@@ -94,25 +99,30 @@ namespace ANS.Model.Services
 
                         cmd.Parameters.AddWithValue("@divisaActual", buzon.Divisa);
 
-                        if (buzon.Banco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && buzon.IdCliente == 179)
-                        {
-                            if (buzon.Cierre.HasValue)
-                            {
-                                TimeSpan horaCierre = buzon.Cierre.Value.TimeOfDay; // <-- TimeSpan
-                                DateTime hoyAHoraCierre = DateTime.Today.Add(horaCierre);
 
-                                // Mejor tipar el parámetro (evitá AddWithValue cuando puedas)
-                                cmd.Parameters.Add("@fechaCierre", SqlDbType.DateTime).Value = hoyAHoraCierre;
-                            }
-                            else
-                            {
-                                // Fallback, por ejemplo 02:00
-                                TimeSpan dosAm = TimeSpan.FromHours(2);
-                                DateTime hoyDosAm = DateTime.Today.Add(dosAm);
-                                cmd.Parameters.Add("@fechaCierre", SqlDbType.DateTime).Value = hoyDosAm;
-                            }
-                        }
-                        else if (horaDeCierre != TimeSpan.Zero)
+                        #region Parche_Coboe
+
+                        //if (buzon.Banco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && buzon.IdCliente == 179)
+                        //{
+                        //    if (buzon.Cierre.HasValue)
+                        //    {
+                        //        TimeSpan horaCierre = buzon.Cierre.Value.TimeOfDay; // <-- TimeSpan
+                        //        DateTime hoyAHoraCierre = DateTime.Today.Add(horaCierre);
+
+                        //        // Mejor tipar el parámetro (evitá AddWithValue cuando puedas)
+                        //        cmd.Parameters.Add("@fechaCierre", SqlDbType.DateTime).Value = hoyAHoraCierre;
+                        //    }
+                        //    else
+                        //    {
+                        //        // Fallback, por ejemplo 02:00
+                        //        TimeSpan dosAm = TimeSpan.FromHours(2);
+                        //        DateTime hoyDosAm = DateTime.Today.Add(dosAm);
+                        //        cmd.Parameters.Add("@fechaCierre", SqlDbType.DateTime).Value = hoyDosAm;
+                        //    }
+                        //}
+
+                        #endregion
+                        if (horaDeCierre != TimeSpan.Zero)
                         {
                             cmd.Parameters.AddWithValue("@fechaCierre", DateTime.Today.Add(horaDeCierre));
                         }

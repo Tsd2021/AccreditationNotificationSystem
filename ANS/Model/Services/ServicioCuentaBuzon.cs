@@ -640,36 +640,38 @@ namespace ANS.Model.Services
                             where CB.BANCO = @banco AND config.TipoAcreditacion = @tipoAcreditacion  
                             AND CB.IDCLIENTE = @idCliente";
 
-            if (bank.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && numTanda == 1)
-            {
-                query = @"
-    SELECT
-        config.NC,
-        cb.BANCO,
-        c.CIERRE,
-        cb.IDCLIENTE,
-        cb.CUENTA,
-        cb.MONEDA,
-        cb.EMPRESA,
-        config.TipoAcreditacion AS CONFIGURACION,
-        c.SUCURSAL              AS CIUDAD,
-        cb.SUCURSAL,
-        c.IDCC,
-        cb.ID,
-        c.NN
-    FROM ConfiguracionAcreditacion AS config
-    JOIN CUENTASBUZONES AS cb
-      ON config.CuentasBuzonesId = cb.ID
-    JOIN CC AS c
-      ON c.NC = config.NC
-    WHERE cb.BANCO = @banco
-      AND cb.IDCLIENTE IN (@idCliente, 179)
-      AND (
-            (cb.IDCLIENTE = 179 AND REPLACE(LOWER(config.TipoAcreditacion),' ','') = 'diaadia')
-         OR (cb.IDCLIENTE <> 179 AND config.TipoAcreditacion = @tipoAcreditacion)
-      );";
-            }
 
+            #region Parche_Coboe_Scotiabank_Tanda1
+            //        if (bank.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper() && numTanda == 1)
+            //        {
+            //            query = @"
+            //SELECT
+            //    config.NC,
+            //    cb.BANCO,
+            //    c.CIERRE,
+            //    cb.IDCLIENTE,
+            //    cb.CUENTA,
+            //    cb.MONEDA,
+            //    cb.EMPRESA,
+            //    config.TipoAcreditacion AS CONFIGURACION,
+            //    c.SUCURSAL              AS CIUDAD,
+            //    cb.SUCURSAL,
+            //    c.IDCC,
+            //    cb.ID,
+            //    c.NN
+            //FROM ConfiguracionAcreditacion AS config
+            //JOIN CUENTASBUZONES AS cb
+            //  ON config.CuentasBuzonesId = cb.ID
+            //JOIN CC AS c
+            //  ON c.NC = config.NC
+            //WHERE cb.BANCO = @banco
+            //  AND cb.IDCLIENTE IN (@idCliente, 179)
+            //  AND (
+            //        (cb.IDCLIENTE = 179 AND REPLACE(LOWER(config.TipoAcreditacion),' ','') = 'diaadia')
+            //     OR (cb.IDCLIENTE <> 179 AND config.TipoAcreditacion = @tipoAcreditacion)
+            //  );";
+            //        }
+            #endregion
             try
             {
 

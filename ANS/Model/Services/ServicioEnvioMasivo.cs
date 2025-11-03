@@ -121,6 +121,7 @@ namespace ANS.Model.Services
                 }).ToArray();
 
                 await Task.WhenAll(tasks);
+
                 await smtp.DisconnectAsync(true);
             }
             catch (Exception e)

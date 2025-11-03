@@ -239,18 +239,20 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     foreach (var dep in buz.Depositos)
                     {
                         var parts = (buz.Cuenta ?? "").Split('-');
-                        if (parts.Length < 2) continue; // seguridad
+                        if (parts.Length < 2) continue;
 
                         string suc = buz.SucursalCuenta;
-                        string cuenta = parts[0];
+                        string cuentaBase = parts[0]; // <- base
                         string sub = parts[1];
                         string mon = buz.Divisa;
+
+                        char producto = GetProductoFlag(cuentaBase); // '2' si 992512102, si no '1'
 
                         string remito = ((buz.IdReferenciaAlCliente ?? "") + "X" + dep.IdOperacion).Trim();
                         decimal suma = Convert.ToDecimal(dep.Totales?.Sum(t => t.ImporteTotal) ?? 0m);
 
                         lines.Add(BuildDetalleBbvaLine(
-                            suc, cuenta, mon, sub, CuentaTransportadora, suma, remito
+                            suc, cuentaBase, mon, sub, CuentaTransportadora, suma, remito, producto
                         ));
 
                         switch (NormalizeCurrency(mon))
@@ -303,100 +305,100 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         // ======================
         // 2) Exporta_Reme_Agrupado (backup)
         // ======================
-        public async Task<bool> Exporta_Reme_Agrupado_BackUp(string rutaBase, DateTime fecha, List<CuentaBuzon> cuentas, string ciudad)
-        {
-            try
-            {
-                if (!Directory.Exists(rutaBase))
-                    Directory.CreateDirectory(rutaBase);
+        //public async Task<bool> Exporta_Reme_Agrupado_BackUp(string rutaBase, DateTime fecha, List<CuentaBuzon> cuentas, string ciudad)
+        //{
+        //    try
+        //    {
+        //        if (!Directory.Exists(rutaBase))
+        //            Directory.CreateDirectory(rutaBase);
 
-                string plantCode = ValidateSinglePlantAndGetCode(cuentas);
-                if (plantCode == null)
-                    return false;
+        //        string plantCode = ValidateSinglePlantAndGetCode(cuentas);
+        //        if (plantCode == null)
+        //            return false;
 
-                var grupos = cuentas
-                    .SelectMany(b => b.Depositos ?? new List<Deposito>(), (b, dep) => new { b, dep, parts = (b.Cuenta ?? "").Split('-') })
-                    .Where(x => x.parts.Length >= 2)
-                    .GroupBy(x => new
-                    {
-                        x.b.SucursalCuenta,
-                        Cuenta = x.parts[0].Trim(),
-                        x.b.Divisa,
-                        SubCuenta = x.parts[1].Trim(),
-                        Remito = x.dep.IdOperacion.ToString()
-                    })
-                    .Select(g => new
-                    {
-                        Sucursal = g.Key.SucursalCuenta,
-                        Cuenta = g.Key.Cuenta,
-                        Moneda = g.Key.Divisa,
-                        SubCuenta = g.Key.SubCuenta,
-                        RemitoOriginal = g.Key.Remito,
-                        SumaMontos = g.Sum(x => (x.dep.Totales?.Sum(t => t.ImporteTotal) ?? 0m))
-                    })
-                    .OrderBy(x => x.Sucursal)
-                    .ThenBy(x => x.Cuenta)
-                    .ThenBy(x => x.Moneda)
-                    .ThenBy(x => x.SubCuenta)
-                    .ThenBy(x => x.RemitoOriginal)
-                    .ToList();
+        //        var grupos = cuentas
+        //            .SelectMany(b => b.Depositos ?? new List<Deposito>(), (b, dep) => new { b, dep, parts = (b.Cuenta ?? "").Split('-') })
+        //            .Where(x => x.parts.Length >= 2)
+        //            .GroupBy(x => new
+        //            {
+        //                x.b.SucursalCuenta,
+        //                Cuenta = x.parts[0].Trim(),
+        //                x.b.Divisa,
+        //                SubCuenta = x.parts[1].Trim(),
+        //                Remito = x.dep.IdOperacion.ToString()
+        //            })
+        //            .Select(g => new
+        //            {
+        //                Sucursal = g.Key.SucursalCuenta,
+        //                Cuenta = g.Key.Cuenta,
+        //                Moneda = g.Key.Divisa,
+        //                SubCuenta = g.Key.SubCuenta,
+        //                RemitoOriginal = g.Key.Remito,
+        //                SumaMontos = g.Sum(x => (x.dep.Totales?.Sum(t => t.ImporteTotal) ?? 0m))
+        //            })
+        //            .OrderBy(x => x.Sucursal)
+        //            .ThenBy(x => x.Cuenta)
+        //            .ThenBy(x => x.Moneda)
+        //            .ThenBy(x => x.SubCuenta)
+        //            .ThenBy(x => x.RemitoOriginal)
+        //            .ToList();
 
-                var lines = new List<string>();
-                decimal totalUYU = 0, totalUSD = 0, totalEUR = 0, totalARS = 0, totalBRL = 0;
-                int cUYU = 0, cUSD = 0, cEUR = 0, cARS = 0, cBRL = 0;
+        //        var lines = new List<string>();
+        //        decimal totalUYU = 0, totalUSD = 0, totalEUR = 0, totalARS = 0, totalBRL = 0;
+        //        int cUYU = 0, cUSD = 0, cEUR = 0, cARS = 0, cBRL = 0;
 
-                foreach (var g in grupos)
-                {
-                    string rem = (g.RemitoOriginal + DateTime.Now.ToString("HHmmssff"));
+        //        foreach (var g in grupos)
+        //        {
+        //            string rem = (g.RemitoOriginal + DateTime.Now.ToString("HHmmssff"));
 
-                    lines.Add(BuildDetalleBbvaLine(
-                        g.Sucursal, g.Cuenta, g.Moneda, g.SubCuenta,
-                        CuentaTransportadora, g.SumaMontos, rem
-                    ));
+        //            lines.Add(BuildDetalleBbvaLine(
+        //                g.Sucursal, g.Cuenta, g.Moneda, g.SubCuenta,
+        //                CuentaTransportadora, g.SumaMontos, rem
+        //            ));
 
-                    switch (NormalizeCurrency(g.Moneda))
-                    {
-                        case "UYU": totalUYU += g.SumaMontos; cUYU++; break;
-                        case "USD": totalUSD += g.SumaMontos; cUSD++; break;
-                        case "EUR": totalEUR += g.SumaMontos; cEUR++; break;
-                        case "ARS": totalARS += g.SumaMontos; cARS++; break;
-                        case "BRL": totalBRL += g.SumaMontos; cBRL++; break;
-                    }
-                }
+        //            switch (NormalizeCurrency(g.Moneda))
+        //            {
+        //                case "UYU": totalUYU += g.SumaMontos; cUYU++; break;
+        //                case "USD": totalUSD += g.SumaMontos; cUSD++; break;
+        //                case "EUR": totalEUR += g.SumaMontos; cEUR++; break;
+        //                case "ARS": totalARS += g.SumaMontos; cARS++; break;
+        //                case "BRL": totalBRL += g.SumaMontos; cBRL++; break;
+        //            }
+        //        }
 
-                if (!lines.Any())
-                    return false;
+        //        if (!lines.Any())
+        //            return false;
 
-                lines.Add(BuildTotalLine("UYU", cUYU, totalUYU, plantCode));
-                lines.Add(BuildTotalLine("USD", cUSD, totalUSD, plantCode));
-                lines.Add(BuildTotalLine("EUR", cEUR, totalEUR, plantCode));
-                lines.Add(BuildTotalLine("ARS", cARS, totalARS, plantCode));
-                lines.Add(BuildTotalLine("BRL", cBRL, totalBRL, plantCode));
+        //        lines.Add(BuildTotalLine("UYU", cUYU, totalUYU, plantCode));
+        //        lines.Add(BuildTotalLine("USD", cUSD, totalUSD, plantCode));
+        //        lines.Add(BuildTotalLine("EUR", cEUR, totalEUR, plantCode));
+        //        lines.Add(BuildTotalLine("ARS", cARS, totalARS, plantCode));
+        //        lines.Add(BuildTotalLine("BRL", cBRL, totalBRL, plantCode));
 
-                // === Correlativo GLOBAL por día (sin ciudad) ===
-                int correlativo = ReservarSiguienteCorrelativoDelDia(rutaBase, fecha);
-                string f = fecha.ToString("yyyyMMdd");
-                string nombreA = $"REME{f}{correlativo:D3}.txt";
-                string nombreB = $"FREME{f}{correlativo:D3}.txt";
-                string pathA = Path.Combine(rutaBase, nombreA);
-                string pathB = Path.Combine(rutaBase, nombreB);
+        //        // === Correlativo GLOBAL por día (sin ciudad) ===
+        //        int correlativo = ReservarSiguienteCorrelativoDelDia(rutaBase, fecha);
+        //        string f = fecha.ToString("yyyyMMdd");
+        //        string nombreA = $"REME{f}{correlativo:D3}.txt";
+        //        string nombreB = $"FREME{f}{correlativo:D3}.txt";
+        //        string pathA = Path.Combine(rutaBase, nombreA);
+        //        string pathB = Path.Combine(rutaBase, nombreB);
 
-                var utf8NoBom = new UTF8Encoding(false);
+        //        var utf8NoBom = new UTF8Encoding(false);
 
-                using (var sw = new StreamWriter(pathA, false, utf8NoBom))
-                    foreach (var ln in lines) sw.WriteLine(ln);
+        //        using (var sw = new StreamWriter(pathA, false, utf8NoBom))
+        //            foreach (var ln in lines) sw.WriteLine(ln);
 
-                using (var sw2 = new StreamWriter(pathB, false, utf8NoBom)) { }
+        //        using (var sw2 = new StreamWriter(pathB, false, utf8NoBom)) { }
 
-                BorrarMarcadorDelDia(rutaBase, fecha, correlativo);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"ERROR en acreditación BBVA, VERIFIQUE: {ex.Message}", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
-                throw;
-            }
-        }
+        //        BorrarMarcadorDelDia(rutaBase, fecha, correlativo);
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show($"ERROR en acreditación BBVA, VERIFIQUE: {ex.Message}", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+        //        throw;
+        //    }
+        //}
 
         public async Task<bool> Exporta_Reme_Agrupado(string rutaBase, DateTime fecha, List<CuentaBuzon> cuentas, string ciudad)
         {
@@ -469,10 +471,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     string remViejoLike = pref4 + DateTime.Now.ToString("HHmmssff");
                     string remitoFinal = Remito12Left(remViejoLike);
 
-                    // Línea detalle (58 cols) — NO CAMBIADA
+                    char producto = GetProductoFlag(g.Cuenta);
+
                     lines.Add(BuildDetalleBbvaLineLegacy(
                         g.Sucursal, g.Cuenta, g.Moneda, g.SubCuenta,
-                        CuentaTransportadora, g.SumaMontos, remitoFinal
+                        CuentaTransportadora, g.SumaMontos, remitoFinal, producto
                     ));
 
                     switch (g.Moneda)
@@ -524,7 +527,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         // ====== BUILDERS a posiciones fijas (NO CAMBIADOS) ======
         private static string BuildDetalleBbvaLineLegacy(
             string sucursal, string cuenta, string moneda, string subCuenta,
-            string ctaTransportadora, decimal importe, string remito)
+            string ctaTransportadora, decimal importe, string remito, char productoFlag)
         {
             var buf = Enumerable.Repeat('0', LEN_DETALLE).ToArray();
 
@@ -541,7 +544,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             Put(buf, 4, cta, LEN_CTA);
             Put(buf, 13, mon, LEN_MON);
             Put(buf, 16, sub, LEN_SUB);
-            buf[18] = PRODUCTO_FIJO;
+            buf[18] = productoFlag;
             Put(buf, 20, trans, LEN_TRANS);
             Put(buf, 29, monto, LEN_MONTO);
             Put(buf, 44, rem, LEN_REMITO);
@@ -628,7 +631,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         private static string BuildDetalleBbvaLine(
             string sucursal, string cuenta, string moneda, string subCuenta,
-            string ctaTransportadora, decimal importe, string remito)
+            string ctaTransportadora, decimal importe, string remito, char productoFlag)
         {
             var buf = Enumerable.Repeat('0', LEN_DETALLE).ToArray();
 
@@ -645,7 +648,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             Put(buf, 4, cta, LEN_CTA);
             Put(buf, 13, mon, LEN_MON);
             Put(buf, 16, sub, LEN_SUB);
-            buf[18] = PRODUCTO_FIJO;                           // 19 → '1'
+            buf[18] = productoFlag;                           // 19 → '1'
             Put(buf, 20, trans, LEN_TRANS);
             Put(buf, 29, monto, LEN_MONTO);
             Put(buf, 44, rem, LEN_REMITO);
@@ -799,6 +802,17 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 // Best-effort cleanup
             }
         }
+
+        private static char GetProductoFlag(string cuentaBase)
+        {
+            const string CuentaEspecial = "992512102";
+            var digits = Digits(cuentaBase);
+            return (!string.IsNullOrEmpty(digits) &&
+                    digits.IndexOf(CuentaEspecial, StringComparison.Ordinal) >= 0)
+                ? '2'
+                : '1';
+        }
+
         #endregion
     }
 }

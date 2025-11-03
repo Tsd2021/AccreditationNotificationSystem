@@ -11,7 +11,6 @@ using ANS.Model.Jobs.SCOTIABANK;
 using ANS.Model.Services;
 using ANS.Scheduling;
 using ANS.ViewModel;
-using Dynamitey;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Impl.Matchers;
@@ -44,6 +43,10 @@ namespace ANS
             preCargarBancos();
 
             preCargarListaNC();
+
+            preCargarCuentasClientesBBVA(); // Este método carga en memoria todo los CLIENTESCUENTAS para luego utilizar el TIPO en la BBVAFileGen!
+
+            preCargarSucursalesClientes(); // Este metodo carga en memoria todas las sucursales por cliente,NC,empresa
 
             preCargarEmailsTarea();
 
@@ -80,6 +83,7 @@ namespace ANS
 
             //await crearJobsPrueba(_scheduler);
             //await correrTestBbva();
+
             await crearJobsBBVA(_scheduler);
             await crearJobsSantander(_scheduler);
             await crearJobsScotiabank(_scheduler);
@@ -119,10 +123,21 @@ namespace ANS
 
         }
 
+        private void preCargarCuentasClientesBBVA()
+        {
+            ServicioCuentaCliente.getInstancia().CargarListaCuentasClientes();
+        }
+
         private async Task correrTestBbva()
         {
             var gen = new BBVAFileGenerator();      
             await gen.RunBbvaLocalTestsAsync();
+        }
+
+
+        private void preCargarSucursalesClientes()
+        {
+            ServicioSucursalesClientes.getInstancia().CargarSucursalesCliente();
         }
 
         private async Task crearJobsPrueba(IScheduler scheduler)
