@@ -27,6 +27,9 @@ namespace ANS.Model.Services
             {
                 string query = "Select * from nc_emp_cli_suc";
 
+
+                con.Open();
+
                 SqlCommand cmd = new SqlCommand(query, con);
 
                 using (SqlDataReader r = cmd.ExecuteReader())

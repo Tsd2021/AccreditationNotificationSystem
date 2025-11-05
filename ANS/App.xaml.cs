@@ -44,7 +44,7 @@ namespace ANS
 
             preCargarListaNC();
 
-            preCargarCuentasClientesBBVA(); // Este método carga en memoria todo los CLIENTESCUENTAS para luego utilizar el TIPO en la BBVAFileGen!
+            //preCargarCuentasClientesBBVA(); // Este método carga en memoria todo los CLIENTESCUENTAS para luego utilizar el TIPO en la BBVAFileGen!
 
             preCargarSucursalesClientes(); // Este metodo carga en memoria todas las sucursales por cliente,NC,empresa
 
@@ -66,8 +66,8 @@ namespace ANS
             //    "ANS", "QuartzRuns.db");
 
 
-            // ---PROD-- -
-            var baseDir = System.IO.Path.Combine(@"D:\", "TAAS");
+           // ---PROD-- -
+           var baseDir = System.IO.Path.Combine(@"D:\", "TAAS");
             Directory.CreateDirectory(baseDir);
             var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
 

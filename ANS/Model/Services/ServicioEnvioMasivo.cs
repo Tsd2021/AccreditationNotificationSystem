@@ -1,7 +1,8 @@
 ﻿
 using Microsoft.Data.SqlClient;
-using System.Data;
 using SharedDTOs;
+using System.Data;
+using System.IO;
 
 namespace ANS.Model.Services
 {
@@ -40,7 +41,27 @@ namespace ANS.Model.Services
 
                 await obtenerFechaUltimaConexionDelBuzon(buzones);
 
-                var reportService = new TAAS.Reports.ReportService();
+                var svcSuc = ServicioSucursalesClientes.getInstancia();
+
+                // (opcional, recomendado) limpiar para evitar duplicados si ya se cargó antes
+                svcSuc.listaSucursalCliente.Clear();
+
+                // cargar desde BD
+                svcSuc.CargarSucursalesCliente();
+
+                // mapear a DTO compartido
+                var sucursalesDtos = svcSuc.listaSucursalCliente
+                    .Select(x => new SucursalClienteDto
+                    {
+                        NC = x.NC,
+                        Empresa = x.Empresa,
+                        IdCliente = x.IdCliente,
+                        Sucursal = x.Sucursal
+                    })
+                    .ToList();
+
+                // inyectar en ReportService
+                var reportService = new TAAS.Reports.ReportService(sucursalesDtos);
 
                 ObtenerMailsPorBuzon(buzonesConAcreditaciones);
 
@@ -73,6 +94,7 @@ namespace ANS.Model.Services
                         UltimaFechaConexion = b.UltimaFechaConexion,
                         EsHenderson = b.EsHenderson,
                         NombreWS = b.NombreWS,
+                        IdCliente = b.IdCliente,
                         // mapea Acreditaciones:
                         Acreditaciones = b.Acreditaciones.Select(a => new AcreditacionDTO2
                         {
@@ -86,9 +108,19 @@ namespace ANS.Model.Services
                         }).ToList()
                     };
 
-                    //var excelStream = ArmarExcelConReportViewer(b, out var subject, out var body, out var fileName);
-                    var excelStream = reportService.ArmarExcelConReportViewer(b2, out var subject, out var body, out var fileName);
+
+                    Stream excelStream;
+                    string subject, body, fileName;
+
+                    excelStream = b2.IdCliente switch
+                    {
+                        179 => reportService.ArmarExcelMasivoParaCoboe(b2, out subject, out body, out fileName),
+                        _ => reportService.ArmarExcelConReportViewer(b2, out subject, out body, out fileName)
+                    };
+
+
                     await semaphore.WaitAsync();
+
                     try
                     {
                         // sólo UNO a la vez entra aquí:

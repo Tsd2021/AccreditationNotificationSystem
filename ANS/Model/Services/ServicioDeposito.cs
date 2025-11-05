@@ -290,7 +290,8 @@ namespace ANS.Model.Services
                     END
                     ) = @empresa
                     AND d.idoperacion > @ultimaOperacion
-                    AND t.Divisas = @divisaActual;";
+                    AND t.Divisas = @divisaActual 
+                    AND d.fechadep < @fechaCierre;";
         }
         private string QueryBuscaDepositoConLikeSinCierre()
         {
