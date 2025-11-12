@@ -22,6 +22,11 @@
 		<!-- Port del ReportViewer original de SSRS para .NET 8 -->
 		<PackageReference Include="NPOI" Version="2.7.4" />
 		<PackageReference Include="ReportViewerCore.NETCore" Version="15.1.26" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="10.15.0.120848">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="SonarQube.Net" Version="1.0.5" />
 		<!-- Para procesar expresiones VB en el RDLC -->
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.7" />
 		<PackageReference Include="System.Drawing.Common" Version="9.0.7" />
