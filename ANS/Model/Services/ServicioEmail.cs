@@ -218,13 +218,14 @@ namespace ANS.Model.Services
             {
 
                 var message = new MimeMessage();
+
                 message.From.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
-                //Cuando esté en producción activar esto:
-                /*
+    
                 foreach (var e in _destinos)
                 {
                     message.To.Add(MailboxAddress.Parse(e.Correo));
-                }*/
+                }
+
                 message.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
           
                 message.Subject = subject;
@@ -251,6 +252,7 @@ namespace ANS.Model.Services
                 await smtpClient.SendAsync(message);
 
                 return true;
+
             }
             catch (Exception ex)
             {

@@ -393,26 +393,26 @@ namespace ANS.Model.Services
         {
             var (desde, cierre) = CalcularVentana(b, numTanda, fecha);
 
-            //var sql = @"
-            //    SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA, a.IDBANCO 
-            //    FROM    AcreditacionDepositoDiegoTest a
-            //    JOIN    cc c
-            //            ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
-            //    WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
-            //        AND a.FECHA >= @Desde
-            //        AND a.FECHA <= @Cierre
-            //        AND c.CIERRE <= @Cierre
-            //    ORDER BY a.IDOPERACION DESC;";
-
-
             var sql = @"
                 SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA, a.IDBANCO 
                 FROM    AcreditacionDepositoDiegoTest a
                 JOIN    cc c
                         ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
                 WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
-            
+                    AND a.FECHA >= @Desde
+                    AND a.FECHA <= @Cierre
+                    AND c.CIERRE <= @Cierre
                 ORDER BY a.IDOPERACION DESC;";
+
+
+            //var sql = @"
+            //    SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA, a.IDBANCO 
+            //    FROM    AcreditacionDepositoDiegoTest a
+            //    JOIN    cc c
+            //            ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
+            //    WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
+
+            //    ORDER BY a.IDOPERACION DESC;";
 
             var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.Add(new SqlParameter("@NC", System.Data.SqlDbType.VarChar, 50) { Value = b.NC ?? (object)DBNull.Value });

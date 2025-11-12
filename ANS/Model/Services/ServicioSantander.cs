@@ -152,41 +152,98 @@ namespace ANS.Model.Services
                 Console.WriteLine($"❌ Error al enviar el archivo vacío: {ex.Message}");
             }
         }
-        //public TensStdr.transactionResponse EnviarArchivoConClienteWS(string NombreCSV, byte[] Archivo)
-        //{
-        //    try
-        //    {
-        //        var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ", "");
-        //        var behavior = new PasswordDigestBehavior(credenciales.UserName, credenciales.Password);
-        //        var ClienteTens = CrearCliente();
+        public async Task<TensStdr.transactionResponse> EnviarArchivoConClienteWS(string nombreCSV, byte[] archivo)
+        {
+            var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ");
 
-        //        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-        //        ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            // 🧱 Binding con auth básica y tamaños amplios
+            var binding = new BasicHttpsBinding
+            {
+                Security = new BasicHttpsSecurity
+                {
+                    Mode = BasicHttpsSecurityMode.Transport,
+                    Message = new BasicHttpMessageSecurity
+                    {
+                        ClientCredentialType = BasicHttpMessageCredentialType.UserName
+                    }
+                },
+                MaxReceivedMessageSize = 20_000_000,
+                ReaderQuotas = System.Xml.XmlDictionaryReaderQuotas.Max
+            };
 
-        //        ClienteTens.Endpoint.EndpointBehaviors.Add(behavior);
+            // 🎯 Endpoint del servicio
+            var endpoint = new EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn");
 
-        //        TensStdr.lotFile lotFile = new TensStdr.lotFile()
-        //        {
-        //            fileName = NombreCSV,
-        //            fileBytes = Archivo
-        //        };
+            try
+            {
+                using (var client = new TensStdr.TenSOnlineTxnServiceClient(binding, endpoint))
+                {
+                    // 🔐 Credenciales
+                    client.ClientCredentials.UserName.UserName = credenciales.UserName;
+                    client.ClientCredentials.UserName.Password = credenciales.Password;
 
-        //        TensStdr.txservice Consulta = new TensStdr.txservice()
-        //        {
-        //            lotFile = lotFile,
-        //            refNumber = "1",
-        //            waitProcess = true,
-        //            method = "uploadLotFile"
-        //        };
+                    var pwdBehavior = new PasswordDigestBehavior(credenciales.UserName, credenciales.Password);
+                    client.Endpoint.EndpointBehaviors.Add(pwdBehavior);
 
-        //        return ClienteTens.execute(Consulta);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error en EnviarArchivoConClienteWS: {ex.Message}");
-        //        return null;
-        //    }
-        //}
+                    // 🔓 (Si el cert del servidor no valida en tu entorno)
+                    client.ClientCredentials.ServiceCertificate.SslCertificateAuthentication = new X509ServiceCertificateAuthentication
+                    {
+                        CertificateValidationMode = X509CertificateValidationMode.None,
+                        RevocationMode = X509RevocationMode.NoCheck
+                    };
+
+                    // ⚙️ TLS y compat
+                    AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                    // 📦 Payload
+                    var lotFile = new TensStdr.lotFile
+                    {
+                        fileName = nombreCSV,
+                        fileBytes = archivo
+                    };
+
+                    var txService = new TensStdr.txservice
+                    {
+                        lotFile = lotFile,
+                        refNumber = "1",
+                        waitProcess = true,
+                        method = "uploadLotFile"
+                    };
+
+                    var request = new TensStdr.execute(txService);
+
+                    // 🚀 Envío
+                    var response = await client.executeAsync(request);
+
+                    // Devolvés la parte útil (código/descr) para que el caller decida
+                    return response?.result;
+                }
+            }
+            catch (TimeoutException tex)
+            {
+                Console.WriteLine($"⏳ Timeout enviando archivo: {tex.Message}");
+                return null;
+            }
+            catch (FaultException faultEx)
+            {
+                Console.WriteLine("❌ FaultException del servicio Tens");
+                Console.WriteLine($"Mensaje: {faultEx.Message}");
+                if (faultEx.Code != null) Console.WriteLine($"Código del Fault: {faultEx.Code.Name}");
+                return null;
+            }
+            catch (CommunicationException cex)
+            {
+                Console.WriteLine($"📡 Error de comunicación: {cex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error general en EnviarArchivoConClienteWS: {ex.Message}");
+                return null;
+            }
+        }
+
         public class PasswordDigestMessageInspector : IClientMessageInspector
         {
             public string Username { get; set; }

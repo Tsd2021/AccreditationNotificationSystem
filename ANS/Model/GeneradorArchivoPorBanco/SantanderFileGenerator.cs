@@ -1,8 +1,12 @@
 ﻿using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
+
+using System.Security.Cryptography;
+
 
 namespace ANS.Model.GeneradorArchivoPorBanco
 {
@@ -139,61 +143,112 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         //    return "hola";
         //}
 
+        //public string getRutaArchivoDAD(string ciudad, string divisa)
+        //{
+        //    // SUGERENCIA: mover esto a configuración (appsettings, .config, etc.)
+        //    const string baseSantander = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SANTANDER";
+        //    const string baseSantanderTest = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\SANTANDER\";
+
+        //    // Normalizo entradas una sola vez (invariant para evitar sorpresas por cultura)
+        //    var ciudadUp = ciudad?.ToUpperInvariant();
+        //    var divisaUp = divisa?.ToUpperInvariant();
+        //    var tipo = _config?.TipoAcreditacion;
+
+        //    // Carpeta por tipo de acreditación
+        //    var carpetaTipo = tipo switch
+        //    {
+        //        var t when t == VariablesGlobales.p2p => "puntoapuntocsvtdr$",
+        //        var t when t == VariablesGlobales.tanda => "tanda$",
+        //        var t when t == VariablesGlobales.diaxdia => "dxd$",
+        //        _ => throw new InvalidOperationException($"TipoAcreditacion desconocido: {tipo}")
+        //    };
+
+        //    // Carpetas por ciudad y divisa
+        //    var carpetaCiudad = ciudadUp switch
+        //    {
+        //        var c when c == VariablesGlobales.maldonado => "MALDONADO",
+        //        var c when c == VariablesGlobales.montevideo => "MONTEVIDEO",
+        //        _ => throw new ArgumentException($"Ciudad no soportada: {ciudad}", nameof(ciudad))
+        //    };
+
+        //    var carpetaDivisa = divisaUp switch
+        //    {
+        //        var d when d == VariablesGlobales.uyu => "PESOS",
+        //        var d when d == VariablesGlobales.usd => "DOLARES",
+        //        _ => throw new ArgumentException($"Divisa no soportada: {divisa}", nameof(divisa))
+        //    };
+
+        //    // Selección de sucursal por combinación ciudad/divisa
+        //    var sucursal = (carpetaCiudad, carpetaDivisa) switch
+        //    {
+        //        ("MALDONADO", "PESOS") => _sucTecnisegurPesosMald,
+        //        ("MALDONADO", "DOLARES") => _sucTecnisegurDolaresMald,
+        //        ("MONTEVIDEO", "PESOS") => _sucTecnisegurPesosMon,
+        //        ("MONTEVIDEO", "DOLARES") => _sucTecnisegurDolaresMon, // <- ojo: aquí había un bug en tu versión (usaba PesosMon)
+        //        _ => throw new InvalidOperationException("Combinación ciudad/divisa no soportada")
+        //    };
+
+        //    // Timestamp compacto y sin colisiones de 12h (usa 24h)
+        //    var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+
+        //    // Construcción de ruta con Path.Combine (seguro y legible)
+        //    var directorio = Path.Combine(baseSantander, carpetaTipo, carpetaCiudad, carpetaDivisa);
+        //    Directory.CreateDirectory(directorio); // asegura que exista
+
+        //    var nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
+        //    return Path.Combine(directorio, nombreArchivo);
+        //}
         public string getRutaArchivoDAD(string ciudad, string divisa)
         {
-            // SUGERENCIA: mover esto a configuración (appsettings, .config, etc.)
-            const string baseSantander = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SANTANDER";
-            const string baseSantanderTest = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\SANTANDER\";
-
-            // Normalizo entradas una sola vez (invariant para evitar sorpresas por cultura)
             var ciudadUp = ciudad?.ToUpperInvariant();
             var divisaUp = divisa?.ToUpperInvariant();
             var tipo = _config?.TipoAcreditacion;
 
-            // Carpeta por tipo de acreditación
-            var carpetaTipo = tipo switch
+            // Sucursal por ciudad/divisa (incluye cashoffice)
+            string sucursal = (ciudadUp, divisaUp) switch
             {
-                var t when t == VariablesGlobales.p2p => "puntoapuntocsvtdr$",
-                var t when t == VariablesGlobales.tanda => "tanda$",
-                var t when t == VariablesGlobales.diaxdia => "dxd$",
-                _ => throw new InvalidOperationException($"TipoAcreditacion desconocido: {tipo}")
+                (var c, var d) when c == VariablesGlobales.cashoffice && d == VariablesGlobales.uyu => _sucTecnisegurPesosMon,
+                (var c, var d) when c == VariablesGlobales.cashoffice && d == VariablesGlobales.usd => _sucTecnisegurDolaresMon,
+
+                (var c, var d) when c == VariablesGlobales.maldonado && d == VariablesGlobales.uyu => _sucTecnisegurPesosMald,
+                (var c, var d) when c == VariablesGlobales.maldonado && d == VariablesGlobales.usd => _sucTecnisegurDolaresMald,
+                (var c, var d) when c == VariablesGlobales.montevideo && d == VariablesGlobales.uyu => _sucTecnisegurPesosMon,
+                (var c, var d) when c == VariablesGlobales.montevideo && d == VariablesGlobales.usd => _sucTecnisegurDolaresMon,
+                _ => throw new InvalidOperationException($"Combinación ciudad/divisa no soportada: {ciudad}/{divisa}")
             };
 
-            // Carpetas por ciudad y divisa
-            var carpetaCiudad = ciudadUp switch
-            {
-                var c when c == VariablesGlobales.maldonado => "MALDONADO",
-                var c when c == VariablesGlobales.montevideo => "MONTEVIDEO",
-                _ => throw new ArgumentException($"Ciudad no soportada: {ciudad}", nameof(ciudad))
-            };
-
-            var carpetaDivisa = divisaUp switch
-            {
-                var d when d == VariablesGlobales.uyu => "PESOS",
-                var d when d == VariablesGlobales.usd => "DOLARES",
-                _ => throw new ArgumentException($"Divisa no soportada: {divisa}", nameof(divisa))
-            };
-
-            // Selección de sucursal por combinación ciudad/divisa
-            var sucursal = (carpetaCiudad, carpetaDivisa) switch
-            {
-                ("MALDONADO", "PESOS") => _sucTecnisegurPesosMald,
-                ("MALDONADO", "DOLARES") => _sucTecnisegurDolaresMald,
-                ("MONTEVIDEO", "PESOS") => _sucTecnisegurPesosMon,
-                ("MONTEVIDEO", "DOLARES") => _sucTecnisegurDolaresMon, // <- ojo: aquí había un bug en tu versión (usaba PesosMon)
-                _ => throw new InvalidOperationException("Combinación ciudad/divisa no soportada")
-            };
-
-            // Timestamp compacto y sin colisiones de 12h (usa 24h)
             var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
 
-            // Construcción de ruta con Path.Combine (seguro y legible)
-            var directorio = Path.Combine(baseSantander, carpetaTipo, carpetaCiudad, carpetaDivisa);
-            Directory.CreateDirectory(directorio); // asegura que exista
+            string directorioBase;
+            if (tipo == VariablesGlobales.p2p)
+            {
+                // P2P: base P2P + subcarpeta por divisa
+                const string baseP2P = @"\\172.16.10.22\puntoapuntocsvstdr$";
+                var carpetaDivisa = divisaUp switch
+                {
+                    var d when d == VariablesGlobales.uyu => "PESOS",
+                    var d when d == VariablesGlobales.usd => "DOLARES",
+                    _ => throw new ArgumentException($"Divisa no soportada: {divisa}", nameof(divisa))
+                };
+                directorioBase = Path.Combine(baseP2P, carpetaDivisa);
+            }
+            else if (tipo == VariablesGlobales.tanda || tipo == VariablesGlobales.diaxdia)
+            {
+                // Tanda y Día a Día: base única sin subcarpetas por divisa
+                directorioBase = @"\\172.16.10.22\csvsantander$";
+            }
+            else
+            {
+                throw new InvalidOperationException($"TipoAcreditacion desconocido: {tipo}");
+            }
+
+            Directory.CreateDirectory(directorioBase);
 
             var nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
-            return Path.Combine(directorio, nombreArchivo);
+            return Path.Combine(directorioBase, nombreArchivo);
         }
+
+
         public async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
             if (_config.TipoAcreditacion == VariablesGlobales.p2p)
@@ -246,7 +301,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                         }
                                         else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
-                                            agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
+                                            agregarLineaAlStringBuilder_Individual(cashOfficeDolares, unaCuenta, unDeposito, unTotal);
                                         }
                                     }
                                     if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
@@ -410,58 +465,100 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         }
         private async Task<bool> generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)
         {
-            DateTime fecha = DateTime.Now;
+            // Correlación y cronómetro
+            var correlationId = Guid.NewGuid().ToString("N");
+            var sw = Stopwatch.StartNew();
 
+            // Nombre para el WS (coincide con el que se guardará en disco)
             string rutaArchivo = getRutaArchivoDAD(ciudad, divisa);
-
-            byte[] archivo = Encoding.UTF8.GetBytes(contenido.ToString());
-
             string nombreCSV = Path.GetFileName(rutaArchivo);
 
-            // TensStdr.transactionResponse tensResponse = ServicioSantander.getInstancia().EnviarArchivoConClienteWS(nombreCSV, archivo);
-            // return tensResponse == null;
-            await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
-            return false;
+            // Bytes del contenido en memoria
+            byte[] archivo = Encoding.UTF8.GetBytes(contenido.ToString());
 
+            // Huella para trazabilidad
+            string sha256 = ComputeSha256(archivo);
+
+            // Envío real
+            var tensResponse = await ServicioSantander.getInstancia().EnviarArchivoConClienteWS(nombreCSV, archivo);
+
+            sw.Stop();
+
+            bool ok = tensResponse != null && tensResponse.code == "0";
+            string code = tensResponse?.code ?? "NULL";
+            string desc = tensResponse?.description ?? "NULL";
+            string tipoAcreditacion = _config?.TipoAcreditacion ?? "NULL";
+
+            // 🔎 Log específico de TenS (en "Logs Tens")
+            ServicioLog.getInstancia().WriteTensResponse(
+                correlationId: correlationId,
+                ok: ok,
+                code: code,
+                description: desc,
+                tipoAcreditacion: tipoAcreditacion,
+                ciudad: ciudad,
+                divisa: divisa,
+                nombreArchivo: nombreCSV,
+                bytes: archivo.Length,
+                sha256: sha256,
+                duracionMs: sw.ElapsedMilliseconds
+            );
+
+            // Pista inmediata si falló (en la misma carpeta)
+            if (!ok)
+            {
+                ServicioLog.getInstancia().WriteTensHint(
+                    correlationId,
+                    "Revisar credenciales, reachability del endpoint, certificado TLS, formato del payload (H;1 / F;N), método=uploadLotFile. " +
+                    "Verificar carpeta *_NO_ENVIADOS y la respuesta del WS en este mismo log."
+                );
+            }
+
+            return ok;
         }
+
+        private static string ComputeSha256(byte[] data)
+        {
+            using var sha = SHA256.Create();
+            var hash = sha.ComputeHash(data);
+            var sb = new StringBuilder(hash.Length * 2);
+            foreach (var b in hash) sb.Append(b.ToString("x2"));
+            return sb.ToString();
+        }
+
         // CREACION ARCHIVOS ESPECIFICAMENTE DE CASHOFFICE
         private async Task CrearArchivoCashOffice(StringBuilder content, string divisa)
         {
-            if (content.Length == 0) return; // No crear archivos vacíos
+            if (content.Length == 0) return;
 
-            string ruta = "";
-            int numeroLineasPesos = LineCount(content.ToString());
-
-            string numRegistro = numeroLineasPesos.ToString();
+            int numeroLineas = LineCount(content.ToString());
+            string numRegistro = numeroLineas.ToString();
 
             content.Insert(0, "H;1\n");
-
             content.AppendLine("F;" + numRegistro);
 
+            // Enviar por WS usando ciudad = cashoffice (ya soportada en getRutaArchivoDAD)
             bool responseTens = await generarYEnviarArchivoTens(content, VariablesGlobales.cashoffice, divisa);
 
+            // Guardado en mismas rutas/base que el resto (según TipoAcreditacion)
+            string rutaArchivoBase = getRutaArchivoDAD(VariablesGlobales.cashoffice, divisa);
+            string directorioBase = Path.GetDirectoryName(rutaArchivoBase);
+            string fecha = DateTime.Now.ToString("ddMMyyyy");
 
-            if (divisa == VariablesGlobales.uyu)
-            {
-                ruta = _cashOfficeRutaPesosP2P + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
-            }
+            string subcarpetaEstado = responseTens ? $"{fecha}_APPROVED" : $"{fecha}_NO_ENVIADOS";
+            string directorioFinal = Path.Combine(directorioBase, subcarpetaEstado);
 
-            if (divisa == VariablesGlobales.usd)
-            {
-                ruta = _cashOfficeRutaDolaresP2P + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
-            }
+            if (!Directory.Exists(directorioFinal))
+                Directory.CreateDirectory(directorioFinal);
 
-            string directorio = Path.GetDirectoryName(ruta);
+            string nombreArchivo = Path.GetFileName(rutaArchivoBase);
+            string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
 
-            if (!Directory.Exists(directorio))
-            {
-                Directory.CreateDirectory(directorio);
-            }
-
-            File.WriteAllText(ruta, content.ToString());
+            File.WriteAllText(rutaFinal, content.ToString());
 
             await Task.Delay(150);
         }
+
         //METODO PARA CREAR LINEAS EN ARCHIVOS DIA A DIA Y TANDA!
         private void agregarLineaAlStringBuilder_Agrupado(StringBuilder lineas, CuentaBuzon unaCuenta, double totalPorCuenta)
         {
