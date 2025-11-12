@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ANS.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,9 @@ namespace ANS
         public string Usuario { get; set; }
         public DateTime FechaDep { get; set; }
         public string Empresa { get; set; }
+        public int IdBanco { get; set; }
+        public string NombreBanco { get; set; }
+        public Banco Banco { get; set; }
         public void setMoneda()
         {
             if (Divisa == 1)

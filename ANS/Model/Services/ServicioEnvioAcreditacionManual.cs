@@ -343,6 +343,13 @@ namespace ANS.Model.Services
                 var buzones = new List<BuzonDTO> { buzon };
 
                 // Completa Usuario/FechaDep/Empresa en las acreditaciones
+                foreach(var acc in buzon.Acreditaciones)
+                {
+                    if (acc.Banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                    {
+                        Console.WriteLine(acc.Empresa);
+                    }
+                }
                 await ServicioEnvioMasivo.getInstancia().obtenerUsuarioYFechaDelDeposito(buzones);
 
                 await GenerarReporteYEnviarEmail(buzon, fecha);
@@ -386,15 +393,25 @@ namespace ANS.Model.Services
         {
             var (desde, cierre) = CalcularVentana(b, numTanda, fecha);
 
+            //var sql = @"
+            //    SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA, a.IDBANCO 
+            //    FROM    AcreditacionDepositoDiegoTest a
+            //    JOIN    cc c
+            //            ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
+            //    WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
+            //        AND a.FECHA >= @Desde
+            //        AND a.FECHA <= @Cierre
+            //        AND c.CIERRE <= @Cierre
+            //    ORDER BY a.IDOPERACION DESC;";
+
+
             var sql = @"
-                SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA
+                SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA, a.IDBANCO 
                 FROM    AcreditacionDepositoDiegoTest a
                 JOIN    cc c
                         ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
                 WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
-                    AND a.FECHA >= @Desde
-                    AND a.FECHA <= @Cierre
-                    AND c.CIERRE <= @Cierre
+            
                 ORDER BY a.IDOPERACION DESC;";
 
             var cmd = new SqlCommand(sql, conn);
@@ -432,6 +449,7 @@ namespace ANS.Model.Services
             int cuentaOrd = reader.GetOrdinal("IDCUENTA");
             int monOrd = reader.GetOrdinal("MONEDA");
             int montoOrd = reader.GetOrdinal("MONTO");
+            int nombreBancoOrd = reader.GetOrdinal("IDBANCO");
 
             while (await reader.ReadAsync())
             {
@@ -441,9 +459,13 @@ namespace ANS.Model.Services
                     IdOperacion = reader.GetInt64(opOrd),
                     IdCuenta = reader.GetInt32(cuentaOrd),
                     Divisa = reader.GetInt32(monOrd),
-                    Monto = reader.GetDouble(montoOrd)
+                    Monto = reader.GetDouble(montoOrd),
+                    IdBanco = reader.GetInt32(nombreBancoOrd)
                 };
                 acc.setMoneda();
+
+                acc.Banco = ServicioBanco.getInstancia().getById(acc.IdBanco);
+
                 acreditaciones.Add(acc);
             }
             return acreditaciones;

@@ -2030,35 +2030,75 @@ namespace ANS.Model.Services
                 banco.NombreBanco.ToUpper() == VariablesGlobales.itau.ToUpper() ||
                 banco.NombreBanco.ToUpper() == VariablesGlobales.bandes.ToUpper())
             {
-                query = @"SELECT  
-                cb.EMPRESA, 
-                cc.nn, 
-                cc.SUCURSAL as CIUDAD, 
-                cb.CUENTA, 
-                acc.MONEDA, 
-                cb.SUCURSAL, 
-                config.TipoAcreditacion,
-                cb.IDCLIENTE as IDCLIENTE,
-                SUM(acc.MONTO) AS TOTAL 
-                FROM ConfiguracionAcreditacion AS config 
-                INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
-                INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
-                INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
-                ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
-                WHERE config.TipoAcreditacion = @tipoAcreditacion 
-                AND cb.BANCO = @banco 
-                AND convert(date,acc.FECHA) = convert(date,getdate()) 
-                GROUP BY 
-                cb.BANCO, 
-                cb.CUENTA, 
-                cb.EMPRESA, 
-                cb.SUCURSAL, 
-                acc.MONEDA, 
-                cc.sucursal, 
-                cc.NN, 
-                config.TipoAcreditacion,
-                cb.IDCLIENTE
-                ORDER BY cb.EMPRESA ASC";
+
+                //ESTA QUERY ANDA BIEN PERO SI LOS REGISTROS DE CONFIGBUZON ESTAN DUPLICADOS ,L O MUESTRA DOBLE EL RESULTADO.
+                //query = @"SELECT  
+                //cb.EMPRESA, 
+                //cc.nn, 
+                //cc.SUCURSAL as CIUDAD, 
+                //cb.CUENTA, 
+                //acc.MONEDA, 
+                //cb.SUCURSAL, 
+                //config.TipoAcreditacion,
+                //cb.IDCLIENTE as IDCLIENTE,
+                //SUM(acc.MONTO) AS TOTAL 
+                //FROM ConfiguracionAcreditacion AS config 
+                //INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
+                //INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
+                //INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
+                //ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
+                //WHERE config.TipoAcreditacion = @tipoAcreditacion 
+                //AND cb.BANCO = @banco 
+                //AND convert(date,acc.FECHA) = convert(date,getdate()) 
+                //GROUP BY 
+                //cb.BANCO, 
+                //cb.CUENTA, 
+                //cb.EMPRESA, 
+                //cb.SUCURSAL, 
+                //acc.MONEDA, 
+                //cc.sucursal, 
+                //cc.NN, 
+                //config.TipoAcreditacion,
+                //cb.IDCLIENTE
+                //ORDER BY cb.EMPRESA ASC";
+
+
+                //Query "mejorada" que evita duplicaciones aunque configAcreditacion tenga registros duplicados para un mismo buzón y cuenta.
+                //A chequear...
+                query = @"WITH Acc AS (
+                        SELECT acc.IDBUZON, acc.IDCUENTA, acc.MONEDA, 
+                        CONVERT(date, acc.FECHA) AS FECHA, 
+                        SUM(acc.MONTO) AS TOTAL_ACREDITADO 
+                        FROM ACREDITACIONDEPOSITODIEGOTEST acc 
+                        WHERE CONVERT(date, acc.FECHA) = CONVERT(date, getdate()) 
+                        GROUP BY acc.IDBUZON, acc.IDCUENTA, acc.MONEDA, CONVERT(date, acc.FECHA) 
+                        ), 
+                        Config AS ( 
+                        SELECT CuentasBuzonesId, NC, TipoAcreditacion 
+                        FROM ConfiguracionAcreditacion 
+                        WHERE TipoAcreditacion=@tipoAcreditacion 
+                        GROUP BY CuentasBuzonesId, NC, TipoAcreditacion 
+                        )
+                        SELECT 
+                        cb.EMPRESA, cc.NN, cc.SUCURSAL AS CIUDAD, 
+                        cb.CUENTA, a.MONEDA, cb.SUCURSAL, 
+                        cfg.TipoAcreditacion, cb.IDCLIENTE AS IDCLIENTE, 
+                        a.TOTAL_ACREDITADO AS TOTAL 
+                        FROM Config AS cfg 
+                        JOIN CUENTASBUZONES AS cb 
+                        ON cfg.CuentasBuzonesId = cb.ID 
+                        JOIN Acc AS a 
+                        ON a.IDBUZON = cfg.NC 
+                        AND a.IDCUENTA = cb.ID 
+                        LEFT JOIN ( 
+                        SELECT DISTINCT IDCLIENTE, NC, NN, SUCURSAL 
+                        FROM cc 
+                        ) AS cc 
+                        ON cb.IDCLIENTE = cc.IDCLIENTE 
+                        AND cfg.NC = cc.NC 
+                        WHERE cb.BANCO=@banco  
+                        AND a.TOTAL_ACREDITADO > 0 
+                        ORDER BY cb.EMPRESA ASC;";
             }
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))

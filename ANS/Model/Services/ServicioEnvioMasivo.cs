@@ -288,6 +288,8 @@ namespace ANS.Model.Services
             int cuentaOrd = reader.GetOrdinal("IDCUENTA");
             int monOrd = reader.GetOrdinal("MONEDA");
             int montoOrd = reader.GetOrdinal("MONTO");
+            int bancoOrd = reader.GetOrdinal("IDBANCO");
+            int nombreBancoOrd = reader.GetOrdinal("NOMBREBANCO");
 
             while (await reader.ReadAsync())
             {
@@ -297,7 +299,9 @@ namespace ANS.Model.Services
                     IdOperacion = reader.GetInt64(opOrd),
                     IdCuenta = reader.GetInt32(cuentaOrd),
                     Divisa = reader.GetInt32(monOrd),
-                    Monto = reader.GetDouble(montoOrd)
+                    Monto = reader.GetDouble(montoOrd),
+                    NombreBanco = reader.GetString(nombreBancoOrd),
+                    IdBanco = reader.GetInt32(bancoOrd)
                 };
                 acc.setMoneda();
 

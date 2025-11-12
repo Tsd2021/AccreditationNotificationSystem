@@ -66,7 +66,7 @@ namespace ANS
             //    "ANS", "QuartzRuns.db");
 
 
-           // ---PROD-- -
+          //  ---PROD-- -
            var baseDir = System.IO.Path.Combine(@"D:\", "TAAS");
             Directory.CreateDirectory(baseDir);
             var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
@@ -97,6 +97,7 @@ namespace ANS
 
             // 4) Detectar ejecuciones omitidas entre el cierre anterior y appStartUtc (exclusivo)
             var lastShutdownUtc = await _historyStore.GetLastShutdownUtcAsync();
+
             if (lastShutdownUtc.HasValue && lastShutdownUtc.Value < appStartUtc)
             {
                 try
