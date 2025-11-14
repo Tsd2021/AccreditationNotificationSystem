@@ -289,8 +289,7 @@ namespace ANS.Model.Services
             int monOrd = reader.GetOrdinal("MONEDA");
             int montoOrd = reader.GetOrdinal("MONTO");
             int bancoOrd = reader.GetOrdinal("IDBANCO");
-            int nombreBancoOrd = reader.GetOrdinal("NOMBREBANCO");
-
+           
             while (await reader.ReadAsync())
             {
                 var acc = new AcreditacionDTO
@@ -299,11 +298,12 @@ namespace ANS.Model.Services
                     IdOperacion = reader.GetInt64(opOrd),
                     IdCuenta = reader.GetInt32(cuentaOrd),
                     Divisa = reader.GetInt32(monOrd),
-                    Monto = reader.GetDouble(montoOrd),
-                    NombreBanco = reader.GetString(nombreBancoOrd),
+                    Monto = reader.GetDouble(montoOrd),         
                     IdBanco = reader.GetInt32(bancoOrd)
                 };
                 acc.setMoneda();
+
+                acc.Banco = ServicioBanco.getInstancia().getById(acc.IdBanco);
 
                 if (mapa.TryGetValue(acc.NC, out var buzon))
                     buzon.Acreditaciones.Add(acc);
