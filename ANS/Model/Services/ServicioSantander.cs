@@ -15,14 +15,16 @@ namespace ANS.Model.Services
 {
     public class ServicioSantander : IServicioSantanderTens
     {
-        public static ServicioSantander Instance { get; set; }   
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Usado para comunicación con servicios web de Santander, thread-safety previene múltiples conexiones
+        private static readonly Lazy<ServicioSantander> _lazy = 
+            new Lazy<ServicioSantander>(() => new ServicioSantander());
+        
+        public static ServicioSantander Instance => _lazy.Value;
+        
         public static ServicioSantander getInstancia()
         {
-            if (Instance == null)
-            {
-                Instance = new ServicioSantander();
-            }
-            return Instance;
+            return _lazy.Value;
         }
         public async Task EnviarArchivoVacioConCliente()
         {
@@ -69,7 +71,9 @@ namespace ANS.Model.Services
 
                     if (!File.Exists(filePath))
                     {
-                        Console.WriteLine("❌ El archivo no existe.");
+                        // ✅ Logging mejorado: Archivo no encontrado
+                        ServicioLog.instancia.WriteError($"El archivo no existe: {filePath}", 
+                            "ServicioSantander | EnviarArchivoVacioConCliente");
                         return;
                     }
 
@@ -94,7 +98,9 @@ namespace ANS.Model.Services
 
                     var request = new TensStdr.execute(txService);
 
-                    Console.WriteLine("📤 Enviando solicitud al servicio...");
+                    // ✅ Logging informativo: Inicio de envío
+                    ServicioLog.instancia.WriteInfo("Enviando solicitud al servicio Santander", 
+                        "ServicioSantander | EnviarArchivoVacioConCliente");
 
                     // ✅ Enviar solicitud
                     AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
@@ -110,83 +116,212 @@ namespace ANS.Model.Services
                     // ✅ Procesar la respuesta
                     if (response?.result != null)
                     {
-                        Console.WriteLine($"✅ Código de respuesta: {response.result.code}");
-                        Console.WriteLine($"✅ Descripción: {response.result.description}");
+                        // ✅ Logging informativo: Respuesta recibida
+                        ServicioLog.instancia.WriteInfo($"Respuesta Santander | Código: {response.result.code} | Descripción: {response.result.description}", 
+                            "ServicioSantander | EnviarArchivoVacioConCliente");
 
                         if (response.result.code == "0")
                         {
-                            Console.WriteLine("✅ El archivo vacío se envió correctamente.");
+                            ServicioLog.instancia.WriteInfo("El archivo vacío se envió correctamente a Santander", 
+                                "ServicioSantander | EnviarArchivoVacioConCliente");
                         }
                         else
                         {
-                            Console.WriteLine("⚠️ Hubo un problema al enviar el archivo vacío.");
+                            // ✅ Logging de advertencia: Respuesta con código de error
+                            ServicioLog.instancia.WriteWarning($"Problema al enviar archivo vacío | Código: {response.result.code} | Descripción: {response.result.description}", 
+                                "ServicioSantander | EnviarArchivoVacioConCliente");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("❌ La respuesta del servicio fue nula.");
+                        // ✅ Logging de error: Respuesta nula
+                        ServicioLog.instancia.WriteError("La respuesta del servicio Santander fue nula", 
+                            "ServicioSantander | EnviarArchivoVacioConCliente");
                     }
                 }
             }
             catch (TimeoutException tex)
             {
-                Console.WriteLine($"⏳ Error de tiempo de espera: {tex.Message}");
+                // ✅ Logging mejorado: Timeout específico
+                ServicioLog.instancia.WriteError($"Error de tiempo de espera: {tex.Message}", 
+                    "ServicioSantander | EnviarArchivoVacioConCliente");
             }
             catch (FaultException faultEx)
             {
-                Console.WriteLine("❌ Se produjo un FaultException en el servicio.");
-                Console.WriteLine($"Mensaje: {faultEx.Message}");
-                if (faultEx.Code != null)
-                {
-                    Console.WriteLine($"Código del Fault: {faultEx.Code.Name}");
-                }
-                // Si existe información adicional en el detail, se puede intentar mostrar
-                // Nota: Si se utiliza FaultException<T> se puede extraer el detail de forma tipada.
+                // ✅ Logging mejorado: FaultException con código
+                string faultCode = faultEx.Code != null ? faultEx.Code.Name : "Sin código";
+                ServicioLog.instancia.WriteError($"FaultException en servicio Santander | Mensaje: {faultEx.Message} | Código: {faultCode}", 
+                    "ServicioSantander | EnviarArchivoVacioConCliente");
             }
             catch (CommunicationException cex)
             {
-                Console.WriteLine($"📡 Error de comunicación: {cex.Message}");
+                // ✅ Logging mejorado: Error de comunicación
+                ServicioLog.instancia.WriteError($"Error de comunicación: {cex.Message}", 
+                    "ServicioSantander | EnviarArchivoVacioConCliente");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al enviar el archivo vacío: {ex.Message}");
+                // ✅ Logging mejorado: Error general con stack trace completo
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Enviar Archivo Vacío con Cliente");
             }
         }
-        //public TensStdr.transactionResponse EnviarArchivoConClienteWS(string NombreCSV, byte[] Archivo)
-        //{
-        //    try
-        //    {
-        //        var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ", "");
-        //        var behavior = new PasswordDigestBehavior(credenciales.UserName, credenciales.Password);
-        //        var ClienteTens = CrearCliente();
+        /// <summary>
+        /// ✅ Envía un archivo al servicio SOAP de Santander usando los parámetros recibidos.
+        /// Basado en la estructura y buenas prácticas de EnviarArchivoVacioConCliente.
+        /// </summary>
+        /// <param name="nombreArchivo">Nombre del archivo a enviar</param>
+        /// <param name="archivo">Contenido del archivo en bytes</param>
+        /// <returns>True si el envío fue exitoso (código de respuesta "0"), False en caso contrario</returns>
+        public async Task<bool> EnviarArchivoConClienteWS(string nombreArchivo, byte[] archivo)
+        {
+            var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ");
 
-        //        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-        //        ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            // ✅ Binding corregido para autenticación básica
+            var binding = new BasicHttpsBinding
+            {
+                Security = new BasicHttpsSecurity
+                {
+                    Mode = BasicHttpsSecurityMode.Transport,
+                    Message = new BasicHttpMessageSecurity
+                    {
+                        ClientCredentialType = BasicHttpMessageCredentialType.UserName
+                    }
+                },
+                MaxReceivedMessageSize = 20000000,
+                ReaderQuotas = System.Xml.XmlDictionaryReaderQuotas.Max
+            };
 
-        //        ClienteTens.Endpoint.EndpointBehaviors.Add(behavior);
+            // ✅ Definir el endpoint correcto
+            var endpoint = new EndpointAddress("https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn");
 
-        //        TensStdr.lotFile lotFile = new TensStdr.lotFile()
-        //        {
-        //            fileName = NombreCSV,
-        //            fileBytes = Archivo
-        //        };
+            try
+            {
+                // ✅ Validación de parámetros
+                if (string.IsNullOrWhiteSpace(nombreArchivo))
+                {
+                    ServicioLog.instancia.WriteError("El nombre del archivo no puede estar vacío", 
+                        "ServicioSantander | EnviarArchivoConClienteWS");
+                    return false;
+                }
 
-        //        TensStdr.txservice Consulta = new TensStdr.txservice()
-        //        {
-        //            lotFile = lotFile,
-        //            refNumber = "1",
-        //            waitProcess = true,
-        //            method = "uploadLotFile"
-        //        };
+                if (archivo == null || archivo.Length == 0)
+                {
+                    ServicioLog.instancia.WriteError("El archivo no puede ser null o vacío", 
+                        "ServicioSantander | EnviarArchivoConClienteWS");
+                    return false;
+                }
 
-        //        return ClienteTens.execute(Consulta);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error en EnviarArchivoConClienteWS: {ex.Message}");
-        //        return null;
-        //    }
-        //}
+                // ✅ Logging informativo: Inicio del proceso
+                ServicioLog.instancia.WriteInfo($"Iniciando envío de archivo: {nombreArchivo} | Tamaño: {archivo.Length} bytes", 
+                    "ServicioSantander | EnviarArchivoConClienteWS");
+
+                using (var client = new TensStdr.TenSOnlineTxnServiceClient(binding, endpoint))
+                {
+                    // ✅ Configurar credenciales de usuario
+                    client.ClientCredentials.UserName.UserName = credenciales.UserName;
+                    client.ClientCredentials.UserName.Password = credenciales.Password;
+
+                    var pwdBehavior = new PasswordDigestBehavior(credenciales.UserName, credenciales.Password);
+                    client.Endpoint.EndpointBehaviors.Add(pwdBehavior);
+
+                    // ✅ Ignorar la validación del certificado del servicio
+                    client.ClientCredentials.ServiceCertificate.SslCertificateAuthentication = new X509ServiceCertificateAuthentication()
+                    {
+                        CertificateValidationMode = X509CertificateValidationMode.None,
+                        RevocationMode = X509RevocationMode.NoCheck
+                    };
+
+                    // ✅ Crear el objeto lotFile con los parámetros recibidos
+                    TensStdr.lotFile newLotFile = new TensStdr.lotFile()
+                    {
+                        fileName = nombreArchivo,
+                        fileBytes = archivo
+                    };
+
+                    // ✅ Crear la solicitud SOAP
+                    var txService = new TensStdr.txservice
+                    {
+                        lotFile = newLotFile,
+                        refNumber = "1",
+                        waitProcess = true,
+                        method = "uploadLotFile"
+                    };
+
+                    var request = new TensStdr.execute(txService);
+
+                    // ✅ Logging informativo: Inicio de envío
+                    ServicioLog.instancia.WriteInfo("Enviando solicitud al servicio Santander", 
+                        "ServicioSantander | EnviarArchivoConClienteWS");
+
+                    // ✅ Enviar solicitud
+                    AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                    HttpClientHandler handler = new HttpClientHandler();
+                    handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+                    HttpClient client2 = new HttpClient(handler);
+
+                    var response = await client.executeAsync(request);
+
+                    // ✅ Procesar la respuesta
+                    if (response?.result != null)
+                    {
+                        // ✅ Logging informativo: Respuesta recibida
+                        ServicioLog.instancia.WriteInfo($"Respuesta Santander | Código: {response.result.code} | Descripción: {response.result.description}", 
+                            "ServicioSantander | EnviarArchivoConClienteWS");
+
+                        if (response.result.code == "0")
+                        {
+                            ServicioLog.instancia.WriteInfo($"El archivo {nombreArchivo} se envió correctamente a Santander", 
+                                "ServicioSantander | EnviarArchivoConClienteWS");
+                            return true; // ✅ Éxito: código "0"
+                        }
+                        else
+                        {
+                            // ✅ Logging de advertencia: Respuesta con código de error
+                            ServicioLog.instancia.WriteWarning($"Problema al enviar archivo {nombreArchivo} | Código: {response.result.code} | Descripción: {response.result.description}", 
+                                "ServicioSantander | EnviarArchivoConClienteWS");
+                            return false; // ❌ Error: código diferente de "0"
+                        }
+                    }
+                    else
+                    {
+                        // ✅ Logging de error: Respuesta nula
+                        ServicioLog.instancia.WriteError("La respuesta del servicio Santander fue nula", 
+                            "ServicioSantander | EnviarArchivoConClienteWS");
+                        return false; // ❌ Error: respuesta nula
+                    }
+                }
+            }
+            catch (TimeoutException tex)
+            {
+                // ✅ Logging mejorado: Timeout específico
+                ServicioLog.instancia.WriteError($"Error de tiempo de espera: {tex.Message}", 
+                    "ServicioSantander | EnviarArchivoConClienteWS");
+                return false; // ❌ Error: timeout
+            }
+            catch (FaultException faultEx)
+            {
+                // ✅ Logging mejorado: FaultException con código
+                string faultCode = faultEx.Code != null ? faultEx.Code.Name : "Sin código";
+                ServicioLog.instancia.WriteError($"FaultException en servicio Santander | Mensaje: {faultEx.Message} | Código: {faultCode}", 
+                    "ServicioSantander | EnviarArchivoConClienteWS");
+                return false; // ❌ Error: FaultException
+            }
+            catch (CommunicationException cex)
+            {
+                // ✅ Logging mejorado: Error de comunicación
+                ServicioLog.instancia.WriteError($"Error de comunicación: {cex.Message}", 
+                    "ServicioSantander | EnviarArchivoConClienteWS");
+                return false; // ❌ Error: comunicación
+            }
+            catch (Exception ex)
+            {
+                // ✅ Logging mejorado: Error general con stack trace completo
+                ServicioLog.instancia.WriteLog(ex, "Santander", $"Enviar Archivo con Cliente WS | Archivo: {nombreArchivo}");
+                return false; // ❌ Error: excepción general
+            }
+        }
         public class PasswordDigestMessageInspector : IClientMessageInspector
         {
             public string Username { get; set; }

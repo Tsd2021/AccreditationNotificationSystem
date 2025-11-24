@@ -9,17 +9,16 @@ namespace ANS.Model.Services
     public class ServicioExcel
     {
 
-        public static ServicioExcel instancia { get; set; }
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Servicio para generación de Excel (actualmente vacío, pero preparado para futuras funcionalidades)
+        private static readonly Lazy<ServicioExcel> _lazy = 
+            new Lazy<ServicioExcel>(() => new ServicioExcel());
+        
+        public static ServicioExcel instancia => _lazy.Value;
 
         public static ServicioExcel getInstancia()
         {
-
-            if (instancia == null)
-            {
-                instancia = new ServicioExcel();
-            }
-            return instancia;
-
+            return _lazy.Value;
         }
 
         #region EXCEL_SANTANDER

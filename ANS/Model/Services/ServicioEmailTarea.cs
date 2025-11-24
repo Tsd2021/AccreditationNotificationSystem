@@ -9,20 +9,17 @@ namespace ANS.Model.Services
 {
     public class ServicioEmailTarea
     {
-        public static ServicioEmailTarea instancia { get; set; }
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Mantiene ListaEmailTarea en memoria, múltiples instancias causarían duplicación
+        private static readonly Lazy<ServicioEmailTarea> _lazy = 
+            new Lazy<ServicioEmailTarea>(() => new ServicioEmailTarea());
+        
+        public static ServicioEmailTarea instancia => _lazy.Value;
+        
         private string _conexionTSD = ConfiguracionGlobal.Conexion22;
         public List<Email> ListaEmailTarea { get; set; } = new List<Email>();
-        public static ServicioEmailTarea Instancia
-        {
-            get
-            {
-                if (instancia == null)
-                {
-                    instancia = new ServicioEmailTarea();
-                }
-                return instancia;
-            }
-        }
+        
+        public static ServicioEmailTarea Instancia => _lazy.Value;
 
         public List<Email> ObtenerTodosLosEmailTarea()
         {

@@ -8,15 +8,16 @@ namespace ANS.Model.Services
     public class ServicioTarea
     {
 
-        public static ServicioTarea instancia { get; set; }
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Obtiene tareas del scheduler de Quartz, thread-safety previene consultas concurrentes problemáticas
+        private static readonly Lazy<ServicioTarea> _lazy = 
+            new Lazy<ServicioTarea>(() => new ServicioTarea());
+        
+        public static ServicioTarea instancia => _lazy.Value;
 
         public static ServicioTarea getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioTarea();
-            }
-            return instancia;
+            return _lazy.Value;
         }
 
         public async Task<List<Tarea>> obtenerTareasDelScheduler(IScheduler scheduler)

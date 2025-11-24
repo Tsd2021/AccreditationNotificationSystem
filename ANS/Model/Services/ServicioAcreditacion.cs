@@ -8,14 +8,16 @@ namespace ANS.Model.Services
     {
         private string _conexionTSD = ConfiguracionGlobal.Conexion22;
 
-        public static ServicioAcreditacion instance { get; set; }
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Usado por múltiples jobs para crear acreditaciones, thread-safety previene duplicados
+        private static readonly Lazy<ServicioAcreditacion> _lazy = 
+            new Lazy<ServicioAcreditacion>(() => new ServicioAcreditacion());
+        
+        public static ServicioAcreditacion instance => _lazy.Value;
+        
         public static ServicioAcreditacion getInstancia()
         {
-            if (instance == null)
-            {
-                instance = new ServicioAcreditacion();
-            }
-            return instance;
+            return _lazy.Value;
         }
         public void insertar(Acreditacion a)
         {

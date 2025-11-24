@@ -22,15 +22,17 @@ namespace ANS.Model.Services
         string contrasena = "exad urge pknr xpaj";
         string destinatario = "acreditaciones@tecnisegur.com.uy";
         private string _conexionTSD = ConfiguracionGlobal.Conexion22;
-        public static ServicioEmail instancia { get; set; }
+        
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única y thread-safe
+        // Importante: Este servicio maneja conexiones SMTP compartidas, por lo que thread-safety es crítico
+        private static readonly Lazy<ServicioEmail> _lazy = 
+            new Lazy<ServicioEmail>(() => new ServicioEmail());
+        
+        public static ServicioEmail instancia => _lazy.Value;
 
         public static ServicioEmail getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioEmail();
-            }
-            return instancia;
+            return _lazy.Value;
         }
 
 
@@ -175,8 +177,9 @@ namespace ANS.Model.Services
             }
             catch (Exception ex)
             {
-                // Opcional: registrar el error para diagnóstico
-                Console.WriteLine("Error al enviar el correo: " + ex.Message);
+                // ✅ Logging mejorado: Registra error con contexto (banco, tarea, ciudad)
+                ServicioLog.instancia.WriteLog(ex, b?.NombreBanco ?? "Desconocido", 
+                    $"Envío Excel | Tarea: {tarea} | Ciudad: {ciudad}");
                 return false;
             }
         }
@@ -206,8 +209,8 @@ namespace ANS.Model.Services
             }
             catch (Exception ex)
             {
-                // Opcional: registrar el error para diagnóstico
-                Console.WriteLine("Error al enviar el correo: " + ex.Message);
+                // ✅ Logging mejorado: Registra error con contexto
+                ServicioLog.instancia.WriteLog(ex, "Todos", "Envío Mail Desconexión");
                 return false;
             }
         }
@@ -254,9 +257,13 @@ namespace ANS.Model.Services
             }
             catch (Exception ex)
             {
-                // Graba la excepción en log para depurar
-                File.AppendAllText("errores_mailkit.log",
-                    $"{DateTime.Now:O} — Error MailKit: {ex}\r\n");
+                // ✅ Logging mejorado: Reemplaza escritura directa a archivo por servicio de logging
+                // Incluye información del archivo y destinatarios para debugging
+                string destinosInfo = _destinos != null && _destinos.Count > 0 
+                    ? string.Join(", ", _destinos.Select(e => e.Correo).Take(3)) 
+                    : "Sin destinatarios";
+                ServicioLog.instancia.WriteLog(ex, "Todos", 
+                    $"Envío Excel Masivo MailKit | Archivo: {fileName} | Destinos: {destinosInfo}");
                 return false;
             }
         }

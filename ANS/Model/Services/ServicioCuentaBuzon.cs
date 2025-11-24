@@ -13,15 +13,19 @@ namespace ANS.Model.Services
     public class ServicioCuentaBuzon : IServicioCuentaBuzon
     {
         private string _conexionTSD = ConfiguracionGlobal.Conexion22;
-        public static ServicioCuentaBuzon instancia { get; set; }
+        
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Este servicio es usado por múltiples jobs de Quartz concurrentes, thread-safety es esencial
+        private static readonly Lazy<ServicioCuentaBuzon> _lazy = 
+            new Lazy<ServicioCuentaBuzon>(() => new ServicioCuentaBuzon());
+        
+        public static ServicioCuentaBuzon instancia => _lazy.Value;
+        
         public ServicioEmail _emailService { get; set; } = new ServicioEmail();
+        
         public static ServicioCuentaBuzon getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioCuentaBuzon();
-            }
-            return instancia;
+            return _lazy.Value;
         }
         public List<DtoAcreditacionesPorEmpresa> getAcreditacionesDeHoy_BackUp(Banco b)
         {

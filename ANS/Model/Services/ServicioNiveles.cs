@@ -9,24 +9,37 @@ namespace ANS.Model.Services
     {
 
         private string _conexion = ConfiguracionGlobal.ConexionWebBuzones;
-        public static ServicioNiveles instancia { get; set; }
+        
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Procesa notificaciones de desconexión, thread-safety previene envíos duplicados
+        private static readonly Lazy<ServicioNiveles> _lazy = 
+            new Lazy<ServicioNiveles>(() => new ServicioNiveles());
+        
+        public static ServicioNiveles instancia => _lazy.Value;
+        
         public static ServicioNiveles getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioNiveles();
-            }
-            return instancia;
+            return _lazy.Value;
         }
         public async Task ProcesarNotificacionesPorDesconexion()
         {
+            // ✅ Logging informativo: Inicio del proceso
+            ServicioLog.instancia.WriteInfo("Iniciando procesamiento de notificaciones por desconexión", 
+                "ServicioNiveles");
+            
             try
             {
-
-
                 List<Buzon> buzonesDesconectados = await GetBuzonesDesconectados();
 
-                if (buzonesDesconectados == null || buzonesDesconectados.Count <= 0) return;
+                if (buzonesDesconectados == null || buzonesDesconectados.Count <= 0)
+                {
+                    ServicioLog.instancia.WriteInfo("No hay buzones desconectados para notificar", 
+                        "ServicioNiveles");
+                    return;
+                }
+                
+                ServicioLog.instancia.WriteInfo($"Buzones desconectados encontrados: {buzonesDesconectados.Count}", 
+                    "ServicioNiveles");
 
                 MailKit.Net.Smtp.SmtpClient smtpClient = await ServicioEmail.instancia.getNewSmptClient();
 
@@ -38,10 +51,18 @@ namespace ANS.Model.Services
                 }
 
                 await smtpClient.DisconnectAsync(true);
+                
+                // ✅ Logging informativo: Proceso completado
+                if (buzonesDesconectados.Count > 0)
+                {
+                    ServicioLog.instancia.WriteInfo($"Notificaciones de desconexión enviadas: {buzonesDesconectados.Count}", 
+                        "ServicioNiveles");
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error al procesar notificaciones por desconexión: " + e.Message);
+                // ✅ Logging mejorado: Registra error con contexto
+                ServicioLog.instancia.WriteLog(e, "Todos", "Procesar Notificaciones por Desconexión");
             }
         }
         public MimeMessage CrearMensajeDesconexion(Buzon buz)

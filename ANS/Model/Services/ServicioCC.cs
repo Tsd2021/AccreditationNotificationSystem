@@ -13,17 +13,20 @@ namespace ANS.Model.Services
 
         private string _conexionTSD22 = ConfiguracionGlobal.Conexion22;
         private string _conexionTSD20 = ConfiguracionGlobal.ConexionTSD;
+        
+        // ✅ Thread-safe: Lazy<T> garantiza una sola instancia
+        // listaBuzones y listaBuzonesDTO se cargan en memoria, múltiples instancias causarían datos duplicados
+        private static readonly Lazy<ServicioCC> _lazy = 
+            new Lazy<ServicioCC>(() => new ServicioCC());
+        
+        public static ServicioCC instancia => _lazy.Value;
+        
         public List<Buzon> listaBuzones { get; private set; } = new List<Buzon>();
         public List<BuzonDTO> listaBuzonesDTO { get; private set; } = new List<BuzonDTO>();
-        public static ServicioCC instancia { get; set; } 
 
         public static ServicioCC getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioCC();
-            }
-            return instancia;
+            return _lazy.Value;
         }
 
 

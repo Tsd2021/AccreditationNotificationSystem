@@ -4,15 +4,18 @@ namespace ANS.Model.Services
 {
     public class ServicioBanco
     {
-        public static ServicioBanco instancia { get; set; }
+        // ✅ Thread-safe: Lazy<T> garantiza una sola instancia
+        // ListaBancos se carga en memoria al inicio, múltiples instancias causarían duplicación de datos
+        private static readonly Lazy<ServicioBanco> _lazy = 
+            new Lazy<ServicioBanco>(() => new ServicioBanco());
+        
+        public static ServicioBanco instancia => _lazy.Value;
+        
         public List<Banco> ListaBancos { get; set; } = new List<Banco>();
+        
         public static ServicioBanco getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioBanco();
-            }
-            return instancia;
+            return _lazy.Value;
         }
         public void agregar(Banco b)
         {

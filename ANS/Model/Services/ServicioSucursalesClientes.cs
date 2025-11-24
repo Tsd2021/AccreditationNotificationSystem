@@ -5,18 +5,19 @@ namespace ANS.Model.Services
 {
     public class ServicioSucursalesClientes
     {
-
-        public static ServicioSucursalesClientes instancia { get; set; }
+        // ✅ Thread-safe: Lazy<T> garantiza una sola instancia
+        // listaSucursalCliente se carga en memoria, múltiples instancias causarían duplicación
+        private static readonly Lazy<ServicioSucursalesClientes> _lazy = 
+            new Lazy<ServicioSucursalesClientes>(() => new ServicioSucursalesClientes());
+        
+        public static ServicioSucursalesClientes instancia => _lazy.Value;
 
         private string _conexionTSD22 = ConfiguracionGlobal.Conexion22;
         public List<DtoSucursalCliente> listaSucursalCliente { get; set; } = new List<DtoSucursalCliente>();
+        
         public static ServicioSucursalesClientes getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioSucursalesClientes();
-            }
-            return instancia;
+            return _lazy.Value;
         }
         public void CargarSucursalesCliente()
         {

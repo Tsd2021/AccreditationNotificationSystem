@@ -10,14 +10,16 @@ namespace ANS.Model.Services
     public class ServicioUtilidad
     {
 
-        public static ServicioUtilidad instancia { get; set; }
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Servicio de utilidades (formateo), thread-safety no es crítico pero mantiene consistencia
+        private static readonly Lazy<ServicioUtilidad> _lazy = 
+            new Lazy<ServicioUtilidad>(() => new ServicioUtilidad());
+        
+        public static ServicioUtilidad instancia => _lazy.Value;
+        
         public static ServicioUtilidad getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioUtilidad();
-            }
-            return instancia;
+            return _lazy.Value;
         }
         public string FormatearDoubleConPuntosYComas(double monto)
         {

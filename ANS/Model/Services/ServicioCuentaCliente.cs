@@ -6,16 +6,19 @@ namespace ANS.Model.Services
     {
 
         private string _conexionTSD22 = ConfiguracionGlobal.Conexion22;
+        
+        // ✅ Thread-safe: Lazy<T> garantiza una sola instancia
+        // listaCuentasClientes se carga en memoria, múltiples instancias causarían duplicación
+        private static readonly Lazy<ServicioCuentaCliente> _lazy = 
+            new Lazy<ServicioCuentaCliente>(() => new ServicioCuentaCliente());
+        
+        public static ServicioCuentaCliente instancia => _lazy.Value;
+        
         public List<CuentaCliente> listaCuentasClientes { get; private set; } = new List<CuentaCliente>();
-        public static ServicioCuentaCliente instancia { get; set; }
 
         public static ServicioCuentaCliente getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioCuentaCliente();
-            }
-            return instancia;
+            return _lazy.Value;
         }
 
         public void CargarListaCuentasClientes()

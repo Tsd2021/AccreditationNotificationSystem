@@ -7,15 +7,19 @@ namespace ANS.Model.Services
     {
         private string _conexionENCUESTA = ConfiguracionGlobal.ConexionEncuesta;
         private string _conexionTSD22 = ConfiguracionGlobal.Conexion22;
-        public static ServicioCliente instancia { get; set; }
+        
+        // ✅ Thread-safe: Lazy<T> garantiza una sola instancia
+        // Importante: ListaClientes se carga en memoria y se comparte, múltiples instancias causarían inconsistencias
+        private static readonly Lazy<ServicioCliente> _lazy = 
+            new Lazy<ServicioCliente>(() => new ServicioCliente());
+        
+        public static ServicioCliente instancia => _lazy.Value;
+        
         public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
+        
         public static ServicioCliente getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioCliente();
-            }
-            return instancia;
+            return _lazy.Value;
         }
         public void agregar(Cliente unCliente)
         {

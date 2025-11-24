@@ -7,14 +7,17 @@ namespace ANS.Model.Services
     public class ServicioDeposito : IServicioDeposito
     {
         private string _conexionWebBuzones = ConfiguracionGlobal.ConexionWebBuzones;
-        private static ServicioDeposito instancia { get; set; }
+        
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // Usado por múltiples jobs concurrentes para asignar depósitos a buzones
+        private static readonly Lazy<ServicioDeposito> _lazy = 
+            new Lazy<ServicioDeposito>(() => new ServicioDeposito());
+        
+        private static ServicioDeposito instancia => _lazy.Value;
+        
         public static ServicioDeposito getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioDeposito();
-            }
-            return instancia;
+            return _lazy.Value;
         }
         public async Task asignarDepositosAlBuzon(CuentaBuzon buzon, int ultIdOperacion, TimeSpan horaDeCierre)
         {

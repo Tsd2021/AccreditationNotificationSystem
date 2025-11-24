@@ -6,28 +6,35 @@ using System.IO;
 
 namespace ANS.Model.Services
 {
+
+
     public class ServicioEnvioMasivo
     {
-
-        public static ServicioEnvioMasivo instancia;
+        // ✅ Thread-safe: Lazy<T> garantiza que solo se crea una instancia, incluso en entornos multi-threaded
+        // LazyThreadSafetyMode.ExecutionAndPublication es el modo por defecto y es thread-safe
+        private static readonly Lazy<ServicioEnvioMasivo> _lazy = 
+            new Lazy<ServicioEnvioMasivo>(() => new ServicioEnvioMasivo());
+        
+        public static ServicioEnvioMasivo instancia => _lazy.Value;
+        
         public ServicioEmail _emailService { get; set; } = ServicioEmail.getInstancia();
+        
         public static ServicioEnvioMasivo getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioEnvioMasivo();
-            }
-
-            return instancia;
+            return _lazy.Value;
         }
         public async Task procesarEnvioMasivo(int numEnvioMasivo)
         {
+            // ✅ Logging informativo: Inicio del proceso
+            ServicioLog.instancia.WriteInfo($"Iniciando procesamiento de envío masivo {numEnvioMasivo}", 
+                $"NumEnvioMasivo: {numEnvioMasivo}");
 
             try
-                
             {
-
                 List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
+                
+                ServicioLog.instancia.WriteInfo($"Buzones encontrados: {buzones.Count}", 
+                    $"NumEnvioMasivo: {numEnvioMasivo}");
 
                 await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
 
@@ -35,7 +42,15 @@ namespace ANS.Model.Services
                   .Where(b => b.Acreditaciones != null && b.Acreditaciones.Count > 0)
                   .ToList();
 
-                if (buzonesConAcreditaciones.Count == 0) return;
+                if (buzonesConAcreditaciones.Count == 0)
+                {
+                    ServicioLog.instancia.WriteInfo($"No hay buzones con acreditaciones para procesar", 
+                        $"NumEnvioMasivo: {numEnvioMasivo}");
+                    return;
+                }
+
+                ServicioLog.instancia.WriteInfo($"Buzones con acreditaciones: {buzonesConAcreditaciones.Count}", 
+                    $"NumEnvioMasivo: {numEnvioMasivo}");
 
                 await obtenerUsuarioYFechaDelDeposito(buzones);
 
@@ -135,8 +150,8 @@ namespace ANS.Model.Services
                         }
                         catch (Exception ex)
                         {
-
-                            Console.WriteLine($"Error al enviar el correo: {ex.Message}");
+                            // ✅ Logging mejorado: Registra error con contexto completo
+                            ServicioLog.instancia.WriteLog(ex, "Todos", $"Envío Masivo {b.NumeroEnvioMasivo} - Buzón: {b.NC}");
                         }
 
                         finally
@@ -155,10 +170,16 @@ namespace ANS.Model.Services
                 await Task.WhenAll(tasks);
 
                 await smtp.DisconnectAsync(true);
+                
+                // ✅ Logging informativo: Fin exitoso del proceso
+                ServicioLog.instancia.WriteInfo($"Procesamiento de envío masivo {numEnvioMasivo} completado exitosamente", 
+                    $"NumEnvioMasivo: {numEnvioMasivo} | Buzones procesados: {buzonesConAcreditaciones.Count}");
             }
             catch (Exception e)
             {
-                throw e;
+                // ✅ Logging mejorado: Registra error completo con contexto
+                ServicioLog.instancia.WriteLog(e, "Todos", $"Envío Masivo {numEnvioMasivo}");
+                throw; // Re-lanzar para que el caller pueda manejarlo
             }
         }
 
@@ -364,7 +385,9 @@ namespace ANS.Model.Services
             while (await reader.ReadAsync())
             {
                 var nc = reader.GetString(ordNc);
-                long idOp = reader.GetInt32(ordOp);
+                // ✅ Fix: La columna idoperacion en la tabla depositos es Int32, no Int64
+                // Convertimos a long para mantener compatibilidad con el diccionario
+                long idOp = reader.IsDBNull(ordOp) ? 0 : (long)reader.GetInt32(ordOp);
                 var user = reader.GetString(ordUser);
                 var fechaDep = reader.GetDateTime(ordFecha);
                 var emp = reader.GetString(ordEmp);

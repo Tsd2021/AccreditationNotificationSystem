@@ -292,7 +292,12 @@ namespace ANS.Model.Services
 {
     public class ServicioEnvioAcreditacionManual
     {
-        public static ServicioEnvioAcreditacionManual instancia;
+        // ✅ Thread-safe: Lazy<T> garantiza inicialización única
+        // El constructor privado carga datos pesados (sucursales), thread-safety previene múltiples cargas
+        private static readonly Lazy<ServicioEnvioAcreditacionManual> _lazy = 
+            new Lazy<ServicioEnvioAcreditacionManual>(() => new ServicioEnvioAcreditacionManual());
+        
+        public static ServicioEnvioAcreditacionManual instancia => _lazy.Value;
 
         public ServicioEmail _emailService { get; set; } = ServicioEmail.getInstancia();
 
@@ -324,11 +329,7 @@ namespace ANS.Model.Services
 
         public static ServicioEnvioAcreditacionManual getInstancia()
         {
-            if (instancia == null)
-            {
-                instancia = new ServicioEnvioAcreditacionManual();
-            }
-            return instancia;
+            return _lazy.Value;
         }
 
         public async Task EnviarAcreditacionManual(BuzonDTO buzon, int numTanda, DateTime fecha)
