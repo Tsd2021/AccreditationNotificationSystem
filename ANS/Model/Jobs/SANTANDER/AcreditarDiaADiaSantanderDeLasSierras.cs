@@ -3,6 +3,7 @@ using ANS.Model.Services;
 using ANS.ViewModel;
 using MaterialDesignThemes.Wpf;
 using Quartz;
+using System;
 using System.Windows;
 using System.Windows.Media;
 
@@ -18,7 +19,15 @@ namespace ANS.Model.Jobs.SANTANDER
         }
         public async Task Execute(IJobExecutionContext context)
         {
+            string jobName = context.JobDetail.Key.Name;
+            string jobGroup = context.JobDetail.Key.Group ?? "DEFAULT";
+            DateTimeOffset scheduledTime = context.ScheduledFireTimeUtc ?? DateTimeOffset.UtcNow;
+
             Exception e = null;
+
+            ServicioLog.instancia.WriteInfo(
+                $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC",
+                $"Job: {jobName} | Group: {jobGroup} | Clase: {GetType().Name}");
 
             try
             {
@@ -104,6 +113,13 @@ namespace ANS.Model.Jobs.SANTANDER
                     // escribir log success
 
                 });
+
+                if (e == null)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"Job completado exitosamente | Duración: {(DateTimeOffset.UtcNow - scheduledTime).TotalSeconds:F2} segundos",
+                        $"Job: {jobName} | Group: {jobGroup} | Clase: {GetType().Name}");
+                }
 
             }
 

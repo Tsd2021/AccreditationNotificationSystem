@@ -18,6 +18,15 @@ namespace ANS.Model.Jobs.SANTANDER
         }
         public async Task Execute(IJobExecutionContext context)
         {
+            string jobName = context.JobDetail.Key.Name;
+            string jobGroup = context.JobDetail.Key.Group ?? "DEFAULT";
+            DateTimeOffset scheduledTime = context.ScheduledFireTimeUtc ?? DateTimeOffset.UtcNow;
+            
+            // ✅ Logging: Inicio de ejecución del job
+            ServicioLog.instancia.WriteInfo(
+                $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC",
+                $"Job: {jobName} | Group: {jobGroup} | Banco: Santander | Tipo: Acreditar Tanda");
+            
             Exception e = null;
             try
             {
@@ -39,11 +48,17 @@ namespace ANS.Model.Jobs.SANTANDER
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea de SANTANDER: {ex.Message}");
-                //ACA GUARDAR EN UN LOG
-
+                ServicioLog.instancia.WriteLog(ex, "Santander", "Acreditar Tanda");
             }
             finally
             {
+                if (e == null)
+                {
+                    // ✅ Logging: Finalización exitosa del job
+                    ServicioLog.instancia.WriteInfo(
+                        $"Job completado exitosamente | Duración: {(DateTimeOffset.UtcNow - scheduledTime).TotalSeconds:F2} segundos",
+                        $"Job: {jobName} | Group: {jobGroup} | Banco: Santander | Tipo: Acreditar Tanda");
+                }
 
                 //string msgRetorno = "SUCCESS - JOB TANDA ~SANTANDER~";
 

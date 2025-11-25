@@ -18,6 +18,15 @@ namespace ANS.Model.Jobs.SANTANDER
         }
         public async Task Execute(IJobExecutionContext context)
         {
+            string jobName = context.JobDetail.Key.Name;
+            string jobGroup = context.JobDetail.Key.Group ?? "DEFAULT";
+            DateTimeOffset scheduledTime = context.ScheduledFireTimeUtc ?? DateTimeOffset.UtcNow;
+            
+            // ✅ Logging: Inicio de ejecución del job
+            ServicioLog.instancia.WriteInfo(
+                $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC",
+                $"Job: {jobName} | Group: {jobGroup} | Banco: Santander | Tipo: Acreditar día a día");
+            
             Exception e = null;
             try
             {
@@ -88,14 +97,22 @@ namespace ANS.Model.Jobs.SANTANDER
                         main.MostrarAviso("Success Job DXD SANTANDER", Colors.Green);
 
                         mensaje.Estado = "Success";
+                        
+                        // ✅ Logging: Resumen final del job
+                        double duracionSegundos = (DateTimeOffset.UtcNow - scheduledTime).TotalSeconds;
+                        ServicioLog.instancia.WriteInfo(
+                            $"═══════════════════════════════════════════════════════════════ | " +
+                            $"JOB COMPLETADO EXITOSAMENTE | Banco: Santander | Tipo: Acreditar día a día | " +
+                            $"Duración: {duracionSegundos:F2} segundos | " +
+                            $"ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC | " +
+                            $"Finalizado: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss} UTC",
+                            $"Job: {jobName} | Group: {jobGroup} | AcreditarDiaADiaSantander");
 
                     }
 
                     ServicioMensajeria.getInstancia().agregar(mensaje);
 
                     vm.CargarMensajes();
-
-                    // escribir log success
 
                 });
 
