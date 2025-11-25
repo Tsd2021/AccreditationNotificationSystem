@@ -1,5 +1,7 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ANS.Model.GeneradorArchivoPorBanco
@@ -294,6 +296,19 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             .Sum(d => d.Totales
                                 .Sum(i => i.ImporteTotal)));
 
+                    // ✅ Recolectar información de depósitos para logging (resumida)
+                    var depositosInfo = gCuenta
+                        .SelectMany(c => (c.Depositos ?? new List<Deposito>())
+                            .Select(d => new { 
+                                c.NC, 
+                                d.IdOperacion, 
+                                Monto = d.Totales?.Sum(t => t.ImporteTotal) ?? 0 
+                            }))
+                        .ToList();
+                    
+                    int totalDepositos = depositosInfo.Count;
+                    string divisaCodigo = grupo.Key.Divisa == VariablesGlobales.uyu ? "UYU" : "USD";
+
                     long parteEntera = (long)totalImporte;
                     // (parte entera + "00"), pad a 15 dígitos
                     string importe = (parteEntera.ToString() + "00")
@@ -329,7 +344,30 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         .Append(' ', 30)         // 30
                         .Append(' ', 692);       // 692
 
-                    txt.AppendLine(linea.ToString());
+                    string lineaFinal = linea.ToString();
+                    txt.AppendLine(lineaFinal);
+                    
+                    // ✅ Logging mejorado: Formato más amigable y legible
+                    // Solo mostrar primeros 5 depósitos si hay muchos, para no saturar el log
+                    string resumenDepositos;
+                    if (totalDepositos <= 5)
+                    {
+                        resumenDepositos = string.Join(", ", depositosInfo.Select(d => 
+                            $"{d.NC}(${d.Monto:F2})"));
+                    }
+                    else
+                    {
+                        var primeros5 = depositosInfo.Take(5).Select(d => 
+                            $"{d.NC}(${d.Monto:F2})");
+                        resumenDepositos = string.Join(", ", primeros5) + 
+                            $" ... y {totalDepositos - 5} más";
+                    }
+                    
+                    ServicioLog.instancia.WriteInfo(
+                        $"📝 Cuenta: {ejemplo.Cuenta} | Sucursal: {ejemplo.SucursalCuenta} | " +
+                        $"Divisa: {divisaCodigo} | Total: ${totalImporte:N2} | " +
+                        $"Depósitos ({totalDepositos}): {resumenDepositos}",
+                        "ScotiaFileGenerator | armarStringParaTxt_Agrupado");
                 }
 
                 // 3) Obtengo de la primera cuenta del grupo los valores externos
@@ -385,7 +423,15 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             var directory = Path.GetDirectoryName(route);
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
-            File.WriteAllText(route, txt.ToString());
+            
+            string contenido = txt.ToString();
+            File.WriteAllText(route, contenido);
+            
+            // ✅ Logging: Registrar resumen del archivo generado
+            int totalLineas = contenido.Split(new[] { Environment.NewLine, "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Length;
+            ServicioLog.instancia.WriteInfo(
+                $"Archivo generado exitosamente | Ruta: {route} | Total líneas escritas: {totalLineas}",
+                "ScotiaFileGenerator | crearYEscribirArchivo");
         }
 
 

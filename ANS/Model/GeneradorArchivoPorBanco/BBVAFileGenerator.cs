@@ -1,4 +1,5 @@
 ﻿using ANS.Model.Interfaces;
+using ANS.Model.Services;
 using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
@@ -251,9 +252,18 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         string remito = ((buz.IdReferenciaAlCliente ?? "") + "X" + dep.IdOperacion).Trim();
                         decimal suma = Convert.ToDecimal(dep.Totales?.Sum(t => t.ImporteTotal) ?? 0m);
 
-                        lines.Add(BuildDetalleBbvaLine(
+                        string lineaDetalle = BuildDetalleBbvaLine(
                             suc, cuentaBase, mon, sub, CuentaTransportadora, suma, remito, producto
-                        ));
+                        );
+                        lines.Add(lineaDetalle);
+                        
+                        // ✅ Logging: Registrar cada línea de detalle escrita al txt
+                        ServicioLog.instancia.WriteInfo(
+                            $"Línea detalle escrita al txt | IDBuzon: {buz.NC ?? "N/A"} | IDOperacion: {dep.IdOperacion} | " +
+                            $"Sucursal: {suc} | Cuenta: {cuentaBase} | SubCuenta: {sub} | " +
+                            $"Moneda: {mon} | Monto: {suma:F2} | Remito: {remito} | " +
+                            $"Línea completa: {lineaDetalle}",
+                            "BBVAFileGenerator | Exporta_Reme");
 
                         switch (NormalizeCurrency(mon))
                         {
@@ -269,11 +279,24 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 if (!lines.Any())
                     return false;
 
-                lines.Add(BuildTotalLine("UYU", cUYU, totalUYU, plantCode));
-                lines.Add(BuildTotalLine("USD", cUSD, totalUSD, plantCode));
-                lines.Add(BuildTotalLine("EUR", cEUR, totalEUR, plantCode));
-                lines.Add(BuildTotalLine("ARS", cARS, totalARS, plantCode));
-                lines.Add(BuildTotalLine("BRL", cBRL, totalBRL, plantCode));
+                string lineaTotalUYU = BuildTotalLine("UYU", cUYU, totalUYU, plantCode);
+                string lineaTotalUSD = BuildTotalLine("USD", cUSD, totalUSD, plantCode);
+                string lineaTotalEUR = BuildTotalLine("EUR", cEUR, totalEUR, plantCode);
+                string lineaTotalARS = BuildTotalLine("ARS", cARS, totalARS, plantCode);
+                string lineaTotalBRL = BuildTotalLine("BRL", cBRL, totalBRL, plantCode);
+                
+                lines.Add(lineaTotalUYU);
+                lines.Add(lineaTotalUSD);
+                lines.Add(lineaTotalEUR);
+                lines.Add(lineaTotalARS);
+                lines.Add(lineaTotalBRL);
+                
+                // ✅ Logging: Registrar líneas de totales
+                ServicioLog.instancia.WriteInfo(
+                    $"Líneas totales escritas | UYU: {cUYU} registros, {totalUYU:F2} | " +
+                    $"USD: {cUSD} registros, {totalUSD:F2} | EUR: {cEUR} registros, {totalEUR:F2} | " +
+                    $"ARS: {cARS} registros, {totalARS:F2} | BRL: {cBRL} registros, {totalBRL:F2}",
+                    "BBVAFileGenerator | Exporta_Reme");
 
                 // === Correlativo GLOBAL por día (sin ciudad) ===
                 int correlativo = ReservarSiguienteCorrelativoDelDia(ruta, fecha);
@@ -291,6 +314,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     foreach (var ln in lines) sw.WriteLine(ln);
 
                 using (var sw2 = new StreamWriter(pathB, false, utf8NoBom)) { }
+
+                // ✅ Logging: Registrar resumen del archivo generado
+                ServicioLog.instancia.WriteInfo(
+                    $"Archivo generado exitosamente | Ruta: {pathA} | Total líneas: {lines.Count} | " +
+                    $"Ciudad: {ciudad} | Correlativo: {correlativo:D3}",
+                    "BBVAFileGenerator | Exporta_Reme");
 
                 BorrarMarcadorDelDia(ruta, fecha, correlativo);
                 return true;
@@ -473,10 +502,18 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                     char producto = GetProductoFlag(g.Cuenta);
 
-                    lines.Add(BuildDetalleBbvaLineLegacy(
+                    string lineaDetalle = BuildDetalleBbvaLineLegacy(
                         g.Sucursal, g.Cuenta, g.Moneda, g.SubCuenta,
                         CuentaTransportadora, g.SumaMontos, remitoFinal, producto
-                    ));
+                    );
+                    lines.Add(lineaDetalle);
+                    
+                    // ✅ Logging: Registrar cada línea de detalle escrita al txt (agrupado)
+                    ServicioLog.instancia.WriteInfo(
+                        $"Línea detalle escrita al txt (agrupado) | Sucursal: {g.Sucursal} | " +
+                        $"Cuenta: {g.Cuenta} | SubCuenta: {g.SubCuenta} | Moneda: {g.Moneda} | " +
+                        $"Monto: {g.SumaMontos:F2} | Remito: {remitoFinal} | Línea completa: {lineaDetalle}",
+                        "BBVAFileGenerator | Exporta_Reme_Agrupado");
 
                     switch (g.Moneda)
                     {
@@ -492,11 +529,24 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     return false;
 
                 // Totales (26 cols exactas) — NO CAMBIADA
-                lines.Add(BuildTotalLine("UYU", cUYU, totalUYU, plantCode));
-                lines.Add(BuildTotalLine("USD", cUSD, totalUSD, plantCode));
-                lines.Add(BuildTotalLine("EUR", cEUR, totalEUR, plantCode));
-                lines.Add(BuildTotalLine("ARS", cARS, totalARS, plantCode));
-                lines.Add(BuildTotalLine("BRL", cBRL, totalBRL, plantCode));
+                string lineaTotalUYU = BuildTotalLine("UYU", cUYU, totalUYU, plantCode);
+                string lineaTotalUSD = BuildTotalLine("USD", cUSD, totalUSD, plantCode);
+                string lineaTotalEUR = BuildTotalLine("EUR", cEUR, totalEUR, plantCode);
+                string lineaTotalARS = BuildTotalLine("ARS", cARS, totalARS, plantCode);
+                string lineaTotalBRL = BuildTotalLine("BRL", cBRL, totalBRL, plantCode);
+                
+                lines.Add(lineaTotalUYU);
+                lines.Add(lineaTotalUSD);
+                lines.Add(lineaTotalEUR);
+                lines.Add(lineaTotalARS);
+                lines.Add(lineaTotalBRL);
+                
+                // ✅ Logging: Registrar líneas de totales (agrupado)
+                ServicioLog.instancia.WriteInfo(
+                    $"Líneas totales escritas (agrupado) | UYU: {cUYU} registros, {totalUYU:F2} | " +
+                    $"USD: {cUSD} registros, {totalUSD:F2} | EUR: {cEUR} registros, {totalEUR:F2} | " +
+                    $"ARS: {cARS} registros, {totalARS:F2} | BRL: {cBRL} registros, {totalBRL:F2}",
+                    "BBVAFileGenerator | Exporta_Reme_Agrupado");
 
                 // === Correlativo GLOBAL por día (sin ciudad) ===
                 int correlativo = ReservarSiguienteCorrelativoDelDia(rutaBase, fecha);
@@ -512,6 +562,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 using (var sw = new StreamWriter(pathA, false, utf8NoBom))
                     foreach (var ln in lines) sw.WriteLine(ln);
                 using (var sw2 = new StreamWriter(pathB, false, utf8NoBom)) { }
+
+                // ✅ Logging: Registrar resumen del archivo generado (agrupado)
+                ServicioLog.instancia.WriteInfo(
+                    $"Archivo generado exitosamente (agrupado) | Ruta: {pathA} | Total líneas: {lines.Count} | " +
+                    $"Ciudad: {ciudad} | Correlativo: {correlativo:D3}",
+                    "BBVAFileGenerator | Exporta_Reme_Agrupado");
 
                 BorrarMarcadorDelDia(rutaBase, fecha, correlativo);
                 return true;

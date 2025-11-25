@@ -236,6 +236,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                                 foreach (Total unTotal in unDeposito.Totales)
                                 {
+                                    bool agregadaAlArchivo = false;
+                                    
                                     if (unaCuenta.esCashOffice())
                                     {
 
@@ -243,10 +245,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                         {
 
                                             agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
+                                            agregadaAlArchivo = true;
                                         }
                                         else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
                                             agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
+                                            agregadaAlArchivo = true;
                                         }
                                     }
                                     if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
@@ -254,10 +258,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                         if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                         {
                                             agregarLineaAlStringBuilder_Individual(maldonadoPesos, unaCuenta, unDeposito, unTotal);
+                                            agregadaAlArchivo = true;
                                         }
                                         else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
                                             agregarLineaAlStringBuilder_Individual(maldonadoDolares, unaCuenta, unDeposito, unTotal);
+                                            agregadaAlArchivo = true;
                                         }
                                     }
                                     else if (unaCuenta.Ciudad == VariablesGlobales.montevideo)
@@ -265,11 +271,25 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                         if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                         {
                                             agregarLineaAlStringBuilder_Individual(montevideoPesos, unaCuenta, unDeposito, unTotal);
+                                            agregadaAlArchivo = true;
                                         }
                                         else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
                                             agregarLineaAlStringBuilder_Individual(montevideoDolares, unaCuenta, unDeposito, unTotal);
+                                            agregadaAlArchivo = true;
                                         }
+                                    }
+                                    
+                                    // ✅ Logging: Registrar depósitos que NO se agregaron al archivo pero tienen totales
+                                    if (!agregadaAlArchivo)
+                                    {
+                                        ServicioLog.instancia.WriteWarning(
+                                            $"Depósito EXCLUIDO del archivo txt (P2P) | IDBuzon: {unaCuenta.NC ?? "N/A"} | " +
+                                            $"IDOperacion: {unDeposito.IdOperacion} | Cuenta: {unaCuenta.Cuenta} | " +
+                                            $"Ciudad: {unaCuenta.Ciudad ?? "NULL"} | Divisa: {unaCuenta.Divisa ?? "NULL"} | " +
+                                            $"Monto: {unTotal.ImporteTotal:F2} | EsCashOffice: {unaCuenta.esCashOffice()} | " +
+                                            $"Razón: No cumple condiciones (debe ser CashOffice, MALDONADO o MONTEVIDEO)",
+                                            "SantanderFileGenerator | GenerarLineasPorTotales");
                                     }
                                 }
                             }
@@ -298,15 +318,19 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                         if (sumaMontos > 0)
                         {
+                            bool agregadaAlArchivo = false;
+                            
                             if (unaCuenta.esCashOffice())
                             {
                                 if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(cashOfficePesos, unaCuenta, sumaMontos);
+                                    agregadaAlArchivo = true;
                                 }
                                 else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(cashOfficeDolares, unaCuenta, sumaMontos);
+                                    agregadaAlArchivo = true;
                                 }
                             }
                             else
@@ -315,10 +339,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                 if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(maldonadoPesos, unaCuenta, sumaMontos);
+                                    agregadaAlArchivo = true;
                                 }
                                 else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(maldonadoDolares, unaCuenta, sumaMontos);
+                                    agregadaAlArchivo = true;
                                 }
                             }
                             else if (unaCuenta.Ciudad == VariablesGlobales.montevideo)
@@ -326,11 +352,25 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                 if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(montevideoPesos, unaCuenta, sumaMontos);
+                                    agregadaAlArchivo = true;
                                 }
                                 else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                 {
                                     agregarLineaAlStringBuilder_Agrupado(montevideoDolares, unaCuenta, sumaMontos);
+                                    agregadaAlArchivo = true;
                                 }
+                            }
+                            
+                            // ✅ Logging: Registrar cuentas que NO se agregaron al archivo pero tienen depósitos
+                            if (!agregadaAlArchivo)
+                            {
+                                ServicioLog.instancia.WriteWarning(
+                                    $"Cuenta EXCLUIDA del archivo txt | IDBuzon: {unaCuenta.NC ?? "N/A"} | " +
+                                    $"Cuenta: {unaCuenta.Cuenta} | Ciudad: {unaCuenta.Ciudad ?? "NULL"} | " +
+                                    $"Divisa: {unaCuenta.Divisa ?? "NULL"} | Monto: {sumaMontos:F2} | " +
+                                    $"EsCashOffice: {unaCuenta.esCashOffice()} | " +
+                                    $"Razón: No cumple condiciones (debe ser CashOffice, MALDONADO o MONTEVIDEO)",
+                                    "SantanderFileGenerator | GenerarLineasPorCuentasBuzones");
                             }
                         }
                     }
@@ -341,35 +381,147 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         }
         private async Task CrearArchivo(StringBuilder maldonadoPesos, StringBuilder maldonadoDolares, StringBuilder montevideoPesos, StringBuilder montevideoDolares, StringBuilder cashOfficePesos, StringBuilder cashOfficeDolares)
         {
+            // ✅ Lista para almacenar información de archivos generados (para envío en producción)
+            var archivosGenerados = new List<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)>();
+            
             if (maldonadoPesos.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(maldonadoPesos, VariablesGlobales.maldonado, VariablesGlobales.uyu);
+                var info = await CrearArchivoPorCiudadYDivisa(maldonadoPesos, VariablesGlobales.maldonado, VariablesGlobales.uyu, false);
+                if (info.HasValue) archivosGenerados.Add(info.Value);
             }
             if (maldonadoDolares.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(maldonadoDolares, VariablesGlobales.maldonado, VariablesGlobales.usd);
+                var info = await CrearArchivoPorCiudadYDivisa(maldonadoDolares, VariablesGlobales.maldonado, VariablesGlobales.usd, false);
+                if (info.HasValue) archivosGenerados.Add(info.Value);
             }
             if (montevideoPesos.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(montevideoPesos, VariablesGlobales.montevideo, VariablesGlobales.uyu);
+                var info = await CrearArchivoPorCiudadYDivisa(montevideoPesos, VariablesGlobales.montevideo, VariablesGlobales.uyu, false);
+                if (info.HasValue) archivosGenerados.Add(info.Value);
             }
             if (montevideoDolares.Length > 0)
             {
-                await CrearArchivoPorCiudadYDivisa(montevideoDolares, VariablesGlobales.montevideo, VariablesGlobales.usd);
+                var info = await CrearArchivoPorCiudadYDivisa(montevideoDolares, VariablesGlobales.montevideo, VariablesGlobales.usd, false);
+                if (info.HasValue) archivosGenerados.Add(info.Value);
             }
             if (cashOfficePesos.Length > 0)
             {
-                await CrearArchivoCashOffice(cashOfficePesos, VariablesGlobales.uyu);
+                var info = await CrearArchivoCashOffice(cashOfficePesos, VariablesGlobales.uyu, false);
+                if (info.HasValue) archivosGenerados.Add(info.Value);
             }
             if (cashOfficeDolares.Length > 0)
             {
-                await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.usd);
+                var info = await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.usd, false);
+                if (info.HasValue) archivosGenerados.Add(info.Value);
+            }
+            
+            // ============================================================================
+            // ✅ IMPLEMENTACIÓN PARA PRODUCCIÓN (COMENTADA - ACTIVAR CUANDO SE NECESITE)
+            // ============================================================================
+            // Cuando se active EnviarArchivoConClienteWS en producción, se enviará CADA archivo
+            // generado al servicio Santander. El flujo será:
+            //
+            // 1. Se generan todos los archivos y se guardan en disco
+            // 2. Se recopila información de cada archivo (ruta, nombre, contenido en bytes)
+            // 3. Al final, se itera sobre todos los archivos generados
+            // 4. Para cada archivo, se llama a EnviarArchivoConClienteWS con:
+            //    - nombreArchivo: el nombre del archivo (ej: "TEC_137_20251125143430.dat")
+            //    - archivo: el contenido del archivo en bytes
+            // 5. Se actualiza el estado del archivo según la respuesta:
+            //    - Si responseTens == true: se mueve a carpeta APPROVED
+            //    - Si responseTens == false: se mantiene en NO_ENVIADOS
+            //
+            // CÓDIGO PARA PRODUCCIÓN (descomentar cuando se active):
+            /*
+            if (archivosGenerados.Count > 0)
+            {
+                ServicioLog.instancia.WriteInfo(
+                    $"Iniciando envío de {archivosGenerados.Count} archivo(s) al servicio Santander",
+                    "SantanderFileGenerator | CrearArchivo");
+                
+                int archivosEnviadosExitosamente = 0;
+                int archivosConError = 0;
+                
+                foreach (var archivoInfo in archivosGenerados)
+                {
+                    try
+                    {
+                        // Enviar archivo al servicio Santander
+                        bool enviadoExitosamente = await ServicioSantander.getInstancia()
+                            .EnviarArchivoConClienteWS(archivoInfo.nombreArchivo, archivoInfo.contenidoBytes);
+                        
+                        if (enviadoExitosamente)
+                        {
+                            archivosEnviadosExitosamente++;
+                            
+                            // Si se envió exitosamente, mover a carpeta APPROVED
+                            string fecha = DateTime.Now.ToString("ddMMyyyy");
+                            string directorioBase = Path.GetDirectoryName(archivoInfo.rutaFinal);
+                            string directorioApproved = Path.Combine(
+                                Path.GetDirectoryName(directorioBase), 
+                                $"{fecha}_APPROVED");
+                            
+                            if (!Directory.Exists(directorioApproved))
+                                Directory.CreateDirectory(directorioApproved);
+                            
+                            string rutaApproved = Path.Combine(directorioApproved, archivoInfo.nombreArchivo);
+                            
+                            // Mover archivo de NO_ENVIADOS a APPROVED
+                            if (File.Exists(archivoInfo.rutaFinal))
+                            {
+                                File.Move(archivoInfo.rutaFinal, rutaApproved, overwrite: true);
+                                
+                                ServicioLog.instancia.WriteInfo(
+                                    $"Archivo movido a APPROVED | {archivoInfo.nombreArchivo} | " +
+                                    $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa}",
+                                    "SantanderFileGenerator | CrearArchivo");
+                            }
+                        }
+                        else
+                        {
+                            archivosConError++;
+                            ServicioLog.instancia.WriteWarning(
+                                $"Archivo NO enviado exitosamente | {archivoInfo.nombreArchivo} | " +
+                                $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
+                                $"Se mantiene en carpeta NO_ENVIADOS",
+                                "SantanderFileGenerator | CrearArchivo");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        archivosConError++;
+                        ServicioLog.instancia.WriteLog(ex, "Santander", 
+                            $"Error al enviar archivo {archivoInfo.nombreArchivo}");
+                    }
+                }
+                
+                ServicioLog.instancia.WriteInfo(
+                    $"Resumen de envío a Santander | Total archivos: {archivosGenerados.Count} | " +
+                    $"Enviados exitosamente: {archivosEnviadosExitosamente} | " +
+                    $"Con error: {archivosConError}",
+                    "SantanderFileGenerator | CrearArchivo");
+            }
+            */
+            
+            // ============================================================================
+            // ✅ IMPLEMENTACIÓN ACTUAL (TESTING) - Usa EnviarArchivoVacioConCliente
+            // ============================================================================
+            // Por ahora, se envía una notificación vacía UNA SOLA VEZ al final
+            // Esto es solo para testing. En producción se descomentará el código de arriba
+            // y se comentará/eliminará esta sección.
+            if (archivosGenerados.Count > 0)
+            {
+                ServicioLog.instancia.WriteInfo(
+                    $"Enviando notificación al servicio Santander (TESTING) | Total archivos generados: {archivosGenerados.Count}",
+                    "SantanderFileGenerator | CrearArchivo");
+                
+                await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
             }
         }
-        private async Task CrearArchivoPorCiudadYDivisa(StringBuilder contenido, string ciudad, string divisa)
+        private async Task<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)?> CrearArchivoPorCiudadYDivisa(StringBuilder contenido, string ciudad, string divisa, bool enviarATens = false)
         {
 
-            if (contenido.Length == 0) return; // No crear archivos vacíos
+            if (contenido.Length == 0) return null; // No crear archivos vacíos
 
             int numeroLineasContenido = LineCount(contenido.ToString());
             string numRegistro = numeroLineasContenido.ToString();
@@ -377,15 +529,19 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             contenido.Insert(0, "H;1\n");
             contenido.AppendLine("F;" + numRegistro);
 
-            // Enviar archivo al servicio y obtener respuesta
-            bool responseTens = await generarYEnviarArchivoTens(contenido, ciudad, divisa);
-
-            // Obtener la ruta base (que ya contiene la estructura de ciudad/divisa)
+            // ✅ Obtener la ruta base (que ya contiene la estructura de ciudad/divisa)
             string rutaArchivoBase = getRutaArchivoDAD(ciudad, divisa);
             string directorioBase = Path.GetDirectoryName(rutaArchivoBase); // Obtiene solo el directorio
             string fecha = DateTime.Now.ToString("ddMMyyyy"); // Fecha en formato ddMMyyyy
 
+            // ✅ En producción, el estado se determinará después de enviar al servicio (ver código comentado en CrearArchivo)
+            // Por ahora, todos van a NO_ENVIADOS ya que el envío se hace al final
+            // NOTA: El parámetro 'enviarATens' y el método 'generarYEnviarArchivoTens' ya NO se usan
+            // porque el envío se hace de forma centralizada al final en el método CrearArchivo
+            bool responseTens = false; // Siempre false porque el envío se hace al final
+            
             // Determinar si se guarda en "APPROVED" o "NOT_APPROVED"
+            // En producción, esto se actualizará después del envío exitoso (ver código comentado)
             string subcarpetaEstado = responseTens ? $"{fecha}_APPROVED" : $"{fecha}_NO_ENVIADOS";
 
             string directorioFinal = Path.Combine(directorioBase, subcarpetaEstado); // Ruta completa
@@ -403,31 +559,75 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             string rutaFinal = Path.Combine(directorioFinal, nombreArchivo); // Ruta donde se guardará
 
             // Guardar archivo en la ubicación correcta
-            File.WriteAllText(rutaFinal, contenido.ToString());
+            string contenidoFinal = contenido.ToString();
+            File.WriteAllText(rutaFinal, contenidoFinal);
+            
+            // ✅ Convertir contenido a bytes para envío en producción
+            byte[] contenidoBytes = Encoding.UTF8.GetBytes(contenidoFinal);
+            
+            // ✅ Logging: Registrar resumen del archivo generado
+            int totalLineas = LineCount(contenidoFinal);
+            ServicioLog.instancia.WriteInfo(
+                $"Archivo generado exitosamente | Ruta: {rutaFinal} | Total líneas: {totalLineas} | " +
+                $"Ciudad: {ciudad} | Divisa: {divisa} | Aprobado: {responseTens}",
+                "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa");
 
             await Task.Delay(250);
-
+            
+            // ✅ Retornar información del archivo para envío en producción
+            return (rutaFinal, nombreArchivo, contenidoBytes, ciudad, divisa);
         }
+        // ============================================================================
+        // ⚠️ MÉTODO OBSOLETO - Ya NO se usa en el flujo actual
+        // ============================================================================
+        // Este método se usaba para enviar archivos individualmente durante la generación.
+        // Ahora el envío se hace de forma centralizada al final en el método CrearArchivo.
+        //
+        // Si en el futuro se necesita enviar archivos individualmente (no recomendado),
+        // se puede actualizar este método para usar EnviarArchivoConClienteWS:
+        //
+        // CÓDIGO PARA PRODUCCIÓN (si se quisiera reactivar):
+        /*
         private async Task<bool> generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)
         {
-            DateTime fecha = DateTime.Now;
-
             string rutaArchivo = getRutaArchivoDAD(ciudad, divisa);
-
             byte[] archivo = Encoding.UTF8.GetBytes(contenido.ToString());
+            string nombreArchivo = Path.GetFileName(rutaArchivo);
 
+            // Enviar archivo real al servicio Santander
+            bool enviadoExitosamente = await ServicioSantander.getInstancia()
+                .EnviarArchivoConClienteWS(nombreArchivo, archivo);
+            
+            return enviadoExitosamente; // Retorna true si código de respuesta fue "0"
+        }
+        */
+        //
+        // NOTA: Actualmente este método NO se llama porque 'enviarATens' siempre es 'false'
+        // ============================================================================
+        [Obsolete("Este método ya no se usa. El envío se hace centralizado en CrearArchivo. Ver código comentado arriba para implementación en producción.")]
+        private async Task<bool> generarYEnviarArchivoTens(StringBuilder contenido, string ciudad, string divisa)
+        {
+            // ⚠️ CÓDIGO LEGACY - Solo para compatibilidad, NO se ejecuta en el flujo actual
+            // Este método ya no se llama porque 'enviarATens' siempre es 'false' en CrearArchivo
+            
+            DateTime fecha = DateTime.Now;
+            string rutaArchivo = getRutaArchivoDAD(ciudad, divisa);
+            byte[] archivo = Encoding.UTF8.GetBytes(contenido.ToString());
             string nombreCSV = Path.GetFileName(rutaArchivo);
 
-            // TensStdr.transactionResponse tensResponse = ServicioSantander.getInstancia().EnviarArchivoConClienteWS(nombreCSV, archivo);
-            // return tensResponse == null;
+            // Código comentado para producción:
+            // bool enviadoExitosamente = await ServicioSantander.getInstancia()
+            //     .EnviarArchivoConClienteWS(nombreCSV, archivo);
+            // return enviadoExitosamente;
+            
+            // Código actual (solo para testing, no se ejecuta):
             await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
             return false;
-
         }
         // CREACION ARCHIVOS ESPECIFICAMENTE DE CASHOFFICE
-        private async Task CrearArchivoCashOffice(StringBuilder content, string divisa)
+        private async Task<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)?> CrearArchivoCashOffice(StringBuilder content, string divisa, bool enviarATens = false)
         {
-            if (content.Length == 0) return; // No crear archivos vacíos
+            if (content.Length == 0) return null; // No crear archivos vacíos
 
             string ruta = "";
             int numeroLineasPesos = LineCount(content.ToString());
@@ -438,7 +638,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             content.AppendLine("F;" + numRegistro);
 
-            bool responseTens = await generarYEnviarArchivoTens(content, VariablesGlobales.cashoffice, divisa);
+            // ✅ NOTA: El parámetro 'enviarATens' y el método 'generarYEnviarArchivoTens' ya NO se usan
+            // porque el envío se hace de forma centralizada al final en el método CrearArchivo
+            // Por ahora, todos van a NO_ENVIADOS. En producción, el estado se actualizará después del envío
+            bool responseTens = false; // Siempre false porque el envío se hace al final
 
 
             if (divisa == VariablesGlobales.uyu)
@@ -458,9 +661,24 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 Directory.CreateDirectory(directorio);
             }
 
-            File.WriteAllText(ruta, content.ToString());
+            string contenidoFinal = content.ToString();
+            File.WriteAllText(ruta, contenidoFinal);
+            
+            // ✅ Convertir contenido a bytes para envío en producción
+            byte[] contenidoBytes = Encoding.UTF8.GetBytes(contenidoFinal);
+            string nombreArchivo = Path.GetFileName(ruta);
+            
+            // ✅ Logging: Registrar resumen del archivo generado (CashOffice)
+            int totalLineas = LineCount(contenidoFinal);
+            ServicioLog.instancia.WriteInfo(
+                $"Archivo generado exitosamente (CashOffice) | Ruta: {ruta} | Total líneas: {totalLineas} | " +
+                $"Divisa: {divisa}",
+                "SantanderFileGenerator | CrearArchivoCashOffice");
 
             await Task.Delay(150);
+            
+            // ✅ Retornar información del archivo para envío en producción
+            return (ruta, nombreArchivo, contenidoBytes, VariablesGlobales.cashoffice, divisa);
         }
         //METODO PARA CREAR LINEAS EN ARCHIVOS DIA A DIA Y TANDA!
         private void agregarLineaAlStringBuilder_Agrupado(StringBuilder lineas, CuentaBuzon unaCuenta, double totalPorCuenta)
@@ -477,12 +695,20 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             var cuentaFormateada = unaCuenta.Cuenta.PadLeft(12, '0');
 
             // Construir línea
-            lineas.AppendLine(
-                $"{_tipoRegistro};{_tipoOperacion};" +
+            string linea = $"{_tipoRegistro};{_tipoOperacion};" +
                 $"{sucursalFormateada};{cuentaFormateada};" +
                 $"{unaCuenta.Divisa};{totalPorCuenta}00;" +
-                $"{_tipoMovimiento};{_tipoDetalle};{referencia}"
-            );
+                $"{_tipoMovimiento};{_tipoDetalle};{referencia}";
+            
+            lineas.AppendLine(linea);
+            
+            // ✅ Logging: Registrar cada línea escrita al txt (agrupado)
+            ServicioLog.instancia.WriteInfo(
+                $"Línea escrita al txt (agrupado) | IDBuzon: {unaCuenta.NC ?? "N/A"} | " +
+                $"Cuenta: {unaCuenta.Cuenta} | Sucursal: {unaCuenta.SucursalCuenta} | " +
+                $"Divisa: {unaCuenta.Divisa} | MontoTotal: {totalPorCuenta:F2} | " +
+                $"Referencia: {referencia} | Línea completa: {linea}",
+                "SantanderFileGenerator | agregarLineaAlStringBuilder_Agrupado");
         }
         //METODO PARA CREAR LINEAS EN ARCHIVOS PUNTO A PUNTO!
         private void agregarLineaAlStringBuilder_Individual(StringBuilder sb, CuentaBuzon cb, Deposito depo, Total tot)
@@ -502,13 +728,21 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             var sucursalFormateada = cb.SucursalCuenta.PadLeft(4, '0');
             var cuentaFormateada = cb.Cuenta.PadLeft(12, '0');
 
-            sb.AppendLine(
-                $"{_tipoRegistro};{_tipoOperacion};" +
+            string linea = $"{_tipoRegistro};{_tipoOperacion};" +
                 $"{sucursalFormateada};{cuentaFormateada};" +
                 $"{cb.Divisa};{tot.ImporteTotal}00;" +
-                $"{_tipoMovimiento};{_tipoDetalle};{referenciaDetalle}"// +
-              //  $"{referencia}"
-            );
+                $"{_tipoMovimiento};{_tipoDetalle};{referenciaDetalle}";
+            
+            sb.AppendLine(linea);
+            
+            // ✅ Logging: Registrar cada línea escrita al txt (individual/P2P)
+            ServicioLog.instancia.WriteInfo(
+                $"Línea escrita al txt (individual/P2P) | IDBuzon: {cb.NC ?? "N/A"} | " +
+                $"IDOperacion: {depo.IdOperacion} | Cuenta: {cb.Cuenta} | " +
+                $"Sucursal: {cb.SucursalCuenta} | Divisa: {cb.Divisa} | " +
+                $"Monto: {tot.ImporteTotal:F2} | Referencia: {referenciaDetalle} | " +
+                $"Línea completa: {linea}",
+                "SantanderFileGenerator | agregarLineaAlStringBuilder_Individual");
         }
         private string ReemplazarPrimerCaracter(string input, int newNumber)
         {
