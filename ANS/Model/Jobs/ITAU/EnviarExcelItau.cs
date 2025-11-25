@@ -4,6 +4,7 @@ using ANS.ViewModel;
 using MaterialDesignColors.ColorManipulation;
 using MaterialDesignThemes.Wpf;
 using Quartz;
+using System;
 using System.Windows;
 using System.Windows.Media;
 
@@ -20,9 +21,18 @@ namespace ANS.Model.Jobs.ITAU
         }
         public async Task Execute(IJobExecutionContext context)
         {
+            string jobName = context.JobDetail.Key.Name;
+            string jobGroup = context.JobDetail.Key.Group ?? "DEFAULT";
+            DateTimeOffset scheduledTime = context.ScheduledFireTimeUtc ?? DateTimeOffset.UtcNow;
+
             Exception e = null;
 
             string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
+
+            // ✅ Logging: Inicio de ejecución del job
+            ServicioLog.instancia.WriteInfo(
+                $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC | Tarea: {_tarea}",
+                $"Job: {jobName} | Group: {jobGroup} | Clase: {GetType().Name}");
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>
@@ -99,6 +109,13 @@ namespace ANS.Model.Jobs.ITAU
 
                 });
 
+                if (e == null)
+                {
+                    // ✅ Logging: Finalización exitosa del job
+                    ServicioLog.instancia.WriteInfo(
+                        $"Job completado exitosamente | Duración: {(DateTimeOffset.UtcNow - scheduledTime).TotalSeconds:F2} segundos | Tarea: {_tarea}",
+                        $"Job: {jobName} | Group: {jobGroup} | Clase: {GetType().Name}");
+                }
 
             }
 

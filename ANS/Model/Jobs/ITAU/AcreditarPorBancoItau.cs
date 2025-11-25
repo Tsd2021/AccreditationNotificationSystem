@@ -25,6 +25,15 @@ namespace ANS.Model.Jobs.ITAU
         }
         public async Task Execute(IJobExecutionContext context)
         {
+            string jobName = context.JobDetail.Key.Name;
+            string jobGroup = context.JobDetail.Key.Group ?? "DEFAULT";
+            DateTimeOffset scheduledTime = context.ScheduledFireTimeUtc ?? DateTimeOffset.UtcNow;
+            
+            // ✅ Logging: Inicio de ejecución del job
+            ServicioLog.instancia.WriteInfo(
+                $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC",
+                $"Job: {jobName} | Group: {jobGroup} | Banco: Itau | Tipo: Acreditar día a día");
+            
             Exception e = null;
             try
             {
@@ -93,6 +102,11 @@ namespace ANS.Model.Jobs.ITAU
                         main.MostrarAviso("Success Job Acreditar Itau", Colors.Green);
 
                         mensaje.Estado = "Success";
+                        
+                        // ✅ Logging: Finalización exitosa del job
+                        ServicioLog.instancia.WriteInfo(
+                            $"Job completado exitosamente | Duración: {(DateTimeOffset.UtcNow - scheduledTime).TotalSeconds:F2} segundos",
+                            $"Job: {jobName} | Group: {jobGroup} | Banco: Itau | Tipo: Acreditar día a día");
 
                     }
                     ServicioMensajeria.getInstancia().agregar(mensaje);
