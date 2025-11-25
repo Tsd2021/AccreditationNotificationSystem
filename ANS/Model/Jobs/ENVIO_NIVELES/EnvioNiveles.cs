@@ -17,10 +17,18 @@ namespace ANS.Model.Jobs.ENVIO_MASIVO
         }
         public async Task Execute(IJobExecutionContext context)
         {
-
+            string jobName = context.JobDetail.Key.Name;
+            string jobGroup = context.JobDetail.Key.Group ?? "DEFAULT";
+            DateTimeOffset scheduledTime = context.ScheduledFireTimeUtc ?? DateTimeOffset.UtcNow;
+            
             JobDataMap dataMap = context.JobDetail.JobDataMap;
 
             int numEnvioMasivo = dataMap.GetInt("numEnvioMasivo");
+            
+            // ✅ Logging: Inicio de ejecución del job
+            ServicioLog.instancia.WriteInfo(
+                $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC | NumEnvioMasivo: {numEnvioMasivo}",
+                $"Job: {jobName} | Group: {jobGroup} | Tipo: Envío Niveles");
 
             Exception e = null;
 
@@ -87,6 +95,11 @@ namespace ANS.Model.Jobs.ENVIO_MASIVO
                         main.MostrarAviso("Success Job ENVIO NIVELES", Colors.Green);
 
                         mensaje.Estado = "Success";
+                        
+                        // ✅ Logging: Finalización exitosa del job
+                        ServicioLog.instancia.WriteInfo(
+                            $"Job completado exitosamente | Duración: {(DateTimeOffset.UtcNow - scheduledTime).TotalSeconds:F2} segundos | NumEnvioMasivo: {numEnvioMasivo}",
+                            $"Job: {jobName} | Group: {jobGroup} | Tipo: Envío Niveles");
 
                     }
                     ServicioMensajeria.getInstancia().agregar(mensaje);
