@@ -202,7 +202,17 @@ namespace ANS.Model.Services
 
                     cmd.Parameters.AddWithValue("@esPrincipal", e.EsPrincipal);
 
-                    return cmd.ExecuteScalar() != null ? Convert.ToInt32(cmd.ExecuteScalar()) : 0;
+                    int result = cmd.ExecuteNonQuery();
+                    
+                    // ✅ Logging avanzado: Detalle de inserción de correo en buzon
+                    if (result > 0)
+                    {
+                        ServicioLog.instancia.WriteInfo(
+                            $"Inserción de correo en buzon | Correo: {e.Correo} | NC: {e.NC} | EsPrincipal: {e.EsPrincipal}",
+                            "ServicioCC | insertarEmail");
+                    }
+                    
+                    return result;
 
                 }
             }

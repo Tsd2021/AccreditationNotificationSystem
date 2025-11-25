@@ -828,6 +828,18 @@ namespace ANS.Model.Services
                 throw new Exception("Error en método generarArchivoPorBanco: Lista Buzones tiene 0 elementos");
             }
 
+            // ✅ Logging: Resumen al inicio de generación de archivo
+            int totalDepositos = listaCuentaBuzones.Sum(cb => cb.Depositos?.Count ?? 0);
+            double totalMonto = listaCuentaBuzones
+                .Sum(cb => cb.Depositos?.Sum(d => d.Totales?.Sum(t => t.ImporteTotal) ?? 0) ?? 0);
+            
+            ServicioLog.instancia.WriteInfo(
+                $"═══════════════════════════════════════════════════════════════ | " +
+                $"INICIO GENERACIÓN ARCHIVO | Banco: {banco.NombreBanco} | Tipo: {tipoAcreditacion} | " +
+                $"Total Cuentas: {listaCuentaBuzones.Count} | Total Depósitos: {totalDepositos} | " +
+                $"Monto Total: {totalMonto:F2}",
+                $"ServicioCuentaBuzon | generarArchivoPorBanco");
+
             IBancoModoAcreditacion bank = BankFactory.GetModoAcreditacionByBanco(banco.NombreBanco, tipoAcreditacion);
 
             if (bank != null)
@@ -835,6 +847,13 @@ namespace ANS.Model.Services
             {
 
                 await bank.GenerarArchivo(listaCuentaBuzones);
+                
+                // ✅ Logging: Resumen al final de generación de archivo
+                ServicioLog.instancia.WriteInfo(
+                    $"═══════════════════════════════════════════════════════════════ | " +
+                    $"FIN GENERACIÓN ARCHIVO | Banco: {banco.NombreBanco} | Tipo: {tipoAcreditacion} | " +
+                    $"Archivo generado exitosamente",
+                    $"ServicioCuentaBuzon | generarArchivoPorBanco");
 
                 return;
 

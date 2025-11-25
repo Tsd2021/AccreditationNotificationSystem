@@ -305,7 +305,19 @@ namespace ANS.Model.Services
             );
 
             cn.Open();
-            return cmd.ExecuteNonQuery();
+            int rowsAffected = cmd.ExecuteNonQuery();
+            
+            // ✅ Logging avanzado: Detalle de inserción de email destino
+            if (rowsAffected > 0)
+            {
+                string idClienteStr = idCliente.HasValue ? idCliente.Value.ToString() : "N/A";
+                ServicioLog.instancia.WriteInfo(
+                    $"Inserción de email destino | Email: {correo} | Banco: {banco} | Tarea: {tarea} | " +
+                    $"Ciudad: {ciudad} | IdCliente: {idClienteStr} | Activo: {activo}",
+                    "ServicioEmail | AgregarEmailDestino");
+            }
+            
+            return rowsAffected;
         }
 
         public List<Email> ListarPor(

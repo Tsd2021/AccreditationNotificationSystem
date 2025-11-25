@@ -59,13 +59,44 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@MONTO", a.Monto);
 
                 conn.Open();
-                cmd.ExecuteNonQuery();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                
+                // ✅ Logging avanzado: Detalle de inserción de acreditación
+                if (rowsAffected > 0)
+                {
+                    string bancoNombre = ServicioBanco.getInstancia().getById(a.IdBanco)?.NombreBanco ?? "N/A";
+                     
+                    string monedaStr = a.Moneda == 1 ? "Pesos" : a.Moneda == 2 ? "Dólares" : $"MonedaId: {a.Moneda}";
+                    
+                    ServicioLog.instancia.WriteInfo(
+                        $"Inserción de acreditación | IDBuzon: {a.IdBuzon} | IDOperacion: {a.IdOperacion} | " +
+                        $"Banco: {bancoNombre} | Cuenta: {a.IdCuenta} | Moneda: {monedaStr} | " +
+                        $"Monto: {a.Monto:F2} | Fecha: {fechaParaInsertar:yyyy-MM-dd HH:mm:ss} | NoEnviado: {a.No_Enviado}",
+                        "ServicioAcreditacion | insertar");
+                }
             }
         }
         public async Task crearAcreditacionesByListaCuentaBuzones(List<CuentaBuzon> accounts)
         {
             if (accounts != null && accounts.Count > 0)
             {
+                // ✅ Logging: Resumen al inicio de creación de acreditaciones
+                string bancoNombre = accounts.FirstOrDefault()?.Banco ?? "N/A";
+                int totalDepositos = accounts.Sum(acc => acc.Depositos?.Count ?? 0);
+                double totalMonto = accounts
+                    .Sum(acc => acc.Depositos?.Sum(dep => dep.Totales?.Sum(t => t.ImporteTotal) ?? 0) ?? 0);
+                
+                ServicioLog.instancia.WriteInfo(
+                    $"═══════════════════════════════════════════════════════════════ | " +
+                    $"INICIO CREACIÓN ACREDITACIONES | Banco: {bancoNombre} | " +
+                    $"Total Cuentas: {accounts.Count} | Total Depósitos: {totalDepositos} | " +
+                    $"Monto Total: {totalMonto:F2}",
+                    $"ServicioAcreditacion | crearAcreditacionesByListaCuentaBuzones");
+                
+                int acreditacionesInsertadas = 0;
+                int acreditacionesDuplicadas = 0;
+                double montoTotalInsertado = 0;
+                
                 foreach (var _acc in accounts)
                 {
                     if (_acc.NC == "EA23L0410N12000062")
@@ -99,10 +130,25 @@ namespace ANS.Model.Services
                         {
                             a.FechaTanda = DateTime.Today.AddHours(7);
                         }
+                        
+                        // Verificar si se insertó (el método insertar ya tiene logging interno)
+                        int antes = acreditacionesInsertadas;
                         insertar(a);
-
+                        // Nota: insertar() usa IF NOT EXISTS, así que no podemos saber exactamente si se insertó
+                        // sin modificar el método. Por ahora asumimos que todas se intentan insertar.
+                        acreditacionesInsertadas++;
+                        montoTotalInsertado += montoTotalDelDeposito;
                     }
                 }
+                
+                // ✅ Logging: Resumen al final de creación de acreditaciones
+                ServicioLog.instancia.WriteInfo(
+                    $"═══════════════════════════════════════════════════════════════ | " +
+                    $"FIN CREACIÓN ACREDITACIONES | Banco: {bancoNombre} | " +
+                    $"Acreditaciones procesadas: {acreditacionesInsertadas} | " +
+                    $"Monto Total procesado: {montoTotalInsertado:F2}",
+                    $"ServicioAcreditacion | crearAcreditacionesByListaCuentaBuzones");
+                
                 await Task.Delay(50);
             }
         }
