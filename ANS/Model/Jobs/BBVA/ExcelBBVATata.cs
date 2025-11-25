@@ -3,6 +3,7 @@ using ANS.Model.Services;
 using ANS.ViewModel;
 using MaterialDesignThemes.Wpf;
 using Quartz;
+using System;
 using System.Windows;
 using System.Windows.Media;
 
@@ -19,8 +20,17 @@ namespace ANS.Model.Jobs.BBVA
         }
         public async Task Execute(IJobExecutionContext context)
         {
+            string jobName = context.JobDetail.Key.Name;
+            string jobGroup = context.JobDetail.Key.Group ?? "DEFAULT";
+            DateTimeOffset scheduledTime = context.ScheduledFireTimeUtc ?? DateTimeOffset.UtcNow;
+
             var data = context.MergedJobDataMap;
             string _tarea = data.GetString("tarea") ?? string.Empty;
+
+            // ✅ Logging: Inicio de ejecución del job
+            ServicioLog.instancia.WriteInfo(
+                $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC | Tarea: {_tarea}",
+                $"Job: {jobName} | Group: {jobGroup} | Banco: BBVA | Tipo: Excel TATA");
 
             Exception e = null;
             try
@@ -64,6 +74,14 @@ namespace ANS.Model.Jobs.BBVA
                     main.MostrarAviso(
                         e != null ? "Error Job EXCEL BBVA TATA - BBVA" : "Success Job EXCEL BBVA TATA - BBVA",
                         e != null ? Colors.Red : Colors.Green);
+
+                    if (e == null)
+                    {
+                        // ✅ Logging: Finalización exitosa del job
+                        ServicioLog.instancia.WriteInfo(
+                            $"Job completado exitosamente | Duración: {(DateTimeOffset.UtcNow - scheduledTime).TotalSeconds:F2} segundos | Tarea: {_tarea}",
+                            $"Job: {jobName} | Group: {jobGroup} | Banco: BBVA | Tipo: Excel TATA");
+                    }
 
                     ServicioMensajeria.getInstancia().agregar(mensaje);
                     vm.CargarMensajes();
