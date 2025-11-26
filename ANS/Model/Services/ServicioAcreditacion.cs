@@ -80,17 +80,22 @@ namespace ANS.Model.Services
         {
             if (accounts != null && accounts.Count > 0)
             {
-                // ✅ Logging: Resumen al inicio de creación de acreditaciones
+                // ✅ Logging: Resumen detallado al inicio de creación de acreditaciones
                 string bancoNombre = accounts.FirstOrDefault()?.Banco ?? "N/A";
                 int totalDepositos = accounts.Sum(acc => acc.Depositos?.Count ?? 0);
-                double totalMonto = accounts
+                decimal totalMonto = accounts
                     .Sum(acc => acc.Depositos?.Sum(dep => dep.Totales?.Sum(t => t.ImporteTotal) ?? 0) ?? 0);
                 
+                // Información adicional por ciudad y divisa
+                var cuentasPorCiudad = accounts.GroupBy(acc => acc.Ciudad ?? "N/A");
+                var detallesCiudad = string.Join(", ", cuentasPorCiudad.Select(g => 
+                    $"{g.Key}: {g.Count()} cuenta(s)"));
+                
                 ServicioLog.instancia.WriteInfo(
-                    $"═══════════════════════════════════════════════════════════════ | " +
                     $"INICIO CREACIÓN ACREDITACIONES | Banco: {bancoNombre} | " +
                     $"Total Cuentas: {accounts.Count} | Total Depósitos: {totalDepositos} | " +
-                    $"Monto Total: {totalMonto:F2}",
+                    $"Monto Total: ${ServicioLog.instancia.FormatearMontoPublico(totalMonto)} | " +
+                    $"Distribución por Ciudad: {detallesCiudad}",
                     $"ServicioAcreditacion | crearAcreditacionesByListaCuentaBuzones");
                 
                 int acreditacionesInsertadas = 0;
@@ -145,6 +150,9 @@ namespace ANS.Model.Services
                 ServicioLog.instancia.WriteInfo(
                     $"═══════════════════════════════════════════════════════════════ | " +
                     $"FIN CREACIÓN ACREDITACIONES | Banco: {bancoNombre} | " +
+                    $"Acreditaciones procesadas: {acreditacionesInsertadas} | " +
+                    $"Acreditaciones duplicadas (omitidas): {acreditacionesDuplicadas} | " +
+                    $"Monto total insertado: ${ServicioLog.instancia.FormatearMontoPublico((decimal)montoTotalInsertado)} | " +
                     $"Acreditaciones procesadas: {acreditacionesInsertadas} | " +
                     $"Monto Total procesado: {montoTotalInsertado:F2}",
                     $"ServicioAcreditacion | crearAcreditacionesByListaCuentaBuzones");
