@@ -364,7 +364,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     }
                     
                     ServicioLog.instancia.WriteInfo(
-                        $"📝 Cuenta: {ejemplo.Cuenta} | Sucursal: {ejemplo.SucursalCuenta} | " +
+                        $"IdCuenta: {ejemplo.IdCuenta} | " +
+                        $"Cuenta: {ejemplo.Cuenta} | Sucursal: {ejemplo.SucursalCuenta} | " +
                         $"Divisa: {divisaCodigo} | Total: ${totalImporte:N2} | " +
                         $"Depósitos ({totalDepositos}): {resumenDepositos}",
                         "ScotiaFileGenerator | armarStringParaTxt_Agrupado");
