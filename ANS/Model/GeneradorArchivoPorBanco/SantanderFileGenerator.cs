@@ -23,10 +23,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         private string _rutaDolaresP2P = @"\\172.16.10.20\puntoapuntocsvstdr$\DOLARES\";
         private string _rutaPesosP2P = @"\\172.16.10.20\puntoapuntocsvstdr$\PESOS\";
         */
-        private string _cashOfficeRutaDolaresP2P = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SANTANDER\cashoffice$\CashSantander\DOLARES\";
-        private string _cashOfficeRutaPesosP2P = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SANTANDER\cashoffice$\CashSantander\PESOS\";
-        private string _rutaDolaresP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\DOLARES\";
-        private string _rutaPesosP2P = @"C:\Users\dchiquiar\Desktop\ACREDITACIONES TEST\SANTANDER\puntoapuntocsvstdr$\PESOS\";
+        // ✅ Rutas ahora se obtienen desde ConfiguracionGlobal.Rutas (App.config)
+        // Se mantienen estas variables privadas solo para compatibilidad con métodos legacy
+        // que no han sido actualizados aún
         private Dictionary<int, int> CuentasTata = new Dictionary<int, int>
                 {
                 { 67, 1 },
@@ -139,27 +138,55 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         //    return "hola";
         //}
 
-        public string getRutaArchivoDAD(string ciudad, string divisa)
+        /// <summary>
+        /// ✅ Obtiene la ruta base del directorio según tipo de acreditación y divisa
+        /// IMPORTANTE: Para SANTANDER, NINGUNA configuración subdivide por CIUDAD, solo por DIVISA (PESOS/DOLARES)
+        /// La ciudad se refleja en el nombre del archivo, pero NO en la estructura de carpetas
+        /// </summary>
+        private string GetRutaBaseDirectorio(string ciudad, string divisa, bool esCashOffice = false)
         {
-            // SUGERENCIA: mover esto a configuración (appsettings, .config, etc.)
-            const string baseSantander = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SANTANDER";
-            const string baseSantanderTest = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\TXT\SANTANDER\";
-
-            // Normalizo entradas una sola vez (invariant para evitar sorpresas por cultura)
-            var ciudadUp = ciudad?.ToUpperInvariant();
-            var divisaUp = divisa?.ToUpperInvariant();
             var tipo = _config?.TipoAcreditacion;
+            var divisaUp = divisa?.ToUpperInvariant();
+            
+            // Carpeta divisa (siempre se usa, nunca ciudad)
+            var carpetaDivisa = divisaUp switch
+            {
+                var d when d == VariablesGlobales.uyu => "PESOS",
+                var d when d == VariablesGlobales.usd => "DOLARES",
+                _ => throw new ArgumentException($"Divisa no soportada: {divisa}", nameof(divisa))
+            };
 
-            // Carpeta por tipo de acreditación
+            // ✅ Para CashOffice P2P
+            if (esCashOffice)
+            {
+                return Path.Combine(ConfiguracionGlobal.Rutas.SantanderCashOfficeP2P, carpetaDivisa);
+            }
+
+            // ✅ Para todos los tipos de acreditación (P2P, Tanda, Día a Día):
+            // Estructura: Tipo/Divisa (SIN ciudad)
             var carpetaTipo = tipo switch
             {
-                var t when t == VariablesGlobales.p2p => "puntoapuntocsvtdr$",
-                var t when t == VariablesGlobales.tanda => "tanda$",
-                var t when t == VariablesGlobales.diaxdia => "dxd$",
+                var t when t == VariablesGlobales.p2p => ConfiguracionGlobal.Rutas.SantanderPuntoAPunto,
+                var t when t == VariablesGlobales.tanda => ConfiguracionGlobal.Rutas.SantanderTanda,
+                var t when t == VariablesGlobales.diaxdia => ConfiguracionGlobal.Rutas.SantanderDiaADia,
                 _ => throw new InvalidOperationException($"TipoAcreditacion desconocido: {tipo}")
             };
 
-            // Carpetas por ciudad y divisa
+            // Estructura: Tipo/Divisa (NO se incluye ciudad)
+            return Path.Combine(carpetaTipo, carpetaDivisa);
+        }
+
+        /// <summary>
+        /// ✅ Obtiene la ruta completa del archivo (incluye directorio base + nombre archivo)
+        /// IMPORTANTE: La ciudad se usa SOLO para determinar la sucursal en el nombre del archivo,
+        /// pero NO se incluye en la estructura de carpetas (solo divisa: PESOS/DOLARES)
+        /// </summary>
+        public string getRutaArchivoDAD(string ciudad, string divisa)
+        {
+            var ciudadUp = ciudad?.ToUpperInvariant();
+            var divisaUp = divisa?.ToUpperInvariant();
+
+            // Carpeta ciudad (solo para determinar sucursal, NO para estructura de carpetas)
             var carpetaCiudad = ciudadUp switch
             {
                 var c when c == VariablesGlobales.maldonado => "MALDONADO",
@@ -174,25 +201,26 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 _ => throw new ArgumentException($"Divisa no soportada: {divisa}", nameof(divisa))
             };
 
-            // Selección de sucursal por combinación ciudad/divisa
+            // Selección de sucursal por combinación ciudad/divisa (para nombre de archivo)
             var sucursal = (carpetaCiudad, carpetaDivisa) switch
             {
                 ("MALDONADO", "PESOS") => _sucTecnisegurPesosMald,
                 ("MALDONADO", "DOLARES") => _sucTecnisegurDolaresMald,
                 ("MONTEVIDEO", "PESOS") => _sucTecnisegurPesosMon,
-                ("MONTEVIDEO", "DOLARES") => _sucTecnisegurDolaresMon, // <- ojo: aquí había un bug en tu versión (usaba PesosMon)
+                ("MONTEVIDEO", "DOLARES") => _sucTecnisegurDolaresMon,
                 _ => throw new InvalidOperationException("Combinación ciudad/divisa no soportada")
             };
 
-            // Timestamp compacto y sin colisiones de 12h (usa 24h)
+            // Timestamp compacto
             var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
 
-            // Construcción de ruta con Path.Combine (seguro y legible)
-            var directorio = Path.Combine(baseSantander, carpetaTipo, carpetaCiudad, carpetaDivisa);
-            Directory.CreateDirectory(directorio); // asegura que exista
+            // ✅ Obtener ruta base (NO incluye ciudad, solo tipo/divisa)
+            var directorioBase = GetRutaBaseDirectorio(ciudad, divisa);
+            Directory.CreateDirectory(directorioBase); // Asegura que exista
 
+            // Nombre de archivo incluye sucursal (que refleja la ciudad), pero carpeta no
             var nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
-            return Path.Combine(directorio, nombreArchivo);
+            return Path.Combine(directorioBase, nombreArchivo);
         }
         public async Task GenerarArchivo(List<CuentaBuzon> cb)
         {
@@ -529,9 +557,40 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             contenido.Insert(0, "H;1\n");
             contenido.AppendLine("F;" + numRegistro);
 
-            // ✅ Obtener la ruta base (que ya contiene la estructura de ciudad/divisa)
-            string rutaArchivoBase = getRutaArchivoDAD(ciudad, divisa);
-            string directorioBase = Path.GetDirectoryName(rutaArchivoBase); // Obtiene solo el directorio
+            // ✅ Obtener ruta base usando el nuevo método centralizado
+            // IMPORTANTE: Para P2P, GetRutaBaseDirectorio NO incluye carpeta de ciudad
+            string directorioBase = GetRutaBaseDirectorio(ciudad, divisa);
+            
+            // ✅ Generar nombre de archivo (mismo formato que antes)
+            string ciudadUp = ciudad?.ToUpperInvariant();
+            string divisaUp = divisa?.ToUpperInvariant();
+            
+            var carpetaCiudad = ciudadUp switch
+            {
+                var c when c == VariablesGlobales.maldonado => "MALDONADO",
+                var c when c == VariablesGlobales.montevideo => "MONTEVIDEO",
+                _ => "N/A"
+            };
+            
+            var carpetaDivisa = divisaUp switch
+            {
+                var d when d == VariablesGlobales.uyu => "PESOS",
+                var d when d == VariablesGlobales.usd => "DOLARES",
+                _ => "N/A"
+            };
+
+            var sucursal = (carpetaCiudad, carpetaDivisa) switch
+            {
+                ("MALDONADO", "PESOS") => _sucTecnisegurPesosMald,
+                ("MALDONADO", "DOLARES") => _sucTecnisegurDolaresMald,
+                ("MONTEVIDEO", "PESOS") => _sucTecnisegurPesosMon,
+                ("MONTEVIDEO", "DOLARES") => _sucTecnisegurDolaresMon,
+                _ => "000" // Fallback
+            };
+
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            string nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
+            
             string fecha = DateTime.Now.ToString("ddMMyyyy"); // Fecha en formato ddMMyyyy
 
             // ✅ En producción, el estado se determinará después de enviar al servicio (ver código comentado en CrearArchivo)
@@ -552,9 +611,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 Directory.CreateDirectory(directorioFinal);
             }
 
-            // Generar nuevo nombre de archivo sin sobrescribir el original
-
-            string nombreArchivo = Path.GetFileName(rutaArchivoBase);
+            // ✅ Nombre de archivo ya se generó arriba
 
             string rutaFinal = Path.Combine(directorioFinal, nombreArchivo); // Ruta donde se guardará
 
@@ -629,13 +686,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         {
             if (content.Length == 0) return null; // No crear archivos vacíos
 
-            string ruta = "";
             int numeroLineasPesos = LineCount(content.ToString());
-
             string numRegistro = numeroLineasPesos.ToString();
 
             content.Insert(0, "H;1\n");
-
             content.AppendLine("F;" + numRegistro);
 
             // ✅ NOTA: El parámetro 'enviarATens' y el método 'generarYEnviarArchivoTens' ya NO se usan
@@ -643,42 +697,45 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // Por ahora, todos van a NO_ENVIADOS. En producción, el estado se actualizará después del envío
             bool responseTens = false; // Siempre false porque el envío se hace al final
 
+            // ✅ Usar rutas desde configuración
+            string directorioBase = GetRutaBaseDirectorio(VariablesGlobales.montevideo, divisa, esCashOffice: true);
+            
+            // Generar nombre de archivo
+            string sucursal = divisa == VariablesGlobales.uyu 
+                ? _sucTecnisegurPesosMon 
+                : _sucTecnisegurDolaresMon;
+            
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            string nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
 
-            if (divisa == VariablesGlobales.uyu)
+            // ✅ Estructura de carpetas: directorioBase/{fecha}_NO_ENVIADOS (o _APPROVED)
+            string fecha = DateTime.Now.ToString("ddMMyyyy");
+            string subcarpetaEstado = responseTens ? $"{fecha}_APPROVED" : $"{fecha}_NO_ENVIADOS";
+            string directorioFinal = Path.Combine(directorioBase, subcarpetaEstado);
+
+            if (!Directory.Exists(directorioFinal))
             {
-                ruta = _cashOfficeRutaPesosP2P + "TEC_" + _sucTecnisegurPesosMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
+                Directory.CreateDirectory(directorioFinal);
             }
 
-            if (divisa == VariablesGlobales.usd)
-            {
-                ruta = _cashOfficeRutaDolaresP2P + "TEC_" + _sucTecnisegurDolaresMon + "_" + DateTime.Now.Year.ToString() + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd") + DateTime.Now.ToString("hh") + DateTime.Now.ToString("mm") + DateTime.Now.ToString("ss") + ".dat";
-            }
-
-            string directorio = Path.GetDirectoryName(ruta);
-
-            if (!Directory.Exists(directorio))
-            {
-                Directory.CreateDirectory(directorio);
-            }
-
+            string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
             string contenidoFinal = content.ToString();
-            File.WriteAllText(ruta, contenidoFinal);
+            File.WriteAllText(rutaFinal, contenidoFinal);
             
             // ✅ Convertir contenido a bytes para envío en producción
             byte[] contenidoBytes = Encoding.UTF8.GetBytes(contenidoFinal);
-            string nombreArchivo = Path.GetFileName(ruta);
             
             // ✅ Logging: Registrar resumen del archivo generado (CashOffice)
             int totalLineas = LineCount(contenidoFinal);
             ServicioLog.instancia.WriteInfo(
-                $"Archivo generado exitosamente (CashOffice) | Ruta: {ruta} | Total líneas: {totalLineas} | " +
+                $"Archivo generado exitosamente (CashOffice) | Ruta: {rutaFinal} | Total líneas: {totalLineas} | " +
                 $"Divisa: {divisa}",
                 "SantanderFileGenerator | CrearArchivoCashOffice");
 
             await Task.Delay(150);
             
             // ✅ Retornar información del archivo para envío en producción
-            return (ruta, nombreArchivo, contenidoBytes, VariablesGlobales.cashoffice, divisa);
+            return (rutaFinal, nombreArchivo, contenidoBytes, VariablesGlobales.cashoffice, divisa);
         }
         //METODO PARA CREAR LINEAS EN ARCHIVOS DIA A DIA Y TANDA!
         private void agregarLineaAlStringBuilder_Agrupado(StringBuilder lineas, CuentaBuzon unaCuenta, double totalPorCuenta)
