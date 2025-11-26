@@ -828,16 +828,26 @@ namespace ANS.Model.Services
                 throw new Exception("Error en método generarArchivoPorBanco: Lista Buzones tiene 0 elementos");
             }
 
-            // ✅ Logging: Resumen al inicio de generación de archivo
+            // ✅ Logging: Resumen detallado al inicio de generación de archivo
             int totalDepositos = listaCuentaBuzones.Sum(cb => cb.Depositos?.Count ?? 0);
-            double totalMonto = listaCuentaBuzones
+            decimal totalMonto = listaCuentaBuzones
                 .Sum(cb => cb.Depositos?.Sum(d => d.Totales?.Sum(t => t.ImporteTotal) ?? 0) ?? 0);
             
+            // Agrupar por ciudad y divisa para información más detallada
+            var cuentasPorCiudad = listaCuentaBuzones.GroupBy(cb => cb.Ciudad ?? "N/A");
+            var cuentasPorDivisa = listaCuentaBuzones.GroupBy(cb => cb.Divisa ?? "N/A");
+            
+            var detallesCiudad = string.Join(", ", cuentasPorCiudad.Select(g => 
+                $"{g.Key}: {g.Count()} cuenta(s)"));
+            var detallesDivisa = string.Join(", ", cuentasPorDivisa.Select(g => 
+                $"{g.Key}: {g.Count()} cuenta(s)"));
+            
             ServicioLog.instancia.WriteInfo(
-                $"═══════════════════════════════════════════════════════════════ | " +
                 $"INICIO GENERACIÓN ARCHIVO | Banco: {banco.NombreBanco} | Tipo: {tipoAcreditacion} | " +
                 $"Total Cuentas: {listaCuentaBuzones.Count} | Total Depósitos: {totalDepositos} | " +
-                $"Monto Total: {totalMonto:F2}",
+                $"Monto Total: ${ServicioLog.instancia.FormatearMontoPublico(totalMonto)} | " +
+                $"Distribución por Ciudad: {detallesCiudad} | " +
+                $"Distribución por Divisa: {detallesDivisa}",
                 $"ServicioCuentaBuzon | generarArchivoPorBanco");
 
             IBancoModoAcreditacion bank = BankFactory.GetModoAcreditacionByBanco(banco.NombreBanco, tipoAcreditacion);
@@ -848,11 +858,14 @@ namespace ANS.Model.Services
 
                 await bank.GenerarArchivo(listaCuentaBuzones);
                 
-                // ✅ Logging: Resumen al final de generación de archivo
+                // ✅ Logging: Resumen detallado al final de generación de archivo
+                var tiempoTranscurrido = DateTime.Now;
                 ServicioLog.instancia.WriteInfo(
-                    $"═══════════════════════════════════════════════════════════════ | " +
                     $"FIN GENERACIÓN ARCHIVO | Banco: {banco.NombreBanco} | Tipo: {tipoAcreditacion} | " +
-                    $"Archivo generado exitosamente",
+                    $"Archivo generado exitosamente | " +
+                    $"Total Cuentas procesadas: {listaCuentaBuzones.Count} | " +
+                    $"Total Depósitos: {totalDepositos} | " +
+                    $"Monto Total procesado: ${ServicioLog.instancia.FormatearMontoPublico(totalMonto)}",
                     $"ServicioCuentaBuzon | generarArchivoPorBanco");
 
                 return;
@@ -1391,11 +1404,8 @@ namespace ANS.Model.Services
                     fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                //PRODUCCION:
-                string path = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", fn);
-
-                //TESTING:
-                //string path = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", fn);
+                // ✅ Ruta desde configuración
+                string path = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, fn);
 
                 wb.SaveAs(path);
 
@@ -1573,9 +1583,8 @@ namespace ANS.Model.Services
                 // (opcional) usar fechaBase para el nombre de archivo en vez de Now
                 var nombreArchivo = $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{fechaBase:yyyyMMdd}.xlsx";
 
-                var filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
-                // Producción:
-                // var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+                // ✅ Ruta desde configuración
+                var filePath = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
                 wb.SaveAs(filePath);
 
                 // Envío por correo
@@ -1689,13 +1698,8 @@ namespace ANS.Model.Services
                 var nombreArchivo =
                     $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{DateTime.Now:yyyyMMdd}.xlsx";
 
-                //Testing
-
-                var filePath = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
-
-                //Produccion:
-
-                //var filePath = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
+                // ✅ Ruta desde configuración
+                var filePath = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
                 wb.SaveAs(filePath); 
 
                 // Envío por correo
@@ -1867,9 +1871,8 @@ namespace ANS.Model.Services
             string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
             //produccion:
-            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombreArchivo);
-            //testing:
-            //string ruta = Path.Combine(@"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombreArchivo);
+            // ✅ Ruta desde configuración
+            string ruta = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
 
 
             workbook.SaveAs(ruta);
@@ -2309,7 +2312,8 @@ namespace ANS.Model.Services
             //produccion:
 
 
-            string ruta = Path.Combine(@"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\EXCEL\", nombre);
+            // ✅ Ruta desde configuración
+            string ruta = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombre);
 
 
             //testing:
