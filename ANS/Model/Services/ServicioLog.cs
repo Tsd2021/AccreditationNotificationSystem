@@ -1,7 +1,9 @@
 ﻿
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace ANS.Model.Services
 {
@@ -165,6 +167,7 @@ namespace ANS.Model.Services
             return bancoUpper switch
             {
                 "SCOTIA" => "SCOTIABANK",
+                "SCOTIABANK" => "SCOTIABANK", // ✅ Agregado para reconocer el nombre completo
                 "SANTANDER" => "SANTANDER",
                 "BBVA" => "BBVA",
                 "ITAU" => "ITAU",
@@ -176,16 +179,51 @@ namespace ANS.Model.Services
             };
         }
 
+        // ✅ Método privado para formatear montos de forma legible
+        private string FormatearMonto(decimal monto)
+        {
+            return monto.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-UY"));
+        }
+
+        // ✅ Método privado para formatear números grandes de forma legible
+        private string FormatearNumero(long numero)
+        {
+            return numero.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-UY"));
+        }
+
+        // ✅ Método privado para formatear duraciones de forma legible
+        private string FormatearDuracion(double segundos)
+        {
+            if (segundos < 60)
+                return $"{segundos:F2} segundos";
+            else if (segundos < 3600)
+                return $"{segundos / 60:F2} minutos ({segundos:F2} segundos)";
+            else
+                return $"{segundos / 3600:F2} horas ({segundos / 60:F2} minutos)";
+        }
+
+        // ✅ Método privado para mejorar el formato de mensajes
+        private string FormatearMensaje(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return message;
+
+            // Reemplazar separadores múltiples por uno solo para mejor legibilidad
+            message = Regex.Replace(message, @"\s*\|\s*", " | ");
+            
+            // Limpiar espacios múltiples
+            message = Regex.Replace(message, @"\s+", " ");
+            
+            return message.Trim();
+        }
+
         // ✅ Método privado centralizado para escribir logs (evita duplicación de código)
         private void WriteToFile(string level, string message, string context = "")
         {
             try
             {
-                // Directorio base de logs
-                // Prod:
-                string baseLogDirectory = @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\Logs\";
-                // Testing Local:
-                //string baseLogDirectory = @"C:\Users\dchiquiar.ABUDIL\Desktop\ANS TEST\Logs\";
+                // ✅ Directorio base de logs desde configuración
+                string baseLogDirectory = ConfiguracionGlobal.Rutas.BaseLogs;
                 
                 // ✅ Extraer banco del contexto o mensaje para crear carpeta por banco
                 string banco = ExtraerBancoDelContexto(context, message);
@@ -197,9 +235,24 @@ namespace ANS.Model.Services
                 string fileName = $"TAAS_Log_{banco}_{DateTime.Now:ddMMyyyy}.txt";
                 string filePath = Path.Combine(logDirectory, fileName);
 
-                // Construye la línea de log con formato consistente
-                string contextPart = string.IsNullOrEmpty(context) ? "" : $" | {context}";
-                string line = $"[{level}] {DateTime.Now:yyyy-MM-dd HH:mm:ss}{contextPart} | {message}";
+                // ✅ Formatear mensaje para mejor legibilidad
+                string mensajeFormateado = FormatearMensaje(message);
+                
+                // ✅ Construye la línea de log con formato mejorado y más legible
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string nivelFormateado = level.PadRight(7); // Alinea los niveles para mejor lectura
+                
+                // Construir línea con formato estructurado
+                string line;
+                if (!string.IsNullOrEmpty(context))
+                {
+                    // Si hay contexto, mostrarlo de forma más clara
+                    line = $"[{nivelFormateado}] {timestamp} | {context} | {mensajeFormateado}";
+                }
+                else
+                {
+                    line = $"[{nivelFormateado}] {timestamp} | {mensajeFormateado}";
+                }
 
                 // Añade la línea al final (crea el archivo si no existe)
                 // ✅ Thread-safe: FileStream con FileShare.ReadWrite permite escritura concurrente
@@ -231,22 +284,33 @@ namespace ANS.Model.Services
             if (e == null) return;
 
             string context = $"Bank: {bank} | AccreditationType: {accreditationType}";
-            string message = $"Exception: {e.GetType().Name} | Message: {e.Message}";
+            
+            // ✅ Mensaje más estructurado y legible
+            var messageParts = new List<string>
+            {
+                $"EXCEPCIÓN: {e.GetType().Name}",
+                $"Mensaje: {e.Message}"
+            };
             
             // Incluye InnerException si existe
             if (e.InnerException != null)
             {
-                message += $" | InnerException: {e.InnerException.GetType().Name} - {e.InnerException.Message}";
+                messageParts.Add($"Excepción Interna: {e.InnerException.GetType().Name} - {e.InnerException.Message}");
             }
             
             // Incluye StackTrace para debugging (solo las primeras líneas para no saturar)
             if (!string.IsNullOrEmpty(e.StackTrace))
             {
-                var stackLines = e.StackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                var relevantStack = string.Join(" | ", stackLines.Take(3)); // Primeras 3 líneas
-                message += $" | StackTrace: {relevantStack}";
+                var stackLines = e.StackTrace
+                    .Split(new[] { Environment.NewLine, "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
+                    .Where(line => !string.IsNullOrWhiteSpace(line))
+                    .Take(3)
+                    .Select(line => line.Trim());
+                
+                messageParts.Add($"Stack Trace (primeras 3 líneas): {string.Join(" -> ", stackLines)}");
             }
 
+            string message = string.Join(" | ", messageParts);
             WriteToFile("ERROR", message, context);
         }
 
@@ -284,6 +348,77 @@ namespace ANS.Model.Services
         {
             if (string.IsNullOrEmpty(msg)) return;
             WriteToFile("INFO", msg);
+        }
+
+        // ✅ Métodos auxiliares públicos para formatear información común en logs
+
+        /// <summary>
+        /// Formatea un monto de forma legible (ej: 1.234,56)
+        /// </summary>
+        public string FormatearMontoPublico(decimal monto)
+        {
+            return FormatearMonto(monto);
+        }
+
+        /// <summary>
+        /// Formatea un número grande de forma legible (ej: 1.234)
+        /// </summary>
+        public string FormatearNumeroPublico(long numero)
+        {
+            return FormatearNumero(numero);
+        }
+
+        /// <summary>
+        /// Formatea una duración de forma legible
+        /// </summary>
+        public string FormatearDuracionPublica(double segundos)
+        {
+            return FormatearDuracion(segundos);
+        }
+
+        /// <summary>
+        /// ✅ Método mejorado: Registra información con formato estructurado
+        /// Útil para logs complejos que requieren múltiples campos
+        /// </summary>
+        public void WriteInfoEstructurado(string accion, Dictionary<string, string> campos, string context = "")
+        {
+            if (string.IsNullOrEmpty(accion)) return;
+
+            var partes = new List<string> { accion };
+            
+            if (campos != null && campos.Count > 0)
+            {
+                foreach (var campo in campos)
+                {
+                    if (!string.IsNullOrEmpty(campo.Value))
+                    {
+                        partes.Add($"{campo.Key}: {campo.Value}");
+                    }
+                }
+            }
+
+            string mensaje = string.Join(" | ", partes);
+            WriteToFile("INFO", mensaje, context);
+        }
+
+        /// <summary>
+        /// ✅ Método mejorado: Registra el inicio de una operación importante
+        /// </summary>
+        public void WriteInicioOperacion(string operacion, string context = "")
+        {
+            string mensaje = $"═══════════════════════════════════════════════════════════════ | " +
+                            $"INICIO: {operacion}";
+            WriteToFile("INFO", mensaje, context);
+        }
+
+        /// <summary>
+        /// ✅ Método mejorado: Registra el fin de una operación importante
+        /// </summary>
+        public void WriteFinOperacion(string operacion, string resultado = "Completado exitosamente", string context = "")
+        {
+            string mensaje = $"═══════════════════════════════════════════════════════════════ | " +
+                            $"FIN: {operacion} | Resultado: {resultado}";
+            WriteToFile("INFO", mensaje, context);
         }
     }
 }
