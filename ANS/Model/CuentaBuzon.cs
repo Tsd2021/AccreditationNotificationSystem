@@ -1,4 +1,4 @@
-﻿using ANS.Model.Services;
+using ANS.Model.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,8 @@ namespace ANS.Model
     public class CuentaBuzon
     {
         public int CuentasBuzonesId { get; set; }
-        public string Banco { get; set; }
+        public string Banco { get; set; } // Banco de la cuenta (cuentasbuzones.BANCO)
+        public string BancoBuzon { get; set; } // Banco del buzón (cc.BANCO) - usado para determinar si es CashOffice
         public string IdReferenciaAlCliente { get; set; } // ID CC
         public string Cuenta { get; set; }
         public string Moneda { get; set; }
@@ -46,7 +47,9 @@ namespace ANS.Model
         }
         public void setCashOffice()
         {
-            if (Banco == VariablesGlobales.cashoffice)
+            // ✅ Validación corregida: se usa el banco del BUZÓN (CC.BANCO), no el banco de la cuenta (cuentasbuzones.BANCO)
+            // El banco del buzón puede ser CASHOFFICE, mientras que el banco de la cuenta solo puede ser BBVA, HSBC, ITAU, BANDES, SANTANDER o SCOTIABANK
+            if (BancoBuzon != null && BancoBuzon.ToUpperInvariant() == VariablesGlobales.cashoffice.ToUpperInvariant())
             {
                 CashOffice = true;
             }

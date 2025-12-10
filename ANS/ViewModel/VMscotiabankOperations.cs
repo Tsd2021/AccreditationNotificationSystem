@@ -37,6 +37,9 @@ namespace ANS.ViewModel
             EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
 
             EjecutarDiaADiaFarmashopTXTCommand = new RelayCommand(async () => await ejecutarTXTFarmashop());
+
+            EjecutarCombinarTxtMaldonadoCommand = new RelayCommand(async () => await ejecutarCombinarTxtMaldonado());
+            EjecutarCombinarTxtMontevideoCommand = new RelayCommand(async () => await ejecutarCombinarTxtMontevideo());
         }
 
         public bool IsLoading
@@ -258,8 +261,56 @@ namespace ANS.ViewModel
         public ICommand EjecutarDiaADiaExcelCommand { get; set; }
         public ICommand EjecutarAltaEmailDestinoCommand { get; }
         public ICommand EjecutarDiaADiaFarmashopTXTCommand { get; }
+        public ICommand EjecutarCombinarTxtMaldonadoCommand { get; }
+        public ICommand EjecutarCombinarTxtMontevideoCommand { get; }
 
 
         #endregion
+
+        private async Task ejecutarCombinarTxtMaldonado()
+        {
+            IsLoading = true;
+            await Task.Yield();
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await ServicioCombinarTxtScotiabank.CombinarArchivosPorCiudad("MALDONADO");
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Scotiabank", "[MANUAL] Combinar TXT Maldonado");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task ejecutarCombinarTxtMontevideo()
+        {
+            IsLoading = true;
+            await Task.Yield();
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await ServicioCombinarTxtScotiabank.CombinarArchivosPorCiudad("MONTEVIDEO");
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Scotiabank", "[MANUAL] Combinar TXT Montevideo");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
     }
 }

@@ -176,6 +176,16 @@ namespace ANS.Model.Jobs
             {
                 return new ExcelCash(_servicioCuentaBuzon);
             }
+
+            if (jobType == typeof(CombinarTxtScotiabankPorDivisaMontevideo))
+            {
+                return new CombinarTxtScotiabankPorDivisaMontevideo();
+            }
+
+            if (jobType == typeof(CombinarTxtScotiabankPorDivisaMaldonado))
+            {
+                return new CombinarTxtScotiabankPorDivisaMaldonado();
+            }
             #endregion
             #endregion
             #region ITAU_JOBS

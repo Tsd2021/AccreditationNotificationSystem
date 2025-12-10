@@ -96,6 +96,9 @@ namespace ANS
 
             /// <summary>Ruta para CashOffice de Scotiabank</summary>
             public static string ScotiabankCashOffice => GetAppSetting("RutaScotiabankCashOffice");
+            
+            /// <summary>Ruta para archivos de combinación de Scotiabank (donde se leen y generan los combinados)</summary>
+            public static string ScotiabankCombinacion => GetAppSetting("RutaScotiabankCombinacion");
         }
     }
 }

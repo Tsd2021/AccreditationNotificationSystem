@@ -1,4 +1,4 @@
-﻿using ANS.Model.Interfaces;
+using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using System.IO;
 using System.Linq;
@@ -269,13 +269,20 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             File.WriteAllText(route, txt.ToString());
         }
         */
+        /// <summary>
+        /// Genera archivos TXT agrupados para Scotiabank
+        /// ✅ IMPORTANTE: La validación de Cash Office se hace contra el banco del BUZÓN (CC.BANCO), 
+        /// no el banco de la cuenta (cuentasbuzones.BANCO). Los buzones con CC.BANCO = 'CASHOFFICE' 
+        /// se envían a la ruta de Cash Office configurada en App.config.
+        /// </summary>
         private void armarStringParaTxt_Agrupado(List<CuentaBuzon> cb)
         {
             if (cb == null || !cb.Any())
                 throw new Exception("No hay cuentas para generar el archivo");
 
-            // 1) Agrupo por DIVISA + CIUDAD (cada grupo genera un archivo)
-            var grupos = cb.GroupBy(c => new { c.Divisa, c.Ciudad });
+            // ✅ Agrupo por DIVISA + CIUDAD + CASHOFFICE (cada grupo genera un archivo)
+            // IMPORTANTE: Incluir CashOffice en la agrupación para que se separen correctamente
+            var grupos = cb.GroupBy(c => new { c.Divisa, c.Ciudad, EsCashOffice = c.esCashOffice() });
 
             foreach (var grupo in grupos)
             {
@@ -375,8 +382,16 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 var ejemploGrupo = grupo.First();
                 // Asumimos que ConfiguracionAcreditacion tiene propiedad 'Henderson'
                 //int henderson = ejemploGrupo.esHenderson() ?? 0;
-                bool cashOffice = ejemploGrupo.esCashOffice();
+                // ✅ Usar el valor de la clave de agrupación en lugar de calcularlo de nuevo
+                bool cashOffice = grupo.Key.EsCashOffice;
                 string ciudad = grupo.Key.Ciudad;
+                
+                // ✅ Logging: Registrar información del grupo antes de procesarlo
+                ServicioLog.instancia.WriteInfo(
+                    $"Procesando grupo Scotiabank | Ciudad: '{ciudad}' | Divisa: {grupo.Key.Divisa} | " +
+                    $"EsCashOffice: {cashOffice} | BancoBuzon: {ejemploGrupo.BancoBuzon ?? "NULL"} | " +
+                    $"BancoCuenta: {ejemploGrupo.Banco ?? "NULL"}",
+                    "ScotiaFileGenerator | armarStringParaTxt_Agrupado");
 
                 // Calculo 'Modo' y 'suctecni'
                 //string modo = henderson == 1 ? "Henderson_Tanda1"
@@ -388,12 +403,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                 string suctecni = ciudad == "MONTEVIDEO" ? "Mont" : "Mald";
 
-                // Rutas UNC según ciudad y cashOffice
+                // Rutas según ciudad y cashOffice (usando configuración centralizada)
                 string rutaBase = ciudad == "MONTEVIDEO"
-                    ? @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK\MONTEVIDEO"
-                    : @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK\MALDONADO";
+                    ? ConfiguracionGlobal.Rutas.ScotiabankMontevideo
+                    : ConfiguracionGlobal.Rutas.ScotiabankMaldonado;
                 string basePath = cashOffice
-                    ? @"C:\Users\Administrador.ABUDIL\Desktop\TAAS TESTING\TXT\SCOTIABANK\cashoffice$\CashScotiabank\"
+                    ? ConfiguracionGlobal.Rutas.ScotiabankCashOffice
                     : rutaBase;
 
                 // Carpeta diaria yyyy-MM-dd
@@ -409,8 +424,40 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             .Sum(i => i.ImporteTotal)));
                 string divCode = grupo.Key.Divisa == VariablesGlobales.uyu ? "UYU" : "USD";
                 string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm");
+                
+                // Agregar tipo de acreditación al nombre del archivo si está disponible
+                string tipoAcreditacionSufijo = "";
+                
+                // ✅ PRIORIDAD 1: Verificar si es cliente Farmashop/Coboe (ID 179)
+                // Si alguna cuenta del grupo pertenece a Farmashop, usar sufijo específico
+                bool esFarmashop = grupo.Any(c => c.IdCliente == 179);
+                if (esFarmashop)
+                {
+                    tipoAcreditacionSufijo = "_Farmashop";
+                }
+                // ✅ PRIORIDAD 2: Si no es Farmashop, usar el tipo de acreditación de la configuración
+                else if (_config != null && !string.IsNullOrWhiteSpace(_config.TipoAcreditacion))
+                {
+                    // Normalizar el nombre del tipo de acreditación para el sufijo
+                    string tipoNormalizado = _config.TipoAcreditacion;
+                    if (tipoNormalizado.Equals("Tanda1", StringComparison.OrdinalIgnoreCase) ||
+                        tipoNormalizado.Equals("Tanda", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tipoAcreditacionSufijo = "_Tanda1";
+                    }
+                    else if (tipoNormalizado.Equals("Tanda2", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tipoAcreditacionSufijo = "_Tanda2";
+                    }
+                    else if (tipoNormalizado.Equals("DiaADia", StringComparison.OrdinalIgnoreCase) ||
+                             tipoNormalizado.Equals("DXD", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tipoAcreditacionSufijo = "_DiaADia";
+                    }
+                }
+                
                 string fileName = $"{timestamp}-{divCode}{totalGrupo}-" +
-                                    $"AcreditacionBuzonesTecnisegur{modo}{suctecni}.txt";
+                                    $"AcreditacionBuzonesTecnisegur{modo}{suctecni}{tipoAcreditacionSufijo}.txt";
 
                 string rutaDestino = Path.Combine(folderPath, fileName);
 

@@ -66,8 +66,8 @@ namespace ANS
             //    "ANS", "QuartzRuns.db");
 
 
-          //  ---PROD-- -
-           var baseDir = System.IO.Path.Combine(@"D:\", "TAAS");
+            //  ---PROD-- -
+            var baseDir = System.IO.Path.Combine(@"D:\", "TAAS");
             Directory.CreateDirectory(baseDir);
             var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
 
@@ -83,6 +83,7 @@ namespace ANS
 
             //await crearJobsPrueba(_scheduler);
             //await correrTestBbva();
+            await correrTestCombinarTxtScotiabank(); // Descomentar para ejecutar test de combinación
 
             await crearJobsBBVA(_scheduler);
             await crearJobsSantander(_scheduler);
@@ -133,6 +134,14 @@ namespace ANS
         {
             var gen = new BBVAFileGenerator();      
             await gen.RunBbvaLocalTestsAsync();
+        }
+
+        private async Task correrTestCombinarTxtScotiabank()
+        {
+            await Task.Run(() =>
+            {
+                CombinarTxtScotiabankPorDivisaTest.EjecutarTest();
+            });
         }
 
 
@@ -605,6 +614,28 @@ namespace ANS
                     .WithCronSchedule("0 30 16 ? * MON-FRI")
                     .Build();
                 #endregion
+                #region Tarea 8: COMBINAR TXT MONTEVIDEO POR DIVISA (16:45:00)
+
+                IJobDetail jobCombinarTxtScotiabankMontevideo = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMontevideo>()
+                    .WithIdentity("ScotiabankJobCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
+                    .Build();
+
+                ITrigger triggerCombinarTxtScotiabankMontevideo = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("0 45 16 ? * MON-FRI")
+                    .Build();
+                #endregion
+                #region Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (16:46:00)
+
+                IJobDetail jobCombinarTxtScotiabankMaldonado = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMaldonado>()
+                    .WithIdentity("ScotiabankJobCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
+                    .Build();
+
+                ITrigger triggerCombinarTxtScotiabankMaldonado = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankTriggerCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
+                    .WithCronSchedule("0 46 16 ? * MON-FRI")
+                    .Build();
+                #endregion
 
                 //TODO: falta correo del cierre con todos los buzones incluidos reporte diario SOLO PARA TESORERIA 16HS MVD-MAL
                 //se llama TANDA 0 , por ahora va con henderson REPORTE DIARIO
@@ -627,6 +658,10 @@ namespace ANS
                     await scheduler.ScheduleJob(jobExcelDiaADiaScotiabank, triggerExcelDiaADiaScotiabank);
 
                     await scheduler.ScheduleJob(jobExcelCashScotiabank, triggerExcelCashScotiabank);
+
+                    await scheduler.ScheduleJob(jobCombinarTxtScotiabankMontevideo, triggerCombinarTxtScotiabankMontevideo);
+
+                    await scheduler.ScheduleJob(jobCombinarTxtScotiabankMaldonado, triggerCombinarTxtScotiabankMaldonado);
 
                 }
                 catch (Exception ex)

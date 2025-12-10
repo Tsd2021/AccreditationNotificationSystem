@@ -2,6 +2,7 @@
 using ANS.Model.Services;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ANS.Model.GeneradorArchivoPorBanco
@@ -139,31 +140,29 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         //}
 
         /// <summary>
-        /// ✅ Obtiene la ruta base del directorio según tipo de acreditación y divisa
-        /// IMPORTANTE: Para SANTANDER, NINGUNA configuración subdivide por CIUDAD, solo por DIVISA (PESOS/DOLARES)
-        /// La ciudad se refleja en el nombre del archivo, pero NO en la estructura de carpetas
+        /// ✅ Obtiene la ruta base del directorio según tipo de acreditación
+        /// IMPORTANTE: 
+        /// - NUNCA se separa por divisa (PESOS/DOLARES) - todos los archivos van juntos
+        /// - NUNCA se separa por ciudad - todos los archivos van juntos
+        /// - Los archivos se diferencian SOLO por el nombre (TEC_004, TEC_005, TEC_137, TEC_138)
+        ///   donde el número de sucursal identifica ciudad y divisa:
+        ///   - 004 = Montevideo Pesos
+        ///   - 005 = Montevideo Dólares
+        ///   - 137 = Maldonado Pesos
+        ///   - 138 = Maldonado Dólares
         /// </summary>
         private string GetRutaBaseDirectorio(string ciudad, string divisa, bool esCashOffice = false)
         {
             var tipo = _config?.TipoAcreditacion;
-            var divisaUp = divisa?.ToUpperInvariant();
-            
-            // Carpeta divisa (siempre se usa, nunca ciudad)
-            var carpetaDivisa = divisaUp switch
-            {
-                var d when d == VariablesGlobales.uyu => "PESOS",
-                var d when d == VariablesGlobales.usd => "DOLARES",
-                _ => throw new ArgumentException($"Divisa no soportada: {divisa}", nameof(divisa))
-            };
 
-            // ✅ Para CashOffice P2P
+            // ✅ Para CashOffice P2P: NO se separa por divisa
             if (esCashOffice)
             {
-                return Path.Combine(ConfiguracionGlobal.Rutas.SantanderCashOfficeP2P, carpetaDivisa);
+                return ConfiguracionGlobal.Rutas.SantanderCashOfficeP2P;
             }
 
-            // ✅ Para todos los tipos de acreditación (P2P, Tanda, Día a Día):
-            // Estructura: Tipo/Divisa (SIN ciudad)
+            // ✅ Para todos los tipos: NO se separa por divisa ni ciudad
+            // Estructura: Solo Tipo (todos los archivos juntos)
             var carpetaTipo = tipo switch
             {
                 var t when t == VariablesGlobales.p2p => ConfiguracionGlobal.Rutas.SantanderPuntoAPunto,
@@ -172,8 +171,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 _ => throw new InvalidOperationException($"TipoAcreditacion desconocido: {tipo}")
             };
 
-            // Estructura: Tipo/Divisa (NO se incluye ciudad)
-            return Path.Combine(carpetaTipo, carpetaDivisa);
+            // Estructura: Solo Tipo (SIN divisa, SIN ciudad) - Todos los archivos juntos
+            return carpetaTipo;
         }
 
         /// <summary>
@@ -242,6 +241,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 throw new Exception("Tipo de acreditación no soportado");
             }
         }
+        /// <summary>
+        /// Genera líneas para archivos P2P (Punto a Punto)
+        /// ✅ IMPORTANTE: La validación de Cash Office se hace contra el banco del BUZÓN (CC.BANCO), 
+        /// no el banco de la cuenta (cuentasbuzones.BANCO). Los buzones con CC.BANCO = 'CASHOFFICE' 
+        /// se envían a la ruta de Cash Office configurada en App.config.
+        /// </summary>
         private async Task GenerarLineasPorTotales(List<CuentaBuzon> cb)
         {
             StringBuilder maldonadoPesos = new StringBuilder();
@@ -266,18 +271,17 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                 {
                                     bool agregadaAlArchivo = false;
                                     
+                                    // ✅ Cash Office: Los buzones con CC.BANCO = 'CASHOFFICE' van a la ruta de Cash Office
                                     if (unaCuenta.esCashOffice())
                                     {
-
                                         if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                         {
-
                                             agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
                                             agregadaAlArchivo = true;
                                         }
                                         else if (unaCuenta.Divisa == VariablesGlobales.usd)
                                         {
-                                            agregarLineaAlStringBuilder_Individual(cashOfficePesos, unaCuenta, unDeposito, unTotal);
+                                            agregarLineaAlStringBuilder_Individual(cashOfficeDolares, unaCuenta, unDeposito, unTotal);
                                             agregadaAlArchivo = true;
                                         }
                                     }
@@ -316,6 +320,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                             $"IDOperacion: {unDeposito.IdOperacion} | Cuenta: {unaCuenta.Cuenta} | " +
                                             $"Ciudad: {unaCuenta.Ciudad ?? "NULL"} | Divisa: {unaCuenta.Divisa ?? "NULL"} | " +
                                             $"Monto: {unTotal.ImporteTotal:F2} | EsCashOffice: {unaCuenta.esCashOffice()} | " +
+                                            $"BancoBuzon: {unaCuenta.BancoBuzon ?? "NULL"} | BancoCuenta: {unaCuenta.Banco ?? "NULL"} | " +
                                             $"Razón: No cumple condiciones (debe ser CashOffice, MALDONADO o MONTEVIDEO)",
                                             "SantanderFileGenerator | GenerarLineasPorTotales");
                                     }
@@ -327,6 +332,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             }
             await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
         }
+        /// <summary>
+        /// Genera líneas para archivos Tanda y Día a Día (agrupados por cuenta)
+        /// ✅ IMPORTANTE: La validación de Cash Office se hace contra el banco del BUZÓN (CC.BANCO), 
+        /// no el banco de la cuenta (cuentasbuzones.BANCO). Los buzones con CC.BANCO = 'CASHOFFICE' 
+        /// se envían a la ruta de Cash Office configurada en App.config.
+        /// </summary>
         private async Task GenerarLineasPorCuentasBuzones(List<CuentaBuzon> cb)
         {
             StringBuilder maldonadoPesos = new StringBuilder();
@@ -338,68 +349,140 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             if (cb != null && cb.Count > 0)
             {
-                foreach (var unaCuenta in cb)
-                {
-                    if (unaCuenta.Depositos != null && unaCuenta.Depositos.Count > 0)
+                // ✅ AGRUPACIÓN CORRECTA: Agrupar por Empresa + Ciudad + Divisa + CashOffice
+                // IMPORTANTE: NO se agrupa por Cuenta ni Sucursal, solo por Empresa
+                // Esto permite que todas las empresas de la misma cuenta queden juntas en el archivo
+                // pero separadas por ciudad/divisa para generar archivos diferentes (004=Montevideo, 137=Maldonado)
+                var gruposAgrupados = cb
+                    .Where(c => c.Depositos != null && c.Depositos.Count > 0)
+                    .GroupBy(c => new
                     {
-                        double sumaMontos = unaCuenta.Depositos.Sum(dep => dep.Totales.Sum(t => t.ImporteTotal));
+                        // Clave de agrupación: Empresa + Ciudad + Divisa + CashOffice
+                        // NO incluir Cuenta ni Sucursal para que se agrupen todas las empresas
+                        Empresa = (c.Empresa ?? "").Trim(),
+                        Ciudad = c.Ciudad,
+                        Divisa = c.Divisa,
+                        EsCashOffice = c.esCashOffice()
+                    })
+                    .Select(g => new
+                    {
+                        // Tomar Cuenta y Sucursal de la primera CuentaBuzon del grupo
+                        // (todas las del mismo grupo deberían tener la misma cuenta, pero no es parte de la clave)
+                        Cuenta = g.First().Cuenta,
+                        Sucursal = g.First().SucursalCuenta,
+                        Empresa = g.Key.Empresa,
+                        Ciudad = g.Key.Ciudad,
+                        Divisa = g.Key.Divisa,
+                        EsCashOffice = g.Key.EsCashOffice,
+                        IdCuenta = g.First().IdCuenta, // Para el diccionario CuentasTata
+                        IdReferenciaAlCliente = g.First().IdReferenciaAlCliente ?? "", // Para construir la referencia final
+                        // Sumar TODOS los depósitos de todas las CuentaBuzon que tienen la misma Empresa+Ciudad+Divisa
+                        SumaMontos = g.Sum(c => c.Depositos.Sum(d => d.Totales.Sum(t => (double)t.ImporteTotal))),
+                        CuentaBuzonEjemplo = g.First() // Para obtener otros datos necesarios
+                    })
+                    .OrderBy(x => x.Cuenta) // Ordenar por cuenta para que queden agrupadas
+                    .ThenBy(x => x.Sucursal)
+                    .ThenBy(x => x.Empresa) // Ordenar por empresa dentro de la misma cuenta
+                    .ToList();
 
-                        if (sumaMontos > 0)
+                foreach (var grupo in gruposAgrupados)
+                {
+                    if (grupo.SumaMontos > 0)
+                    {
+                        bool agregadaAlArchivo = false;
+                        
+                        // Crear una cuenta temporal con los datos del grupo para usar el método existente
+                        var cuentaTemporal = grupo.CuentaBuzonEjemplo;
+                        
+                        // Construir la referencia final usando IdReferenciaAlCliente (para el formato del archivo)
+                        // pero la agrupación se hizo por Empresa
+                        string referenciaFinal = grupo.IdReferenciaAlCliente ?? "";
+                        if (CuentasTata.ContainsKey(grupo.IdCuenta))
                         {
-                            bool agregadaAlArchivo = false;
-                            
-                            if (unaCuenta.esCashOffice())
+                            referenciaFinal = ReemplazarPrimerCaracter(grupo.IdReferenciaAlCliente ?? "", CuentasTata[grupo.IdCuenta]);
+                        }
+                        
+                        // ✅ Logging: Registrar información del grupo antes de agregarlo
+                        string ciudadNormalizada = grupo.Ciudad?.ToUpperInvariant()?.Trim() ?? "";
+                        string divisaNormalizada = grupo.Divisa?.ToUpperInvariant()?.Trim() ?? "";
+                        
+                        ServicioLog.instancia.WriteInfo(
+                            $"Procesando grupo | Cuenta: {grupo.Cuenta} | Empresa: {grupo.Empresa} | " +
+                            $"Ciudad: '{grupo.Ciudad}' (normalizada: '{ciudadNormalizada}') | " +
+                            $"Divisa: '{grupo.Divisa}' (normalizada: '{divisaNormalizada}') | " +
+                            $"Monto: {grupo.SumaMontos:F2} | EsCashOffice: {grupo.EsCashOffice} | " +
+                            $"BancoBuzon: {cuentaTemporal.BancoBuzon ?? "NULL"} | BancoCuenta: {cuentaTemporal.Banco ?? "NULL"}",
+                            "SantanderFileGenerator | GenerarLineasPorCuentasBuzones");
+                        
+                        // ✅ Cash Office: Los buzones con CC.BANCO = 'CASHOFFICE' van a la ruta de Cash Office
+                        // La validación se hace contra el banco del BUZÓN (CC.BANCO), no el banco de la cuenta (cuentasbuzones.BANCO)
+                        if (grupo.EsCashOffice)
+                        {
+                            if (divisaNormalizada == VariablesGlobales.uyu)
                             {
-                                if (unaCuenta.Divisa == VariablesGlobales.uyu)
-                                {
-                                    agregarLineaAlStringBuilder_Agrupado(cashOfficePesos, unaCuenta, sumaMontos);
-                                    agregadaAlArchivo = true;
-                                }
-                                else if (unaCuenta.Divisa == VariablesGlobales.usd)
-                                {
-                                    agregarLineaAlStringBuilder_Agrupado(cashOfficeDolares, unaCuenta, sumaMontos);
-                                    agregadaAlArchivo = true;
-                                }
+                                agregarLineaAlStringBuilder_AgrupadoConReferencia(cashOfficePesos, cuentaTemporal, grupo.SumaMontos, referenciaFinal);
+                                agregadaAlArchivo = true;
+                                ServicioLog.instancia.WriteInfo(
+                                    $"Agregado a CashOffice Pesos | Ruta: {ConfiguracionGlobal.Rutas.SantanderCashOfficeP2P} | " +
+                                    $"BancoBuzon: {cuentaTemporal.BancoBuzon ?? "NULL"}",
+                                    "SantanderFileGenerator");
                             }
-                            else
-                            if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
+                            else if (divisaNormalizada == VariablesGlobales.usd)
                             {
-                                if (unaCuenta.Divisa == VariablesGlobales.uyu)
-                                {
-                                    agregarLineaAlStringBuilder_Agrupado(maldonadoPesos, unaCuenta, sumaMontos);
-                                    agregadaAlArchivo = true;
-                                }
-                                else if (unaCuenta.Divisa == VariablesGlobales.usd)
-                                {
-                                    agregarLineaAlStringBuilder_Agrupado(maldonadoDolares, unaCuenta, sumaMontos);
-                                    agregadaAlArchivo = true;
-                                }
+                                agregarLineaAlStringBuilder_AgrupadoConReferencia(cashOfficeDolares, cuentaTemporal, grupo.SumaMontos, referenciaFinal);
+                                agregadaAlArchivo = true;
+                                ServicioLog.instancia.WriteInfo(
+                                    $"Agregado a CashOffice Dólares | Ruta: {ConfiguracionGlobal.Rutas.SantanderCashOfficeP2P} | " +
+                                    $"BancoBuzon: {cuentaTemporal.BancoBuzon ?? "NULL"}",
+                                    "SantanderFileGenerator");
                             }
-                            else if (unaCuenta.Ciudad == VariablesGlobales.montevideo)
+                        }
+                        else if (ciudadNormalizada == VariablesGlobales.maldonado.ToUpperInvariant())
+                        {
+                            if (divisaNormalizada == VariablesGlobales.uyu)
                             {
-                                if (unaCuenta.Divisa == VariablesGlobales.uyu)
-                                {
-                                    agregarLineaAlStringBuilder_Agrupado(montevideoPesos, unaCuenta, sumaMontos);
-                                    agregadaAlArchivo = true;
-                                }
-                                else if (unaCuenta.Divisa == VariablesGlobales.usd)
-                                {
-                                    agregarLineaAlStringBuilder_Agrupado(montevideoDolares, unaCuenta, sumaMontos);
-                                    agregadaAlArchivo = true;
-                                }
+                                agregarLineaAlStringBuilder_AgrupadoConReferencia(maldonadoPesos, cuentaTemporal, grupo.SumaMontos, referenciaFinal);
+                                agregadaAlArchivo = true;
+                                ServicioLog.instancia.WriteInfo($"Agregado a Maldonado Pesos (TEC_137)", "SantanderFileGenerator");
                             }
-                            
-                            // ✅ Logging: Registrar cuentas que NO se agregaron al archivo pero tienen depósitos
-                            if (!agregadaAlArchivo)
+                            else if (divisaNormalizada == VariablesGlobales.usd)
                             {
-                                ServicioLog.instancia.WriteWarning(
-                                    $"Cuenta EXCLUIDA del archivo txt | IDBuzon: {unaCuenta.NC ?? "N/A"} | " +
-                                    $"Cuenta: {unaCuenta.Cuenta} | Ciudad: {unaCuenta.Ciudad ?? "NULL"} | " +
-                                    $"Divisa: {unaCuenta.Divisa ?? "NULL"} | Monto: {sumaMontos:F2} | " +
-                                    $"EsCashOffice: {unaCuenta.esCashOffice()} | " +
-                                    $"Razón: No cumple condiciones (debe ser CashOffice, MALDONADO o MONTEVIDEO)",
-                                    "SantanderFileGenerator | GenerarLineasPorCuentasBuzones");
+                                agregarLineaAlStringBuilder_AgrupadoConReferencia(maldonadoDolares, cuentaTemporal, grupo.SumaMontos, referenciaFinal);
+                                agregadaAlArchivo = true;
+                                ServicioLog.instancia.WriteInfo($"Agregado a Maldonado Dólares (TEC_138)", "SantanderFileGenerator");
                             }
+                        }
+                        else if (ciudadNormalizada == VariablesGlobales.montevideo.ToUpperInvariant())
+                        {
+                            if (divisaNormalizada == VariablesGlobales.uyu)
+                            {
+                                agregarLineaAlStringBuilder_AgrupadoConReferencia(montevideoPesos, cuentaTemporal, grupo.SumaMontos, referenciaFinal);
+                                agregadaAlArchivo = true;
+                                ServicioLog.instancia.WriteInfo($"Agregado a Montevideo Pesos (TEC_004)", "SantanderFileGenerator");
+                            }
+                            else if (divisaNormalizada == VariablesGlobales.usd)
+                            {
+                                agregarLineaAlStringBuilder_AgrupadoConReferencia(montevideoDolares, cuentaTemporal, grupo.SumaMontos, referenciaFinal);
+                                agregadaAlArchivo = true;
+                                ServicioLog.instancia.WriteInfo($"Agregado a Montevideo Dólares (TEC_005)", "SantanderFileGenerator");
+                            }
+                        }
+                        
+                        // ✅ Logging: Registrar cuentas que NO se agregaron al archivo
+                        if (!agregadaAlArchivo)
+                        {
+                            ServicioLog.instancia.WriteWarning(
+                                $"Grupo EXCLUIDO del archivo txt | Cuenta: {grupo.Cuenta} | " +
+                                $"Sucursal: {grupo.Sucursal} | Empresa: {grupo.Empresa ?? "NULL"} | " +
+                                $"Ciudad: '{grupo.Ciudad ?? "NULL"}' (normalizada: '{ciudadNormalizada}') | " +
+                                $"Divisa: '{grupo.Divisa ?? "NULL"}' (normalizada: '{divisaNormalizada}') | " +
+                                $"Monto: {grupo.SumaMontos:F2} | EsCashOffice: {grupo.EsCashOffice} | " +
+                                $"Comparación Ciudad: Maldonado='{VariablesGlobales.maldonado.ToUpperInvariant()}' == '{ciudadNormalizada}'? {ciudadNormalizada == VariablesGlobales.maldonado.ToUpperInvariant()} | " +
+                                $"Montevideo='{VariablesGlobales.montevideo.ToUpperInvariant()}' == '{ciudadNormalizada}'? {ciudadNormalizada == VariablesGlobales.montevideo.ToUpperInvariant()} | " +
+                                $"Comparación Divisa: UYU='{VariablesGlobales.uyu}' == '{divisaNormalizada}'? {divisaNormalizada == VariablesGlobales.uyu} | " +
+                                $"USD='{VariablesGlobales.usd}' == '{divisaNormalizada}'? {divisaNormalizada == VariablesGlobales.usd} | " +
+                                $"Razón: No cumple condiciones (debe ser CashOffice, MALDONADO o MONTEVIDEO)",
+                                "SantanderFileGenerator | GenerarLineasPorCuentasBuzones");
                         }
                     }
                 }
@@ -766,6 +849,31 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 $"Divisa: {unaCuenta.Divisa} | MontoTotal: {totalPorCuenta:F2} | " +
                 $"Referencia: {referencia} | Línea completa: {linea}",
                 "SantanderFileGenerator | agregarLineaAlStringBuilder_Agrupado");
+        }
+        
+        // ✅ NUEVO MÉTODO: Similar al anterior pero acepta la referencia como parámetro
+        // Esto permite agrupar correctamente por cuenta+sucursal+referencia
+        private void agregarLineaAlStringBuilder_AgrupadoConReferencia(StringBuilder lineas, CuentaBuzon unaCuenta, double totalPorCuenta, string referencia)
+        {
+            // Formatear sucursal a 4 dígitos y cuenta a 12 dígitos
+            var sucursalFormateada = unaCuenta.SucursalCuenta.PadLeft(4, '0');
+            var cuentaFormateada = unaCuenta.Cuenta.PadLeft(12, '0');
+
+            // Construir línea
+            string linea = $"{_tipoRegistro};{_tipoOperacion};" +
+                $"{sucursalFormateada};{cuentaFormateada};" +
+                $"{unaCuenta.Divisa};{totalPorCuenta}00;" +
+                $"{_tipoMovimiento};{_tipoDetalle};{referencia}";
+            
+            lineas.AppendLine(linea);
+            
+            // ✅ Logging: Registrar cada línea escrita al txt (agrupado con referencia específica)
+            ServicioLog.instancia.WriteInfo(
+                $"Línea escrita al txt (agrupado por referencia) | IDBuzon: {unaCuenta.NC ?? "N/A"} | " +
+                $"Cuenta: {unaCuenta.Cuenta} | Sucursal: {unaCuenta.SucursalCuenta} | " +
+                $"Divisa: {unaCuenta.Divisa} | MontoTotal: {totalPorCuenta:F2} | " +
+                $"Referencia: {referencia} | Línea completa: {linea}",
+                "SantanderFileGenerator | agregarLineaAlStringBuilder_AgrupadoConReferencia");
         }
         //METODO PARA CREAR LINEAS EN ARCHIVOS PUNTO A PUNTO!
         private void agregarLineaAlStringBuilder_Individual(StringBuilder sb, CuentaBuzon cb, Deposito depo, Total tot)

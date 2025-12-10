@@ -1,4 +1,4 @@
-﻿using ANS.Model.GeneradorArchivoPorBanco;
+using ANS.Model.GeneradorArchivoPorBanco;
 using ANS.Model.Interfaces;
 using ClosedXML.Excel;
 using ClosedXML.Excel.Drawings;
@@ -252,7 +252,7 @@ namespace ANS.Model.Services
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = @"SELECT c.NC, cb.BANCO, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, cb.TANDA, c.NN
+                string query = @"SELECT c.NC, cb.BANCO, c.BANCO as BANCOBUZON, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, cb.TANDA, c.NN
                                 from ConfiguracionAcreditacion config 
                                 inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
                                 inner join cc c on cb.idcliente = c.IDCLIENTE 
@@ -269,6 +269,7 @@ namespace ANS.Model.Services
                     // Obtener los índices de las columnas
                     int ncOrdinal = reader.GetOrdinal("NC");
                     int bancoOrdinal = reader.GetOrdinal("BANCO");
+                    int bancoBuzonOrdinal = reader.GetOrdinal("BANCOBUZON");
                     int cierreOrdinal = reader.GetOrdinal("CIERRE");
                     int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                     int cuentaOrdinal = reader.GetOrdinal("CUENTA");
@@ -286,6 +287,7 @@ namespace ANS.Model.Services
                         {
                             NC = reader.GetString(ncOrdinal),
                             Banco = reader.GetString(bancoOrdinal),
+                            BancoBuzon = reader.IsDBNull(bancoBuzonOrdinal) ? null : reader.GetString(bancoBuzonOrdinal),
                             Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
                             IdCliente = reader.GetInt32(idClienteOrdinal),
                             Cuenta = reader.GetString(cuentaOrdinal),
@@ -327,6 +329,7 @@ namespace ANS.Model.Services
                 // POR DEFAULT 
                 query = @"select distinct c.NC, 
                         cb.BANCO, 
+                        c.BANCO as BANCOBUZON,
                         c.CIERRE, 
                         c.IDCLIENTE, 
                         cb.CUENTA, 
@@ -352,6 +355,7 @@ namespace ANS.Model.Services
                     {
                         query = @"select distinct c.NC,
                             cb.BANCO,
+                            c.BANCO as BANCOBUZON,
                             c.CIERRE,
                             c.IDCLIENTE,
                             cb.CUENTA,
@@ -379,10 +383,12 @@ namespace ANS.Model.Services
                     if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
                     {
 
-                        //Si es dia a dia Scotiabank hay que excluir todo Henderson porq ya fue acreditado.
+                        //Si es dia a dia Scotiabank hay que excluir todo Henderson (164) y Farmashop (179) porque ya fueron acreditados.
+                        //Henderson se acredita en Tanda1/Tanda2, Farmashop se acredita en su job específico a las 06:58.
                         //Y tambien la consulta es especial porque no exluye RELACIONADOS!
                         query = @"select distinct c.NC,
                                 cb.BANCO,
+                                c.BANCO as BANCOBUZON,
                                 c.CIERRE,
                                 c.IDCLIENTE,
                                 cb.CUENTA,
@@ -399,7 +405,7 @@ namespace ANS.Model.Services
                                 inner join cc c on cb.idcliente = c.IDCLIENTE 
                                 and c.nc = config.nc 
                                 where cb.BANCO = @bank 
-                                and cb.idcliente not in (164)
+                                and cb.idcliente not in (164, 179)
                                 and config.TipoAcreditacion = @tipoAcreditacion;";
                     }
                 }
@@ -417,6 +423,7 @@ namespace ANS.Model.Services
 
                     int ncOrdinal = reader.GetOrdinal("NC");
                     int bancoOrdinal = reader.GetOrdinal("BANCO");
+                    int bancoBuzonOrdinal = reader.GetOrdinal("BANCOBUZON");
                     int cierreOrdinal = reader.GetOrdinal("CIERRE");
                     int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                     int cuentaOrdinal = reader.GetOrdinal("CUENTA");
@@ -435,6 +442,7 @@ namespace ANS.Model.Services
                         {
                             NC = reader.GetString(ncOrdinal),
                             Banco = reader.GetString(bancoOrdinal),
+                            BancoBuzon = reader.IsDBNull(bancoBuzonOrdinal) ? null : reader.GetString(bancoBuzonOrdinal),
                             Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
                             IdCliente = reader.GetInt32(idClienteOrdinal),
                             Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""), // Limpia \r\n
@@ -450,7 +458,7 @@ namespace ANS.Model.Services
 
                         cuentaBuzon.setDivisa();
 
-                        cuentaBuzon.setCashOffice(); // El nombre del Banco define si es CashOffice o no!
+                        cuentaBuzon.setCashOffice(); // ✅ El banco del BUZÓN (CC.BANCO) define si es CashOffice, no el banco de la cuenta (cuentasbuzones.BANCO)
 
                         if (!reader.IsDBNull(tipoAcreditacionOrdinal))
                         {
@@ -491,6 +499,7 @@ namespace ANS.Model.Services
                 SELECT DISTINCT 
                 c.NC, 
                 cb.BANCO, 
+                c.BANCO as BANCOBUZON,
                 c.CIERRE, 
                 c.IDCLIENTE, 
                 cb.CUENTA, 
@@ -519,6 +528,7 @@ namespace ANS.Model.Services
                         // Obtener los índices de las columnas
                         int ncOrdinal = reader.GetOrdinal("NC");
                         int bancoOrdinal = reader.GetOrdinal("BANCO");
+                        int bancoBuzonOrdinal = reader.GetOrdinal("BANCOBUZON");
                         int cierreOrdinal = reader.GetOrdinal("CIERRE");
                         int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                         int cuentaOrdinal = reader.GetOrdinal("CUENTA");
@@ -537,6 +547,7 @@ namespace ANS.Model.Services
                             {
                                 NC = reader.GetString(ncOrdinal),
                                 Banco = reader.GetString(bancoOrdinal),
+                                BancoBuzon = reader.IsDBNull(bancoBuzonOrdinal) ? null : reader.GetString(bancoBuzonOrdinal),
                                 Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
                                 IdCliente = reader.GetInt32(idClienteOrdinal),
                                 Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""), // Limpia \r\n
@@ -569,7 +580,7 @@ namespace ANS.Model.Services
         public async Task<List<CuentaBuzon>> getCuentasPorClienteBancoYTipoAcreditacion(int idCliente, Banco bank, ConfiguracionAcreditacion configuracionAcreditacion)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
-            string query = @"select config.nc, cb.banco, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
+            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
                             from ConfiguracionAcreditacion config 
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
                             inner join cc c on c.nc = config.nc 
@@ -588,6 +599,7 @@ namespace ANS.Model.Services
                     {
                         int ncOrdinal = reader.GetOrdinal("NC");
                         int bancoOrdinal = reader.GetOrdinal("BANCO");
+                        int bancoBuzonOrdinal = reader.GetOrdinal("BANCOBUZON");
                         int cierreOrdinal = reader.GetOrdinal("CIERRE");
                         int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                         int cuentaOrdinal = reader.GetOrdinal("CUENTA");
@@ -605,6 +617,7 @@ namespace ANS.Model.Services
                             {
                                 NC = reader.GetString(ncOrdinal),
                                 Banco = reader.GetString(bancoOrdinal),
+                                BancoBuzon = reader.IsDBNull(bancoBuzonOrdinal) ? null : reader.GetString(bancoBuzonOrdinal),
                                 Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
                                 IdCliente = reader.GetInt32(idClienteOrdinal),
                                 Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""),
@@ -637,7 +650,7 @@ namespace ANS.Model.Services
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
-            string query = @"select config.nc, cb.banco, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
+            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
                             from ConfiguracionAcreditacion config 
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
                             inner join cc c on c.nc = config.nc 
@@ -746,7 +759,7 @@ namespace ANS.Model.Services
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
-            string query = @"select DISTINCT config.nc, cb.banco, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
+            string query = @"select DISTINCT config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
                             from ConfiguracionAcreditacion config 
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
                             inner join cc c on cb.idcliente = c.IDCLIENTE 
@@ -769,6 +782,7 @@ namespace ANS.Model.Services
 
                         int ncOrdinal = reader.GetOrdinal("NC");
                         int bancoOrdinal = reader.GetOrdinal("BANCO");
+                        int bancoBuzonOrdinal = reader.GetOrdinal("BANCOBUZON");
                         int cierreOrdinal = reader.GetOrdinal("CIERRE");
                         int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                         int cuentaOrdinal = reader.GetOrdinal("CUENTA");
@@ -787,6 +801,7 @@ namespace ANS.Model.Services
                             {
                                 NC = reader.GetString(ncOrdinal),
                                 Banco = reader.GetString(bancoOrdinal),
+                                BancoBuzon = reader.IsDBNull(bancoBuzonOrdinal) ? null : reader.GetString(bancoBuzonOrdinal),
                                 Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
                                 IdCliente = reader.GetInt32(idClienteOrdinal),
                                 Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""),
@@ -1108,7 +1123,9 @@ namespace ANS.Model.Services
                 if (cuentasConDepositos.Count > 0)
                 {
                     {
-                        await generarArchivoPorBanco(cuentasConDepositos, scotia, VariablesGlobales.tanda);
+                        // Pasar el tipo específico de acreditación según el número de tanda
+                        string tipoAcreditacionEspecifico = numTanda == 1 ? "Tanda1" : "Tanda2";
+                        await generarArchivoPorBanco(cuentasConDepositos, scotia, tipoAcreditacionEspecifico);
 
                         await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzonesTanda(cuentasConDepositos, numTanda);
                     }
@@ -1739,6 +1756,39 @@ namespace ANS.Model.Services
 
             List<DtoAcreditacionesPorEmpresa> acreditacionesPorBancoYTipoAcreditacion = getAcreditacionesPorBancoYTipoAcreditacion(banco, tipoAcreditacion);
 
+            // ✅ Agrupar por Empresa, Sucursal, Cuenta, Moneda, Ciudad y NN (buzón) para evitar duplicados
+            // El NN (nombre del buzón) es importante para diferenciar buzones distintos de la misma empresa
+            // Esto soluciona el problema cuando hay múltiples configuraciones de acreditación para la misma cuenta
+            // pero mantiene la diferenciación entre buzones diferentes (NC diferentes)
+            var acreditacionesAgrupadas = acreditacionesPorBancoYTipoAcreditacion
+                .GroupBy(ac => new
+                {
+                    Empresa = ac.Empresa?.Trim() ?? "",
+                    Sucursal = ac.Sucursal?.Trim() ?? "",
+                    NumeroCuenta = ac.NumeroCuenta?.Trim() ?? "",
+                    Divisa = ac.Divisa,
+                    Ciudad = ac.Ciudad?.Trim() ?? "",
+                    NN = ac.NN?.Trim() ?? "" // Incluir NN para diferenciar buzones distintos
+                })
+                .Select(g => new DtoAcreditacionesPorEmpresa
+                {
+                    Empresa = g.Key.Empresa,
+                    Sucursal = g.Key.Sucursal,
+                    NumeroCuenta = g.Key.NumeroCuenta,
+                    Divisa = g.Key.Divisa,
+                    Ciudad = g.Key.Ciudad,
+                    NN = g.Key.NN,
+                    Monto = g.First().Monto, // Tomar el primer monto para evitar duplicar cuando hay configuraciones duplicadas
+                    IdCliente = g.First().IdCliente // Tomar el primer IdCliente del grupo
+                })
+                .ToList();
+
+            // Establecer la moneda para cada registro agrupado
+            foreach (var ac in acreditacionesAgrupadas)
+            {
+                ac.setMoneda();
+            }
+
             List<DtoAcreditacionesPorEmpresa> acreditacionesPesosMaldonado = new List<DtoAcreditacionesPorEmpresa>();
 
             List<DtoAcreditacionesPorEmpresa> acreditacionesDolaresMaldonado = new List<DtoAcreditacionesPorEmpresa>();
@@ -1747,7 +1797,7 @@ namespace ANS.Model.Services
 
             List<DtoAcreditacionesPorEmpresa> acreditacionesDolaresMvd = new List<DtoAcreditacionesPorEmpresa>();
 
-            foreach (DtoAcreditacionesPorEmpresa _ac in acreditacionesPorBancoYTipoAcreditacion)
+            foreach (DtoAcreditacionesPorEmpresa _ac in acreditacionesAgrupadas)
             {
 
                 if (_ac.Ciudad.ToUpper() == "MONTEVIDEO")
@@ -1816,11 +1866,28 @@ namespace ANS.Model.Services
             double totalPesos = 0;
             foreach (var item in listaPesos)
             {
-                if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                string nombreAMostrar;
+                
+                // Para BBVA, mostrar directamente la EMPRESA de la tabla CuentasBuzones
+                if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                 {
-                    item.Empresa = item.NN;
+                    nombreAMostrar = item.Empresa ?? "";
                 }
-                ws.Cell(row, 1).Value = item.Empresa;
+                else
+                {
+                    // ✅ Patrón universal: Por defecto mostrar NN (nombre del buzón), pero si Empresa es un RUT, buscar el nombre del cliente
+                    // Esto aplica para todos los bancos (Scotiabank, Santander, HSBC, ITAU, BANDES, etc.)
+                    nombreAMostrar = item.NN ?? ""; // Por defecto: nombre del buzón (NN)
+                    
+                    // Si Empresa es un RUT (solo dígitos), buscar el nombre del cliente por RUT
+                    if (!string.IsNullOrWhiteSpace(item.Empresa) && item.Empresa.All(char.IsDigit))
+                    {
+                        var cliente = ServicioCliente.getInstancia().getByRut(item.Empresa);
+                        nombreAMostrar = cliente?.Nombre ?? item.NN ?? "";
+                    }
+                }
+                
+                ws.Cell(row, 1).Value = nombreAMostrar;
                 ws.Cell(row, 2).Value = item.Sucursal;
                 ws.Cell(row, 3).Value = item.NumeroCuenta;
                 ws.Cell(row, 4).Value = item.Moneda;
@@ -1848,11 +1915,28 @@ namespace ANS.Model.Services
             double totalDolares = 0;
             foreach (var item in listaDolares)
             {
-                if (banco.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                string nombreAMostrar;
+                
+                // Para BBVA, mostrar directamente la EMPRESA de la tabla CuentasBuzones
+                if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                 {
-                    item.Empresa = item.NN;
+                    nombreAMostrar = item.Empresa ?? "";
                 }
-                ws.Cell(row, 1).Value = item.Empresa;
+                else
+                {
+                    // ✅ Patrón universal: Por defecto mostrar NN (nombre del buzón), pero si Empresa es un RUT, buscar el nombre del cliente
+                    // Esto aplica para todos los bancos (Scotiabank, Santander, HSBC, ITAU, BANDES, etc.)
+                    nombreAMostrar = item.NN ?? ""; // Por defecto: nombre del buzón (NN)
+                    
+                    // Si Empresa es un RUT (solo dígitos), buscar el nombre del cliente por RUT
+                    if (!string.IsNullOrWhiteSpace(item.Empresa) && item.Empresa.All(char.IsDigit))
+                    {
+                        var cliente = ServicioCliente.getInstancia().getByRut(item.Empresa);
+                        nombreAMostrar = cliente?.Nombre ?? item.NN ?? "";
+                    }
+                }
+                
+                ws.Cell(row, 1).Value = nombreAMostrar;
                 ws.Cell(row, 2).Value = item.Sucursal;
                 ws.Cell(row, 3).Value = item.NumeroCuenta;
                 ws.Cell(row, 4).Value = item.Moneda;

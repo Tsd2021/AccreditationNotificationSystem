@@ -205,6 +205,9 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
@@ -240,11 +243,39 @@
                                    Text="Día a Día"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
-                                   Margin="0,4,16,0"/>
+                                   Margin="0,4,16,4"/>
                         <Button Grid.Row="3" Grid.Column="1"
                                 Content="Generar Excel DXD"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarDiaADiaExcelCommand}"/>
+
+                        <!-- Separador -->
+                        <Border Grid.Row="4" Grid.ColumnSpan="2" 
+                                BorderBrush="{StaticResource Brush.Border}" 
+                                BorderThickness="0,1,0,0" 
+                                Margin="0,8,0,8"/>
+
+                        <!-- Combinar TXT -->
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                   Text="Combinar TXT Maldonado"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="5" Grid.Column="1"
+                                Content="Combinar TXT"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarCombinarTxtMaldonadoCommand}"/>
+
+                        <!-- Combinar TXT Montevideo -->
+                        <TextBlock Grid.Row="6" Grid.Column="0"
+                                   Text="Combinar TXT Montevideo"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="6" Grid.Column="1"
+                                Content="Combinar TXT"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarCombinarTxtMontevideoCommand}"/>
                     </Grid>
                 </Border>
             </Grid>
