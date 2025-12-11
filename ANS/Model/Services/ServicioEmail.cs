@@ -222,13 +222,19 @@ namespace ANS.Model.Services
 
                 var message = new MimeMessage();
                 message.From.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
-                //Cuando esté en producción activar esto:
-                /*
-                foreach (var e in _destinos)
+                // ✅ PRODUCCIÓN: Recorrer todos los mails de destino
+                if (_destinos != null && _destinos.Count > 0)
                 {
-                    message.To.Add(MailboxAddress.Parse(e.Correo));
-                }*/
-                message.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
+                    foreach (var e in _destinos)
+                    {
+                        message.To.Add(MailboxAddress.Parse(e.Correo));
+                    }
+                }
+                else
+                {
+                    // Fallback: si no hay destinatarios, enviar a acreditaciones@tecnisegur.com.uy
+                    message.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
+                }
           
                 message.Subject = subject;
 

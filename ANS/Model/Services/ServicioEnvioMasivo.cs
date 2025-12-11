@@ -344,25 +344,49 @@ namespace ANS.Model.Services
               .Distinct()
               .ToList();
 
+            // Log para diagnóstico (especialmente para GENDIL)
+            var gendilKeys = keys.Where(k => k.NC != null && k.NC.Contains("GENDIL", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (gendilKeys.Any())
+            {
+                ServicioLog.instancia.WriteInfo($"GENDIL - Keys a buscar en DEPOSITOS: {gendilKeys.Count}", 
+                    string.Join(", ", gendilKeys.Select(k => $"NC: '{k.NC}', IdOp: {k.IdOperacion}")));
+            }
+
             // 3. Llenar un DataTable para el TVP
             var tvp = new DataTable();
             tvp.Columns.Add("NC", typeof(string));
-            tvp.Columns.Add("IdOperacion", typeof(long));  // o del tipo correcto
+            // ✅ Fix: IdOperacion en DEPOSITOS es int, no bigint
+            tvp.Columns.Add("IdOperacion", typeof(int));
 
             foreach (var (nc, idOp) in keys)
-                tvp.Rows.Add(nc, idOp);
+            {
+                // Convertir long a int para el TVP (IdOperacion en DEPOSITOS es int)
+                // Si es mayor que int.MaxValue, no se puede buscar en DEPOSITOS (que solo tiene int)
+                // así que lo omitimos del TVP
+                if (idOp > int.MaxValue)
+                {
+                    ServicioLog.instancia.WriteInfo($"IdOperacion fuera de rango omitido", 
+                        $"NC: '{nc}', IdOperacion: {idOp} (mayor que int.MaxValue)");
+                    continue;
+                }
+                
+                int idOpInt = (int)idOp;
+                // Normalizar NC (trim) antes de agregar al TVP
+                var ncNormalized = string.IsNullOrWhiteSpace(nc) ? nc : nc.Trim();
+                tvp.Rows.Add(ncNormalized, idOpInt);
+            }
 
-            // 4. Ejecutar un solo SELECT
+            // 4. Ejecutar un solo SELECT con TRIM para manejar espacios en códigos
             var sql = @"
                         SELECT 
-                        d.codigo   AS NC,
+                        LTRIM(RTRIM(d.codigo))   AS NC,
                         d.idoperacion AS IdOperacion,
                         d.usuario,
                         d.fechadep  AS FechaDep,
                         d.empresa
                         FROM depositos d
                         INNER JOIN @ListaKeys k
-                        ON d.codigo      = k.NC
+                        ON LTRIM(RTRIM(d.codigo)) = LTRIM(RTRIM(k.NC))
                         AND d.idoperacion = k.IdOperacion;";
 
             using var conn = new SqlConnection(ConfiguracionGlobal.ConexionWebBuzones);
@@ -382,31 +406,98 @@ namespace ANS.Model.Services
             int ordFecha = reader.GetOrdinal("FechaDep");
             int ordEmp = reader.GetOrdinal("empresa");
 
+            int totalRows = 0;
+            int gendilRows = 0;
             while (await reader.ReadAsync())
             {
+                totalRows++;
                 var nc = reader.GetString(ordNc);
-                // ✅ Fix: La columna idoperacion en la tabla depositos es Int32, no Int64
-                // Convertimos a long para mantener compatibilidad con el diccionario
-                long idOp = reader.IsDBNull(ordOp) ? 0 : (long)reader.GetInt32(ordOp);
-                var user = reader.GetString(ordUser);
+                // ✅ Fix: La columna idoperacion en la tabla depositos es Int32
+                // Convertimos a long para mantener compatibilidad con el diccionario que usa long
+                int idOpInt = reader.IsDBNull(ordOp) ? 0 : reader.GetInt32(ordOp);
+                long idOp = idOpInt; // Convertir a long para el diccionario
+                var user = reader.IsDBNull(ordUser) ? null : reader.GetString(ordUser);
                 var fechaDep = reader.GetDateTime(ordFecha);
-                var emp = reader.GetString(ordEmp);
+                var emp = reader.IsDBNull(ordEmp) ? null : reader.GetString(ordEmp);
 
-                dict[(nc, idOp)] = (user, fechaDep, emp);
+                // Normalizar NC (trim) para el diccionario
+                var ncNormalized = string.IsNullOrWhiteSpace(nc) ? nc : nc.Trim();
+                
+                // Log para GENDIL
+                if (ncNormalized != null && ncNormalized.Contains("GENDIL", StringComparison.OrdinalIgnoreCase))
+                {
+                    gendilRows++;
+                    ServicioLog.instancia.WriteInfo($"GENDIL - Encontrado en DEPOSITOS", 
+                        $"NC: '{ncNormalized}', IdOp: {idOp}, Empresa: '{emp}', Usuario: '{user}'");
+                }
+                
+                dict[(ncNormalized, idOp)] = (user, fechaDep, emp);
             }
+            
+            ServicioLog.instancia.WriteInfo($"DEPOSITOS - Total registros encontrados: {totalRows}", 
+                $"GENDIL registros: {gendilRows}");
 
-            // 6. Asignar a cada AcreditacionDTO
+            // 6. Obtener empresas desde cuentasbuzones como fallback para los casos donde no esté en depositos
+            var empresasFallback = await obtenerEmpresasDesdeCuentasBuzones(buzones);
+
+            // 7. Asignar a cada AcreditacionDTO
             bool empresaDeLaAcreditacionAsignadaAlBuzon = false;
             foreach (var b in buzones)
             {
+                bool esGendil = b.NC != null && (b.NC.Contains("GENDIL", StringComparison.OrdinalIgnoreCase) || 
+                                                  b.NC.Contains("EA22L0315N12000049", StringComparison.OrdinalIgnoreCase));
+                
                 foreach (var a in b.Acreditaciones)
                 {
-                    if (dict.TryGetValue((a.NC, a.IdOperacion), out var info))
+                    // Normalizar NC para la búsqueda (trim)
+                    var ncNormalized = string.IsNullOrWhiteSpace(a.NC) ? a.NC : a.NC.Trim();
+                    
+                    // El diccionario usa long, así que usamos el IdOperacion directamente (ya es long)
+                    // Pero necesitamos convertir a int para el TVP, y luego de vuelta a long para buscar
+                    int idOpInt = a.IdOperacion > int.MaxValue ? 0 : (int)a.IdOperacion;
+                    long idOpForSearch = idOpInt; // Convertir de vuelta a long para buscar en el diccionario
+                    
+                    // Log detallado para GENDIL
+                    if (esGendil || (ncNormalized != null && ncNormalized.Contains("GENDIL", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        ServicioLog.instancia.WriteInfo($"GENDIL - Buscando en diccionario", 
+                            $"NC original: '{a.NC}', NC normalizado: '{ncNormalized}', IdOp original: {a.IdOperacion}, IdOp para buscar: {idOpForSearch}");
+                        var gendilKeysInDict = dict.Keys.Count(k => k.NC != null && k.NC.Contains("GENDIL", StringComparison.OrdinalIgnoreCase));
+                        ServicioLog.instancia.WriteInfo($"GENDIL - Keys en diccionario", 
+                            $"Total keys: {dict.Count}, GENDIL keys: {gendilKeysInDict}");
+                    }
+                    
+                    if (dict.TryGetValue((ncNormalized, idOpForSearch), out var info))
                     {
                         a.Usuario = info.Usuario;
                         a.FechaDep = info.FechaDep;
-                        a.Empresa = info.Empresa;
-                        if (empresaDeLaAcreditacionAsignadaAlBuzon == false)
+                        
+                        if (esGendil)
+                        {
+                            ServicioLog.instancia.WriteInfo($"GENDIL - ✅ ENCONTRADO en diccionario", 
+                                $"NC: '{ncNormalized}', IdOp: {idOpForSearch}, Empresa: '{info.Empresa}', Usuario: '{info.Usuario}'");
+                        }
+                        
+                        // Si la empresa está vacía o null en depositos, usar el fallback desde cuentasbuzones
+                        if (string.IsNullOrWhiteSpace(info.Empresa))
+                        {
+                            // Intentar obtener desde fallback usando NC e IdCuenta
+                            var empresaFallbackTupla = empresasFallback
+                                .FirstOrDefault(e => e.NC == a.NC && e.IdCuenta == a.IdCuenta);
+                            a.Empresa = empresaFallbackTupla.NC != null ? empresaFallbackTupla.Empresa : info.Empresa;
+                            
+                            if (esGendil)
+                            {
+                                ServicioLog.instancia.WriteInfo($"GENDIL - Empresa vacía, usando fallback", 
+                                    $"Fallback encontrado: {empresaFallbackTupla.NC != null}, Empresa final: '{a.Empresa}'");
+                            }
+                        }
+                        else
+                        {
+                            a.Empresa = info.Empresa;
+                        }
+                        
+                        if (empresaDeLaAcreditacionAsignadaAlBuzon == false && !string.IsNullOrWhiteSpace(a.Empresa))
                         {
                             empresaDeLaAcreditacionAsignadaAlBuzon = true;
                             b.Empresa = a.Empresa;
@@ -414,14 +505,100 @@ namespace ANS.Model.Services
                     }
                     else
                     {
-                        // Si no existe, dejas defaults o asignas nulo, según convenga
+                        // Si no existe en depositos, intentar obtener desde cuentasbuzones
+                        if (esGendil)
+                        {
+                            ServicioLog.instancia.WriteInfo($"GENDIL - ❌ NO ENCONTRADO en diccionario", 
+                                $"NC: '{ncNormalized}', IdOp: {idOpForSearch}. Buscando en fallback...");
+                        }
+                        
+                        var empresaFallbackTupla = empresasFallback
+                            .FirstOrDefault(e => e.NC == a.NC && e.IdCuenta == a.IdCuenta);
                         a.Usuario = null;
-                        a.Empresa = null;
+                        a.Empresa = empresaFallbackTupla.NC != null ? empresaFallbackTupla.Empresa : null;
+                        
+                        if (esGendil)
+                        {
+                            ServicioLog.instancia.WriteInfo($"GENDIL - Resultado fallback", 
+                                $"Fallback encontrado: {empresaFallbackTupla.NC != null}, Empresa: '{a.Empresa}'");
+                        }
+                        
+                        if (empresaDeLaAcreditacionAsignadaAlBuzon == false && !string.IsNullOrWhiteSpace(a.Empresa))
+                        {
+                            empresaDeLaAcreditacionAsignadaAlBuzon = true;
+                            b.Empresa = a.Empresa;
+                        }
                     }
                 }
                 empresaDeLaAcreditacionAsignadaAlBuzon = false;
             }
         }
+        private async Task<List<(string NC, int IdCuenta, string Empresa)>> obtenerEmpresasDesdeCuentasBuzones(List<BuzonDTO> buzones)
+        {
+            if (buzones == null || buzones.Count == 0) return new List<(string, int, string)>();
+
+            // Recolectar pares únicos (NC, IdCuenta) de todas las acreditaciones
+            var keys = buzones
+                .SelectMany(b => b.Acreditaciones)
+                .Select(a => (a.NC, a.IdCuenta))
+                .Distinct()
+                .ToList();
+
+            if (keys.Count == 0) return new List<(string, int, string)>();
+
+            // Obtener lista de NCs únicos para filtrar
+            var ncs = keys.Select(k => k.NC).Distinct().ToList();
+            var idCuentasSet = keys.Select(k => k.IdCuenta).Distinct().ToHashSet();
+
+            // Crear DataTable para TVP de NCs
+            var tvpNcs = new DataTable();
+            tvpNcs.Columns.Add("NC", typeof(string));
+            foreach (var nc in ncs)
+                tvpNcs.Rows.Add(nc);
+
+            // Consulta que obtiene todas las empresas para los NCs, luego filtramos por IdCuenta en memoria
+            var sql = @"
+                SELECT DISTINCT
+                    config.NC,
+                    cb.ID AS IdCuenta,
+                    cb.EMPRESA
+                FROM ConfiguracionAcreditacion config
+                INNER JOIN cuentasbuzones cb ON config.CuentasBuzonesId = cb.ID
+                INNER JOIN @ListaNC k ON config.NC = k.NC
+                WHERE cb.EMPRESA IS NOT NULL 
+                AND LTRIM(RTRIM(cb.EMPRESA)) <> ''";
+
+            var resultado = new List<(string NC, int IdCuenta, string Empresa)>();
+
+            using var conn = new SqlConnection(ConfiguracionGlobal.Conexion22);
+            await conn.OpenAsync();
+
+            using var cmd = new SqlCommand(sql, conn);
+            var p = cmd.Parameters.AddWithValue("@ListaNC", tvpNcs);
+            p.SqlDbType = SqlDbType.Structured;
+            p.TypeName = "dbo.ListaNC";
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            int ordNc = reader.GetOrdinal("NC");
+            int ordIdCuenta = reader.GetOrdinal("IdCuenta");
+            int ordEmpresa = reader.GetOrdinal("EMPRESA");
+
+            while (await reader.ReadAsync())
+            {
+                var nc = reader.GetString(ordNc);
+                var idCuenta = reader.GetInt32(ordIdCuenta);
+                var empresa = reader.IsDBNull(ordEmpresa) ? null : reader.GetString(ordEmpresa);
+                
+                // Filtrar en memoria solo los IdCuentas que necesitamos
+                if (idCuentasSet.Contains(idCuenta) && !string.IsNullOrWhiteSpace(empresa))
+                {
+                    resultado.Add((nc, idCuenta, empresa));
+                }
+            }
+
+            return resultado;
+        }
+
         private async Task obtenerFechaUltimaConexionDelBuzon(List<BuzonDTO> buzones)
         {
             if (buzones == null || buzones.Count == 0) return;

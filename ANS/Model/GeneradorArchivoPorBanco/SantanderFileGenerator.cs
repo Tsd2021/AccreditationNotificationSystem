@@ -542,8 +542,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             //    - Si responseTens == true: se mueve a carpeta APPROVED
             //    - Si responseTens == false: se mantiene en NO_ENVIADOS
             //
-            // CÓDIGO PARA PRODUCCIÓN (descomentar cuando se active):
-            /*
+            // ✅ CÓDIGO PARA PRODUCCIÓN - ACTIVADO
             if (archivosGenerados.Count > 0)
             {
                 ServicioLog.instancia.WriteInfo(
@@ -612,14 +611,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     $"Con error: {archivosConError}",
                     "SantanderFileGenerator | CrearArchivo");
             }
-            */
             
             // ============================================================================
-            // ✅ IMPLEMENTACIÓN ACTUAL (TESTING) - Usa EnviarArchivoVacioConCliente
+            // ⚠️ IMPLEMENTACIÓN DE TESTING - COMENTADA PARA PRODUCCIÓN
             // ============================================================================
-            // Por ahora, se envía una notificación vacía UNA SOLA VEZ al final
-            // Esto es solo para testing. En producción se descomentará el código de arriba
-            // y se comentará/eliminará esta sección.
+            // Código de testing desactivado - ahora se usa el código de producción arriba
+            /*
             if (archivosGenerados.Count > 0)
             {
                 ServicioLog.instancia.WriteInfo(
@@ -628,6 +625,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 
                 await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
             }
+            */
         }
         private async Task<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)?> CrearArchivoPorCiudadYDivisa(StringBuilder contenido, string ciudad, string divisa, bool enviarATens = false)
         {
