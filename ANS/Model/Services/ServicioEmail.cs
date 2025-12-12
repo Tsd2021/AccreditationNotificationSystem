@@ -239,16 +239,7 @@ namespace ANS.Model.Services
                 message.Subject = subject;
 
                 var builder = new BodyBuilder();
-                var firma = builder.LinkedResources.Add("Images/FirmaDiegoMail.png");
-                firma.ContentId = MimeUtils.GenerateMessageId();
-                builder.HtmlBody = $@"
-                {body}
-                 <div style=""text-align:left; margin-top:30px;"">
-                              <img 
-                                src=""cid:{firma.ContentId}"" 
-                                style=""max-width:300px; height:auto;"" 
-                                alt=""Firma Diego"" />
-                            </div>";
+                builder.HtmlBody = body;
 
                 builder.Attachments.Add(fileName, excelStream,
                     new ContentType(
@@ -373,6 +364,113 @@ namespace ANS.Model.Services
             }
 
             return resultado;
+        }
+
+        public int EliminarEmailDestino(
+            string banco,
+            int? idCliente,
+            string tarea,
+            string correo,
+            string ciudad)
+        {
+            if (string.IsNullOrWhiteSpace(banco)
+             || string.IsNullOrWhiteSpace(tarea)
+             || string.IsNullOrWhiteSpace(correo)
+             || string.IsNullOrWhiteSpace(ciudad))
+            {
+                return 0;
+            }
+
+            const string sql = @"
+            DELETE FROM Email_Tarea
+            WHERE Email = @email
+              AND Tarea = @tarea
+              AND Banco = @banco
+              AND Ciudad = @ciudad
+              AND (idcliente IS NULL OR idcliente = @idCliente);";
+
+            using var cn = new SqlConnection(_conexionTSD);
+            using var cmd = new SqlCommand(sql, cn);
+            cmd.Parameters.AddWithValue("@email", correo);
+            cmd.Parameters.AddWithValue("@tarea", tarea);
+            cmd.Parameters.AddWithValue("@banco", banco);
+            cmd.Parameters.AddWithValue("@ciudad", ciudad);
+            cmd.Parameters.AddWithValue(
+                "@idCliente",
+                idCliente.HasValue ? (object)idCliente.Value : DBNull.Value
+            );
+
+            cn.Open();
+            int rowsAffected = cmd.ExecuteNonQuery();
+            
+            // ✅ Logging avanzado: Detalle de eliminación de email destino
+            if (rowsAffected > 0)
+            {
+                string idClienteStr = idCliente.HasValue ? idCliente.Value.ToString() : "N/A";
+                ServicioLog.instancia.WriteInfo(
+                    $"Eliminación de email destino | Email: {correo} | Banco: {banco} | Tarea: {tarea} | " +
+                    $"Ciudad: {ciudad} | IdCliente: {idClienteStr}",
+                    "ServicioEmail | EliminarEmailDestino");
+            }
+            
+            return rowsAffected;
+        }
+
+        public int ModificarEmailDestino(
+            string banco,
+            int? idCliente,
+            string tarea,
+            string correoViejo,
+            string correoNuevo,
+            bool activo,
+            string ciudad)
+        {
+            if (string.IsNullOrWhiteSpace(banco)
+             || string.IsNullOrWhiteSpace(tarea)
+             || string.IsNullOrWhiteSpace(correoViejo)
+             || string.IsNullOrWhiteSpace(correoNuevo)
+             || string.IsNullOrWhiteSpace(ciudad))
+            {
+                return 0;
+            }
+
+            const string sql = @"
+            UPDATE Email_Tarea
+            SET Email = @correoNuevo,
+                activo = @activo
+            WHERE Email = @correoViejo
+              AND Tarea = @tarea
+              AND Banco = @banco
+              AND Ciudad = @ciudad
+              AND (idcliente IS NULL OR idcliente = @idCliente);";
+
+            using var cn = new SqlConnection(_conexionTSD);
+            using var cmd = new SqlCommand(sql, cn);
+            cmd.Parameters.AddWithValue("@correoViejo", correoViejo);
+            cmd.Parameters.AddWithValue("@correoNuevo", correoNuevo);
+            cmd.Parameters.AddWithValue("@tarea", tarea);
+            cmd.Parameters.AddWithValue("@banco", banco);
+            cmd.Parameters.AddWithValue("@ciudad", ciudad);
+            cmd.Parameters.AddWithValue("@activo", activo);
+            cmd.Parameters.AddWithValue(
+                "@idCliente",
+                idCliente.HasValue ? (object)idCliente.Value : DBNull.Value
+            );
+
+            cn.Open();
+            int rowsAffected = cmd.ExecuteNonQuery();
+            
+            // ✅ Logging avanzado: Detalle de modificación de email destino
+            if (rowsAffected > 0)
+            {
+                string idClienteStr = idCliente.HasValue ? idCliente.Value.ToString() : "N/A";
+                ServicioLog.instancia.WriteInfo(
+                    $"Modificación de email destino | Email viejo: {correoViejo} | Email nuevo: {correoNuevo} | " +
+                    $"Banco: {banco} | Tarea: {tarea} | Ciudad: {ciudad} | IdCliente: {idClienteStr} | Activo: {activo}",
+                    "ServicioEmail | ModificarEmailDestino");
+            }
+            
+            return rowsAffected;
         }
     }
 }
