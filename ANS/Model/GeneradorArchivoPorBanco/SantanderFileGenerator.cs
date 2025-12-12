@@ -1,4 +1,4 @@
-﻿using ANS.Model.Interfaces;
+using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using System.Globalization;
 using System.IO;
@@ -256,6 +256,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             StringBuilder cashOfficePesos = new StringBuilder();
             StringBuilder cashOfficeDolares = new StringBuilder();
 
+            // ✅ HashSet para evitar duplicados: clave única = NC + IdOperacion + Cuenta + Divisa + Monto
+            var lineasAgregadas = new HashSet<string>();
+
             if (cb != null && cb.Count > 0)
             {
                 foreach (var unaCuenta in cb)
@@ -269,9 +272,24 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                                 foreach (Total unTotal in unDeposito.Totales)
                                 {
+                                    // ✅ Crear clave única para detectar duplicados
+                                    string claveUnica = $"{unaCuenta.NC ?? ""}_{unDeposito.IdOperacion}_{unaCuenta.Cuenta ?? ""}_{unaCuenta.Divisa ?? ""}_{unTotal.ImporteTotal:F2}";
+                                    
+                                    // ✅ Verificar si ya se agregó esta línea
+                                    if (lineasAgregadas.Contains(claveUnica))
+                                    {
+                                        ServicioLog.instancia.WriteWarning(
+                                            $"Línea DUPLICADA detectada y omitida (P2P) | IDBuzon: {unaCuenta.NC ?? "N/A"} | " +
+                                            $"IDOperacion: {unDeposito.IdOperacion} | Cuenta: {unaCuenta.Cuenta} | " +
+                                            $"Divisa: {unaCuenta.Divisa ?? "NULL"} | Monto: {unTotal.ImporteTotal:F2}",
+                                            "SantanderFileGenerator | GenerarLineasPorTotales");
+                                        continue; // Omitir esta línea duplicada
+                                    }
+                                    
                                     bool agregadaAlArchivo = false;
                                     
-                                    // ✅ Cash Office: Los buzones con CC.BANCO = 'CASHOFFICE' van a la ruta de Cash Office
+                                    // ✅ Cash Office: Los buzones con CC.BANCO = 'CASHOFFICE' van SOLO a la ruta de Cash Office
+                                    // Si es CashOffice, NO se verifica ciudad (prioridad absoluta)
                                     if (unaCuenta.esCashOffice())
                                     {
                                         if (unaCuenta.Divisa == VariablesGlobales.uyu)
@@ -285,7 +303,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                             agregadaAlArchivo = true;
                                         }
                                     }
-                                    if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
+                                    // ✅ Solo verificar ciudad si NO es CashOffice
+                                    else if (unaCuenta.Ciudad == VariablesGlobales.maldonado)
                                     {
                                         if (unaCuenta.Divisa == VariablesGlobales.uyu)
                                         {
@@ -310,6 +329,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                             agregarLineaAlStringBuilder_Individual(montevideoDolares, unaCuenta, unDeposito, unTotal);
                                             agregadaAlArchivo = true;
                                         }
+                                    }
+                                    
+                                    // ✅ Marcar como agregada solo si se agregó al archivo
+                                    if (agregadaAlArchivo)
+                                    {
+                                        lineasAgregadas.Add(claveUnica);
                                     }
                                     
                                     // ✅ Logging: Registrar depósitos que NO se agregaron al archivo pero tienen totales
@@ -552,56 +577,118 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 int archivosEnviadosExitosamente = 0;
                 int archivosConError = 0;
                 
-                foreach (var archivoInfo in archivosGenerados)
+                // ✅ Agrupar archivos por nombre para detectar duplicados
+                var archivosPorNombre = archivosGenerados
+                    .GroupBy(a => a.nombreArchivo)
+                    .ToList();
+                
+                // ✅ Verificar si hay duplicados para optimizar el flujo
+                bool hayDuplicados = archivosPorNombre.Any(g => g.Count() > 1);
+                
+                foreach (var grupoArchivos in archivosPorNombre)
                 {
-                    try
+                    var archivosDelGrupo = grupoArchivos.ToList();
+                    
+                    // Si hay múltiples archivos con el mismo nombre, procesar secuencialmente
+                    if (archivosDelGrupo.Count > 1)
                     {
-                        // Enviar archivo al servicio Santander
-                        bool enviadoExitosamente = await ServicioSantander.getInstancia()
-                            .EnviarArchivoConClienteWS(archivoInfo.nombreArchivo, archivoInfo.contenidoBytes);
+                        ServicioLog.instancia.WriteInfo(
+                            $"Detectados {archivosDelGrupo.Count} archivo(s) con el mismo nombre: {grupoArchivos.Key} | " +
+                            $"Se procesarán secuencialmente para evitar duplicados",
+                            "SantanderFileGenerator | CrearArchivo");
+                    }
+                    
+                    for (int i = 0; i < archivosDelGrupo.Count; i++)
+                    {
+                        var archivoInfo = archivosDelGrupo[i];
+                        string nombreArchivoOriginal = archivoInfo.nombreArchivo;
+                        string rutaFinalOriginal = archivoInfo.rutaFinal;
                         
-                        if (enviadoExitosamente)
+                        // Si no es el primer archivo del grupo, regenerar nombre con nuevo timestamp
+                        if (i > 0)
                         {
-                            archivosEnviadosExitosamente++;
+                            // Esperar 1 segundo para asegurar que el timestamp sea diferente
+                            await Task.Delay(1000);
                             
-                            // Si se envió exitosamente, mover a carpeta APPROVED
-                            string fecha = DateTime.Now.ToString("ddMMyyyy");
-                            string directorioBase = Path.GetDirectoryName(archivoInfo.rutaFinal);
-                            string directorioApproved = Path.Combine(
-                                Path.GetDirectoryName(directorioBase), 
-                                $"{fecha}_APPROVED");
+                            // Regenerar nombre con nuevo timestamp
+                            var nuevoTimestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
                             
-                            if (!Directory.Exists(directorioApproved))
-                                Directory.CreateDirectory(directorioApproved);
-                            
-                            string rutaApproved = Path.Combine(directorioApproved, archivoInfo.nombreArchivo);
-                            
-                            // Mover archivo de NO_ENVIADOS a APPROVED
-                            if (File.Exists(archivoInfo.rutaFinal))
+                            // Extraer sucursal del nombre original (formato: TEC_{sucursal}_{timestamp}.dat)
+                            var partesNombre = nombreArchivoOriginal.Split('_');
+                            if (partesNombre.Length >= 2)
                             {
-                                File.Move(archivoInfo.rutaFinal, rutaApproved, overwrite: true);
+                                string sucursal = partesNombre[1];
+                                string nuevoNombreArchivo = $"TEC_{sucursal}_{nuevoTimestamp}.dat";
                                 
-                                ServicioLog.instancia.WriteInfo(
-                                    $"Archivo movido a APPROVED | {archivoInfo.nombreArchivo} | " +
-                                    $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa}",
+                                // Renombrar archivo en disco
+                                string directorioArchivo = Path.GetDirectoryName(rutaFinalOriginal);
+                                string nuevaRutaFinal = Path.Combine(directorioArchivo, nuevoNombreArchivo);
+                                
+                                if (File.Exists(rutaFinalOriginal))
+                                {
+                                    File.Move(rutaFinalOriginal, nuevaRutaFinal, overwrite: true);
+                                    
+                                    // Actualizar información del archivo
+                                    byte[] contenidoBytesActualizado = File.ReadAllBytes(nuevaRutaFinal);
+                                    archivoInfo = (nuevaRutaFinal, nuevoNombreArchivo, contenidoBytesActualizado, archivoInfo.ciudad, archivoInfo.divisa);
+                                    
+                                    ServicioLog.instancia.WriteInfo(
+                                        $"Archivo renombrado para evitar duplicado | Nombre original: {nombreArchivoOriginal} | " +
+                                        $"Nuevo nombre: {nuevoNombreArchivo}",
+                                        "SantanderFileGenerator | CrearArchivo");
+                                }
+                            }
+                        }
+                        
+                        try
+                        {
+                            // Enviar archivo al servicio Santander
+                            bool enviadoExitosamente = await ServicioSantander.getInstancia()
+                                .EnviarArchivoConClienteWS(archivoInfo.nombreArchivo, archivoInfo.contenidoBytes);
+                            
+                            if (enviadoExitosamente)
+                            {
+                                archivosEnviadosExitosamente++;
+                                
+                                // Si se envió exitosamente, mover a carpeta APPROVED
+                                string fecha = DateTime.Now.ToString("ddMMyyyy");
+                                string directorioBase = Path.GetDirectoryName(archivoInfo.rutaFinal);
+                                string directorioApproved = Path.Combine(
+                                    Path.GetDirectoryName(directorioBase), 
+                                    $"{fecha}_APPROVED");
+                                
+                                if (!Directory.Exists(directorioApproved))
+                                    Directory.CreateDirectory(directorioApproved);
+                                
+                                string rutaApproved = Path.Combine(directorioApproved, archivoInfo.nombreArchivo);
+                                
+                                // Mover archivo de NO_ENVIADOS a APPROVED
+                                if (File.Exists(archivoInfo.rutaFinal))
+                                {
+                                    File.Move(archivoInfo.rutaFinal, rutaApproved, overwrite: true);
+                                    
+                                    ServicioLog.instancia.WriteInfo(
+                                        $"Archivo movido a APPROVED | {archivoInfo.nombreArchivo} | " +
+                                        $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa}",
+                                        "SantanderFileGenerator | CrearArchivo");
+                                }
+                            }
+                            else
+                            {
+                                archivosConError++;
+                                ServicioLog.instancia.WriteWarning(
+                                    $"Archivo NO enviado exitosamente | {archivoInfo.nombreArchivo} | " +
+                                    $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
+                                    $"Se mantiene en carpeta NO_ENVIADOS",
                                     "SantanderFileGenerator | CrearArchivo");
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
                             archivosConError++;
-                            ServicioLog.instancia.WriteWarning(
-                                $"Archivo NO enviado exitosamente | {archivoInfo.nombreArchivo} | " +
-                                $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
-                                $"Se mantiene en carpeta NO_ENVIADOS",
-                                "SantanderFileGenerator | CrearArchivo");
+                            ServicioLog.instancia.WriteLog(ex, "Santander", 
+                                $"Error al enviar archivo {archivoInfo.nombreArchivo}");
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        archivosConError++;
-                        ServicioLog.instancia.WriteLog(ex, "Santander", 
-                            $"Error al enviar archivo {archivoInfo.nombreArchivo}");
                     }
                 }
                 

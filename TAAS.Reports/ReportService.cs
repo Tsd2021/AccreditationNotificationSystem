@@ -1,4 +1,4 @@
-﻿using Microsoft.Reporting.NETCore;
+using Microsoft.Reporting.NETCore;
 using SharedDTOs;
 using System.Globalization;
 
@@ -232,6 +232,13 @@ namespace TAAS.Reports
 
                 body = $"Acreditaciones del Buzón Inteligente {buzonDTO.NN} del <strong>{fechaRango}</strong>";
 
+                // Agregar información de última conexión del buzón si está disponible
+                if (buzonDTO.UltimaFechaConexion != DateTime.MinValue)
+                {
+                    string fechaUltimaConexionStr = buzonDTO.UltimaFechaConexion.ToString("dd/MM/yyyy HH:mm");
+                    body += $"<br/><br/>Por favor, tener en cuenta fecha y hora de última conexión del buzón registrada a las: <strong>{fechaUltimaConexionStr}</strong>";
+                }
+
                 // 5) Devuelves el outStream **vivo**, no el viejo excelBytes
                 return outStream;
             }
@@ -407,6 +414,13 @@ namespace TAAS.Reports
                 subject = $"Acreditaciones Buzón Inteligente [{buzonDTO.NN}] - {cierreStr}";
 
                 body = $"Acreditaciones del Buzón Inteligente {buzonDTO.NN} del <strong>{fechaRango}</strong>";
+
+                // Agregar información de última conexión del buzón si está disponible
+                if (buzonDTO.UltimaFechaConexion != DateTime.MinValue)
+                {
+                    string fechaUltimaConexionStr = buzonDTO.UltimaFechaConexion.ToString("dd/MM/yyyy HH:mm");
+                    body += $"<br/><br/>Por favor, tener en cuenta fecha y hora de última conexión del buzón registrada a las: <strong>{fechaUltimaConexionStr}</strong>";
+                }
 
                 // 5) Devuelves el outStream **vivo**, no el viejo excelBytes
                 return outStream;
@@ -602,6 +616,13 @@ namespace TAAS.Reports
                 fileName = $"Acreditacion{buzonDTO.NN}_{DateTime.Now.Day}_{DateTime.Now.Month}_{DateTime.Now.Year}.{fileExt}";
                 subject = $"Acreditaciones Buzón Inteligente [{buzonDTO.NN}] - {cierreStr}";
                 body = $"Acreditaciones del Buzón Inteligente {buzonDTO.NN} del <strong>{fechaRango}</strong>";
+
+                // Agregar información de última conexión del buzón si está disponible
+                if (buzonDTO.UltimaFechaConexion != DateTime.MinValue)
+                {
+                    string fechaUltimaConexionStr = buzonDTO.UltimaFechaConexion.ToString("dd/MM/yyyy HH:mm");
+                    body += $"<br/><br/>Por favor, tener en cuenta fecha y hora de última conexión del buzón registrada a las: <strong>{fechaUltimaConexionStr}</strong>";
+                }
 
                 return outStream;
             }

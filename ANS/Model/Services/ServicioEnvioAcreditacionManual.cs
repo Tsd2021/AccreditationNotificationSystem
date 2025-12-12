@@ -336,14 +336,46 @@ namespace ANS.Model.Services
         {
             try
             {
+                // ✅ Logging específico para el buzón problemático
+                if (buzon?.NC?.Trim() == "EA22L0105N12000032")
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"Iniciando envío manual | NC: {buzon.NC} | NN: {buzon.NN} | " +
+                        $"IdCliente: {buzon.IdCliente} | EsHenderson: {buzon.EsHenderson} | " +
+                        $"NumTanda: {numTanda} | Fecha: {fecha:yyyy-MM-dd} | Cierre: {buzon.Cierre}",
+                        "ServicioEnvioAcreditacionManual | EnviarAcreditacionManual");
+                }
+                
                 await GetAcreditacionesByBuzonTandaYFecha(buzon, numTanda, fecha);
 
                 if (buzon.Acreditaciones == null || !buzon.Acreditaciones.Any())
+                {
+                    // ✅ Logging específico si no hay acreditaciones
+                    if (buzon?.NC?.Trim() == "EA22L0105N12000032")
+                    {
+                        ServicioLog.instancia.WriteWarning(
+                            $"No se encontraron acreditaciones para el buzón | NC: {buzon.NC} | " +
+                            $"NumTanda: {numTanda} | Fecha: {fecha:yyyy-MM-dd}",
+                            "ServicioEnvioAcreditacionManual | EnviarAcreditacionManual");
+                    }
                     return;
+                }
+
+                // ✅ Logging específico si hay acreditaciones
+                if (buzon?.NC?.Trim() == "EA22L0105N12000032")
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"Acreditaciones encontradas | NC: {buzon.NC} | " +
+                        $"Total acreditaciones: {buzon.Acreditaciones.Count} | " +
+                        $"Monto total: {buzon.Acreditaciones.Sum(a => a.Monto)}",
+                        "ServicioEnvioAcreditacionManual | EnviarAcreditacionManual");
+                }
 
                 var buzones = new List<BuzonDTO> { buzon };
  
                 await ServicioEnvioMasivo.getInstancia().obtenerUsuarioYFechaDelDeposito(buzones);
+
+                await ServicioEnvioMasivo.getInstancia().obtenerFechaUltimaConexionDelBuzon(buzones);
 
                 await GenerarReporteYEnviarEmail(buzon, fecha);
             }
@@ -363,16 +395,42 @@ namespace ANS.Model.Services
                     throw new Exception("Error: La fecha elegida es incorrecta.");
 
                 buzon.NumeroEnvioMasivo = numTanda;
+                
+                // ✅ Normalizar NC para evitar problemas de espacios
+                if (!string.IsNullOrWhiteSpace(buzon.NC))
+                    buzon.NC = buzon.NC.Trim();
 
                 using (var conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
                 {
                     await conn.OpenAsync();
 
                     using (var cmd = ArmarCommand(conn, buzon, numTanda, fecha))
-                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        var acreditaciones = await MapearAcreditaciones(reader);
-                        buzon.Acreditaciones = acreditaciones;
+                        // ✅ Logging específico para el buzón problemático
+                        if (buzon.NC == "EA22L0105N12000032")
+                        {
+                            var (desde, cierre) = CalcularVentana(buzon, numTanda, fecha);
+                            ServicioLog.instancia.WriteInfo(
+                                $"Ejecutando query para obtener acreditaciones | NC: {buzon.NC} | " +
+                                $"Desde: {desde:yyyy-MM-dd HH:mm:ss} | Cierre: {cierre:yyyy-MM-dd HH:mm:ss} | " +
+                                $"NumTanda: {numTanda} | Fecha: {fecha:yyyy-MM-dd}",
+                                "ServicioEnvioAcreditacionManual | GetAcreditacionesByBuzonTandaYFecha");
+                        }
+                        
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            var acreditaciones = await MapearAcreditaciones(reader, buzon.NC);
+                            buzon.Acreditaciones = acreditaciones;
+                            
+                            // ✅ Logging específico después de mapear
+                            if (buzon.NC == "EA22L0105N12000032")
+                            {
+                                ServicioLog.instancia.WriteInfo(
+                                    $"Acreditaciones mapeadas | NC: {buzon.NC} | " +
+                                    $"Total: {acreditaciones.Count}",
+                                    "ServicioEnvioAcreditacionManual | GetAcreditacionesByBuzonTandaYFecha");
+                            }
+                        }
                     }
                 }
             }
@@ -394,7 +452,6 @@ namespace ANS.Model.Services
                 WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
                     AND a.FECHA >= @Desde
                     AND a.FECHA <= @Cierre
-                    AND c.CIERRE <= @Cierre
                 ORDER BY a.IDOPERACION DESC;";
 
 
@@ -419,21 +476,42 @@ namespace ANS.Model.Services
             var desde = fecha.Date;
             DateTime cierre;
 
-            if (b.esHenderson())
+            // ✅ Filtrar por rango solo para TANDAS (Henderson) con numTanda 1 o 2
+            // Para envío manual (numTanda == 0) o numTanda > 2, mostrar todo el día
+            if (numTanda == 1 || numTanda == 2)
             {
-                if (numTanda == 1) cierre = fecha.Date.AddHours(7);
-                else if (numTanda == 2) cierre = fecha.Date.AddHours(14).AddMinutes(30);
-                else throw new Exception("NumTanda inválido. Debe ser 1 o 2 para Henderson.");
+                // Solo para Henderson (Tandas)
+                if (b.esHenderson())
+                {
+                    if (numTanda == 1) 
+                    {
+                        // Tanda 1: desde día anterior 14:30 hasta hoy 7:00
+                        desde = fecha.Date.AddDays(-1).AddHours(14).AddMinutes(30);
+                        cierre = fecha.Date.AddHours(7);
+                    }
+                    else // numTanda == 2
+                    {
+                        // Tanda 2: desde hoy 7:00 hasta hoy 14:30
+                        desde = fecha.Date.AddHours(7);
+                        cierre = fecha.Date.AddHours(14).AddMinutes(30);
+                    }
+                }
+                else
+                {
+                    // Si no es Henderson pero numTanda es 1 o 2, usar todo el día
+                    cierre = fecha.Date.AddDays(1).AddSeconds(-1); // Hasta el final del día (23:59:59)
+                }
             }
             else
             {
-                cierre = fecha.Date.AddHours(b.Cierre.Hour).AddMinutes(b.Cierre.Minute);
+                // ✅ Envío manual (numTanda == 0) o numTanda > 2: mostrar todo el día
+                cierre = fecha.Date.AddDays(1).AddSeconds(-1); // Hasta el final del día (23:59:59)
             }
 
             return (desde, cierre);
         }
 
-        private async Task<List<AcreditacionDTO>> MapearAcreditaciones(SqlDataReader reader)
+        private async Task<List<AcreditacionDTO>> MapearAcreditaciones(SqlDataReader reader, string ncBuzon = null)
         {
             var acreditaciones = new List<AcreditacionDTO>();
 
@@ -444,11 +522,15 @@ namespace ANS.Model.Services
             int montoOrd = reader.GetOrdinal("MONTO");
             int nombreBancoOrd = reader.GetOrdinal("IDBANCO");
 
+            int totalLeidas = 0;
+            bool esBuzonEspecifico = ncBuzon == "EA22L0105N12000032";
+
             while (await reader.ReadAsync())
             {
+                totalLeidas++;
                 var acc = new AcreditacionDTO
                 {
-                    NC = reader.GetString(ncOrd),
+                    NC = reader.GetString(ncOrd)?.Trim(), // ✅ Normalizar espacios
                     IdOperacion = reader.GetInt64(opOrd),
                     IdCuenta = reader.GetInt32(cuentaOrd),
                     Divisa = reader.GetInt32(monOrd),
@@ -460,7 +542,27 @@ namespace ANS.Model.Services
                 acc.Banco = ServicioBanco.getInstancia().getById(acc.IdBanco);
 
                 acreditaciones.Add(acc);
+                
+                // ✅ Logging específico para cada acreditación del buzón problemático
+                if (esBuzonEspecifico)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"Acreditación mapeada | NC: {acc.NC} | IDOPERACION: {acc.IdOperacion} | " +
+                        $"IDCUENTA: {acc.IdCuenta} | MONTO: {acc.Monto} | DIVISA: {acc.Divisa} | " +
+                        $"IDBANCO: {acc.IdBanco}",
+                        "ServicioEnvioAcreditacionManual | MapearAcreditaciones");
+                }
             }
+            
+            // ✅ Logging resumen
+            if (esBuzonEspecifico)
+            {
+                ServicioLog.instancia.WriteInfo(
+                    $"Resumen mapeo acreditaciones | NC: {ncBuzon} | " +
+                    $"Total leídas: {totalLeidas} | Total mapeadas: {acreditaciones.Count}",
+                    "ServicioEnvioAcreditacionManual | MapearAcreditaciones");
+            }
+            
             return acreditaciones;
         }
 

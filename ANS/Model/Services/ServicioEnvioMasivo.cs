@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.Data.SqlClient;
 using SharedDTOs;
 using System.Data;
@@ -202,16 +202,29 @@ namespace ANS.Model.Services
             if (deps == null || deps.Count == 0) return;
 
 
+            // ✅ Normalizar NC (trim) para evitar problemas de espacios en blanco
             var mapaBuzones = deps
-     .GroupBy(b => b.NC)
-     .ToDictionary(
-         g => g.Key,
-         g => g.First()
-     );
+                .GroupBy(b => b.NC?.Trim() ?? b.NC)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.First()
+                );
+            
+            // ✅ Logging para diagnóstico
+            ServicioLog.instancia.WriteInfo(
+                $"Hidratando acreditaciones | Total buzones: {deps.Count} | " +
+                $"Buzones únicos en mapa: {mapaBuzones.Count} | " +
+                $"NCs en mapa: {string.Join(", ", mapaBuzones.Keys.Take(10))}",
+                "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
 
-
-            var hendersons = deps.Where(b => b.EsHenderson).Select(b => b.NC).Distinct().ToList();
-            var normals = deps.Where(b => !b.EsHenderson).Select(b => b.NC).Distinct().ToList();
+            var hendersons = deps.Where(b => b.EsHenderson).Select(b => b.NC?.Trim() ?? b.NC).Distinct().ToList();
+            var normals = deps.Where(b => !b.EsHenderson).Select(b => b.NC?.Trim() ?? b.NC).Distinct().ToList();
+            
+            // ✅ Logging para diagnóstico
+            ServicioLog.instancia.WriteInfo(
+                $"Clasificación buzones | Henderson: {hendersons.Count} | Normales: {normals.Count} | " +
+                $"NCs normales: {string.Join(", ", normals.Take(10))}",
+                "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
 
 
             DataTable BuildTvp(List<string> list)
@@ -229,30 +242,40 @@ namespace ANS.Model.Services
             DateTime today = DateTime.Today;
 
             DateTime startH, endH;
-            if (numEnvioMasivo == 1)
+            
+            // ✅ Si numEnvioMasivo > 2, buscar todo el día (no filtrar por rango)
+            if (numEnvioMasivo > 2)
             {
-
+                // Mostrar todo el día: desde 00:00:00 hasta 23:59:59
+                startH = today.Date;
+                endH = today.Date.AddDays(1).AddSeconds(-1);
+            }
+            else if (numEnvioMasivo == 1)
+            {
+                // Tanda 1: desde día anterior 14:30 hasta hoy 7:00
                 switch (today.DayOfWeek)
                 {
                     case DayOfWeek.Monday:
-
                         startH = today.AddDays(-3).AddHours(14).AddMinutes(30);
                         break;
                     default:
-
                         startH = today.AddDays(-1).AddHours(14).AddMinutes(30);
                         break;
                 }
-
-
                 endH = today.AddHours(7);
             }
-            else
+            else // numEnvioMasivo == 2
             {
+                // Tanda 2: desde hoy 7:00 hasta hoy 14:30
                 startH = today.AddHours(7);
-
                 endH = today.AddHours(14).AddMinutes(30);
             }
+            
+            // ✅ Logging para diagnóstico
+            ServicioLog.instancia.WriteInfo(
+                $"Ventana de fechas calculada | NumEnvioMasivo: {numEnvioMasivo} | " +
+                $"Desde: {startH:yyyy-MM-dd HH:mm:ss} | Hasta: {endH:yyyy-MM-dd HH:mm:ss}",
+                "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
 
             using (var conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
             {
@@ -311,11 +334,15 @@ namespace ANS.Model.Services
             int montoOrd = reader.GetOrdinal("MONTO");
             int bancoOrd = reader.GetOrdinal("IDBANCO");
            
+            int acreditacionesMapeadas = 0;
+            int acreditacionesNoMapeadas = 0;
+            var ncsNoEncontrados = new HashSet<string>();
+           
             while (await reader.ReadAsync())
             {
                 var acc = new AcreditacionDTO
                 {
-                    NC = reader.GetString(ncOrd),
+                    NC = reader.GetString(ncOrd)?.Trim(), // ✅ Normalizar espacios
                     IdOperacion = reader.GetInt64(opOrd),
                     IdCuenta = reader.GetInt32(cuentaOrd),
                     Divisa = reader.GetInt32(monOrd),
@@ -327,7 +354,31 @@ namespace ANS.Model.Services
                 acc.Banco = ServicioBanco.getInstancia().getById(acc.IdBanco);
 
                 if (mapa.TryGetValue(acc.NC, out var buzon))
+                {
                     buzon.Acreditaciones.Add(acc);
+                    acreditacionesMapeadas++;
+                }
+                else
+                {
+                    acreditacionesNoMapeadas++;
+                    ncsNoEncontrados.Add(acc.NC);
+                    
+                    // ✅ Logging detallado para diagnóstico
+                    ServicioLog.instancia.WriteWarning(
+                        $"Acreditación no mapeada | IDBUZON: '{acc.NC}' | IDOPERACION: {acc.IdOperacion} | " +
+                        $"IDCUENTA: {acc.IdCuenta} | Buzones en mapa: {mapa.Count} | " +
+                        $"NCs en mapa: {string.Join(", ", mapa.Keys.Take(5))}",
+                        "ServicioEnvioMasivo | MapearAcreditaciones");
+                }
+            }
+            
+            // ✅ Logging resumen
+            if (acreditacionesNoMapeadas > 0)
+            {
+                ServicioLog.instancia.WriteWarning(
+                    $"Resumen mapeo acreditaciones | Mapeadas: {acreditacionesMapeadas} | " +
+                    $"No mapeadas: {acreditacionesNoMapeadas} | NCs no encontrados: {string.Join(", ", ncsNoEncontrados.Take(10))}",
+                    "ServicioEnvioMasivo | MapearAcreditaciones");
             }
         }
 
@@ -599,7 +650,7 @@ namespace ANS.Model.Services
             return resultado;
         }
 
-        private async Task obtenerFechaUltimaConexionDelBuzon(List<BuzonDTO> buzones)
+        public async Task obtenerFechaUltimaConexionDelBuzon(List<BuzonDTO> buzones)
         {
             if (buzones == null || buzones.Count == 0) return;
 
@@ -726,7 +777,7 @@ namespace ANS.Model.Services
                     while (await reader.ReadAsync())
                     {
                         BuzonDTO dto = new BuzonDTO();
-                        dto.NC = reader.GetString(ncOrdinal);
+                        dto.NC = reader.GetString(ncOrdinal)?.Trim(); // ✅ Normalizar espacios
                         dto.NN = reader.GetString(nnOrdinal);
                         dto.Sucursal = reader.GetString(sucursalOrdinal);
                         dto.Cierre = reader.GetDateTime(cierreOrdinal);
@@ -743,6 +794,16 @@ namespace ANS.Model.Services
                             dto.NombreWS = "NO_DEFINIDO";
                         }
                         retorno.Add(dto);
+                        
+                        // ✅ Logging específico para el buzón problemático
+                        if (dto.NC == "EA22L0105N12000032")
+                        {
+                            ServicioLog.instancia.WriteInfo(
+                                $"Buzón encontrado en getBuzonesByNumeroEnvioMasivo | NC: {dto.NC} | " +
+                                $"NN: {dto.NN} | IdCliente: {dto.IdCliente} | EsHenderson: {dto.EsHenderson} | " +
+                                $"Cierre: {dto.Cierre} | NumEnvioMasivo: {numEnvioMasivo}",
+                                "ServicioEnvioMasivo | getBuzonesByNumeroEnvioMasivo");
+                        }
                     }
                 }
 
