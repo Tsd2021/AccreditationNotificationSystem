@@ -1,4 +1,4 @@
-﻿using ANS.Model.Interfaces;
+using ANS.Model.Interfaces;
 using Quartz.Spi;
 using Quartz;
 using ANS.Model.Jobs.BBVA;
@@ -43,6 +43,12 @@ namespace ANS.Model.Jobs
             {
 
                 return new AcreditarDiaADiaBBVAJob(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(AcreditarDiaADiaBBVANike))
+            {
+
+                return new AcreditarDiaADiaBBVANike(_servicioCuentaBuzon);
             }
             #endregion
             #region JOBS_QUE_ENVIAN_EXCEL

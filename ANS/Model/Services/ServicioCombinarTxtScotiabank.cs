@@ -25,7 +25,100 @@ namespace ANS.Model.Services
         }
 
         /// <summary>
+        /// Estructura para retornar los archivos encontrados
+        /// </summary>
+        private class ResultadoBusquedaArchivos
+        {
+            public FileInfo ArchivoTSD { get; set; }
+            public FileInfo ArchivoTanda2 { get; set; }
+            public FileInfo ArchivoDiaADia { get; set; }
+        }
+
+        /// <summary>
+        /// Busca los 3 archivos necesarios: TSD, Tanda2 y DiaADia
+        /// </summary>
+        private static ResultadoBusquedaArchivos BuscarArchivosNecesarios(string folderPath, string divisaCodigo, string ciudad)
+        {
+            var resultado = new ResultadoBusquedaArchivos();
+
+            // Buscar archivo TSD (AcreditacionTecnisegur sin "Buzones")
+            var archivosTSD = Directory.GetFiles(folderPath, $"*{divisaCodigo}*.txt", SearchOption.TopDirectoryOnly)
+                .Where(f => 
+                {
+                    string fileName = Path.GetFileName(f).ToUpper();
+                    return fileName.Contains("ACREDITACIONTECNISEGUR") &&
+                           !fileName.Contains("BUZONES") &&
+                           !fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") &&
+                           !fileName.Contains("_TANDA") &&
+                           !fileName.Contains("_DIAADIA") &&
+                           !fileName.Contains("COMBINADO");
+                })
+                .Select(f => new FileInfo(f))
+                .OrderByDescending(f => f.LastWriteTime)
+                .ToList();
+
+            resultado.ArchivoTSD = archivosTSD.FirstOrDefault();
+
+            // Buscar archivo Tanda 2
+            var archivosTanda2 = Directory.GetFiles(folderPath, $"*{divisaCodigo}*.txt", SearchOption.TopDirectoryOnly)
+                .Where(f =>
+                {
+                    string fileName = Path.GetFileName(f).ToUpper();
+                    if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") || 
+                        fileName.Contains("COMBINADO") ||
+                        fileName.Contains("CASHOFFICE") ||
+                        fileName.Contains("_TANDA1") ||
+                        fileName.Contains("_DIAADIA"))
+                        return false;
+
+                    bool tieneSufijoTanda2 = fileName.Contains("_TANDA2");
+                    
+                    if (tieneSufijoTanda2)
+                        return true;
+                    
+                    var fileInfo = new FileInfo(f);
+                    var horaModificacion = fileInfo.LastWriteTime;
+                    bool estaEnRangoHorario = horaModificacion.Hour >= 7 && 
+                                               (horaModificacion.Hour < 15 || (horaModificacion.Hour == 15 && horaModificacion.Minute == 0));
+                    
+                    return estaEnRangoHorario;
+                })
+                .Select(f => new FileInfo(f))
+                .OrderByDescending(f => f.LastWriteTime)
+                .ToList();
+
+            resultado.ArchivoTanda2 = archivosTanda2.FirstOrDefault();
+
+            // Buscar archivo Día a Día
+            var archivosDiaADia = Directory.GetFiles(folderPath, $"*{divisaCodigo}*.txt", SearchOption.TopDirectoryOnly)
+                .Where(f =>
+                {
+                    string fileName = Path.GetFileName(f).ToUpper();
+                    if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") || 
+                        fileName.Contains("COMBINADO") ||
+                        fileName.Contains("CASHOFFICE"))
+                        return false;
+
+                    bool tieneSufijoDiaADia = fileName.Contains("_DIAADIA");
+                    
+                    var fileInfo = new FileInfo(f);
+                    var horaModificacion = fileInfo.LastWriteTime;
+                    bool estaDespuesDe16 = horaModificacion.Hour >= 16;
+                    
+                    return tieneSufijoDiaADia || (estaDespuesDe16 && !fileName.Contains("_TANDA1") && !fileName.Contains("_TANDA2"));
+                })
+                .Select(f => new FileInfo(f))
+                .OrderByDescending(f => f.LastWriteTime)
+                .ToList();
+
+            resultado.ArchivoDiaADia = archivosDiaADia.FirstOrDefault();
+
+            return resultado;
+        }
+
+        /// <summary>
         /// Combina archivos TXT de una divisa específica para una ciudad
+        /// Con lógica de reintentos: intenta cada 3 minutos por 1 hora hasta encontrar los 3 archivos necesarios
         /// </summary>
         public static async Task CombinarArchivosPorDivisa(string ciudad, string divisaCodigo, string monedaCodigo)
         {
@@ -52,142 +145,113 @@ namespace ANS.Model.Services
                 }
 
                 // ============================================
-                // PASO 1: Buscar archivo TSD más reciente
+                // LÓGICA DE REINTENTOS: Intentar cada 3 minutos por 1 hora
                 // ============================================
-                ServicioLog.instancia.WriteInfo(
-                    $"PASO 1: Buscando archivo TSD más reciente para {divisaCodigo}",
-                    $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 1");
+                DateTime inicioIntento = DateTime.Now;
+                TimeSpan tiempoMaximoEspera = TimeSpan.FromHours(1);
+                TimeSpan intervaloReintento = TimeSpan.FromMinutes(3);
+                int intento = 0;
+                bool archivosCompletos = false;
 
-                var archivosTSD = Directory.GetFiles(folderPath, $"*{divisaCodigo}*.txt", SearchOption.TopDirectoryOnly)
-                    .Where(f => 
+                FileInfo archivoTSDInfo = null;
+                FileInfo archivoTanda2Info = null;
+                FileInfo archivoDiaADiaInfo = null;
+
+                while (!archivosCompletos && (DateTime.Now - inicioIntento) < tiempoMaximoEspera)
+                {
+                    intento++;
+                    ServicioLog.instancia.WriteInfo(
+                        $"Intento {intento} - Buscando archivos necesarios para {divisaCodigo} | " +
+                        $"Tiempo transcurrido: {(DateTime.Now - inicioIntento).TotalMinutes:F1} minutos",
+                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Reintento {intento}");
+
+                    // Buscar los 3 archivos necesarios
+                    var resultadoBusqueda = BuscarArchivosNecesarios(folderPath, divisaCodigo, ciudad);
+                    archivoTSDInfo = resultadoBusqueda.ArchivoTSD;
+                    archivoTanda2Info = resultadoBusqueda.ArchivoTanda2;
+                    archivoDiaADiaInfo = resultadoBusqueda.ArchivoDiaADia;
+
+                    // ✅ Verificar si se encontró el archivo TSD (OBLIGATORIO)
+                    // Tanda2 y DiaADia son opcionales si TSD existe
+                    archivosCompletos = archivoTSDInfo != null;
+
+                    if (archivosCompletos)
                     {
-                        string fileName = Path.GetFileName(f).ToUpper();
-                        return fileName.Contains("ACREDITACIONTECNISEGUR") &&
-                               !fileName.Contains("BUZONES") &&
-                               !fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") &&
-                               !fileName.Contains("_TANDA") &&
-                               !fileName.Contains("_DIAADIA") &&
-                               !fileName.Contains("COMBINADO");
-                    })
-                    .Select(f => new FileInfo(f))
-                    .OrderByDescending(f => f.LastWriteTime)
-                    .ToList();
+                        var archivosEncontrados = new List<string> { $"TSD: {archivoTSDInfo.Name}" };
+                        if (archivoTanda2Info != null) archivosEncontrados.Add($"Tanda2: {archivoTanda2Info.Name}");
+                        if (archivoDiaADiaInfo != null) archivosEncontrados.Add($"DiaADia: {archivoDiaADiaInfo.Name}");
+                        
+                        var archivosOpcionalesFaltantes = new List<string>();
+                        if (archivoTanda2Info == null) archivosOpcionalesFaltantes.Add("Tanda2");
+                        if (archivoDiaADiaInfo == null) archivosOpcionalesFaltantes.Add("DiaADia");
 
-                FileInfo archivoTSDInfo = archivosTSD.FirstOrDefault();
+                        if (archivosOpcionalesFaltantes.Any())
+                        {
+                            ServicioLog.instancia.WriteInfo(
+                                $"✅ Archivo TSD encontrado en intento {intento} | " +
+                                $"Archivos encontrados: {string.Join(" | ", archivosEncontrados)} | " +
+                                $"Archivos opcionales faltantes (se combinará sin ellos): {string.Join(", ", archivosOpcionalesFaltantes)}",
+                                $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Archivos Suficientes");
+                        }
+                        else
+                        {
+                            ServicioLog.instancia.WriteInfo(
+                                $"✅ TODOS LOS ARCHIVOS ENCONTRADOS en intento {intento} | " +
+                                $"TSD: {archivoTSDInfo.Name} | " +
+                                $"Tanda2: {archivoTanda2Info.Name} | " +
+                                $"DiaADia: {archivoDiaADiaInfo.Name}",
+                                $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Archivos Completos");
+                        }
+                        break; // Salir del loop, proceder a combinar
+                    }
+                    else
+                    {
+                        var archivosFaltantes = new List<string>();
+                        if (archivoTSDInfo == null) archivosFaltantes.Add("TSD (OBLIGATORIO)");
+                        if (archivoTanda2Info == null) archivosFaltantes.Add("Tanda2 (opcional)");
+                        if (archivoDiaADiaInfo == null) archivosFaltantes.Add("DiaADia (opcional)");
+
+                        ServicioLog.instancia.WriteInfo(
+                            $"⚠️ Archivo TSD faltante en intento {intento} | " +
+                            $"Archivos faltantes: {string.Join(", ", archivosFaltantes)} | " +
+                            $"Esperando {intervaloReintento.TotalMinutes} minutos antes del siguiente intento...",
+                            $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Archivos Faltantes");
+
+                        // Esperar antes del siguiente intento (solo si no se alcanzó el tiempo máximo)
+                        if ((DateTime.Now - inicioIntento) < tiempoMaximoEspera)
+                        {
+                            await Task.Delay(intervaloReintento);
+                        }
+                    }
+                }
+
+                // ✅ Validación final: TSD es obligatorio, Tanda2 y DiaADia son opcionales
+                if (archivoTSDInfo == null)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"❌ NO SE ENCONTRÓ EL ARCHIVO TSD (OBLIGATORIO) después de {intento} intentos y {tiempoMaximoEspera.TotalMinutes} minutos | " +
+                        $"NO se generará archivo combinado",
+                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Error - TSD Faltante");
+                    return; // Salir sin generar archivo combinado
+                }
+
+                // ✅ Si TSD existe, proceder incluso si faltan Tanda2 o DiaADia
+                var archivosOpcionalesFinales = new List<string>();
+                if (archivoTanda2Info == null) archivosOpcionalesFinales.Add("Tanda2");
+                if (archivoDiaADiaInfo == null) archivosOpcionalesFinales.Add("DiaADia");
+                
+                if (archivosOpcionalesFinales.Any())
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"✅ Archivo TSD encontrado. Procediendo con combinación aunque falten archivos opcionales: {string.Join(", ", archivosOpcionalesFinales)}",
+                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Continuando sin Archivos Opcionales");
+                }
+
+                // Los archivos ya fueron encontrados en el loop de reintentos
+                // Continuar con la combinación usando los archivos encontrados
                 string archivoTSD = archivoTSDInfo?.FullName;
-
-                if (archivoTSDInfo != null)
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"PASO 1 - Archivo TSD encontrado: {archivoTSDInfo.Name} | " +
-                        $"Hora creación: {archivoTSDInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss} | " +
-                        $"Tamaño: {archivoTSDInfo.Length} bytes",
-                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 1");
-                }
-                else
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"PASO 1 - No se encontró archivo TSD para {divisaCodigo}",
-                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 1");
-                }
-
-                // ============================================
-                // PASO 2: Buscar archivos Tanda 2
-                // ============================================
-                ServicioLog.instancia.WriteInfo(
-                    $"PASO 2: Buscando archivos Tanda 2 (entre 7:00 y 15:00) para {divisaCodigo}",
-                    $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 2");
-
-                var archivosTanda2 = Directory.GetFiles(folderPath, $"*{divisaCodigo}*.txt", SearchOption.TopDirectoryOnly)
-                    .Where(f =>
-                    {
-                        string fileName = Path.GetFileName(f).ToUpper();
-                        if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") || 
-                            fileName.Contains("COMBINADO") ||
-                            fileName.Contains("CASHOFFICE") ||
-                            fileName.Contains("_TANDA1") ||
-                            fileName.Contains("_DIAADIA"))
-                            return false;
-
-                        bool tieneSufijoTanda2 = fileName.Contains("_TANDA2");
-                        
-                        if (tieneSufijoTanda2)
-                            return true;
-                        
-                        var fileInfo = new FileInfo(f);
-                        var horaModificacion = fileInfo.LastWriteTime;
-                        bool estaEnRangoHorario = horaModificacion.Hour >= 7 && 
-                                                   (horaModificacion.Hour < 15 || (horaModificacion.Hour == 15 && horaModificacion.Minute == 0));
-                        
-                        return estaEnRangoHorario;
-                    })
-                    .Select(f => new FileInfo(f))
-                    .OrderByDescending(f => f.LastWriteTime)
-                    .ToList();
-
-                FileInfo archivoTanda2Info = archivosTanda2.FirstOrDefault();
                 string archivoTanda2 = archivoTanda2Info?.FullName;
-
-                if (archivoTanda2Info != null)
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"PASO 2 - Archivo Tanda 2 encontrado: {archivoTanda2Info.Name} | " +
-                        $"Hora creación: {archivoTanda2Info.LastWriteTime:yyyy-MM-dd HH:mm:ss} | " +
-                        $"Tamaño: {archivoTanda2Info.Length} bytes",
-                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 2");
-                }
-                else
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"PASO 2 - No se encontró archivo Tanda 2 para {divisaCodigo}",
-                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 2");
-                }
-
-                // ============================================
-                // PASO 3: Buscar archivos Día a Día
-                // ============================================
-                ServicioLog.instancia.WriteInfo(
-                    $"PASO 3: Buscando archivos Día a Día para {divisaCodigo}",
-                    $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 3");
-
-                var archivosDiaADia = Directory.GetFiles(folderPath, $"*{divisaCodigo}*.txt", SearchOption.TopDirectoryOnly)
-                    .Where(f =>
-                    {
-                        string fileName = Path.GetFileName(f).ToUpper();
-                        if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") || 
-                            fileName.Contains("COMBINADO") ||
-                            fileName.Contains("CASHOFFICE"))
-                            return false;
-
-                        bool tieneSufijoDiaADia = fileName.Contains("_DIAADIA");
-                        
-                        var fileInfo = new FileInfo(f);
-                        var horaModificacion = fileInfo.LastWriteTime;
-                        bool estaDespuesDe16 = horaModificacion.Hour >= 16;
-                        
-                        return tieneSufijoDiaADia || (estaDespuesDe16 && !fileName.Contains("_TANDA1") && !fileName.Contains("_TANDA2"));
-                    })
-                    .Select(f => new FileInfo(f))
-                    .OrderByDescending(f => f.LastWriteTime)
-                    .ToList();
-
-                FileInfo archivoDiaADiaInfo = archivosDiaADia.FirstOrDefault();
                 string archivoDiaADia = archivoDiaADiaInfo?.FullName;
-
-                if (archivoDiaADiaInfo != null)
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"PASO 3 - Archivo Día a Día encontrado: {archivoDiaADiaInfo.Name} | " +
-                        $"Hora creación: {archivoDiaADiaInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss} | " +
-                        $"Tamaño: {archivoDiaADiaInfo.Length} bytes",
-                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 3");
-                }
-                else
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"PASO 3 - No se encontró archivo Día a Día para {divisaCodigo}",
-                        $"SCOTIABANK | ServicioCombinarTxtScotiabank | {ciudad} | Paso 3");
-                }
 
                 // ============================================
                 // COMBINAR ARCHIVOS EN ORDEN ESPECÍFICO

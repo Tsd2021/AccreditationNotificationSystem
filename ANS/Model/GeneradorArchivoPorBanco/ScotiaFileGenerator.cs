@@ -325,8 +325,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     string moneda = ejemplo.Divisa == VariablesGlobales.uyu
                         ? "00" : "01";
 
-                    // Número de cuenta: pad 11 + prefijo según moneda
-                    string nroCuenta = ejemplo.Cuenta.PadLeft(11, '0');
+                    // Número de cuenta: limpiar espacios y pad 11 + prefijo según moneda
+                    string cuentaLimpia = (ejemplo.Cuenta ?? "").Trim().Replace(" ", "");
+                    string nroCuenta = cuentaLimpia.PadLeft(11, '0');
                     nroCuenta = moneda == "00"
                         ? "2101" + "0000" + nroCuenta
                         : "2101" + "2225" + nroCuenta;

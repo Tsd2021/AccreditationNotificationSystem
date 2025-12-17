@@ -376,6 +376,33 @@ namespace ANS.Model.Services
                             and config.TipoAcreditacion = @tipoAcreditacion;";
 
                     }
+                    
+                    if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
+                    {
+                        // Excluir Nike (ID 998) porque se acredita en su job específico a las 14:25
+                        query = @"select distinct c.NC,
+                            cb.BANCO,
+                            c.BANCO as BANCOBUZON,
+                            c.CIERRE,
+                            c.IDCLIENTE,
+                            cb.CUENTA,
+                            cb.MONEDA,
+                            cb.EMPRESA,
+                            config.TipoAcreditacion,
+                            c.SUCURSAL as CIUDAD,
+                            cb.SUCURSAL,
+                            c.IDCC,
+                            cb.ID,
+                            c.NN  
+                            from ConfiguracionAcreditacion config 
+                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
+                            inner join cc c on cb.idcliente = c.IDCLIENTE 
+                            and c.nc = config.nc 
+                            where cb.BANCO = @bank 
+                            and cb.IDCLIENTE NOT IN (998)
+                            and config.TipoAcreditacion = @tipoAcreditacion;";
+
+                    }
                 }
 
                 if (tipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())

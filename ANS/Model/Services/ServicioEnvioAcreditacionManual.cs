@@ -1,4 +1,4 @@
-﻿//using Microsoft.Data.SqlClient;
+//using Microsoft.Data.SqlClient;
 //using SharedDTOs;
 //using TAAS.Reports;
 
@@ -450,7 +450,7 @@ namespace ANS.Model.Services
                 JOIN    cc c
                         ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
                 WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
-                    AND a.FECHA >= @Desde
+                    AND a.FECHA > @Desde
                     AND a.FECHA <= @Cierre
                 ORDER BY a.IDOPERACION DESC;";
 

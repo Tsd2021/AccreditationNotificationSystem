@@ -14,6 +14,7 @@
         public double Monto { get; set; } // Cambiado a double
         public string Divisa { get; set; }
         public DateTime FechaTanda { get; set; } = DateTime.MinValue;
+        public DateTime FechaDepReal { get; set; }
         public void setDivisa()
         {
             if (Moneda == 0)

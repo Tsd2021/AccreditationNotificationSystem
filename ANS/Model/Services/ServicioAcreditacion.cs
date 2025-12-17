@@ -1,4 +1,4 @@
-﻿using ANS.Model.Interfaces;
+using ANS.Model.Interfaces;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -43,9 +43,9 @@ namespace ANS.Model.Services
                                     )
                                     BEGIN
                                     INSERT INTO AcreditacionDepositoDiegoTest
-                                    (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO)
+                                    (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP)
                                     VALUES
-                                    (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO);
+                                    (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL);
                                     END";
 
                 // Parámetros
@@ -57,6 +57,9 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@MONEDA", a.Moneda);
                 cmd.Parameters.AddWithValue("@NO_ENVIADO", a.No_Enviado);
                 cmd.Parameters.AddWithValue("@MONTO", a.Monto);
+                // Manejar DateTime.MinValue como NULL para compatibilidad con registros antiguos
+                cmd.Parameters.AddWithValue("@FECHADEPREAL", 
+                    a.FechaDepReal != DateTime.MinValue ? (object)a.FechaDepReal : DBNull.Value);
 
                 conn.Open();
                 int rowsAffected = cmd.ExecuteNonQuery();
@@ -104,10 +107,7 @@ namespace ANS.Model.Services
                 
                 foreach (var _acc in accounts)
                 {
-                    if (_acc.NC == "EA23L0410N12000062")
-                    {
-                        Console.WriteLine("es el que se repite de fonbay");
-                    }
+         
                     foreach (var _dep in _acc.Depositos)
                     {
                         int bankId = ServicioBanco.getInstancia().getByNombre(_acc.Banco).BancoId;
@@ -126,6 +126,7 @@ namespace ANS.Model.Services
                             Moneda = moneyId,
                             No_Enviado = false,
                             Monto = montoTotalDelDeposito,
+                            FechaDepReal = _dep.FechaDep
                         };
 
 
@@ -183,6 +184,7 @@ namespace ANS.Model.Services
                             Moneda = moneyId,
                             No_Enviado = false,
                             Monto = montoTotalDelDeposito,
+                            FechaDepReal = _dep.FechaDep
                         };
 
                         if (tanda == 1)

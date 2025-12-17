@@ -18,6 +18,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         private string _sucTecnisegurDolaresMon = "005";
         private string _sucTecnisegurPesosMald = "137";
         private string _sucTecnisegurDolaresMald = "138";
+        
+        // ✅ Lock estático por sucursal para evitar colisiones de nombres cuando se generan archivos en paralelo
+        private static readonly Dictionary<string, SemaphoreSlim> _locksPorSucursal = new Dictionary<string, SemaphoreSlim>();
+        private static readonly object _lockDictionary = new object();
         /*
         private string _cashOfficeRutaDolaresP2P = @"\\172.16.10.20\cashoffice$\CashSantander\DOLARES\";
         private string _cashOfficeRutaPesosP2P = @"\\172.16.10.20\cashoffice$\CashSantander\PESOS\";
@@ -522,33 +526,33 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             
             if (maldonadoPesos.Length > 0)
             {
-                var info = await CrearArchivoPorCiudadYDivisa(maldonadoPesos, VariablesGlobales.maldonado, VariablesGlobales.uyu, false);
-                if (info.HasValue) archivosGenerados.Add(info.Value);
+                var archivos = await CrearArchivoPorCiudadYDivisa(maldonadoPesos, VariablesGlobales.maldonado, VariablesGlobales.uyu, false);
+                archivosGenerados.AddRange(archivos);
             }
             if (maldonadoDolares.Length > 0)
             {
-                var info = await CrearArchivoPorCiudadYDivisa(maldonadoDolares, VariablesGlobales.maldonado, VariablesGlobales.usd, false);
-                if (info.HasValue) archivosGenerados.Add(info.Value);
+                var archivos = await CrearArchivoPorCiudadYDivisa(maldonadoDolares, VariablesGlobales.maldonado, VariablesGlobales.usd, false);
+                archivosGenerados.AddRange(archivos);
             }
             if (montevideoPesos.Length > 0)
             {
-                var info = await CrearArchivoPorCiudadYDivisa(montevideoPesos, VariablesGlobales.montevideo, VariablesGlobales.uyu, false);
-                if (info.HasValue) archivosGenerados.Add(info.Value);
+                var archivos = await CrearArchivoPorCiudadYDivisa(montevideoPesos, VariablesGlobales.montevideo, VariablesGlobales.uyu, false);
+                archivosGenerados.AddRange(archivos);
             }
             if (montevideoDolares.Length > 0)
             {
-                var info = await CrearArchivoPorCiudadYDivisa(montevideoDolares, VariablesGlobales.montevideo, VariablesGlobales.usd, false);
-                if (info.HasValue) archivosGenerados.Add(info.Value);
+                var archivos = await CrearArchivoPorCiudadYDivisa(montevideoDolares, VariablesGlobales.montevideo, VariablesGlobales.usd, false);
+                archivosGenerados.AddRange(archivos);
             }
             if (cashOfficePesos.Length > 0)
             {
-                var info = await CrearArchivoCashOffice(cashOfficePesos, VariablesGlobales.uyu, false);
-                if (info.HasValue) archivosGenerados.Add(info.Value);
+                var archivos = await CrearArchivoCashOffice(cashOfficePesos, VariablesGlobales.uyu, false);
+                archivosGenerados.AddRange(archivos);
             }
             if (cashOfficeDolares.Length > 0)
             {
-                var info = await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.usd, false);
-                if (info.HasValue) archivosGenerados.Add(info.Value);
+                var archivos = await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.usd, false);
+                archivosGenerados.AddRange(archivos);
             }
             
             // ============================================================================
@@ -714,22 +718,27 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             }
             */
         }
-        private async Task<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)?> CrearArchivoPorCiudadYDivisa(StringBuilder contenido, string ciudad, string divisa, bool enviarATens = false)
+        /// <summary>
+        /// ✅ Crea uno o múltiples archivos si el contenido supera 500 líneas.
+        /// Divide automáticamente el contenido en chunks de máximo 500 líneas para evitar timeouts.
+        /// </summary>
+        private async Task<List<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)>> CrearArchivoPorCiudadYDivisa(StringBuilder contenido, string ciudad, string divisa, bool enviarATens = false)
         {
+            var archivosGenerados = new List<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)>();
 
-            if (contenido.Length == 0) return null; // No crear archivos vacíos
+            if (contenido.Length == 0) 
+                return archivosGenerados; // No crear archivos vacíos
 
+            // ✅ Obtener contenido original (StringBuilder) - mantener referencia para modificar
+            StringBuilder contenidoBuilder = contenido;
+            
+            // ✅ Verificar si el contenido tiene más de 500 líneas (sin contar header/footer)
             int numeroLineasContenido = LineCount(contenido.ToString());
-            string numRegistro = numeroLineasContenido.ToString();
-
-            contenido.Insert(0, "H;1\n");
-            contenido.AppendLine("F;" + numRegistro);
-
+            
             // ✅ Obtener ruta base usando el nuevo método centralizado
-            // IMPORTANTE: Para P2P, GetRutaBaseDirectorio NO incluye carpeta de ciudad
             string directorioBase = GetRutaBaseDirectorio(ciudad, divisa);
             
-            // ✅ Generar nombre de archivo (mismo formato que antes)
+            // ✅ Generar nombre de archivo base (mismo formato que antes)
             string ciudadUp = ciudad?.ToUpperInvariant();
             string divisaUp = divisa?.ToUpperInvariant();
             
@@ -756,22 +765,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 _ => "000" // Fallback
             };
 
-            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-            string nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
-            
-            string fecha = DateTime.Now.ToString("ddMMyyyy"); // Fecha en formato ddMMyyyy
-
-            // ✅ En producción, el estado se determinará después de enviar al servicio (ver código comentado en CrearArchivo)
-            // Por ahora, todos van a NO_ENVIADOS ya que el envío se hace al final
-            // NOTA: El parámetro 'enviarATens' y el método 'generarYEnviarArchivoTens' ya NO se usan
-            // porque el envío se hace de forma centralizada al final en el método CrearArchivo
+            string fecha = DateTime.Now.ToString("ddMMyyyy");
             bool responseTens = false; // Siempre false porque el envío se hace al final
-            
-            // Determinar si se guarda en "APPROVED" o "NOT_APPROVED"
-            // En producción, esto se actualizará después del envío exitoso (ver código comentado)
             string subcarpetaEstado = responseTens ? $"{fecha}_APPROVED" : $"{fecha}_NO_ENVIADOS";
-
-            string directorioFinal = Path.Combine(directorioBase, subcarpetaEstado); // Ruta completa
+            string directorioFinal = Path.Combine(directorioBase, subcarpetaEstado);
 
             // Crear la carpeta si no existe
             if (!Directory.Exists(directorioFinal))
@@ -779,28 +776,85 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 Directory.CreateDirectory(directorioFinal);
             }
 
-            // ✅ Nombre de archivo ya se generó arriba
+            // ✅ Si el contenido tiene más de 500 líneas, dividirlo en chunks
+            if (numeroLineasContenido > 500)
+            {
+                ServicioLog.instancia.WriteInfo(
+                    $"Contenido supera 500 líneas ({numeroLineasContenido} líneas) | " +
+                    $"Se dividirá en múltiples archivos para evitar timeout | " +
+                    $"Ciudad: {ciudad} | Divisa: {divisa}",
+                    "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa");
 
-            string rutaFinal = Path.Combine(directorioFinal, nombreArchivo); // Ruta donde se guardará
+                // Dividir contenido en chunks de máximo 500 líneas
+                string contenidoOriginal = contenidoBuilder.ToString();
+                var chunks = DividirContenidoEnChunks(contenidoOriginal, maxLineasPorChunk: 500);
 
-            // Guardar archivo en la ubicación correcta
-            string contenidoFinal = contenido.ToString();
-            File.WriteAllText(rutaFinal, contenidoFinal);
-            
-            // ✅ Convertir contenido a bytes para envío en producción
-            byte[] contenidoBytes = Encoding.UTF8.GetBytes(contenidoFinal);
-            
-            // ✅ Logging: Registrar resumen del archivo generado
-            int totalLineas = LineCount(contenidoFinal);
-            ServicioLog.instancia.WriteInfo(
-                $"Archivo generado exitosamente | Ruta: {rutaFinal} | Total líneas: {totalLineas} | " +
-                $"Ciudad: {ciudad} | Divisa: {divisa} | Aprobado: {responseTens}",
-                "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa");
+                // Crear un archivo para cada chunk
+                for (int i = 0; i < chunks.Count; i++)
+                {
+                    // Generar nombre único manteniendo el formato TEC_{sucursal}_{timestamp}.dat
+                    // Verifica que no exista otro archivo con el mismo nombre
+                    string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, i);
+                    string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                    
+                    // Guardar archivo
+                    File.WriteAllText(rutaFinal, chunks[i]);
+                    
+                    // Convertir contenido a bytes para envío
+                    byte[] contenidoBytes = Encoding.UTF8.GetBytes(chunks[i]);
+                    
+                    int totalLineas = LineCount(chunks[i]);
+                    ServicioLog.instancia.WriteInfo(
+                        $"Archivo {i + 1}/{chunks.Count} generado exitosamente | " +
+                        $"Ruta: {rutaFinal} | Total líneas: {totalLineas} | " +
+                        $"Ciudad: {ciudad} | Divisa: {divisa}",
+                        "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa");
+
+                    archivosGenerados.Add((rutaFinal, nombreArchivo, contenidoBytes, ciudad, divisa));
+                    
+                    // Pequeña pausa entre archivos para asegurar timestamps únicos (al menos 1 segundo)
+                    if (i < chunks.Count - 1)
+                    {
+                        await Task.Delay(1000); // Esperar 1 segundo para que el timestamp cambie
+                    }
+                }
+            }
+            else
+            {
+                // ✅ Contenido tiene 500 líneas o menos, crear un solo archivo normalmente
+                // MANTENER LA LÓGICA ORIGINAL EXACTA que funcionaba bien
+                
+                // Contar líneas (como se hacía originalmente)
+                int numRegistro = numeroLineasContenido;
+                string numRegistroStr = numRegistro.ToString();
+                
+                // Agregar header y footer directamente al StringBuilder (como se hacía originalmente)
+                contenidoBuilder.Insert(0, "H;1\n");
+                contenidoBuilder.AppendLine("F;" + numRegistroStr);
+                
+                // Generar nombre de archivo único (índice 0 = primer archivo)
+                // Verifica que no exista otro archivo con el mismo nombre
+                string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, 0);
+                string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                
+                // Guardar archivo (como se hacía originalmente)
+                string contenidoFinal = contenidoBuilder.ToString();
+                File.WriteAllText(rutaFinal, contenidoFinal);
+                
+                byte[] contenidoBytes = Encoding.UTF8.GetBytes(contenidoFinal);
+                
+                int totalLineas = LineCount(contenidoFinal);
+                ServicioLog.instancia.WriteInfo(
+                    $"Archivo generado exitosamente | Ruta: {rutaFinal} | Total líneas: {totalLineas} | " +
+                    $"Ciudad: {ciudad} | Divisa: {divisa} | Aprobado: {responseTens}",
+                    "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa");
+
+                archivosGenerados.Add((rutaFinal, nombreArchivo, contenidoBytes, ciudad, divisa));
+            }
 
             await Task.Delay(250);
             
-            // ✅ Retornar información del archivo para envío en producción
-            return (rutaFinal, nombreArchivo, contenidoBytes, ciudad, divisa);
+            return archivosGenerados;
         }
         // ============================================================================
         // ⚠️ MÉTODO OBSOLETO - Ya NO se usa en el flujo actual
@@ -849,16 +903,20 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
             return false;
         }
-        // CREACION ARCHIVOS ESPECIFICAMENTE DE CASHOFFICE
-        private async Task<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)?> CrearArchivoCashOffice(StringBuilder content, string divisa, bool enviarATens = false)
+        /// <summary>
+        /// ✅ Crea uno o múltiples archivos CashOffice si el contenido supera 500 líneas.
+        /// Divide automáticamente el contenido en chunks de máximo 500 líneas para evitar timeouts.
+        /// </summary>
+        private async Task<List<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)>> CrearArchivoCashOffice(StringBuilder content, string divisa, bool enviarATens = false)
         {
-            if (content.Length == 0) return null; // No crear archivos vacíos
+            var archivosGenerados = new List<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)>();
 
-            int numeroLineasPesos = LineCount(content.ToString());
-            string numRegistro = numeroLineasPesos.ToString();
+            if (content.Length == 0) 
+                return archivosGenerados; // No crear archivos vacíos
 
-            content.Insert(0, "H;1\n");
-            content.AppendLine("F;" + numRegistro);
+            // ✅ Obtener contenido original (StringBuilder) - mantener referencia para modificar
+            StringBuilder contenidoBuilder = content;
+            int numeroLineasContenido = LineCount(contenidoBuilder.ToString());
 
             // ✅ NOTA: El parámetro 'enviarATens' y el método 'generarYEnviarArchivoTens' ya NO se usan
             // porque el envío se hace de forma centralizada al final en el método CrearArchivo
@@ -868,13 +926,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // ✅ Usar rutas desde configuración
             string directorioBase = GetRutaBaseDirectorio(VariablesGlobales.montevideo, divisa, esCashOffice: true);
             
-            // Generar nombre de archivo
+            // Generar código de sucursal
             string sucursal = divisa == VariablesGlobales.uyu 
                 ? _sucTecnisegurPesosMon 
                 : _sucTecnisegurDolaresMon;
-            
-            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-            string nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
 
             // ✅ Estructura de carpetas: directorioBase/{fecha}_NO_ENVIADOS (o _APPROVED)
             string fecha = DateTime.Now.ToString("ddMMyyyy");
@@ -886,24 +941,83 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 Directory.CreateDirectory(directorioFinal);
             }
 
-            string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
-            string contenidoFinal = content.ToString();
-            File.WriteAllText(rutaFinal, contenidoFinal);
-            
-            // ✅ Convertir contenido a bytes para envío en producción
-            byte[] contenidoBytes = Encoding.UTF8.GetBytes(contenidoFinal);
-            
-            // ✅ Logging: Registrar resumen del archivo generado (CashOffice)
-            int totalLineas = LineCount(contenidoFinal);
-            ServicioLog.instancia.WriteInfo(
-                $"Archivo generado exitosamente (CashOffice) | Ruta: {rutaFinal} | Total líneas: {totalLineas} | " +
-                $"Divisa: {divisa}",
-                "SantanderFileGenerator | CrearArchivoCashOffice");
+            // ✅ Si el contenido tiene más de 500 líneas, dividirlo en chunks
+            if (numeroLineasContenido > 500)
+            {
+                ServicioLog.instancia.WriteInfo(
+                    $"Contenido CashOffice supera 500 líneas ({numeroLineasContenido} líneas) | " +
+                    $"Se dividirá en múltiples archivos para evitar timeout | Divisa: {divisa}",
+                    "SantanderFileGenerator | CrearArchivoCashOffice");
+
+                // Dividir contenido en chunks de máximo 500 líneas
+                string contenidoOriginal = contenidoBuilder.ToString();
+                var chunks = DividirContenidoEnChunks(contenidoOriginal, maxLineasPorChunk: 500);
+
+                // Crear un archivo para cada chunk
+                for (int i = 0; i < chunks.Count; i++)
+                {
+                    // Generar nombre único manteniendo el formato TEC_{sucursal}_{timestamp}.dat
+                    // Verifica que no exista otro archivo con el mismo nombre
+                    string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, i);
+                    string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                    
+                    // Guardar archivo
+                    File.WriteAllText(rutaFinal, chunks[i]);
+                    
+                    // Convertir contenido a bytes para envío
+                    byte[] contenidoBytes = Encoding.UTF8.GetBytes(chunks[i]);
+                    
+                    int totalLineas = LineCount(chunks[i]);
+                    ServicioLog.instancia.WriteInfo(
+                        $"Archivo CashOffice {i + 1}/{chunks.Count} generado exitosamente | " +
+                        $"Ruta: {rutaFinal} | Total líneas: {totalLineas} | Divisa: {divisa}",
+                        "SantanderFileGenerator | CrearArchivoCashOffice");
+
+                    archivosGenerados.Add((rutaFinal, nombreArchivo, contenidoBytes, VariablesGlobales.cashoffice, divisa));
+                    
+                    // Pequeña pausa entre archivos para asegurar timestamps únicos (al menos 1 segundo)
+                    if (i < chunks.Count - 1)
+                    {
+                        await Task.Delay(1000); // Esperar 1 segundo para que el timestamp cambie
+                    }
+                }
+            }
+            else
+            {
+                // ✅ Contenido tiene 500 líneas o menos, crear un solo archivo normalmente
+                // MANTENER LA LÓGICA ORIGINAL EXACTA que funcionaba bien
+                
+                // Contar líneas (como se hacía originalmente)
+                int numRegistro = numeroLineasContenido;
+                string numRegistroStr = numRegistro.ToString();
+                
+                // Agregar header y footer directamente al StringBuilder (como se hacía originalmente)
+                contenidoBuilder.Insert(0, "H;1\n");
+                contenidoBuilder.AppendLine("F;" + numRegistroStr);
+                
+                // Generar nombre de archivo único (índice 0 = primer archivo)
+                // Verifica que no exista otro archivo con el mismo nombre
+                string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, 0);
+                string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                
+                // Guardar archivo (como se hacía originalmente)
+                string contenidoFinal = contenidoBuilder.ToString();
+                File.WriteAllText(rutaFinal, contenidoFinal);
+                
+                byte[] contenidoBytes = Encoding.UTF8.GetBytes(contenidoFinal);
+                
+                int totalLineas = LineCount(contenidoFinal);
+                ServicioLog.instancia.WriteInfo(
+                    $"Archivo generado exitosamente (CashOffice) | Ruta: {rutaFinal} | Total líneas: {totalLineas} | " +
+                    $"Divisa: {divisa}",
+                    "SantanderFileGenerator | CrearArchivoCashOffice");
+
+                archivosGenerados.Add((rutaFinal, nombreArchivo, contenidoBytes, VariablesGlobales.cashoffice, divisa));
+            }
 
             await Task.Delay(150);
             
-            // ✅ Retornar información del archivo para envío en producción
-            return (rutaFinal, nombreArchivo, contenidoBytes, VariablesGlobales.cashoffice, divisa);
+            return archivosGenerados;
         }
         //METODO PARA CREAR LINEAS EN ARCHIVOS DIA A DIA Y TANDA!
         private void agregarLineaAlStringBuilder_Agrupado(StringBuilder lineas, CuentaBuzon unaCuenta, double totalPorCuenta)
@@ -1008,6 +1122,244 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         {
             return str.Split('\n').Length - 1;
             //el menos uno es para no contar el ultimo salto de linea.
+        }
+
+        /// <summary>
+        /// ✅ Divide el contenido en chunks de máximo 500 líneas (sin contar header y footer).
+        /// Cada chunk se formatea con su propio header y footer.
+        /// </summary>
+        /// <param name="contenidoOriginal">Contenido original sin header ni footer</param>
+        /// <returns>Lista de chunks formateados, cada uno con header y footer</returns>
+        private List<string> DividirContenidoEnChunks(string contenidoOriginal, int maxLineasPorChunk = 500)
+        {
+            var chunks = new List<string>();
+            
+            if (string.IsNullOrWhiteSpace(contenidoOriginal))
+                return chunks;
+
+            // Dividir el contenido en líneas (excluyendo líneas vacías al final)
+            var lineas = contenidoOriginal
+                .Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .ToList();
+
+            if (lineas.Count == 0)
+                return chunks;
+
+            // Si el contenido tiene 500 líneas o menos, retornar un solo chunk
+            if (lineas.Count <= maxLineasPorChunk)
+            {
+                string contenidoCompleto = string.Join("\n", lineas);
+                int numRegistro = lineas.Count;
+                string chunkFormateado = $"H;1\n{contenidoCompleto}\nF;{numRegistro}";
+                chunks.Add(chunkFormateado);
+                return chunks;
+            }
+
+            // Dividir en chunks de máximo 500 líneas
+            int indiceInicio = 0;
+            int numeroChunk = 1;
+            
+            while (indiceInicio < lineas.Count)
+            {
+                int lineasEnChunk = Math.Min(maxLineasPorChunk, lineas.Count - indiceInicio);
+                var lineasChunk = lineas.Skip(indiceInicio).Take(lineasEnChunk).ToList();
+                
+                string contenidoChunk = string.Join("\n", lineasChunk);
+                int numRegistro = lineasChunk.Count;
+                
+                // Formatear chunk con header y footer
+                string chunkFormateado = $"H;1\n{contenidoChunk}\nF;{numRegistro}";
+                chunks.Add(chunkFormateado);
+                
+                ServicioLog.instancia.WriteInfo(
+                    $"Chunk {numeroChunk} creado | Líneas: {lineasEnChunk} | " +
+                    $"Líneas totales procesadas: {indiceInicio + lineasEnChunk} de {lineas.Count}",
+                    "SantanderFileGenerator | DividirContenidoEnChunks");
+                
+                indiceInicio += lineasEnChunk;
+                numeroChunk++;
+            }
+
+            ServicioLog.instancia.WriteInfo(
+                $"Contenido dividido en {chunks.Count} archivo(s) | Total líneas originales: {lineas.Count} | " +
+                $"Máximo líneas por archivo: {maxLineasPorChunk}",
+                "SantanderFileGenerator | DividirContenidoEnChunks");
+
+            return chunks;
+        }
+
+        /// <summary>
+        /// ✅ Obtiene o crea un semáforo para una sucursal específica.
+        /// Esto asegura que solo un archivo se genere a la vez por sucursal, evitando colisiones.
+        /// </summary>
+        private SemaphoreSlim ObtenerLockPorSucursal(string sucursal)
+        {
+            lock (_lockDictionary)
+            {
+                if (!_locksPorSucursal.ContainsKey(sucursal))
+                {
+                    _locksPorSucursal[sucursal] = new SemaphoreSlim(1, 1);
+                }
+                return _locksPorSucursal[sucursal];
+            }
+        }
+
+        /// <summary>
+        /// ✅ Obtiene todas las rutas base posibles donde podría existir un archivo Santander con la misma sucursal.
+        /// Esto incluye: P2P, CashOffice, Tanda, y Día a Día.
+        /// </summary>
+        private List<string> ObtenerTodasLasRutasBasePosibles()
+        {
+            var rutas = new List<string>();
+            
+            try
+            {
+                // Agregar todas las rutas base posibles de Santander
+                if (!string.IsNullOrWhiteSpace(ConfiguracionGlobal.Rutas.SantanderPuntoAPunto))
+                    rutas.Add(ConfiguracionGlobal.Rutas.SantanderPuntoAPunto);
+                
+                if (!string.IsNullOrWhiteSpace(ConfiguracionGlobal.Rutas.SantanderCashOfficeP2P))
+                    rutas.Add(ConfiguracionGlobal.Rutas.SantanderCashOfficeP2P);
+                
+                if (!string.IsNullOrWhiteSpace(ConfiguracionGlobal.Rutas.SantanderTanda))
+                    rutas.Add(ConfiguracionGlobal.Rutas.SantanderTanda);
+                
+                if (!string.IsNullOrWhiteSpace(ConfiguracionGlobal.Rutas.SantanderDiaADia))
+                    rutas.Add(ConfiguracionGlobal.Rutas.SantanderDiaADia);
+            }
+            catch (Exception ex)
+            {
+                ServicioLog.instancia.WriteWarning(
+                    $"Error al obtener rutas base para verificación de archivos: {ex.Message}",
+                    "SantanderFileGenerator | ObtenerTodasLasRutasBasePosibles");
+            }
+            
+            return rutas;
+        }
+
+        /// <summary>
+        /// ✅ Verifica si un archivo existe en TODAS las carpetas posibles de Santander (P2P, CashOffice, Tanda, Día a Día).
+        /// Busca en todas las subcarpetas posibles (con fechas como {fecha}_NO_ENVIADOS, {fecha}_APPROVED, etc.)
+        /// </summary>
+        /// <param name="nombreArchivo">Nombre del archivo a buscar (ej: "TEC_004_20251125134000.dat")</param>
+        /// <returns>True si el archivo existe en alguna carpeta, False si no existe en ninguna</returns>
+        private bool VerificarArchivoEnTodasLasCarpetas(string nombreArchivo)
+        {
+            var rutasBase = ObtenerTodasLasRutasBasePosibles();
+            
+            foreach (var rutaBase in rutasBase)
+            {
+                try
+                {
+                    // Verificar si la carpeta base existe
+                    if (!Directory.Exists(rutaBase))
+                        continue;
+                    
+                    // Buscar el archivo directamente en la carpeta base
+                    string rutaDirecta = Path.Combine(rutaBase, nombreArchivo);
+                    if (File.Exists(rutaDirecta))
+                    {
+                        ServicioLog.instancia.WriteInfo(
+                            $"Archivo encontrado en carpeta base | Ruta: {rutaDirecta} | Nombre: {nombreArchivo}",
+                            "SantanderFileGenerator | VerificarArchivoEnTodasLasCarpetas");
+                        return true;
+                    }
+                    
+                    // Buscar en todas las subcarpetas (pueden tener formato {fecha}_NO_ENVIADOS, {fecha}_APPROVED, etc.)
+                    var subcarpetas = Directory.GetDirectories(rutaBase, "*", SearchOption.TopDirectoryOnly);
+                    foreach (var subcarpeta in subcarpetas)
+                    {
+                        string rutaEnSubcarpeta = Path.Combine(subcarpeta, nombreArchivo);
+                        if (File.Exists(rutaEnSubcarpeta))
+                        {
+                            ServicioLog.instancia.WriteInfo(
+                                $"Archivo encontrado en subcarpeta | Ruta: {rutaEnSubcarpeta} | Nombre: {nombreArchivo}",
+                                "SantanderFileGenerator | VerificarArchivoEnTodasLasCarpetas");
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Si hay error al acceder a una carpeta, continuar con las demás
+                    ServicioLog.instancia.WriteWarning(
+                        $"Error al verificar archivo en ruta {rutaBase}: {ex.Message}",
+                        "SantanderFileGenerator | VerificarArchivoEnTodasLasCarpetas");
+                    continue;
+                }
+            }
+            
+            return false; // No se encontró el archivo en ninguna carpeta
+        }
+
+        /// <summary>
+        /// ✅ Genera un nombre de archivo único manteniendo el formato original TEC_{sucursal}_{timestamp}.dat
+        /// Usa un lock por sucursal para evitar colisiones cuando se generan archivos en paralelo.
+        /// Verifica que el archivo NO exista en NINGUNA carpeta de Santander (P2P, CashOffice, Tanda, Día a Día).
+        /// Si existe en alguna carpeta, espera y genera otro timestamp.
+        /// </summary>
+        /// <param name="sucursal">Código de sucursal (ej: "137")</param>
+        /// <param name="directorioFinal">Directorio donde se guardará el archivo</param>
+        /// <param name="indiceChunk">Índice del chunk (0 para el primer archivo, 1+ para archivos adicionales)</param>
+        /// <returns>Nombre de archivo único en formato TEC_{sucursal}_{timestamp}.dat</returns>
+        private async Task<string> GenerarNombreArchivoUnico(string sucursal, string directorioFinal, int indiceChunk)
+        {
+            // ✅ Obtener lock para esta sucursal (evita que dos procesos generen archivos con la misma sucursal al mismo tiempo)
+            var semaforo = ObtenerLockPorSucursal(sucursal);
+            
+            await semaforo.WaitAsync();
+            try
+            {
+                int intentos = 0;
+                const int maxIntentos = 10; // Máximo 10 intentos para evitar loops infinitos
+                
+                while (intentos < maxIntentos)
+                {
+                    // Generar timestamp
+                    var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                    string nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
+                    
+                    // ✅ Verificar si el archivo existe en TODAS las carpetas posibles de Santander
+                    // (P2P, CashOffice, Tanda, Día a Día) para garantizar unicidad global
+                    if (!VerificarArchivoEnTodasLasCarpetas(nombreArchivo))
+                    {
+                        // El nombre es único en todas las carpetas, retornarlo
+                        ServicioLog.instancia.WriteInfo(
+                            $"Nombre de archivo único verificado | Nombre: {nombreArchivo} | Sucursal: {sucursal} | " +
+                            $"Directorio destino: {directorioFinal}",
+                            "SantanderFileGenerator | GenerarNombreArchivoUnico");
+                        return nombreArchivo;
+                    }
+                    
+                    // El archivo existe en alguna carpeta, esperar un segundo y generar otro timestamp
+                    intentos++;
+                    ServicioLog.instancia.WriteWarning(
+                        $"Archivo ya existe en alguna carpeta, generando nuevo timestamp | Intento: {intentos}/{maxIntentos} | " +
+                        $"Nombre: {nombreArchivo} | Sucursal: {sucursal} | Directorio destino: {directorioFinal}",
+                        "SantanderFileGenerator | GenerarNombreArchivoUnico");
+                    
+                    // Esperar 1 segundo antes del siguiente intento
+                    await Task.Delay(1000);
+                }
+                
+                // Si después de todos los intentos no se encontró un nombre único,
+                // agregar milisegundos al timestamp como último recurso
+                // (aunque esto cambiaría el formato, es mejor que fallar)
+                var timestampFinal = DateTime.Now.ToString("yyyyMMddHHmmssfff", CultureInfo.InvariantCulture);
+                string nombreFinal = $"TEC_{sucursal}_{timestampFinal}.dat";
+                
+                ServicioLog.instancia.WriteWarning(
+                    $"No se pudo generar nombre único después de {maxIntentos} intentos | " +
+                    $"Usando timestamp con milisegundos: {nombreFinal} | Sucursal: {sucursal}",
+                    "SantanderFileGenerator | GenerarNombreArchivoUnico");
+                
+                return nombreFinal;
+            }
+            finally
+            {
+                semaforo.Release();
+            }
         }
     }
 }

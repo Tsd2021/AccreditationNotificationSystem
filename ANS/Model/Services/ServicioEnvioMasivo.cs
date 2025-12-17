@@ -12,13 +12,13 @@ namespace ANS.Model.Services
     {
         // ✅ Thread-safe: Lazy<T> garantiza que solo se crea una instancia, incluso en entornos multi-threaded
         // LazyThreadSafetyMode.ExecutionAndPublication es el modo por defecto y es thread-safe
-        private static readonly Lazy<ServicioEnvioMasivo> _lazy = 
+        private static readonly Lazy<ServicioEnvioMasivo> _lazy =
             new Lazy<ServicioEnvioMasivo>(() => new ServicioEnvioMasivo());
-        
+
         public static ServicioEnvioMasivo instancia => _lazy.Value;
-        
+
         public ServicioEmail _emailService { get; set; } = ServicioEmail.getInstancia();
-        
+
         public static ServicioEnvioMasivo getInstancia()
         {
             return _lazy.Value;
@@ -26,14 +26,14 @@ namespace ANS.Model.Services
         public async Task procesarEnvioMasivo(int numEnvioMasivo)
         {
             // ✅ Logging informativo: Inicio del proceso
-            ServicioLog.instancia.WriteInfo($"Iniciando procesamiento de envío masivo {numEnvioMasivo}", 
+            ServicioLog.instancia.WriteInfo($"Iniciando procesamiento de envío masivo {numEnvioMasivo}",
                 $"NumEnvioMasivo: {numEnvioMasivo}");
 
             try
             {
                 List<BuzonDTO> buzones = await getBuzonesByNumeroEnvioMasivo(numEnvioMasivo);
-                
-                ServicioLog.instancia.WriteInfo($"Buzones encontrados: {buzones.Count}", 
+
+                ServicioLog.instancia.WriteInfo($"Buzones encontrados: {buzones.Count}",
                     $"NumEnvioMasivo: {numEnvioMasivo}");
 
                 await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
@@ -44,12 +44,12 @@ namespace ANS.Model.Services
 
                 if (buzonesConAcreditaciones.Count == 0)
                 {
-                    ServicioLog.instancia.WriteInfo($"No hay buzones con acreditaciones para procesar", 
+                    ServicioLog.instancia.WriteInfo($"No hay buzones con acreditaciones para procesar",
                         $"NumEnvioMasivo: {numEnvioMasivo}");
                     return;
                 }
 
-                ServicioLog.instancia.WriteInfo($"Buzones con acreditaciones: {buzonesConAcreditaciones.Count}", 
+                ServicioLog.instancia.WriteInfo($"Buzones con acreditaciones: {buzonesConAcreditaciones.Count}",
                     $"NumEnvioMasivo: {numEnvioMasivo}");
 
                 await obtenerUsuarioYFechaDelDeposito(buzones);
@@ -170,9 +170,9 @@ namespace ANS.Model.Services
                 await Task.WhenAll(tasks);
 
                 await smtp.DisconnectAsync(true);
-                
+
                 // ✅ Logging informativo: Fin exitoso del proceso
-                ServicioLog.instancia.WriteInfo($"Procesamiento de envío masivo {numEnvioMasivo} completado exitosamente", 
+                ServicioLog.instancia.WriteInfo($"Procesamiento de envío masivo {numEnvioMasivo} completado exitosamente",
                     $"NumEnvioMasivo: {numEnvioMasivo} | Buzones procesados: {buzonesConAcreditaciones.Count}");
             }
             catch (Exception e)
@@ -189,9 +189,14 @@ namespace ANS.Model.Services
             {
                 foreach (var e in ServicioCC.getInstancia().getBuzones())
                 {
-                    if (b.NC == e.NC)
+                    // ✅ Normalizar NC con TRIM para evitar problemas de espacios en blanco
+                    string ncBuzon = b.NC?.Trim() ?? b.NC;
+                    string ncServicioCC = e.NC?.Trim() ?? e.NC;
+
+                    if (ncBuzon == ncServicioCC)
                     {
                         b._Emails = e._listaEmails;
+                        break; // ✅ Optimización: salir del loop interno al encontrar coincidencia
                     }
                 }
             }
@@ -209,7 +214,7 @@ namespace ANS.Model.Services
                     g => g.Key,
                     g => g.First()
                 );
-            
+
             // ✅ Logging para diagnóstico
             ServicioLog.instancia.WriteInfo(
                 $"Hidratando acreditaciones | Total buzones: {deps.Count} | " +
@@ -219,7 +224,7 @@ namespace ANS.Model.Services
 
             var hendersons = deps.Where(b => b.EsHenderson).Select(b => b.NC?.Trim() ?? b.NC).Distinct().ToList();
             var normals = deps.Where(b => !b.EsHenderson).Select(b => b.NC?.Trim() ?? b.NC).Distinct().ToList();
-            
+
             // ✅ Logging para diagnóstico
             ServicioLog.instancia.WriteInfo(
                 $"Clasificación buzones | Henderson: {hendersons.Count} | Normales: {normals.Count} | " +
@@ -238,52 +243,52 @@ namespace ANS.Model.Services
 
             var tvpN = BuildTvp(normals);
 
-
             DateTime today = DateTime.Today;
-
-            DateTime startH, endH;
-            
-            // ✅ Si numEnvioMasivo > 2, buscar todo el día (no filtrar por rango)
-            if (numEnvioMasivo > 2)
-            {
-                // Mostrar todo el día: desde 00:00:00 hasta 23:59:59
-                startH = today.Date;
-                endH = today.Date.AddDays(1).AddSeconds(-1);
-            }
-            else if (numEnvioMasivo == 1)
-            {
-                // Tanda 1: desde día anterior 14:30 hasta hoy 7:00
-                switch (today.DayOfWeek)
-                {
-                    case DayOfWeek.Monday:
-                        startH = today.AddDays(-3).AddHours(14).AddMinutes(30);
-                        break;
-                    default:
-                        startH = today.AddDays(-1).AddHours(14).AddMinutes(30);
-                        break;
-                }
-                endH = today.AddHours(7);
-            }
-            else // numEnvioMasivo == 2
-            {
-                // Tanda 2: desde hoy 7:00 hasta hoy 14:30
-                startH = today.AddHours(7);
-                endH = today.AddHours(14).AddMinutes(30);
-            }
-            
-            // ✅ Logging para diagnóstico
-            ServicioLog.instancia.WriteInfo(
-                $"Ventana de fechas calculada | NumEnvioMasivo: {numEnvioMasivo} | " +
-                $"Desde: {startH:yyyy-MM-dd HH:mm:ss} | Hasta: {endH:yyyy-MM-dd HH:mm:ss}",
-                "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
 
             using (var conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
             {
                 await conn.OpenAsync();
 
-                // A) Sólo Henderson
+                // A) Sólo Henderson - Lógica específica para Henderson (no se modifica)
                 if (hendersons.Any())
                 {
+                    // Calcular fechas para Henderson según numEnvioMasivo
+                    DateTime startH, endH;
+
+                    // ✅ Si numEnvioMasivo > 2, buscar todo el día (no filtrar por rango)
+                    if (numEnvioMasivo > 2)
+                    {
+                        // Mostrar todo el día: desde 00:00:00 hasta 23:59:59
+                        startH = today.Date;
+                        endH = today.Date.AddDays(1).AddSeconds(-1);
+                    }
+                    else if (numEnvioMasivo == 1)
+                    {
+                        // Tanda 1: desde día anterior 14:30 hasta hoy 7:00
+                        switch (today.DayOfWeek)
+                        {
+                            case DayOfWeek.Monday:
+                                startH = today.AddDays(-3).AddHours(14).AddMinutes(30);
+                                break;
+                            default:
+                                startH = today.AddDays(-1).AddHours(14).AddMinutes(30);
+                                break;
+                        }
+                        endH = today.AddHours(7);
+                    }
+                    else // numEnvioMasivo == 2
+                    {
+                        // Tanda 2: desde hoy 7:00 hasta hoy 14:30
+                        startH = today.AddHours(7);
+                        endH = today.AddHours(14).AddMinutes(30);
+                    }
+
+                    // ✅ Logging para diagnóstico
+                    ServicioLog.instancia.WriteInfo(
+                        $"Filtro Henderson | NumEnvioMasivo: {numEnvioMasivo} | " +
+                        $"Desde: {startH:yyyy-MM-dd HH:mm:ss} | Hasta: {endH:yyyy-MM-dd HH:mm:ss}",
+                        "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
+
                     const string sqlH = @"
                                     SELECT * 
                                     FROM acreditaciondepositodiegotest
@@ -306,20 +311,90 @@ namespace ANS.Model.Services
                 // B) Sólo normales
                 if (normals.Any())
                 {
+                    // Obtener buzones normales con su hora de cierre (agrupar por NC para evitar duplicados)
+                    var buzonesNormalesConCierre = deps
+                        .Where(b => !b.EsHenderson)
+                        .GroupBy(b => b.NC?.Trim() ?? b.NC)
+                        .Select(g => new { NC = g.Key, Cierre = g.First().Cierre })
+                        .ToList();
 
-                    const string sqlN = @"SELECT * 
-                                        FROM acreditaciondepositodiegotest
-                                        WHERE CONVERT(date, fecha) = CONVERT(date, GETDATE())
-                                        AND idbuzon IN (SELECT NC FROM @ListaN)";
+                    // Agrupar por hora de cierre para optimizar consultas
+                    var gruposPorCierre = buzonesNormalesConCierre
+                        .GroupBy(b => b.Cierre.TimeOfDay)
+                        .ToList();
 
-                    using var cmdN = new SqlCommand(sqlN, conn);
-                    // Parámetro TVP para normales
-                    var pN = cmdN.Parameters.Add("@ListaN", SqlDbType.Structured);
-                    pN.Value = tvpN;
-                    pN.TypeName = "dbo.ListaNC";
+                    bool esLunes = today.DayOfWeek == DayOfWeek.Monday;
 
-                    using var readerN = await cmdN.ExecuteReaderAsync();
-                    await MapearAcreditaciones(readerN, mapaBuzones);
+                    foreach (var grupo in gruposPorCierre)
+                    {
+                        TimeSpan horaCierre = grupo.Key;
+                        var ncsDelGrupo = grupo.Select(b => b.NC).ToList();
+
+                        // Crear TVP para este grupo
+                        var tvpGrupo = BuildTvp(ncsDelGrupo);
+
+                        DateTime fechaInicioFECHA; // Fecha de inicio para buscar por FECHA (inserción)
+                        DateTime fechaFinFECHADEP; // Fecha límite para validar FECHADEP (depósito real)
+
+                        if (esLunes)
+                        {
+                            // ✅ Si es lunes: buscar acreditaciones creadas desde el viernes pasado (FECHA >= viernes)
+                            // Pero validar que su FECHADEP sea < hora de cierre del buzón del lunes (hoy)
+                            DateTime viernesPasado = today.AddDays(-3); // Viernes pasado
+                            fechaInicioFECHA = viernesPasado.Date; // Desde viernes 00:00:00
+                            fechaFinFECHADEP = today.Date.Add(horaCierre); // Hasta lunes a hora de cierre (exclusive)
+                        }
+                        else
+                        {
+                            // ✅ Si no es lunes: buscar acreditaciones creadas ayer (FECHA = ayer)
+                            // Pero validar que su FECHADEP sea < hora de cierre del buzón de hoy
+                            DateTime diaAnterior = today.AddDays(-1);
+                            fechaInicioFECHA = diaAnterior.Date; // Desde ayer 00:00:00
+                            fechaFinFECHADEP = today.Date.Add(horaCierre); // Hasta hoy a hora de cierre (exclusive)
+                        }
+
+                        // ✅ Logging para diagnóstico
+                        ServicioLog.instancia.WriteInfo(
+                            $"Filtro buzones normales | Hora cierre: {horaCierre:hh\\:mm\\:ss} | " +
+                            $"Es lunes: {esLunes} | " +
+                            $"FECHA desde: {fechaInicioFECHA:yyyy-MM-dd} | " +
+                            $"FECHADEP < {fechaFinFECHADEP:yyyy-MM-dd HH:mm:ss} | " +
+                            $"Buzones: {ncsDelGrupo.Count}",
+                            "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
+
+                        // ✅ Consulta SQL: filtra por FECHA (inserción) desde fecha inicio, y valida FECHADEP < hora de cierre
+                        // Si es lunes: FECHA >= viernes pasado Y FECHADEP < hora de cierre lunes
+                        // Si no es lunes: FECHA >= ayer Y FECHADEP < hora de cierre hoy
+                        string sqlN;
+                        if (esLunes)
+                        {
+                            sqlN = $@"SELECT * 
+                               FROM acreditaciondepositodiegotest
+                               WHERE CONVERT(DATE, FECHA) >= @fechaInicioFECHA
+                                 AND FECHADEP < @fechaFinFECHADEP
+                                 AND idbuzon IN (SELECT NC FROM @ListaN)";
+                        }
+                        else
+                        {
+                            sqlN = $@"SELECT * 
+                               FROM acreditaciondepositodiegotest
+                               WHERE CONVERT(DATE, FECHA) = @fechaInicioFECHA
+                                 AND FECHADEP < @fechaFinFECHADEP
+                                 AND idbuzon IN (SELECT NC FROM @ListaN)";
+                        }
+
+                        using var cmdN = new SqlCommand(sqlN, conn);
+                        // Parámetro TVP para normales
+                        var pN = cmdN.Parameters.Add("@ListaN", SqlDbType.Structured);
+                        pN.Value = tvpGrupo;
+                        pN.TypeName = "dbo.ListaNC";
+                        // Parámetros de fecha
+                        cmdN.Parameters.AddWithValue("@fechaInicioFECHA", fechaInicioFECHA);
+                        cmdN.Parameters.AddWithValue("@fechaFinFECHADEP", fechaFinFECHADEP);
+
+                        using var readerN = await cmdN.ExecuteReaderAsync();
+                        await MapearAcreditaciones(readerN, mapaBuzones);
+                    }
                 }
             }
         }
@@ -333,11 +408,11 @@ namespace ANS.Model.Services
             int monOrd = reader.GetOrdinal("MONEDA");
             int montoOrd = reader.GetOrdinal("MONTO");
             int bancoOrd = reader.GetOrdinal("IDBANCO");
-           
+
             int acreditacionesMapeadas = 0;
             int acreditacionesNoMapeadas = 0;
             var ncsNoEncontrados = new HashSet<string>();
-           
+
             while (await reader.ReadAsync())
             {
                 var acc = new AcreditacionDTO
@@ -346,7 +421,7 @@ namespace ANS.Model.Services
                     IdOperacion = reader.GetInt64(opOrd),
                     IdCuenta = reader.GetInt32(cuentaOrd),
                     Divisa = reader.GetInt32(monOrd),
-                    Monto = reader.GetDouble(montoOrd),         
+                    Monto = reader.GetDouble(montoOrd),
                     IdBanco = reader.GetInt32(bancoOrd)
                 };
                 acc.setMoneda();
@@ -362,7 +437,7 @@ namespace ANS.Model.Services
                 {
                     acreditacionesNoMapeadas++;
                     ncsNoEncontrados.Add(acc.NC);
-                    
+
                     // ✅ Logging detallado para diagnóstico
                     ServicioLog.instancia.WriteWarning(
                         $"Acreditación no mapeada | IDBUZON: '{acc.NC}' | IDOPERACION: {acc.IdOperacion} | " +
@@ -371,7 +446,7 @@ namespace ANS.Model.Services
                         "ServicioEnvioMasivo | MapearAcreditaciones");
                 }
             }
-            
+
             // ✅ Logging resumen
             if (acreditacionesNoMapeadas > 0)
             {
@@ -395,14 +470,6 @@ namespace ANS.Model.Services
               .Distinct()
               .ToList();
 
-            // Log para diagnóstico (especialmente para GENDIL)
-            var gendilKeys = keys.Where(k => k.NC != null && k.NC.Contains("GENDIL", StringComparison.OrdinalIgnoreCase)).ToList();
-            if (gendilKeys.Any())
-            {
-                ServicioLog.instancia.WriteInfo($"GENDIL - Keys a buscar en DEPOSITOS: {gendilKeys.Count}", 
-                    string.Join(", ", gendilKeys.Select(k => $"NC: '{k.NC}', IdOp: {k.IdOperacion}")));
-            }
-
             // 3. Llenar un DataTable para el TVP
             var tvp = new DataTable();
             tvp.Columns.Add("NC", typeof(string));
@@ -416,11 +483,11 @@ namespace ANS.Model.Services
                 // así que lo omitimos del TVP
                 if (idOp > int.MaxValue)
                 {
-                    ServicioLog.instancia.WriteInfo($"IdOperacion fuera de rango omitido", 
+                    ServicioLog.instancia.WriteInfo($"IdOperacion fuera de rango omitido",
                         $"NC: '{nc}', IdOperacion: {idOp} (mayor que int.MaxValue)");
                     continue;
                 }
-                
+
                 int idOpInt = (int)idOp;
                 // Normalizar NC (trim) antes de agregar al TVP
                 var ncNormalized = string.IsNullOrWhiteSpace(nc) ? nc : nc.Trim();
@@ -473,20 +540,10 @@ namespace ANS.Model.Services
 
                 // Normalizar NC (trim) para el diccionario
                 var ncNormalized = string.IsNullOrWhiteSpace(nc) ? nc : nc.Trim();
-                
-                // Log para GENDIL
-                if (ncNormalized != null && ncNormalized.Contains("GENDIL", StringComparison.OrdinalIgnoreCase))
-                {
-                    gendilRows++;
-                    ServicioLog.instancia.WriteInfo($"GENDIL - Encontrado en DEPOSITOS", 
-                        $"NC: '{ncNormalized}', IdOp: {idOp}, Empresa: '{emp}', Usuario: '{user}'");
-                }
-                
+
                 dict[(ncNormalized, idOp)] = (user, fechaDep, emp);
             }
-            
-            ServicioLog.instancia.WriteInfo($"DEPOSITOS - Total registros encontrados: {totalRows}", 
-                $"GENDIL registros: {gendilRows}");
+
 
             // 6. Obtener empresas desde cuentasbuzones como fallback para los casos donde no esté en depositos
             var empresasFallback = await obtenerEmpresasDesdeCuentasBuzones(buzones);
@@ -495,40 +552,26 @@ namespace ANS.Model.Services
             bool empresaDeLaAcreditacionAsignadaAlBuzon = false;
             foreach (var b in buzones)
             {
-                bool esGendil = b.NC != null && (b.NC.Contains("GENDIL", StringComparison.OrdinalIgnoreCase) || 
-                                                  b.NC.Contains("EA22L0315N12000049", StringComparison.OrdinalIgnoreCase));
-                
+
                 foreach (var a in b.Acreditaciones)
                 {
                     // Normalizar NC para la búsqueda (trim)
                     var ncNormalized = string.IsNullOrWhiteSpace(a.NC) ? a.NC : a.NC.Trim();
-                    
+
                     // El diccionario usa long, así que usamos el IdOperacion directamente (ya es long)
                     // Pero necesitamos convertir a int para el TVP, y luego de vuelta a long para buscar
                     int idOpInt = a.IdOperacion > int.MaxValue ? 0 : (int)a.IdOperacion;
                     long idOpForSearch = idOpInt; // Convertir de vuelta a long para buscar en el diccionario
-                    
-                    // Log detallado para GENDIL
-                    if (esGendil || (ncNormalized != null && ncNormalized.Contains("GENDIL", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        ServicioLog.instancia.WriteInfo($"GENDIL - Buscando en diccionario", 
-                            $"NC original: '{a.NC}', NC normalizado: '{ncNormalized}', IdOp original: {a.IdOperacion}, IdOp para buscar: {idOpForSearch}");
-                        var gendilKeysInDict = dict.Keys.Count(k => k.NC != null && k.NC.Contains("GENDIL", StringComparison.OrdinalIgnoreCase));
-                        ServicioLog.instancia.WriteInfo($"GENDIL - Keys en diccionario", 
-                            $"Total keys: {dict.Count}, GENDIL keys: {gendilKeysInDict}");
-                    }
-                    
+
+
+
                     if (dict.TryGetValue((ncNormalized, idOpForSearch), out var info))
                     {
                         a.Usuario = info.Usuario;
                         a.FechaDep = info.FechaDep;
-                        
-                        if (esGendil)
-                        {
-                            ServicioLog.instancia.WriteInfo($"GENDIL - ✅ ENCONTRADO en diccionario", 
-                                $"NC: '{ncNormalized}', IdOp: {idOpForSearch}, Empresa: '{info.Empresa}', Usuario: '{info.Usuario}'");
-                        }
-                        
+
+
+
                         // Si la empresa está vacía o null en depositos, usar el fallback desde cuentasbuzones
                         if (string.IsNullOrWhiteSpace(info.Empresa))
                         {
@@ -536,18 +579,14 @@ namespace ANS.Model.Services
                             var empresaFallbackTupla = empresasFallback
                                 .FirstOrDefault(e => e.NC == a.NC && e.IdCuenta == a.IdCuenta);
                             a.Empresa = empresaFallbackTupla.NC != null ? empresaFallbackTupla.Empresa : info.Empresa;
-                            
-                            if (esGendil)
-                            {
-                                ServicioLog.instancia.WriteInfo($"GENDIL - Empresa vacía, usando fallback", 
-                                    $"Fallback encontrado: {empresaFallbackTupla.NC != null}, Empresa final: '{a.Empresa}'");
-                            }
+
+
                         }
                         else
                         {
                             a.Empresa = info.Empresa;
                         }
-                        
+
                         if (empresaDeLaAcreditacionAsignadaAlBuzon == false && !string.IsNullOrWhiteSpace(a.Empresa))
                         {
                             empresaDeLaAcreditacionAsignadaAlBuzon = true;
@@ -556,24 +595,15 @@ namespace ANS.Model.Services
                     }
                     else
                     {
-                        // Si no existe en depositos, intentar obtener desde cuentasbuzones
-                        if (esGendil)
-                        {
-                            ServicioLog.instancia.WriteInfo($"GENDIL - ❌ NO ENCONTRADO en diccionario", 
-                                $"NC: '{ncNormalized}', IdOp: {idOpForSearch}. Buscando en fallback...");
-                        }
-                        
+
+
                         var empresaFallbackTupla = empresasFallback
                             .FirstOrDefault(e => e.NC == a.NC && e.IdCuenta == a.IdCuenta);
                         a.Usuario = null;
                         a.Empresa = empresaFallbackTupla.NC != null ? empresaFallbackTupla.Empresa : null;
-                        
-                        if (esGendil)
-                        {
-                            ServicioLog.instancia.WriteInfo($"GENDIL - Resultado fallback", 
-                                $"Fallback encontrado: {empresaFallbackTupla.NC != null}, Empresa: '{a.Empresa}'");
-                        }
-                        
+
+
+
                         if (empresaDeLaAcreditacionAsignadaAlBuzon == false && !string.IsNullOrWhiteSpace(a.Empresa))
                         {
                             empresaDeLaAcreditacionAsignadaAlBuzon = true;
@@ -639,7 +669,7 @@ namespace ANS.Model.Services
                 var nc = reader.GetString(ordNc);
                 var idCuenta = reader.GetInt32(ordIdCuenta);
                 var empresa = reader.IsDBNull(ordEmpresa) ? null : reader.GetString(ordEmpresa);
-                
+
                 // Filtrar en memoria solo los IdCuentas que necesitamos
                 if (idCuentasSet.Contains(idCuenta) && !string.IsNullOrWhiteSpace(empresa))
                 {
@@ -714,7 +744,7 @@ namespace ANS.Model.Services
                 //Son son los <= 7
                 case 1:
                     desdeTime = new TimeSpan(0, 0, 0);
-                    hastaTime = new TimeSpan(7, 0, 0); ;
+                    hastaTime = new TimeSpan(7, 0, 0);
                     break;
 
                 //Son los cierre > 7 pero < a 14:30
@@ -724,21 +754,21 @@ namespace ANS.Model.Services
                     break;
 
                 case 3:
-                    // rangos de 14:30 a 15:30
+                    // rangos de 14:30 a 16:30
                     desdeTime = new TimeSpan(14, 30, 0);
-                    hastaTime = new TimeSpan(15, 30, 0);
+                    hastaTime = new TimeSpan(16, 30, 0);
                     break;
 
                 case 4:
-                    // rangos de 15:30 a 19:00
-                    desdeTime = new TimeSpan(15, 30, 0);
+                    // rangos de 16:30 a 19:00
+                    desdeTime = new TimeSpan(16, 30, 0);
                     hastaTime = new TimeSpan(19, 0, 0);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-            query =     @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+            query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
                         from
                         cc as c 
                         left join 
@@ -794,16 +824,7 @@ namespace ANS.Model.Services
                             dto.NombreWS = "NO_DEFINIDO";
                         }
                         retorno.Add(dto);
-                        
-                        // ✅ Logging específico para el buzón problemático
-                        if (dto.NC == "EA22L0105N12000032")
-                        {
-                            ServicioLog.instancia.WriteInfo(
-                                $"Buzón encontrado en getBuzonesByNumeroEnvioMasivo | NC: {dto.NC} | " +
-                                $"NN: {dto.NN} | IdCliente: {dto.IdCliente} | EsHenderson: {dto.EsHenderson} | " +
-                                $"Cierre: {dto.Cierre} | NumEnvioMasivo: {numEnvioMasivo}",
-                                "ServicioEnvioMasivo | getBuzonesByNumeroEnvioMasivo");
-                        }
+
                     }
                 }
 

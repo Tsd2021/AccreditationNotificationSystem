@@ -1,4 +1,4 @@
-﻿using Dynamitey;
+using Dynamitey;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -61,7 +61,7 @@ namespace ANS.Model.Services
                             Buzon b = new Buzon
                             {
                                 NN = r.GetString(nnOrdinal),
-                                NC = r.GetString(ncOrdinal),
+                                NC = r.GetString(ncOrdinal)?.Trim(), // ✅ Normalizar espacios desde el origen
                                 Email = r.GetString(emailOrdinal),
                                 Cierre = r.GetDateTime(cierreOrdinal),
                             };
@@ -118,7 +118,7 @@ namespace ANS.Model.Services
                             while (reader.Read())
                             {
                                 BuzonDTO dto = new BuzonDTO();
-                                dto.NC = reader.GetString(ncOrdinal);
+                                dto.NC = reader.GetString(ncOrdinal)?.Trim(); // ✅ Normalizar espacios desde el origen
                                 dto.NN = reader.GetString(nnOrdinal);
                                 dto.Sucursal = reader.GetString(sucursalOrdinal);
                                 dto.Cierre = reader.GetDateTime(cierreOrdinal);
@@ -152,7 +152,7 @@ namespace ANS.Model.Services
                     {
                         c.Open();
 
-                        string query = "select email,nccc from ccemail where nccc = @nc;";
+                        string query = "select email,nccc from ccemail where LTRIM(RTRIM(nccc)) = LTRIM(RTRIM(@nc));";
 
                         SqlCommand cmd = new SqlCommand(query, c);
 

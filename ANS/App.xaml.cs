@@ -1,4 +1,4 @@
-﻿using ANS.Model;
+using ANS.Model;
 using ANS.Model.GeneradorArchivoPorBanco;
 using ANS.Model.Jobs;
 using ANS.Model.Jobs.BANDES;
@@ -67,7 +67,8 @@ namespace ANS
 
 
             //  ---PROD-- -
-            var baseDir = System.IO.Path.Combine(@"D:\", "TAAS");
+            // ✅ Usar la carpeta donde está el ejecutable (sin importar el nombre de la carpeta)
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             Directory.CreateDirectory(baseDir);
             var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
 
@@ -83,7 +84,7 @@ namespace ANS
 
             //await crearJobsPrueba(_scheduler);
             //await correrTestBbva();
-            await correrTestCombinarTxtScotiabank(); // Descomentar para ejecutar test de combinación
+            //await correrTestCombinarTxtScotiabank(); // Descomentar para ejecutar test de combinación
 
             await crearJobsBBVA(_scheduler);
             await crearJobsSantander(_scheduler);
@@ -248,7 +249,7 @@ namespace ANS
         }
         private async Task crearJobsItau(IScheduler scheduler)
         {
-            //Tarea 1: Acreditar dia a dia ITAU  (16:05:05)
+            //Tarea 1: Acreditar dia a dia ITAU  (15:05:05)
             #region TAREA_ACREDITAR_DXD
             IJobDetail jobAcreditarItau = JobBuilder.Create<AcreditarPorBancoITAU>()
             .WithIdentity("ItauJobAcreditar", "GrupoTrabajoITAU")
@@ -256,11 +257,11 @@ namespace ANS
 
             ITrigger triggerAcreditarItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerAcreditar", "GrupoTrabajoITAU")
-            .WithCronSchedule("05 05 16 ? * MON-FRI")
+            .WithCronSchedule("05 05 15 ? * MON-FRI")
             .Build();
             #endregion
 
-            //Tarea 2: Enviar excel dia a dia ITAU  (16:06:05)
+            //Tarea 2: Enviar excel dia a dia ITAU  (15:06:05)
             #region TAREA_ENVIAR_EXCEL_DXD
             IJobDetail jobEnviarExcelItau = JobBuilder.Create<EnviarExcelItau>()
             .WithIdentity("ItauJobEnviarExcel", "GrupoTrabajoITAU")
@@ -269,7 +270,7 @@ namespace ANS
 
             ITrigger triggerEnviarExcelItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerEnviarExcel", "GrupoTrabajoITAU")
-            .WithCronSchedule("05 06 16 ? * MON-FRI")
+            .WithCronSchedule("05 06 15 ? * MON-FRI")
             .Build();
             #endregion
 
@@ -521,14 +522,14 @@ namespace ANS
             if (scheduler != null)
             {
                 #region Tarea 0: FARMASHOP SCOTIA (07:04:45)
-                IJobDetail jobDiaADiaFarmashop = JobBuilder.Create<AcreditarDiaADiaFarmashop>()
-                .WithIdentity("ScotiabankFarmashopJob", "GrupoTrabajoScotiabank")
-                .Build();
+                //IJobDetail jobDiaADiaFarmashop = JobBuilder.Create<AcreditarDiaADiaFarmashop>()
+                //.WithIdentity("ScotiabankFarmashopJob", "GrupoTrabajoScotiabank")
+                //.Build();
 
-                ITrigger triggerDiaADiaFarmashop = TriggerBuilder.Create()
-                .WithIdentity("ScotiabankFarmashopTrigger", "GrupoTrabajoScotiabank")
-                .WithSchedule(CronScheduleBuilder.CronSchedule("45 4 7 ? * MON-FRI"))
-                .Build();
+                //ITrigger triggerDiaADiaFarmashop = TriggerBuilder.Create()
+                //.WithIdentity("ScotiabankFarmashopTrigger", "GrupoTrabajoScotiabank")
+                //.WithSchedule(CronScheduleBuilder.CronSchedule("45 4 7 ? * MON-FRI"))
+                //.Build();
 
                 #endregion
                 #region Tarea 1: ACREDITAR TANDA 1 (7:06:00 AM)
@@ -625,6 +626,7 @@ namespace ANS
                     .WithCronSchedule("0 45 16 ? * MON-FRI")
                     .Build();
                 #endregion
+                // Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (16:46:00)
                 #region Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (16:46:00)
 
                 IJobDetail jobCombinarTxtScotiabankMaldonado = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMaldonado>()
@@ -643,7 +645,7 @@ namespace ANS
                 try
                 {
 
-                    await scheduler.ScheduleJob(jobDiaADiaFarmashop, triggerDiaADiaFarmashop);
+                    //await scheduler.ScheduleJob(jobDiaADiaFarmashop, triggerDiaADiaFarmashop);
 
                     await scheduler.ScheduleJob(jobAcreditarTanda1Scotiabank, triggerAcreditarTanda1Scotiabank);
 
@@ -929,6 +931,20 @@ namespace ANS
 
             #endregion
 
+            // Tarea 2.1: Acreditar dia a dia Nike (ID 998). 14:25
+            #region TAREA_ACREDITAR_DIAADIA_NIKE
+
+            IJobDetail jobBBVADiaADiaNike = JobBuilder.Create<AcreditarDiaADiaBBVANike>()
+                .WithIdentity("BBVAJobDADNike", "GrupoTrabajoBBVA")
+                .Build();
+
+            ITrigger triggerBBVADiaADiaNike = TriggerBuilder.Create()
+                .WithIdentity("BBVATriggerDADNike", "GrupoTrabajoBBVA")
+                .WithCronSchedule("0 25 14 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
             //Tarea 3: Enviar excel resumen punto a punto 21:05
             #region TAREA_EXCEL_RESUMENDIARIO
             IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
@@ -966,6 +982,8 @@ namespace ANS
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelResumen, triggerBBVAEnviarExcelResumen);
 
             await _scheduler.ScheduleJob(jobBBVADiaADia, triggerBBVADiaADia);
+
+            await _scheduler.ScheduleJob(jobBBVADiaADiaNike, triggerBBVADiaADiaNike);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 
