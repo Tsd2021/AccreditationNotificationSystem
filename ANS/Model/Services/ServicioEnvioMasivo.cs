@@ -311,90 +311,27 @@ namespace ANS.Model.Services
                 // B) Sólo normales
                 if (normals.Any())
                 {
-                    // Obtener buzones normales con su hora de cierre (agrupar por NC para evitar duplicados)
-                    var buzonesNormalesConCierre = deps
-                        .Where(b => !b.EsHenderson)
-                        .GroupBy(b => b.NC?.Trim() ?? b.NC)
-                        .Select(g => new { NC = g.Key, Cierre = g.First().Cierre })
-                        .ToList();
+                    // ✅ Simplificado: buscar acreditaciones normales por fecha actual (GETDATE())
+                    // ✅ Logging para diagnóstico
+                    ServicioLog.instancia.WriteInfo(
+                        $"Filtro buzones normales | Fecha actual: {today:yyyy-MM-dd} | " +
+                        $"Buzones: {normals.Count}",
+                        "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
 
-                    // Agrupar por hora de cierre para optimizar consultas
-                    var gruposPorCierre = buzonesNormalesConCierre
-                        .GroupBy(b => b.Cierre.TimeOfDay)
-                        .ToList();
+                    // ✅ Consulta SQL: filtra por FECHA = fecha actual (GETDATE())
+                    const string sqlN = @"SELECT * 
+                                           FROM acreditaciondepositodiegotest
+                                           WHERE CONVERT(DATE, FECHA) = CONVERT(DATE, GETDATE())
+                                             AND idbuzon IN (SELECT NC FROM @ListaN)";
 
-                    bool esLunes = today.DayOfWeek == DayOfWeek.Monday;
+                    using var cmdN = new SqlCommand(sqlN, conn);
+                    // Parámetro TVP para normales
+                    var pN = cmdN.Parameters.Add("@ListaN", SqlDbType.Structured);
+                    pN.Value = tvpN;
+                    pN.TypeName = "dbo.ListaNC";
 
-                    foreach (var grupo in gruposPorCierre)
-                    {
-                        TimeSpan horaCierre = grupo.Key;
-                        var ncsDelGrupo = grupo.Select(b => b.NC).ToList();
-
-                        // Crear TVP para este grupo
-                        var tvpGrupo = BuildTvp(ncsDelGrupo);
-
-                        DateTime fechaInicioFECHA; // Fecha de inicio para buscar por FECHA (inserción)
-                        DateTime fechaFinFECHADEP; // Fecha límite para validar FECHADEP (depósito real)
-
-                        if (esLunes)
-                        {
-                            // ✅ Si es lunes: buscar acreditaciones creadas desde el viernes pasado (FECHA >= viernes)
-                            // Pero validar que su FECHADEP sea < hora de cierre del buzón del lunes (hoy)
-                            DateTime viernesPasado = today.AddDays(-3); // Viernes pasado
-                            fechaInicioFECHA = viernesPasado.Date; // Desde viernes 00:00:00
-                            fechaFinFECHADEP = today.Date.Add(horaCierre); // Hasta lunes a hora de cierre (exclusive)
-                        }
-                        else
-                        {
-                            // ✅ Si no es lunes: buscar acreditaciones creadas ayer (FECHA = ayer)
-                            // Pero validar que su FECHADEP sea < hora de cierre del buzón de hoy
-                            DateTime diaAnterior = today.AddDays(-1);
-                            fechaInicioFECHA = diaAnterior.Date; // Desde ayer 00:00:00
-                            fechaFinFECHADEP = today.Date.Add(horaCierre); // Hasta hoy a hora de cierre (exclusive)
-                        }
-
-                        // ✅ Logging para diagnóstico
-                        ServicioLog.instancia.WriteInfo(
-                            $"Filtro buzones normales | Hora cierre: {horaCierre:hh\\:mm\\:ss} | " +
-                            $"Es lunes: {esLunes} | " +
-                            $"FECHA desde: {fechaInicioFECHA:yyyy-MM-dd} | " +
-                            $"FECHADEP < {fechaFinFECHADEP:yyyy-MM-dd HH:mm:ss} | " +
-                            $"Buzones: {ncsDelGrupo.Count}",
-                            "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
-
-                        // ✅ Consulta SQL: filtra por FECHA (inserción) desde fecha inicio, y valida FECHADEP < hora de cierre
-                        // Si es lunes: FECHA >= viernes pasado Y FECHADEP < hora de cierre lunes
-                        // Si no es lunes: FECHA >= ayer Y FECHADEP < hora de cierre hoy
-                        string sqlN;
-                        if (esLunes)
-                        {
-                            sqlN = $@"SELECT * 
-                               FROM acreditaciondepositodiegotest
-                               WHERE CONVERT(DATE, FECHA) >= @fechaInicioFECHA
-                                 AND FECHADEP < @fechaFinFECHADEP
-                                 AND idbuzon IN (SELECT NC FROM @ListaN)";
-                        }
-                        else
-                        {
-                            sqlN = $@"SELECT * 
-                               FROM acreditaciondepositodiegotest
-                               WHERE CONVERT(DATE, FECHA) = @fechaInicioFECHA
-                                 AND FECHADEP < @fechaFinFECHADEP
-                                 AND idbuzon IN (SELECT NC FROM @ListaN)";
-                        }
-
-                        using var cmdN = new SqlCommand(sqlN, conn);
-                        // Parámetro TVP para normales
-                        var pN = cmdN.Parameters.Add("@ListaN", SqlDbType.Structured);
-                        pN.Value = tvpGrupo;
-                        pN.TypeName = "dbo.ListaNC";
-                        // Parámetros de fecha
-                        cmdN.Parameters.AddWithValue("@fechaInicioFECHA", fechaInicioFECHA);
-                        cmdN.Parameters.AddWithValue("@fechaFinFECHADEP", fechaFinFECHADEP);
-
-                        using var readerN = await cmdN.ExecuteReaderAsync();
-                        await MapearAcreditaciones(readerN, mapaBuzones);
-                    }
+                    using var readerN = await cmdN.ExecuteReaderAsync();
+                    await MapearAcreditaciones(readerN, mapaBuzones);
                 }
             }
         }
@@ -730,7 +667,6 @@ namespace ANS.Model.Services
         private async Task<List<BuzonDTO>> getBuzonesByNumeroEnvioMasivo(int numEnvioMasivo)
         {
 
-
             var desdeTime = new TimeSpan(0, 0, 0);
 
             var hastaTime = new TimeSpan(0, 0, 0);
@@ -754,29 +690,29 @@ namespace ANS.Model.Services
                     break;
 
                 case 3:
-                    // rangos de 14:30 a 16:30
+                    // rangos de 14:30 a 17:00
                     desdeTime = new TimeSpan(14, 30, 0);
-                    hastaTime = new TimeSpan(16, 30, 0);
+                    hastaTime = new TimeSpan(17, 0, 0);
                     break;
 
                 case 4:
-                    // rangos de 16:30 a 19:00
-                    desdeTime = new TimeSpan(16, 30, 0);
+                    // rangos de 17:00 a 19:00
+                    desdeTime = new TimeSpan(17, 0, 0);
                     hastaTime = new TimeSpan(19, 0, 0);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-            query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
-                        from
-                        cc as c 
-                        left join 
-                        cc_nombrews as ws 
-                        on ws.NC = c.NC 
-                        where c.estado = 'alta'
-                        AND CAST(c.CIERRE AS time) > @desdeTime 
-                        AND CAST(c.CIERRE AS time) <= @hastaTime";
+                query =     @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+                            from
+                            cc as c 
+                            left join 
+                            cc_nombrews as ws 
+                            on ws.NC = c.NC 
+                            where c.estado = 'alta'
+                            AND CAST(c.CIERRE AS time) > @desdeTime 
+                            AND CAST(c.CIERRE AS time) <= @hastaTime";
 
             using (SqlConnection conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
             {
@@ -880,8 +816,62 @@ namespace ANS.Model.Services
                     }
 
                 }
+
+                if (numEnvioMasivo == 3)
+                {
+                    // ✅ Incluir buzones específicos del masivo 1 en el masivo 3
+                    string queryParaObtenerBuzonesEspecificos = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE, c.IDCLIENTE, ws.NombreWS
+                                                                    FROM cc as c 
+                                                                    LEFT JOIN cc_nombrews as ws ON ws.NC = c.NC 
+                                                                    WHERE c.estado = 'alta'
+                                                                    AND c.NC IN (
+                                                                        'EA20L0108N12000027',
+                                                                        'EA23L0725N12000083',
+                                                                        'EA23L0725N12000094',
+                                                                        'EA23L0725N12000101',
+                                                                        'EA23L0725N12000104',
+                                                                        'EA23L0810N12000117',
+                                                                        'EA24L0101N13000011'
+                                                                    )";
+
+                    SqlCommand cmd3 = new SqlCommand(queryParaObtenerBuzonesEspecificos, conn);
+
+                    using (SqlDataReader reader3 = await cmd3.ExecuteReaderAsync())
+                    {
+                        int ncOrdinal = reader3.GetOrdinal("NC");
+                        int nnOrdinal = reader3.GetOrdinal("NN");
+                        int sucursalOrdinal = reader3.GetOrdinal("SUCURSAL");
+                        int cierreOrdinal = reader3.GetOrdinal("CIERRE");
+                        int idClienteOrdinal = reader3.GetOrdinal("IDCLIENTE");
+                        int nombreWSOrdinal = reader3.GetOrdinal("NombreWS");
+
+                        while (await reader3.ReadAsync())
+                        {
+                            BuzonDTO dto = new BuzonDTO();
+                            dto.NC = reader3.GetString(ncOrdinal)?.Trim(); // ✅ Normalizar espacios
+                            dto.NN = reader3.GetString(nnOrdinal);
+                            dto.Sucursal = reader3.GetString(sucursalOrdinal);
+                            dto.Cierre = reader3.GetDateTime(cierreOrdinal);
+                            dto.Email = "acreditaciones@tecnisegur.com.uy";
+                            dto.IdCliente = reader3.GetInt32(idClienteOrdinal);
+                            dto.EsHenderson = dto.esHenderson();
+                            dto.NumeroEnvioMasivo = numEnvioMasivo;
+                            if (!reader3.IsDBNull(nombreWSOrdinal))
+                            {
+                                dto.NombreWS = reader3.GetString(nombreWSOrdinal);
+                            }
+                            else
+                            {
+                                dto.NombreWS = "NO_DEFINIDO";
+                            }
+                            retorno.Add(dto);
+                        }
+                    }
+                }
             }
+
             return retorno;
+
         }
 
         public class TotalesImprimir

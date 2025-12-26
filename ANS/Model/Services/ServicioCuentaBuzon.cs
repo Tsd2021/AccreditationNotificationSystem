@@ -5,6 +5,7 @@ using ClosedXML.Excel.Drawings;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -1213,7 +1214,30 @@ namespace ANS.Model.Services
                     if (ultIdOperacion > 0)
                     {
 
-                        await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
+
+                        // ✅ Usar la hora de cierre del buzón individual si horaCierreActual es TimeSpan.Zero
+                        // Si el buzón tiene hora de cierre, usarla; si no, usar horaCierreActual como fallback
+
+
+                        //APLICAR SOLO PARA NIKE DE PRUEBA, SI ANDA BIEN MAÑANA MARTES 23 DEE DICIEMBRE,ENTONCES APLICAR PARA TODOS.
+                        if(cli.IdCliente == 998)
+                        {
+                            TimeSpan horaCierreAUsar = horaCierreActual;
+
+                            if (horaCierreActual == TimeSpan.Zero && cu.Cierre.HasValue)
+                            {
+                                horaCierreAUsar = cu.Cierre.Value.TimeOfDay;
+                            }
+
+                            await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreAUsar);
+                        }
+                        else
+                        {
+                            await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
+                        }
+
+                        //eSTO ESTUVO HASTA EL 22 DE DICIEMBRE, NO TOMA LA HORA DE CIERRE DE LOS BUZONES QUE SON ACREDITADOS POR CLIENTE ESPECIFICO Y BANCO.
+                        //await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
 
                     }
                 }
@@ -1783,10 +1807,11 @@ namespace ANS.Model.Services
 
             List<DtoAcreditacionesPorEmpresa> acreditacionesPorBancoYTipoAcreditacion = getAcreditacionesPorBancoYTipoAcreditacion(banco, tipoAcreditacion);
 
-            // ✅ Agrupar por Empresa, Sucursal, Cuenta, Moneda, Ciudad y NN (buzón) para evitar duplicados
+            // ✅ Agrupar por Empresa, Sucursal, Cuenta, Moneda, Ciudad, NN (buzón) e IdCliente para evitar duplicados
             // El NN (nombre del buzón) es importante para diferenciar buzones distintos de la misma empresa
+            // El IdCliente es importante para diferenciar cuando la misma cuenta es usada por diferentes clientes
             // Esto soluciona el problema cuando hay múltiples configuraciones de acreditación para la misma cuenta
-            // pero mantiene la diferenciación entre buzones diferentes (NC diferentes)
+            // pero mantiene la diferenciación entre buzones diferentes (NC diferentes) y clientes diferentes
             var acreditacionesAgrupadas = acreditacionesPorBancoYTipoAcreditacion
                 .GroupBy(ac => new
                 {
@@ -1795,7 +1820,8 @@ namespace ANS.Model.Services
                     NumeroCuenta = ac.NumeroCuenta?.Trim() ?? "",
                     Divisa = ac.Divisa,
                     Ciudad = ac.Ciudad?.Trim() ?? "",
-                    NN = ac.NN?.Trim() ?? "" // Incluir NN para diferenciar buzones distintos
+                    NN = ac.NN?.Trim() ?? "", // Incluir NN para diferenciar buzones distintos
+                    IdCliente = ac.IdCliente // ✅ Incluir IdCliente para diferenciar clientes con la misma cuenta
                 })
                 .Select(g => new DtoAcreditacionesPorEmpresa
                 {
@@ -1806,7 +1832,7 @@ namespace ANS.Model.Services
                     Ciudad = g.Key.Ciudad,
                     NN = g.Key.NN,
                     Monto = g.First().Monto, // Tomar el primer monto para evitar duplicar cuando hay configuraciones duplicadas
-                    IdCliente = g.First().IdCliente // Tomar el primer IdCliente del grupo
+                    IdCliente = g.Key.IdCliente // ✅ Usar el IdCliente de la clave de agrupación
                 })
                 .ToList();
 
@@ -1862,6 +1888,13 @@ namespace ANS.Model.Services
         }
         private void GenerarExcelFormatoDiaADia(string ciudad, List<DtoAcreditacionesPorEmpresa> listaPesos, List<DtoAcreditacionesPorEmpresa> listaDolares, Banco banco, string tarea, DateTime? fechaFiltro)
         {
+
+
+            var servicioCliente = ServicioCliente.getInstancia();
+            if (servicioCliente.ListaClientes == null || servicioCliente.ListaClientes.Count == 0)
+            {
+                servicioCliente.getAllClientes();
+            }
             var fechaHoy = DateTime.Now.ToString("dd - MM - yy");
             if (fechaFiltro!=null)
             {
@@ -1898,7 +1931,30 @@ namespace ANS.Model.Services
                 // Para BBVA, mostrar directamente la EMPRESA de la tabla CuentasBuzones
                 if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                 {
-                    nombreAMostrar = item.Empresa ?? "";
+                    // ✅ Mapeo especial: IdCliente 998 se muestra como "TECNISEGUR" en el Excel
+                    if (item.IdCliente == 998)
+                    {
+                        nombreAMostrar = "TECNISEGUR";
+                    }
+                    else
+                    {
+                        nombreAMostrar = item.Empresa ?? "";
+                        
+                        // ✅ Si hay otros registros con la misma empresa pero diferente IdCliente, agregar nombre del cliente entre paréntesis
+                        bool hayDuplicados = listaPesos.Any(x => 
+                            x != item && 
+                            x.Empresa?.Trim() == item.Empresa?.Trim() && 
+                            x.IdCliente != item.IdCliente);
+                        
+                        if (hayDuplicados)
+                        {
+                            var cliente = ServicioCliente.getInstancia().getById(item.IdCliente);
+                            if (cliente != null && !string.IsNullOrWhiteSpace(cliente.Nombre))
+                            {
+                                nombreAMostrar = $"{nombreAMostrar} ({cliente.Nombre})";
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -1947,7 +2003,30 @@ namespace ANS.Model.Services
                 // Para BBVA, mostrar directamente la EMPRESA de la tabla CuentasBuzones
                 if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                 {
-                    nombreAMostrar = item.Empresa ?? "";
+                    // ✅ Mapeo especial: IdCliente 998 se muestra como "TECNISEGUR" en el Excel
+                    if (item.IdCliente == 998)
+                    {
+                        nombreAMostrar = "TECNISEGUR";
+                    }
+                    else
+                    {
+                        nombreAMostrar = item.Empresa ?? "";
+                        
+                        // ✅ Si hay otros registros con la misma empresa pero diferente IdCliente, agregar nombre del cliente entre paréntesis
+                        bool hayDuplicados = listaDolares.Any(x => 
+                            x != item && 
+                            x.Empresa?.Trim() == item.Empresa?.Trim() && 
+                            x.IdCliente != item.IdCliente);
+                        
+                        if (hayDuplicados)
+                        {
+                            var cliente = ServicioCliente.getInstancia().getById(item.IdCliente);
+                            if (cliente != null && !string.IsNullOrWhiteSpace(cliente.Nombre))
+                            {
+                                nombreAMostrar = $"{nombreAMostrar} ({cliente.Nombre})";
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -1999,8 +2078,6 @@ namespace ANS.Model.Services
             }
 
         }
-
-
         private List<DtoAcreditacionesPorEmpresa> getAcreditacionesPorBancoYTipoAcreditacion(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
         {
 

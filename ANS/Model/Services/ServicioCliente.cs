@@ -63,6 +63,14 @@ namespace ANS.Model.Services
         }
         public void getAllClientes()
         {
+
+            Cliente preCargarSanRoque = new Cliente
+            {
+                IdCliente = 262,
+                Nombre = "SAN ROQUE S.A",
+                Rut = "210354300016"
+            };
+
             using (SqlConnection conn = new SqlConnection(_conexionENCUESTA))
             {
                 string query = @"SELECT IDCLIENTE,NOMBRE,RUT FROM CLIENTES WHERE Facturacion IN(1,3)";
@@ -85,10 +93,18 @@ namespace ANS.Model.Services
               
                             cli.ClientesRelacionados = getClientesRelacionados(cli);
                         }
+
+                    
                         ListaClientes.Add(cli);
                     }
                 }
             }
+
+            if(getById(preCargarSanRoque.IdCliente) == null)
+            {
+                ListaClientes.Add(preCargarSanRoque);
+            }
+               
         }
         public List<Cliente> getClientesRelacionados(Cliente cli)
         {

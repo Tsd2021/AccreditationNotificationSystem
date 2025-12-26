@@ -61,16 +61,16 @@ namespace ANS
 
             // 1) Store SQLite
             // --- TEST ---
-            //var dbPath = System.IO.Path.Combine(
-            //    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            //    "ANS", "QuartzRuns.db");
+            var dbPath = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "ANS", "QuartzRuns.db");
 
 
             //  ---PROD-- -
             // ✅ Usar la carpeta donde está el ejecutable (sin importar el nombre de la carpeta)
-            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            Directory.CreateDirectory(baseDir);
-            var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
+            //var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            //Directory.CreateDirectory(baseDir);
+            //var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
 
             _historyStore = new RepositorioJobHistory(dbPath);
             await _historyStore.InitializeAsync();
@@ -472,7 +472,7 @@ namespace ANS
                 .Build();
             #endregion
 
-            #region Tarea 3: ENVIO MASIVO 3 (17:09:00)
+            #region Tarea 3: ENVIO MASIVO 3 (17:03:00)
 
             IJobDetail jobEnvioMasivo3 = JobBuilder.Create<EnvioMasivo>()
                 .WithIdentity("EnvioMasivo3Job", "GrupoEnvioMasivo")
@@ -481,7 +481,7 @@ namespace ANS
 
             ITrigger triggerEnvioMasivo3 = TriggerBuilder.Create()
                 .WithIdentity("EnvioMasivo3Trigger", "GrupoEnvioMasivo")
-                .WithCronSchedule("0 9 17 ? * MON-FRI")
+                .WithCronSchedule("0 3 17 ? * MON-FRI")
                 .Build();
 
             #endregion
