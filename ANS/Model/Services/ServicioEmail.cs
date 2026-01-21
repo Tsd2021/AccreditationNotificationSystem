@@ -1,4 +1,4 @@
-﻿using ANS.Model.Interfaces;
+using ANS.Model.Interfaces;
 using MailKit.Security;
 using Microsoft.Data.SqlClient;
 using MimeKit;
@@ -215,7 +215,7 @@ namespace ANS.Model.Services
             }
         }
 
-        public async Task<bool> EnviarExcelPorMailMasivoConMailKit(Stream excelStream, string fileName, string subject, string body, List<Email> _destinos, MailKit.Net.Smtp.SmtpClient smtpClient)
+        public async Task<bool> EnviarExcelPorMailMasivoConMailKit(Stream? excelStream, string? fileName, string subject, string body, List<Email> _destinos, MailKit.Net.Smtp.SmtpClient smtpClient)
         {
             try
             {
@@ -241,10 +241,12 @@ namespace ANS.Model.Services
                 var builder = new BodyBuilder();
                 builder.HtmlBody = body;
 
-                builder.Attachments.Add(fileName, excelStream,
-                    new ContentType(
-                        "application",
-                        "vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+                // Solo adjuntar si hay Excel
+                if (excelStream != null && !string.IsNullOrEmpty(fileName))
+                {
+                    builder.Attachments.Add(fileName, excelStream,
+                        new ContentType("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+                }
 
                 message.Body = builder.ToMessageBody();
 
@@ -260,7 +262,7 @@ namespace ANS.Model.Services
                     ? string.Join(", ", _destinos.Select(e => e.Correo).Take(3)) 
                     : "Sin destinatarios";
                 ServicioLog.instancia.WriteLog(ex, "Todos", 
-                    $"Envío Excel Masivo MailKit | Archivo: {fileName} | Destinos: {destinosInfo}");
+                    $"Envío Excel Masivo MailKit | Archivo: {fileName ?? "N/A"} | Destinos: {destinosInfo}");
                 return false;
             }
         }

@@ -39,18 +39,21 @@ namespace ANS.Model.Services
                 await hidratarDTOconSusAcreditaciones(buzones, numEnvioMasivo);
 
                 var buzonesConAcreditaciones = buzones
-                  .Where(b => b.Acreditaciones != null && b.Acreditaciones.Count > 0)
-                  .ToList();
+                    .Where(b => b.Acreditaciones != null && b.Acreditaciones.Count > 0)
+                    .ToList();
 
-                if (buzonesConAcreditaciones.Count == 0)
+                var buzonesSinAcreditaciones = buzones
+                    .Where(b => b.Acreditaciones == null || b.Acreditaciones.Count == 0)
+                    .ToList();
+
+                if (buzonesConAcreditaciones.Count == 0 && buzonesSinAcreditaciones.Count == 0)
                 {
-                    ServicioLog.instancia.WriteInfo($"No hay buzones con acreditaciones para procesar",
-                        $"NumEnvioMasivo: {numEnvioMasivo}");
+                    ServicioLog.instancia.WriteInfo($"No hay buzones para procesar", $"NumEnvioMasivo: {numEnvioMasivo}");
                     return;
                 }
 
-                ServicioLog.instancia.WriteInfo($"Buzones con acreditaciones: {buzonesConAcreditaciones.Count}",
-                    $"NumEnvioMasivo: {numEnvioMasivo}");
+                ServicioLog.instancia.WriteInfo($"Buzones con acreditaciones: {buzonesConAcreditaciones.Count}", $"NumEnvioMasivo: {numEnvioMasivo}");
+                ServicioLog.instancia.WriteInfo($"Buzones sin acreditaciones: {buzonesSinAcreditaciones.Count}", $"NumEnvioMasivo: {numEnvioMasivo}");
 
                 await obtenerUsuarioYFechaDelDeposito(buzones);
 
@@ -78,7 +81,7 @@ namespace ANS.Model.Services
                 // inyectar en ReportService
                 var reportService = new TAAS.Reports.ReportService(sucursalesDtos);
 
-                ObtenerMailsPorBuzon(buzonesConAcreditaciones);
+                ObtenerMailsPorBuzon(buzones);
 
                 var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
 
@@ -86,7 +89,7 @@ namespace ANS.Model.Services
 
                 var sendLock = new SemaphoreSlim(1, 1);
 
-                var tasks = buzonesConAcreditaciones.Select(async b =>
+                var tasksCon = buzonesConAcreditaciones.Select(async b =>
                 {
                     // preparar excelStream, subject, body, fileName, destino…
                     b.MontoTotal = b.Acreditaciones.Sum(a => a.Monto);
@@ -167,13 +170,95 @@ namespace ANS.Model.Services
                     }
                 }).ToArray();
 
+                // Buzones sin acreditaciones: enviar mail con mensaje fijo, sin adjunto (solo si tienen destinos)
+                var tasksSin = buzonesSinAcreditaciones
+                    .Where(b => b._Emails != null && b._Emails.Count > 0)
+                    .Select(async b =>
+                    {
+                        // Calcular fechaRango igual que en ReportService
+                        DateTime hoy = DateTime.Today;
+                        DateTime fechaInicio;
+                        DateTime fechaCierre;
+
+                        if (b.EsHenderson && b.NumeroEnvioMasivo == 1)
+                        {
+                            int diasARestar = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
+                            var baseDate = hoy.AddDays(-diasARestar);
+                            fechaInicio = new DateTime(baseDate.Year, baseDate.Month, baseDate.Day, 14, 30, 0);
+                            fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, 7, 0, 0);
+                        }
+                        else
+                        {
+                            var horaCierreDto = b.Cierre.TimeOfDay;
+                            fechaCierre = new DateTime(hoy.Year, hoy.Month, hoy.Day, horaCierreDto.Hours, horaCierreDto.Minutes, 0);
+
+                            if (!b.EsHenderson)
+                            {
+                                int diasARestar = hoy.DayOfWeek == DayOfWeek.Monday ? 3 : 1;
+                                var baseDate = hoy.AddDays(-diasARestar);
+                                var t = b.Cierre.TimeOfDay;
+                                fechaInicio = new DateTime(baseDate.Year, baseDate.Month, baseDate.Day, t.Hours, t.Minutes, 0);
+                            }
+                            else
+                            {
+                                switch (b.NumeroEnvioMasivo)
+                                {
+                                    case 2:
+                                        fechaInicio = new DateTime(hoy.Year, hoy.Month, hoy.Day, 7, 0, 0);
+                                        break;
+                                    default:
+                                        fechaInicio = new DateTime(b.Cierre.Year, b.Cierre.Month, b.Cierre.Day, b.Cierre.Hour, b.Cierre.Minute, 0);
+                                        break;
+                                }
+                            }
+                        }
+
+                        string inicioStr = fechaInicio.ToString("dd/MM/yyyy HH:mm");
+                        string cierreStr = fechaCierre.ToString("dd/MM/yyyy HH:mm");
+                        string fechaRango = $"DEL {inicioStr} AL {cierreStr}";
+
+                        string subjectSin = $"Acreditaciones Buzón Inteligente [{b.NN}] - {cierreStr}";
+                        string bodySin = $"Acreditaciones del Buzón Inteligente {b.NN} del <strong>{fechaRango}</strong>";
+
+                        // Agregar información de última conexión del buzón si está disponible
+                        if (b.UltimaFechaConexion != DateTime.MinValue)
+                        {
+                            string fechaUltimaConexionStr = b.UltimaFechaConexion.ToString("dd/MM/yyyy HH:mm");
+                            bodySin += $"<br/><br/>Por favor, tener en cuenta fecha y hora de última conexión del buzón registrada a las: <strong>{fechaUltimaConexionStr}</strong>";
+                        }
+                        await semaphore.WaitAsync();
+                        try
+                        {
+                            await sendLock.WaitAsync();
+                            try
+                            {
+                                await ServicioEmail.instancia.EnviarExcelPorMailMasivoConMailKit(
+                                    excelStream: null, fileName: null, subjectSin, bodySin, b._Emails, smtp);
+                            }
+                            catch (Exception ex)
+                            {
+                                ServicioLog.instancia.WriteLog(ex, "Todos", $"Envío Masivo (sin acreditaciones) {b.NumeroEnvioMasivo} - Buzón: {b.NC}");
+                            }
+                            finally
+                            {
+                                sendLock.Release();
+                            }
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    }).ToArray();
+
+                var tasks = tasksCon.Concat(tasksSin).ToArray();
                 await Task.WhenAll(tasks);
 
                 await smtp.DisconnectAsync(true);
 
                 // ✅ Logging informativo: Fin exitoso del proceso
-                ServicioLog.instancia.WriteInfo($"Procesamiento de envío masivo {numEnvioMasivo} completado exitosamente",
-                    $"NumEnvioMasivo: {numEnvioMasivo} | Buzones procesados: {buzonesConAcreditaciones.Count}");
+                ServicioLog.instancia.WriteInfo(
+                    $"Procesamiento de envío masivo {numEnvioMasivo} completado exitosamente",
+                    $"NumEnvioMasivo: {numEnvioMasivo} | Buzones con acreditaciones: {buzonesConAcreditaciones.Count} | Buzones sin acreditaciones: {buzonesSinAcreditaciones.Count}");
             }
             catch (Exception e)
             {
