@@ -19,3 +19,4 @@ FileContentIndex/
 ProjectEvaluation/
 v17/
 *.suo
+/.vscode/settings.json
