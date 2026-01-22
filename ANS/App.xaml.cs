@@ -931,7 +931,7 @@ namespace ANS
 
             #endregion
 
-            // Tarea 2.1: Acreditar dia a dia Nike (ID 998). 14:25
+            // Tarea 2.1: Acreditar dia a dia Nike (ID 998). 08:25
             #region TAREA_ACREDITAR_DIAADIA_NIKE
 
             IJobDetail jobBBVADiaADiaNike = JobBuilder.Create<AcreditarDiaADiaBBVANike>()
@@ -940,7 +940,7 @@ namespace ANS
 
             ITrigger triggerBBVADiaADiaNike = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerDADNike", "GrupoTrabajoBBVA")
-                .WithCronSchedule("0 25 14 ? * MON-FRI")
+                .WithCronSchedule("0 25 8 ? * MON-FRI")
                 .Build();
 
             #endregion
