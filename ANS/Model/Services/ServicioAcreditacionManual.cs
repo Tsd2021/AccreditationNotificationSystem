@@ -143,26 +143,39 @@ namespace ANS.Model.Services
         }
 
         /// <summary>
-        /// Obtiene depósitos de los últimos 7 días (o rango personalizado) para un buzón/empresa/moneda
+        /// Obtiene depósitos de los últimos 7 días (o rango personalizado) para un buzón/empresa/moneda.
+        /// Si se pasa idCuenta, se usa solo esa CuentaBuzon (la seleccionada en el combo Banco+Empresa+Moneda).
+        /// El Banco de cada DTO viene de cuentasbuzones.BANCO de esa cuenta, no de CC.
         /// </summary>
         public async Task<List<DepositoAcreditacionDto>> ObtenerDepositosUltimos7Dias(
             string nc, 
             string empresa, 
             DateTime desde, 
             DateTime hasta, 
-            string moneda = null)
+            string moneda = null,
+            int? idCuenta = null)
         {
             if (string.IsNullOrWhiteSpace(nc) || string.IsNullOrWhiteSpace(empresa))
                 return new List<DepositoAcreditacionDto>();
 
             var depositos = new List<DepositoAcreditacionDto>();
 
-            // Obtener configuración de cuentas para este buzón, empresa y moneda seleccionada
             var empresas = await ObtenerEmpresasPorBuzon(nc);
-            var cuentasFiltradas = empresas
-                .Where(e => e.Empresa.Equals(empresa, StringComparison.OrdinalIgnoreCase)
-                    && (string.IsNullOrWhiteSpace(moneda) || e.Moneda.Equals(moneda?.Trim(), StringComparison.OrdinalIgnoreCase)))
-                .ToList();
+            List<EmpresaDto> cuentasFiltradas;
+
+            if (idCuenta.HasValue && idCuenta.Value != 0)
+            {
+                // Usar exactamente la cuenta seleccionada (Banco+Empresa+Moneda del combo)
+                cuentasFiltradas = empresas.Where(e => e.IdCuenta == idCuenta.Value).ToList();
+            }
+            else
+            {
+                // Fallback: filtrar por empresa y moneda (puede haber varias cuentas por banco)
+                cuentasFiltradas = empresas
+                    .Where(e => e.Empresa.Equals(empresa, StringComparison.OrdinalIgnoreCase)
+                        && (string.IsNullOrWhiteSpace(moneda) || e.Moneda.Equals(moneda?.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+            }
 
             if (!cuentasFiltradas.Any())
                 return depositos;
@@ -272,7 +285,7 @@ namespace ANS.Model.Services
                 }
             }
 
-            // Mapear a DTOs: solo la moneda seleccionada (o ambas si moneda no indicada)
+            // Mapear a DTOs: solo la moneda seleccionada. Banco/Cuenta vienen de la CuentaBuzon elegida (cuentasbuzones), no de CC.
             var incluirPesos = string.IsNullOrWhiteSpace(moneda) || moneda.Trim().Equals(VariablesGlobales.pesos, StringComparison.OrdinalIgnoreCase);
             var incluirDolares = string.IsNullOrWhiteSpace(moneda) || moneda.Trim().Equals(VariablesGlobales.dolares, StringComparison.OrdinalIgnoreCase);
 
@@ -296,7 +309,7 @@ namespace ANS.Model.Services
                             Usuario = dep.Usuario,
                             IdCuenta = cuentaPesos.IdCuenta,
                             Cuenta = cuentaPesos.Cuenta,
-                            Banco = cuentaPesos.Banco,
+                            Banco = cuentaPesos.Banco,   // cuentasbuzones.BANCO (cuenta elegida), no CC
                             IdBanco = cuentaPesos.IdBanco,
                             Moneda = VariablesGlobales.pesos,
                             Divisa = VariablesGlobales.uyu,
@@ -323,7 +336,7 @@ namespace ANS.Model.Services
                             Usuario = dep.Usuario,
                             IdCuenta = cuentaDolares.IdCuenta,
                             Cuenta = cuentaDolares.Cuenta,
-                            Banco = cuentaDolares.Banco,
+                            Banco = cuentaDolares.Banco, // cuentasbuzones.BANCO (cuenta elegida), no CC
                             IdBanco = cuentaDolares.IdBanco,
                             Moneda = VariablesGlobales.dolares,
                             Divisa = VariablesGlobales.usd,

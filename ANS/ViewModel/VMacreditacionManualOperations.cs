@@ -324,7 +324,8 @@ namespace ANS.ViewModel
                     EmpresaSeleccionada.Empresa,
                     Desde,
                     Hasta,
-                    EmpresaSeleccionada.Moneda);
+                    EmpresaSeleccionada.Moneda,
+                    EmpresaSeleccionada.IdCuenta);
 
                 // Mapear con estado de acreditación (batch)
                 var depositosConEstado = await _servicio.MapearDepositosConEstadoAcreditado(depositos);
