@@ -1,4 +1,5 @@
 using ANS.Model.Interfaces;
+using ANS.Runtime;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -32,17 +33,21 @@ namespace ANS.Model.Services
             using (var conn = new SqlConnection(_conexionTSD))
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = @"
+                // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+                var tableName = TableNameResolver.AcreditacionDeposito;
+                TableNameResolver.ValidateTableName(tableName, "ServicioAcreditacion.insertar");
+
+                cmd.CommandText = $@"
                                     IF NOT EXISTS (
                                     SELECT 1
-                                    FROM AcreditacionDepositoDiegoTest
+                                    FROM {tableName}
                                     WHERE IDBUZON     = @IDBUZON
                                     AND IDOPERACION = @IDOPERACION
                                     AND MONEDA      = @MONEDA
                                     AND IDCUENTA    = @IDCUENTA
                                     )
                                     BEGIN
-                                    INSERT INTO AcreditacionDepositoDiegoTest
+                                    INSERT INTO {tableName}
                                     (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP)
                                     VALUES
                                     (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL);
@@ -243,7 +248,7 @@ namespace ANS.Model.Services
                                     FROM ConfiguracionAcreditacion AS config 
                                     INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
                                     INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
-                                    INNER JOIN AcreditacionDepositoDiegoTest AS acc  
+                                    INNER JOIN {TableNameResolver.AcreditacionDeposito} AS acc  
                                     ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
                                     WHERE cb.BANCO = @bank 
                                     AND acc.FECHA BETWEEN @FechaDesde AND @FechaHasta 
@@ -306,9 +311,13 @@ namespace ANS.Model.Services
             bool esBBVA = bank.NombreBanco
                 .Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase);
 
+            // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+            var tableName = TableNameResolver.AcreditacionDeposito;
+            TableNameResolver.ValidateTableName(tableName, "ServicioAcreditacion.getAcreditacionesByFechaBancoClienteYTipoAcreditacion");
+
             // 1) Elige la consulta según sea BBVA o no
             string sql = esBBVA
-                ? @"
+                ? $@"
             SELECT
                 cc.NN,
                 cb.CUENTA,
@@ -320,7 +329,7 @@ namespace ANS.Model.Services
                 ON config.CuentasBuzonesId = cb.ID
             INNER JOIN cc
                 ON config.NC = cc.NC
-            INNER JOIN AcreditacionDepositoDiegoTest acc
+            INNER JOIN {tableName} acc
                 ON acc.IDBUZON   = config.NC
                AND acc.IDCUENTA  = cb.ID
             WHERE UPPER(cb.BANCO)     = UPPER(@banco)
@@ -328,7 +337,7 @@ namespace ANS.Model.Services
               AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
             GROUP BY
                 cc.NN, cb.CUENTA, acc.MONEDA, cc.SUCURSAL;"
-                : @"
+                : $@"
             SELECT
                 cc.NN,
                 cb.EMPRESA,
@@ -342,7 +351,7 @@ namespace ANS.Model.Services
                 ON config.CuentasBuzonesId = cb.ID
             INNER JOIN cc
                 ON config.NC = cc.NC
-            INNER JOIN AcreditacionDepositoDiegoTest acc
+            INNER JOIN {tableName} acc
                 ON acc.IDBUZON   = config.NC
                AND acc.IDCUENTA  = cb.ID
             WHERE UPPER(config.TipoAcreditacion) = UPPER(@tipoAcred)
@@ -361,7 +370,7 @@ namespace ANS.Model.Services
             {
                 //Entonces la tarea es Excel Cash y debo filtrar
               
-                sql =   @" SELECT
+                sql =   $@" SELECT
                         cc.NN,
                         cb.EMPRESA,
                         cb.CUENTA,
@@ -374,7 +383,7 @@ namespace ANS.Model.Services
                         ON config.CuentasBuzonesId = cb.ID
                         INNER JOIN cc
                         ON config.NC = cc.NC
-                        INNER JOIN AcreditacionDepositoDiegoTest acc
+                        INNER JOIN {tableName} acc
                         ON acc.IDBUZON   = config.NC
                         AND acc.IDCUENTA  = cb.ID
                         WHERE 
@@ -474,6 +483,10 @@ namespace ANS.Model.Services
                 throw new Exception("Banco o Configuración vacías");
             }
 
+            // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+            var tableName = TableNameResolver.AcreditacionDeposito;
+            TableNameResolver.ValidateTableName(tableName, "ServicioAcreditacion.getAcreditacionesParaExcelTesoreria_BackUp");
+
             List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
             string query = "";
             using (var conn = new SqlConnection(_conexionTSD))
@@ -484,7 +497,7 @@ namespace ANS.Model.Services
                 if (numTanda == 1)
                 {
                     //Si numTanda es 1, entonces debemos incluir DELASSIERRAS que es día a día en el excel para tesorería.
-                    query = @"SELECT
+                    query = $@"SELECT
                             acc.FECHA, 
                             cb.EMPRESA,
                             cb.CUENTA,
@@ -497,7 +510,7 @@ namespace ANS.Model.Services
                             ON config.CuentasBuzonesId = cb.ID
                             INNER JOIN CC AS cc
                             ON config.NC = cc.NC
-                            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+                            INNER JOIN {tableName} AS acc
                             ON acc.IDBUZON  = config.NC
                             AND acc.IDCUENTA = cb.ID
                             WHERE
@@ -516,7 +529,7 @@ namespace ANS.Model.Services
 
                 else
                 {
-                    query = @"SELECT
+                    query = $@"SELECT
                             acc.FECHA, 
                             cb.EMPRESA,
                             cb.CUENTA,
@@ -529,7 +542,7 @@ namespace ANS.Model.Services
                             ON config.CuentasBuzonesId = cb.ID
                             INNER JOIN CC AS cc
                             ON config.NC = cc.NC
-                            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+                            INNER JOIN {tableName} AS acc
                             ON acc.IDBUZON  = config.NC
                             AND acc.IDCUENTA = cb.ID
                             WHERE
@@ -612,11 +625,15 @@ namespace ANS.Model.Services
             TimeSpan horaTanda = (numTanda == 1) ? new TimeSpan(7, 0, 0)
                                                  : new TimeSpan(14, 30, 0);
 
+            // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+            var tableName = TableNameResolver.AcreditacionDeposito;
+            TableNameResolver.ValidateTableName(tableName, "ServicioAcreditacion.getAcreditacionesParaExcelTesoreria");
+
             // Consulta: filtro por rango de fecha del día y por hora exacta de la tanda
             string query;
             if (numTanda == 1)
             {
-                query = @"
+                query = $@"
             SELECT
                 acc.FECHA,
                 cb.EMPRESA,
@@ -630,7 +647,7 @@ namespace ANS.Model.Services
                 ON config.CuentasBuzonesId = cb.ID
             INNER JOIN CC AS cc
                 ON config.NC = cc.NC
-            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+            INNER JOIN {tableName} AS acc
                 ON acc.IDBUZON   = config.NC
                AND acc.IDCUENTA  = cb.ID
             WHERE
@@ -647,7 +664,7 @@ namespace ANS.Model.Services
             }
             else
             {
-                query = @"
+                query = $@"
             SELECT
                 acc.FECHA,
                 cb.EMPRESA,
@@ -661,7 +678,7 @@ namespace ANS.Model.Services
                 ON config.CuentasBuzonesId = cb.ID
             INNER JOIN CC AS cc
                 ON config.NC = cc.NC
-            INNER JOIN AcreditacionDepositoDiegoTest AS acc
+            INNER JOIN {tableName} AS acc
                 ON acc.IDBUZON   = config.NC
                AND acc.IDCUENTA  = cb.ID
             WHERE

@@ -1,5 +1,7 @@
 using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.Runtime;
+using ANS.Runtime.Guards;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -574,12 +576,31 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // ✅ CÓDIGO PARA PRODUCCIÓN - ACTIVADO
             if (archivosGenerados.Count > 0)
             {
-                ServicioLog.instancia.WriteInfo(
-                    $"Iniciando envío de {archivosGenerados.Count} archivo(s) al servicio Santander",
-                    "SantanderFileGenerator | CrearArchivo");
+                // ✅ Logging específico según modo
+                if (ANS.Runtime.AppRuntime.IsTest)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"═══════════════════════════════════════════════════════════════",
+                        "SantanderFileGenerator | CrearArchivo | TEST MODE");
+                    ServicioLog.instancia.WriteInfo(
+                        $"MODO TEST: {archivosGenerados.Count} archivo(s) generado(s) con prefijo TEST_ | " +
+                        $"WebService de Santander BLOQUEADO (no se enviará) | " +
+                        $"Archivos guardados localmente en: {Path.GetDirectoryName(archivosGenerados.First().rutaFinal)}",
+                        "SantanderFileGenerator | CrearArchivo | TEST MODE");
+                    ServicioLog.instancia.WriteInfo(
+                        $"═══════════════════════════════════════════════════════════════",
+                        "SantanderFileGenerator | CrearArchivo | TEST MODE");
+                }
+                else
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"Iniciando envío de {archivosGenerados.Count} archivo(s) al servicio Santander",
+                        "SantanderFileGenerator | CrearArchivo");
+                }
                 
                 int archivosEnviadosExitosamente = 0;
                 int archivosConError = 0;
+                int archivosBloqueadosEnTest = 0;
                 
                 // ✅ Agrupar archivos por nombre para detectar duplicados
                 var archivosPorNombre = archivosGenerados
@@ -646,7 +667,21 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         
                         try
                         {
-                            // Enviar archivo al servicio Santander
+                            // ✅ En TEST: WebService está bloqueado, no intentar enviar
+                            if (ANS.Runtime.AppRuntime.IsTest)
+                            {
+                                archivosBloqueadosEnTest++;
+                                ServicioLog.instancia.WriteInfo(
+                                    $"TEST MODE: Archivo NO enviado (WebService bloqueado) | " +
+                                    $"Archivo: {archivoInfo.nombreArchivo} | " +
+                                    $"Ruta: {archivoInfo.rutaFinal} | " +
+                                    $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
+                                    $"El archivo se mantiene en carpeta NO_ENVIADOS (comportamiento esperado en TEST)",
+                                    "SantanderFileGenerator | CrearArchivo | TEST MODE");
+                                continue; // Saltar al siguiente archivo sin intentar enviar
+                            }
+                            
+                            // Enviar archivo al servicio Santander (solo en PRODUCTION)
                             bool enviadoExitosamente = await ServicioSantander.getInstancia()
                                 .EnviarArchivoConClienteWS(archivoInfo.nombreArchivo, archivoInfo.contenidoBytes);
                             
@@ -687,6 +722,18 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                     "SantanderFileGenerator | CrearArchivo");
                             }
                         }
+                        catch (InvalidOperationException ex) when (ANS.Runtime.AppRuntime.IsTest && ex.Message.Contains("BLOQUEO EN TEST"))
+                        {
+                            // ✅ Excepción esperada en TEST: WebService bloqueado
+                            archivosBloqueadosEnTest++;
+                            ServicioLog.instancia.WriteInfo(
+                                $"TEST MODE: WebService bloqueado (comportamiento esperado) | " +
+                                $"Archivo: {archivoInfo.nombreArchivo} | " +
+                                $"Ruta: {archivoInfo.rutaFinal} | " +
+                                $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
+                                $"Mensaje: {ex.Message}",
+                                "SantanderFileGenerator | CrearArchivo | TEST MODE - WebService Bloqueado");
+                        }
                         catch (Exception ex)
                         {
                             archivosConError++;
@@ -696,11 +743,34 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     }
                 }
                 
-                ServicioLog.instancia.WriteInfo(
-                    $"Resumen de envío a Santander | Total archivos: {archivosGenerados.Count} | " +
-                    $"Enviados exitosamente: {archivosEnviadosExitosamente} | " +
-                    $"Con error: {archivosConError}",
-                    "SantanderFileGenerator | CrearArchivo");
+                // ✅ Resumen detallado según modo
+                if (ANS.Runtime.AppRuntime.IsTest)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"═══════════════════════════════════════════════════════════════",
+                        "SantanderFileGenerator | CrearArchivo | TEST MODE - RESUMEN");
+                    ServicioLog.instancia.WriteInfo(
+                        $"RESUMEN TEST MODE | Total archivos generados: {archivosGenerados.Count} | " +
+                        $"Archivos con prefijo TEST_: {archivosGenerados.Count} | " +
+                        $"WebService bloqueado (no enviados): {archivosBloqueadosEnTest} | " +
+                        $"Archivos con error: {archivosConError} | " +
+                        $"Archivos enviados exitosamente: {archivosEnviadosExitosamente} (debe ser 0 en TEST)",
+                        "SantanderFileGenerator | CrearArchivo | TEST MODE - RESUMEN");
+                    ServicioLog.instancia.WriteInfo(
+                        $"NOTA: En TEST, los archivos se generan localmente con prefijo TEST_ pero NO se envían al WebService.",
+                        "SantanderFileGenerator | CrearArchivo | TEST MODE - RESUMEN");
+                    ServicioLog.instancia.WriteInfo(
+                        $"═══════════════════════════════════════════════════════════════",
+                        "SantanderFileGenerator | CrearArchivo | TEST MODE - RESUMEN");
+                }
+                else
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"Resumen de envío a Santander | Total archivos: {archivosGenerados.Count} | " +
+                        $"Enviados exitosamente: {archivosEnviadosExitosamente} | " +
+                        $"Con error: {archivosConError}",
+                        "SantanderFileGenerator | CrearArchivo");
+                }
             }
             
             // ============================================================================
@@ -794,8 +864,27 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 {
                     // Generar nombre único manteniendo el formato TEC_{sucursal}_{timestamp}.dat
                     // Verifica que no exista otro archivo con el mismo nombre
-                    string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, i);
+                    string nombreArchivoOriginal = await GenerarNombreArchivoUnico(sucursal, directorioFinal, i);
+                    // Aplicar prefijo TEST_ si está en modo TEST
+                    string nombreArchivo = FileSystemGuard.GetFileNameWithTestPrefix(nombreArchivoOriginal);
                     string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                    
+                    // ✅ GUARDIA: Validar que la escritura esté permitida
+                    FileSystemGuard.EnsureWriteAllowed(rutaFinal, "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa");
+                    
+                    // ✅ Logging específico en TEST
+                    if (ANS.Runtime.AppRuntime.IsTest && nombreArchivo != nombreArchivoOriginal)
+                    {
+                        ServicioLog.instancia.WriteInfo(
+                            $"TEST MODE: Prefijo TEST_ aplicado al archivo | " +
+                            $"Nombre original: {nombreArchivoOriginal} | " +
+                            $"Nombre final: {nombreArchivo} | " +
+                            $"Ruta: {rutaFinal}",
+                            "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa | TEST MODE");
+                    }
+                    
+                    // Asegurar que el directorio existe
+                    Directory.CreateDirectory(directorioFinal);
                     
                     // Guardar archivo
                     File.WriteAllText(rutaFinal, chunks[i]);
@@ -834,8 +923,27 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 
                 // Generar nombre de archivo único (índice 0 = primer archivo)
                 // Verifica que no exista otro archivo con el mismo nombre
-                string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, 0);
+                string nombreArchivoOriginal = await GenerarNombreArchivoUnico(sucursal, directorioFinal, 0);
+                // Aplicar prefijo TEST_ si está en modo TEST
+                string nombreArchivo = FileSystemGuard.GetFileNameWithTestPrefix(nombreArchivoOriginal);
                 string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                
+                // ✅ GUARDIA: Validar que la escritura esté permitida
+                FileSystemGuard.EnsureWriteAllowed(rutaFinal, "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa");
+                
+                // ✅ Logging específico en TEST
+                if (ANS.Runtime.AppRuntime.IsTest && nombreArchivo != nombreArchivoOriginal)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"TEST MODE: Prefijo TEST_ aplicado al archivo | " +
+                        $"Nombre original: {nombreArchivoOriginal} | " +
+                        $"Nombre final: {nombreArchivo} | " +
+                        $"Ruta: {rutaFinal}",
+                        "SantanderFileGenerator | CrearArchivoPorCiudadYDivisa | TEST MODE");
+                }
+                
+                // Asegurar que el directorio existe
+                Directory.CreateDirectory(directorioFinal);
                 
                 // Guardar archivo (como se hacía originalmente)
                 string contenidoFinal = contenidoBuilder.ToString();
@@ -958,8 +1066,27 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 {
                     // Generar nombre único manteniendo el formato TEC_{sucursal}_{timestamp}.dat
                     // Verifica que no exista otro archivo con el mismo nombre
-                    string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, i);
+                    string nombreArchivoOriginal = await GenerarNombreArchivoUnico(sucursal, directorioFinal, i);
+                    // Aplicar prefijo TEST_ si está en modo TEST
+                    string nombreArchivo = FileSystemGuard.GetFileNameWithTestPrefix(nombreArchivoOriginal);
                     string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                    
+                    // ✅ GUARDIA: Validar que la escritura esté permitida
+                    FileSystemGuard.EnsureWriteAllowed(rutaFinal, "SantanderFileGenerator | CrearArchivoCashOffice");
+                    
+                    // ✅ Logging específico en TEST
+                    if (ANS.Runtime.AppRuntime.IsTest && nombreArchivo != nombreArchivoOriginal)
+                    {
+                        ServicioLog.instancia.WriteInfo(
+                            $"TEST MODE: Prefijo TEST_ aplicado al archivo CashOffice | " +
+                            $"Nombre original: {nombreArchivoOriginal} | " +
+                            $"Nombre final: {nombreArchivo} | " +
+                            $"Ruta: {rutaFinal}",
+                            "SantanderFileGenerator | CrearArchivoCashOffice | TEST MODE");
+                    }
+                    
+                    // Asegurar que el directorio existe
+                    Directory.CreateDirectory(directorioFinal);
                     
                     // Guardar archivo
                     File.WriteAllText(rutaFinal, chunks[i]);
@@ -997,8 +1124,24 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 
                 // Generar nombre de archivo único (índice 0 = primer archivo)
                 // Verifica que no exista otro archivo con el mismo nombre
-                string nombreArchivo = await GenerarNombreArchivoUnico(sucursal, directorioFinal, 0);
+                string nombreArchivoOriginal = await GenerarNombreArchivoUnico(sucursal, directorioFinal, 0);
+                // Aplicar prefijo TEST_ si está en modo TEST
+                string nombreArchivo = FileSystemGuard.GetFileNameWithTestPrefix(nombreArchivoOriginal);
                 string rutaFinal = Path.Combine(directorioFinal, nombreArchivo);
+                
+                // ✅ GUARDIA: Validar que la escritura esté permitida
+                FileSystemGuard.EnsureWriteAllowed(rutaFinal, "SantanderFileGenerator | CrearArchivoCashOffice");
+                
+                // ✅ Logging específico en TEST
+                if (AppRuntime.IsTest && nombreArchivo != nombreArchivoOriginal)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"TEST MODE: Prefijo TEST_ aplicado al archivo CashOffice | " +
+                        $"Nombre original: {nombreArchivoOriginal} | " +
+                        $"Nombre final: {nombreArchivo} | " +
+                        $"Ruta: {rutaFinal}",
+                        "SantanderFileGenerator | CrearArchivoCashOffice | TEST MODE");
+                }
                 
                 // Guardar archivo (como se hacía originalmente)
                 string contenidoFinal = contenidoBuilder.ToString();

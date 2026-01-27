@@ -283,6 +283,7 @@
 //    }
 //}
 
+using ANS.Runtime;
 using Microsoft.Data.SqlClient;
 using SharedDTOs;
 using System.IO;
@@ -444,9 +445,12 @@ namespace ANS.Model.Services
         {
             var (desde, cierre) = CalcularVentana(b, numTanda, fecha);
 
-            var sql = @"
+            // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+            var tableName = TableNameResolver.AcreditacionDeposito;
+            TableNameResolver.ValidateTableName(tableName, "ServicioEnvioAcreditacionManual.ArmarCommand");
+            string sql = $@"
                 SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA, a.IDBANCO 
-                FROM    AcreditacionDepositoDiegoTest a
+                FROM    {tableName} a
                 JOIN    cc c
                         ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
                 WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))

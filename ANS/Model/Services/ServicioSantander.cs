@@ -1,4 +1,5 @@
-﻿using ANS.Model.Interfaces;
+using ANS.Model.Interfaces;
+using ANS.Runtime.Guards;
 using System.Net;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
@@ -102,6 +103,9 @@ namespace ANS.Model.Services
                     ServicioLog.instancia.WriteInfo("Enviando solicitud al servicio Santander", 
                         "ServicioSantander | EnviarArchivoVacioConCliente");
 
+                    // ✅ GUARDIA: Bloquear operaciones de red en TEST (punto más bajo posible)
+                    WebServiceGuard.EnsureNetworkAllowed("Santander WebService", "EnviarArchivoVacioConCliente");
+
                     // ✅ Enviar solicitud
                     AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -174,6 +178,9 @@ namespace ANS.Model.Services
         /// <returns>True si el envío fue exitoso (código de respuesta "0"), False en caso contrario</returns>
         public async Task<bool> EnviarArchivoConClienteWS(string nombreArchivo, byte[] archivo)
         {
+            // ✅ GUARDIA: Bloquear WebService de Santander en modo TEST
+            WebServiceGuard.EnsureSantanderWebServiceAllowed($"EnviarArchivoConClienteWS - Archivo: {nombreArchivo}");
+
             var credenciales = new NetworkCredential("urprmaetecnisegur", "9Nw$d9aQ");
 
             // ✅ Binding corregido para autenticación básica
@@ -252,6 +259,9 @@ namespace ANS.Model.Services
                     // ✅ Logging informativo: Inicio de envío
                     ServicioLog.instancia.WriteInfo("Enviando solicitud al servicio Santander", 
                         "ServicioSantander | EnviarArchivoConClienteWS");
+
+                    // ✅ GUARDIA: Bloquear operaciones de red en TEST (punto más bajo posible)
+                    WebServiceGuard.EnsureNetworkAllowed("Santander WebService", $"HttpClient para {nombreArchivo}");
 
                     // ✅ Enviar solicitud
                     AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);

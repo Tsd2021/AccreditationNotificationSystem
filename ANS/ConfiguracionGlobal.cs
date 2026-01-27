@@ -1,48 +1,70 @@
-﻿using System.Configuration;
+using System.Configuration;
+using ANS.Runtime;
+using System.IO;
 
 namespace ANS
 {
     public static class ConfiguracionGlobal
     {
+        /// <summary>
+        /// Obtiene la connection string según el modo actual (TEST usa réplica, PROD usa producción)
+        /// </summary>
         public static string ConexionTSD
         {
             get
             {
-                return ConfigurationManager.ConnectionStrings["conexionTSD"]?.ConnectionString
-                       ?? throw new ConfigurationErrorsException("La cadena de conexión 'ConexionTSD' no está configurada en App.config.");
+                AppRuntime.Initialize(); // Asegurar inicialización
+                return AppRuntime.IsTest 
+                    ? AppRuntime.Settings.ConnectionStrings.SqlServerTest
+                    : AppRuntime.Settings.ConnectionStrings.SqlServerProd;
             }
         }
 
+        /// <summary>
+        /// Obtiene la connection string según el modo actual
+        /// </summary>
         public static string ConexionEncuesta
         {
             get
             {
-                return ConfigurationManager.ConnectionStrings["conexionENCUESTA"]?.ConnectionString
-                       ?? throw new ConfigurationErrorsException("La cadena de conexión 'ConexionEncuesta' no está configurada en App.config.");
+                AppRuntime.Initialize();
+                return AppRuntime.IsTest 
+                    ? AppRuntime.Settings.ConnectionStrings.EncuestaTest
+                    : AppRuntime.Settings.ConnectionStrings.EncuestaProd;
             }
         }
 
+        /// <summary>
+        /// Obtiene la connection string según el modo actual
+        /// </summary>
         public static string ConexionWebBuzones
         {
             get
             {
-                return ConfigurationManager.ConnectionStrings["conexionWebBuzones"]?.ConnectionString
-                       ?? throw new ConfigurationErrorsException("La cadena de conexión 'ConexionWebBuzones' no está configurada en App.config.");
+                AppRuntime.Initialize();
+                return AppRuntime.IsTest 
+                    ? AppRuntime.Settings.ConnectionStrings.WebBuzonesTest
+                    : AppRuntime.Settings.ConnectionStrings.WebBuzonesProd;
             }
         }
 
+        /// <summary>
+        /// Obtiene la connection string según el modo actual
+        /// </summary>
         public static string Conexion22
         {
             get
             {
-                return ConfigurationManager.ConnectionStrings["conexionTSD22"]?.ConnectionString
-                       ?? throw new ConfigurationErrorsException("La cadena de conexión 'Conexion22' no está configurada en App.config.");
+                AppRuntime.Initialize();
+                return AppRuntime.IsTest 
+                    ? AppRuntime.Settings.ConnectionStrings.SqlServer22Test
+                    : AppRuntime.Settings.ConnectionStrings.SqlServer22Prod;
             }
         }
 
         /// <summary>
         /// ✅ Clase centralizada para todas las rutas del sistema
-        /// Lee desde App.config para fácil configuración sin recompilar
+        /// Resuelve rutas según RuntimeMode (TEST usa carpetas locales, PROD usa shares/red)
         /// </summary>
         public static class Rutas
         {
@@ -58,47 +80,172 @@ namespace ANS
                 return value;
             }
 
+            private static string GetPathFromSettings(string key, string defaultValue = null)
+            {
+                AppRuntime.Initialize();
+                if (AppRuntime.IsTest)
+                {
+                    // En TEST, obtener desde Settings (carpetas locales)
+                    return AppRuntime.Settings.Paths.BankOutputRootTest;
+                }
+                else
+                {
+                    // En PROD, obtener desde App.config (shares/red)
+                    return GetAppSetting(key, defaultValue);
+                }
+            }
+
             // ==================== RUTAS BASE ====================
             
-            /// <summary>Ruta base para logs (ej: C:\Logs\ o \\servidor\logs\)</summary>
-            public static string BaseLogs => GetAppSetting("RutaBaseLogs");
+            /// <summary>Ruta base para logs según modo (resuelve usando PathResolver)</summary>
+            public static string BaseLogs
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaBaseLogs");
+                    return AppRuntime.IsTest 
+                        ? PathResolver.ResolveLogsPath(prodPath)
+                        : prodPath;
+                }
+            }
 
-            /// <summary>Ruta base para archivos Excel (ej: C:\Excel\ o \\servidor\excel\)</summary>
-            public static string BaseExcel => GetAppSetting("RutaBaseExcel");
+            /// <summary>Ruta base para archivos Excel según modo (resuelve usando PathResolver)</summary>
+            public static string BaseExcel
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaBaseExcel");
+                    return AppRuntime.IsTest 
+                        ? PathResolver.ResolveExcelPath(prodPath)
+                        : prodPath;
+                }
+            }
 
             // ==================== RUTAS SANTANDER ====================
             
-            /// <summary>Ruta base para archivos TXT de Santander</summary>
-            public static string SantanderBaseTxt => GetAppSetting("RutaSantanderBaseTxt");
+            /// <summary>Ruta base para archivos TXT de Santander según modo</summary>
+            public static string SantanderBaseTxt => GetPathFromSettings("RutaSantanderBaseTxt");
 
-            /// <summary>Ruta para archivos Punto a Punto de Santander (sin ciudad, solo divisa)</summary>
-            public static string SantanderPuntoAPunto => GetAppSetting("RutaSantanderPuntoAPunto");
+            /// <summary>Ruta para archivos Punto a Punto de Santander según modo (resuelve usando PathResolver)</summary>
+            public static string SantanderPuntoAPunto
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaSantanderPuntoAPunto");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Santander")
+                        : prodPath;
+                }
+            }
 
-            /// <summary>Ruta para archivos Tanda de Santander</summary>
-            public static string SantanderTanda => GetAppSetting("RutaSantanderTanda");
+            /// <summary>Ruta para archivos Tanda de Santander según modo (resuelve usando PathResolver)</summary>
+            public static string SantanderTanda
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaSantanderTanda");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Santander")
+                        : prodPath;
+                }
+            }
 
-            /// <summary>Ruta para archivos Día a Día de Santander</summary>
-            public static string SantanderDiaADia => GetAppSetting("RutaSantanderDiaADia");
+            /// <summary>Ruta para archivos Día a Día de Santander según modo (resuelve usando PathResolver)</summary>
+            public static string SantanderDiaADia
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaSantanderDiaADia");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Santander")
+                        : prodPath;
+                }
+            }
 
-            /// <summary>Ruta para CashOffice de Santander (P2P)</summary>
-            public static string SantanderCashOfficeP2P => GetAppSetting("RutaSantanderCashOfficeP2P");
+            /// <summary>Ruta para CashOffice de Santander (P2P) según modo (resuelve usando PathResolver)</summary>
+            public static string SantanderCashOfficeP2P
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaSantanderCashOfficeP2P");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Santander")
+                        : prodPath;
+                }
+            }
 
             // ==================== RUTAS SCOTIABANK ====================
             
-            /// <summary>Ruta base para archivos TXT de Scotiabank</summary>
-            public static string ScotiabankBaseTxt => GetAppSetting("RutaScotiabankBaseTxt");
+            /// <summary>Ruta base para archivos TXT de Scotiabank según modo</summary>
+            public static string ScotiabankBaseTxt => GetPathFromSettings("RutaScotiabankBaseTxt");
 
-            /// <summary>Ruta para archivos de Montevideo (Scotiabank)</summary>
-            public static string ScotiabankMontevideo => GetAppSetting("RutaScotiabankMontevideo");
+            /// <summary>Ruta para archivos de Montevideo (Scotiabank) según modo (resuelve usando PathResolver)</summary>
+            public static string ScotiabankMontevideo
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaScotiabankMontevideo");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Scotiabank")
+                        : prodPath;
+                }
+            }
 
-            /// <summary>Ruta para archivos de Maldonado (Scotiabank)</summary>
-            public static string ScotiabankMaldonado => GetAppSetting("RutaScotiabankMaldonado");
+            /// <summary>Ruta para archivos de Maldonado (Scotiabank) según modo (resuelve usando PathResolver)</summary>
+            public static string ScotiabankMaldonado
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaScotiabankMaldonado");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Scotiabank")
+                        : prodPath;
+                }
+            }
 
-            /// <summary>Ruta para CashOffice de Scotiabank</summary>
-            public static string ScotiabankCashOffice => GetAppSetting("RutaScotiabankCashOffice");
+            /// <summary>Ruta para CashOffice de Scotiabank según modo (resuelve usando PathResolver)</summary>
+            public static string ScotiabankCashOffice
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaScotiabankCashOffice");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Scotiabank")
+                        : prodPath;
+                }
+            }
             
-            /// <summary>Ruta para archivos de combinación de Scotiabank (donde se leen y generan los combinados)</summary>
-            public static string ScotiabankCombinacion => GetAppSetting("RutaScotiabankCombinacion");
+            /// <summary>Ruta para archivos de combinación de Scotiabank según modo (resuelve usando PathResolver)</summary>
+            public static string ScotiabankCombinacion
+            {
+                get
+                {
+                    AppRuntime.Initialize();
+                    PathResolver.Initialize();
+                    var prodPath = GetAppSetting("RutaScotiabankCombinacion");
+                    return AppRuntime.IsTest
+                        ? PathResolver.ResolveBankPath(prodPath, "Scotiabank")
+                        : prodPath;
+                }
+            }
         }
     }
 }

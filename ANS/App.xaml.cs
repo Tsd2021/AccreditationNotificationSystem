@@ -9,6 +9,7 @@ using ANS.Model.Jobs.ITAU;
 using ANS.Model.Jobs.SANTANDER;
 using ANS.Model.Jobs.SCOTIABANK;
 using ANS.Model.Services;
+using ANS.Runtime;
 using ANS.Scheduling;
 using ANS.ViewModel;
 using Quartz;
@@ -31,8 +32,13 @@ namespace ANS
         public TimeZoneInfo tzMvd;
         protected override async void OnStartup(StartupEventArgs e)
         {
-
             base.OnStartup(e);
+
+            // ✅ INICIALIZAR RUNTIME MODE PRIMERO (antes de cualquier otra operación)
+            AppRuntime.Initialize();
+
+            // ✅ Mostrar cartel informativo del modo y tabla de acreditaciones
+            MostrarCartelRuntimeMode();
 
             QuartzTime.SetDefault("Montevideo Standard Time");
 
@@ -59,18 +65,21 @@ namespace ANS
             // 0) Capturamos el instante de arranque (UTC) para tope superior EXCLUSIVO
             var appStartUtc = DateTimeOffset.UtcNow;
 
-            // 1) Store SQLite
-            // --- TEST ---
-            var dbPath = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "ANS", "QuartzRuns.db");
-
-
-            //  ---PROD-- -
-            // ✅ Usar la carpeta donde está el ejecutable (sin importar el nombre de la carpeta)
-            //var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            //Directory.CreateDirectory(baseDir);
-            //var dbPath = System.IO.Path.Combine(baseDir, "QuartzRuns.db");
+            // 1) Store SQLite - Resolver según RuntimeMode usando PathResolver
+            PathResolver.Initialize();
+            string dbPath;
+            if (AppRuntime.IsTest)
+            {
+                // TEST: usar PathResolver para resolver ruta SQLite
+                dbPath = PathResolver.ResolveSqlitePath("QuartzRuns.db");
+            }
+            else
+            {
+                // PRODUCCIÓN: usar carpeta del ejecutable
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                Directory.CreateDirectory(baseDir);
+                dbPath = System.IO.Path.Combine(baseDir, AppRuntime.Settings.Sqlite.FileNameProd);
+            }
 
             _historyStore = new RepositorioJobHistory(dbPath);
             await _historyStore.InitializeAsync();
@@ -987,6 +996,60 @@ namespace ANS
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 
+        }
+
+        /// <summary>
+        /// ✅ Muestra un cartel informativo al inicio mostrando el modo de ejecución y la tabla de acreditaciones
+        /// </summary>
+        private void MostrarCartelRuntimeMode()
+        {
+            try
+            {
+                var modo = AppRuntime.Mode.ToString().ToUpperInvariant();
+                var tablaAcreditaciones = TableNameResolver.AcreditacionDeposito;
+                
+                // Determinar color del título según modo
+                var titulo = AppRuntime.IsTest 
+                    ? "⚠️ MODO TEST ACTIVO" 
+                    : "✅ MODO PRODUCCIÓN ACTIVO";
+                
+                var mensaje = $"MODO DE EJECUCIÓN: {modo}\n\n" +
+                             $"TABLA DE ACREDITACIONES:\n{tablaAcreditaciones}\n\n" +
+                             $"════════════════════════════════════════\n\n";
+                
+                if (AppRuntime.IsTest)
+                {
+                    mensaje += "⚠️ ADVERTENCIAS EN MODO TEST:\n" +
+                             "• WebServices BLOQUEADOS\n" +
+                             "• Archivos con prefijo TEST_\n" +
+                             "• Emails a: acreditaciones@tecnisegur.com.uy\n" +
+                             "• Rutas bajo: " + PathResolver.EffectiveTestRoot + "\n\n";
+                    
+                    var testAllowSmtp = AppRuntime.Settings.Email.TestAllowSmtp;
+                    mensaje += $"SMTP: {(testAllowSmtp ? "PERMITIDO (con whitelist)" : "BLOQUEADO")}\n";
+                }
+                else
+                {
+                    mensaje += "✅ Comportamiento de PRODUCCIÓN:\n" +
+                             "• WebServices habilitados\n" +
+                             "• Archivos en rutas de producción\n" +
+                             "• Emails a destinatarios reales\n";
+                }
+                
+                mensaje += "\n════════════════════════════════════════\n\n" +
+                          "Verifique que la configuración sea correcta antes de continuar.";
+                
+                MessageBox.Show(
+                    mensaje,
+                    titulo,
+                    MessageBoxButton.OK,
+                    AppRuntime.IsTest ? MessageBoxImage.Warning : MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                // Si falla el cartel, loggear pero no bloquear el inicio
+                ServicioLog.instancia.WriteLog(ex, "App | MostrarCartelRuntimeMode", "error");
+            }
         }
 
         protected override async void OnExit(ExitEventArgs e)

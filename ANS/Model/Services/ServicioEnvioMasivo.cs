@@ -1,8 +1,10 @@
-
 using Microsoft.Data.SqlClient;
 using SharedDTOs;
 using System.Data;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using ANS.Runtime;
 
 namespace ANS.Model.Services
 {
@@ -85,7 +87,23 @@ namespace ANS.Model.Services
 
                 var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
 
-                var smtp = await ServicioEmail.instancia.getNewSmptClient();
+                // ✅ En TEST, NO conectar SMTP (emails se procesan localmente sin envío real)
+                // ✅ Crear cliente SMTP solo si está permitido
+                MailKit.Net.Smtp.SmtpClient smtp = null;
+                if (ANS.Runtime.AppRuntime.IsTest)
+                {
+                    // En TEST: crear SMTP solo si TestAllowSmtp=true
+                    var settings = ANS.Runtime.AppRuntime.Settings.Email;
+                    if (settings.TestAllowSmtp)
+                    {
+                        smtp = await ServicioEmail.instancia.getNewSmptClient();
+                    }
+                }
+                else
+                {
+                    // En PRODUCTION: siempre crear SMTP
+                    smtp = await ServicioEmail.instancia.getNewSmptClient();
+                }
 
                 var sendLock = new SemaphoreSlim(1, 1);
 
@@ -146,9 +164,40 @@ namespace ANS.Model.Services
                         try
                         {
 
-                            await ServicioEmail.instancia
-                                .EnviarExcelPorMailMasivoConMailKit(
-                                   excelStream, fileName, subject, body, b._Emails, smtp);
+                            // ✅ En TEST: verificar si SMTP está habilitado
+                            if (ANS.Runtime.AppRuntime.IsTest)
+                            {
+                                var settings = ANS.Runtime.AppRuntime.Settings.Email;
+                                if (settings.TestAllowSmtp)
+                                {
+                                    // TEST con SMTP habilitado: enviar realmente (pero con whitelist aplicada)
+                                    await ServicioEmail.instancia
+                                        .EnviarExcelPorMailMasivoConMailKit(
+                                           excelStream, fileName, subject, body, b._Emails, smtp);
+                                }
+                                else
+                                {
+                                    // TEST sin SMTP: procesar localmente sin envío real
+                                    var destinosAplicados = ANS.Runtime.Guards.EmailGuard.ApplyEmailPolicyToEmailList(b._Emails);
+                                    var originalRecipients = b._Emails?.Select(e => e.Correo).ToList() ?? new List<string>();
+                                    var (recipients, subjectFinal, bodyFinal) = ANS.Runtime.Guards.EmailGuard.ApplyEmailPolicy(
+                                        originalRecipients, subject, body);
+                                    
+                                    ServicioLog.instancia.WriteInfo(
+                                        $"EMAIL TEST (NO ENVIADO - SMTP bloqueado) | Subject: {subjectFinal} | " +
+                                        $"Destinatarios (whitelist): {string.Join(", ", recipients)} | " +
+                                        $"Originales: {string.Join(", ", originalRecipients)} | " +
+                                        $"Para habilitar envío real, configurar TestAllowSmtp=true en App.config",
+                                        "ServicioEnvioMasivo | Envío Masivo TEST");
+                                }
+                            }
+                            else
+                            {
+                                // PRODUCTION: comportamiento normal
+                                await ServicioEmail.instancia
+                                    .EnviarExcelPorMailMasivoConMailKit(
+                                       excelStream, fileName, subject, body, b._Emails, smtp);
+                            }
 
                         }
                         catch (Exception ex)
@@ -232,8 +281,38 @@ namespace ANS.Model.Services
                             await sendLock.WaitAsync();
                             try
                             {
-                                await ServicioEmail.instancia.EnviarExcelPorMailMasivoConMailKit(
-                                    excelStream: null, fileName: null, subjectSin, bodySin, b._Emails, smtp);
+                                // ✅ En TEST: verificar si SMTP está habilitado
+                                if (ANS.Runtime.AppRuntime.IsTest)
+                                {
+                                    var settings = ANS.Runtime.AppRuntime.Settings.Email;
+                                    if (settings.TestAllowSmtp)
+                                    {
+                                        // TEST con SMTP habilitado: enviar realmente (pero con whitelist aplicada)
+                                        await ServicioEmail.instancia.EnviarExcelPorMailMasivoConMailKit(
+                                            excelStream: null, fileName: null, subjectSin, bodySin, b._Emails, smtp);
+                                    }
+                                    else
+                                    {
+                                        // TEST sin SMTP: procesar localmente sin envío real
+                                        var destinosAplicados = ANS.Runtime.Guards.EmailGuard.ApplyEmailPolicyToEmailList(b._Emails);
+                                        var originalRecipients = b._Emails?.Select(e => e.Correo).ToList() ?? new List<string>();
+                                        var (recipients, subjectFinal, bodyFinal) = ANS.Runtime.Guards.EmailGuard.ApplyEmailPolicy(
+                                            originalRecipients, subjectSin, bodySin);
+                                        
+                                        ServicioLog.instancia.WriteInfo(
+                                            $"EMAIL TEST (NO ENVIADO - SMTP bloqueado) | Subject: {subjectFinal} | " +
+                                            $"Destinatarios (whitelist): {string.Join(", ", recipients)} | " +
+                                            $"Originales: {string.Join(", ", originalRecipients)} | " +
+                                            $"Para habilitar envío real, configurar TestAllowSmtp=true en App.config",
+                                            "ServicioEnvioMasivo | Envío Masivo TEST (sin Excel)");
+                                    }
+                                }
+                                else
+                                {
+                                    // PRODUCTION: comportamiento normal
+                                    await ServicioEmail.instancia.EnviarExcelPorMailMasivoConMailKit(
+                                        excelStream: null, fileName: null, subjectSin, bodySin, b._Emails, smtp);
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -253,7 +332,11 @@ namespace ANS.Model.Services
                 var tasks = tasksCon.Concat(tasksSin).ToArray();
                 await Task.WhenAll(tasks);
 
-                await smtp.DisconnectAsync(true);
+                // ✅ Desconectar SMTP solo si se creó
+                if (smtp != null)
+                {
+                    await smtp.DisconnectAsync(true);
+                }
 
                 // ✅ Logging informativo: Fin exitoso del proceso
                 ServicioLog.instancia.WriteInfo(
@@ -374,9 +457,12 @@ namespace ANS.Model.Services
                         $"Desde: {startH:yyyy-MM-dd HH:mm:ss} | Hasta: {endH:yyyy-MM-dd HH:mm:ss}",
                         "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
 
-                    const string sqlH = @"
+                    // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+                    var tableNameH = TableNameResolver.AcreditacionDeposito;
+                    TableNameResolver.ValidateTableName(tableNameH, "ServicioEnvioMasivo.hidratarDTOconSusAcreditaciones (Henderson)");
+                    string sqlH = $@"
                                     SELECT * 
-                                    FROM acreditaciondepositodiegotest
+                                    FROM {tableNameH}
                                     WHERE fecha > @fechaInicio AND fecha <= @fechaFin
                                     AND idbuzon IN (SELECT NC FROM @ListaH)";
 
@@ -404,8 +490,11 @@ namespace ANS.Model.Services
                         "ServicioEnvioMasivo | hidratarDTOconSusAcreditaciones");
 
                     // ✅ Consulta SQL: filtra por FECHA = fecha actual (GETDATE())
-                    const string sqlN = @"SELECT * 
-                                           FROM acreditaciondepositodiegotest
+                    // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+                    var tableNameN = TableNameResolver.AcreditacionDeposito;
+                    TableNameResolver.ValidateTableName(tableNameN, "ServicioEnvioMasivo.hidratarDTOconSusAcreditaciones (Normales)");
+                    string sqlN = $@"SELECT * 
+                                           FROM {tableNameN}
                                            WHERE CONVERT(DATE, FECHA) = CONVERT(DATE, GETDATE())
                                              AND idbuzon IN (SELECT NC FROM @ListaN)";
 

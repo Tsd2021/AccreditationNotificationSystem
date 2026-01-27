@@ -1,5 +1,7 @@
-﻿using ANS.Model.Interfaces;
+using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.Runtime.Guards;
+using DocumentFormat.OpenXml.Wordprocessing;
 using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using static ANS.ConfiguracionGlobal;
 
 namespace ANS.Model.GeneradorArchivoPorBanco
 {
@@ -31,13 +34,37 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         private const char PRODUCTO_FIJO = '1'; // 1 = CC (columna 19)
         private const string CuentaTransportadora = "7584652"; // se pad-left a 9
 
+        // ✅ Rutas ahora se resuelven usando PathResolver (replica estructura de PROD)
         private readonly string rutaBaseProduccion = @"\\192.168.0.9\bbva\SALIDA";
-        private readonly string rutaBaseTest = @"C:\Users\dchiquiar.ABUDIL\Desktop\test local";
 
         public Task RunBbvaLocalTestsAsync() => correrTestBBVA();
 
-        // centraliza la elección de la ruta
-        private string GetRutaSalida(bool modoPrueba) => modoPrueba ? rutaBaseTest : rutaBaseProduccion;
+        // ✅ Centraliza la elección de la ruta según RuntimeMode usando PathResolver
+        private string GetRutaSalida(bool modoPrueba = false)
+        {
+            // Ideal: AppRuntime.Initialize() se hace al inicio de la app (App.xaml.cs).
+            // Acá solo nos aseguramos de leer el modo.
+            ANS.Runtime.AppRuntime.Initialize();
+
+            if (modoPrueba || ANS.Runtime.AppRuntime.IsTest)
+            {
+                // TEST: siempre bajo el root de test (whitelist)
+                var rootBancosTest = ANS.Runtime.AppRuntime.Settings?.Paths?.BankOutputRootTest;
+
+                if (string.IsNullOrWhiteSpace(rootBancosTest))
+                {
+                    // fallback robusto si por algún motivo no está seteado
+                    var testRoot = ANS.Runtime.PathResolver.EffectiveTestRoot;
+                    rootBancosTest = Path.Combine(testRoot, "Bancos");
+                }
+
+                return Path.Combine(rootBancosTest, "BBVA");
+            }
+
+            // PRODUCCIÓN
+            return rutaBaseProduccion;
+        }
+
 
         private readonly ConfiguracionAcreditacion configActual;
         private readonly List<CuentaBuzon> buzonesMontevideo = new();
@@ -48,10 +75,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         public async Task generarArchivoTest()
         {
-            string ruta = rutaBaseTest;
+            // ✅ Usar GetRutaSalida con modoPrueba=true para obtener ruta de TEST
+            string ruta = GetRutaSalida(modoPrueba: true);
 
             if (string.IsNullOrWhiteSpace(ruta))
-                throw new InvalidOperationException("rutaBaseTest no está configurada.");
+                throw new InvalidOperationException("No se pudo resolver la ruta de salida para TEST.");
 
             Directory.CreateDirectory(ruta);
 
@@ -220,6 +248,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         // ======================
         public async Task<bool> Exporta_Reme(string ruta, DateTime fecha, List<CuentaBuzon> cuentas, string ciudad)
         {
+
+
+            if (ANS.Runtime.AppRuntime.IsTest)
+                ruta = GetRutaSalida(modoPrueba: true);
+
             try
             {
                 if (!Directory.Exists(ruta))
@@ -305,8 +338,18 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 // 26/09/2025: Unificación de nombre (sin sufijos por ciudad)
                 string nombreA = $"REME{f}{correlativo:D3}.txt";
                 string nombreB = $"FREME{f}{correlativo:D3}.txt";
+                // Aplicar prefijo TEST_ si está en modo TEST
+                nombreA = FileSystemGuard.GetFileNameWithTestPrefix(nombreA);
+                nombreB = FileSystemGuard.GetFileNameWithTestPrefix(nombreB);
                 string pathA = Path.Combine(ruta, nombreA);
                 string pathB = Path.Combine(ruta, nombreB);
+
+                // ✅ GUARDIA: Validar que la escritura esté permitida
+                FileSystemGuard.EnsureWriteAllowed(pathA, "BBVAFileGenerator | Exporta_Reme");
+                FileSystemGuard.EnsureWriteAllowed(pathB, "BBVAFileGenerator | Exporta_Reme");
+                
+                // Asegurar que el directorio existe
+                Directory.CreateDirectory(ruta);
 
                 var utf8NoBom = new UTF8Encoding(false);
 
@@ -431,6 +474,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         public async Task<bool> Exporta_Reme_Agrupado(string rutaBase, DateTime fecha, List<CuentaBuzon> cuentas, string ciudad)
         {
+
+
+            if (ANS.Runtime.AppRuntime.IsTest)
+                rutaBase = GetRutaSalida(modoPrueba: true);
+
             try
             {
                 if (!Directory.Exists(rutaBase))
@@ -555,8 +603,18 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 // 26/09/2025: Unificación de nombre (sin sufijos por ciudad)
                 string nombreA = $"REME{f}{correlativo:D3}.txt";
                 string nombreB = $"FREME{f}{correlativo:D3}.txt";
+                // Aplicar prefijo TEST_ si está en modo TEST
+                nombreA = FileSystemGuard.GetFileNameWithTestPrefix(nombreA);
+                nombreB = FileSystemGuard.GetFileNameWithTestPrefix(nombreB);
                 string pathA = Path.Combine(rutaBase, nombreA);
                 string pathB = Path.Combine(rutaBase, nombreB);
+
+                // ✅ GUARDIA: Validar que la escritura esté permitida
+                FileSystemGuard.EnsureWriteAllowed(pathA, "BBVAFileGenerator | Exporta_Reme_Agrupado");
+                FileSystemGuard.EnsureWriteAllowed(pathB, "BBVAFileGenerator | Exporta_Reme_Agrupado");
+                
+                // Asegurar que el directorio existe
+                Directory.CreateDirectory(rutaBase);
 
                 var utf8NoBom = new UTF8Encoding(false);
                 using (var sw = new StreamWriter(pathA, false, utf8NoBom))

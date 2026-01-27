@@ -1,5 +1,7 @@
 using ANS.Model.GeneradorArchivoPorBanco;
 using ANS.Model.Interfaces;
+using ANS.Runtime;
+using ANS.Runtime.Guards;
 using ClosedXML.Excel;
 using ClosedXML.Excel.Drawings;
 using Microsoft.Data.SqlClient;
@@ -28,6 +30,26 @@ namespace ANS.Model.Services
         {
             return _lazy.Value;
         }
+
+        /// <summary>
+        /// Helper para aplicar guardias y prefijos a rutas de archivos Excel
+        /// </summary>
+        private static string AplicarGuardiaYPrefijoRuta(string rutaCompleta, string contexto)
+        {
+            // Aplicar prefijo TEST_ al nombre de archivo si está en modo TEST
+            string fileName = Path.GetFileName(rutaCompleta);
+            string directory = Path.GetDirectoryName(rutaCompleta);
+            fileName = FileSystemGuard.GetFileNameWithTestPrefix(fileName);
+            string rutaFinal = Path.Combine(directory, fileName);
+            
+            // ✅ GUARDIA: Validar que la escritura esté permitida
+            FileSystemGuard.EnsureWriteAllowed(rutaFinal, contexto);
+            
+            // Asegurar que el directorio existe
+            Directory.CreateDirectory(directory);
+            
+            return rutaFinal;
+        }
         public List<DtoAcreditacionesPorEmpresa> getAcreditacionesDeHoy_BackUp(Banco b)
         {
             var lista = new List<DtoAcreditacionesPorEmpresa>();
@@ -45,7 +67,7 @@ namespace ANS.Model.Services
                                 INNER JOIN cc
                                 ON cb.IDCLIENTE = cc.IDCLIENTE
                                 AND config.NC       = cc.NC
-                                INNER JOIN AcreditacionDepositoDiegoTest AS acc 
+                                INNER JOIN {TableNameResolver.AcreditacionDeposito} AS acc 
                                 ON acc.IDBUZON  = config.NC
                                 AND acc.IDCUENTA = cb.ID
                                 WHERE cb.BANCO = @banco
@@ -102,7 +124,10 @@ namespace ANS.Model.Services
         {
             var lista = new List<DtoAcreditacionesPorEmpresa>();
 
-            const string sql = @"
+            // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+            var tableName = TableNameResolver.AcreditacionDeposito;
+            TableNameResolver.ValidateTableName(tableName, "ServicioCuentaBuzon.getAcreditacionesDeHoy");
+            string sql = $@"
             SELECT 
             CB.EMPRESA                                     AS EMPRESA, 
             LTRIM(RTRIM(CC.SUCURSAL))                      AS Ciudad,      
@@ -110,7 +135,7 @@ namespace ANS.Model.Services
             CB.CUENTA                                      AS CUENTA, 
             COALESCE(AD.MONEDA, CB.MONEDA)                 AS MONEDA, 
             CAST(SUM(AD.MONTO) AS FLOAT)                   AS Total       
-            FROM dbo.AcreditacionDepositoDiegoTest AS AD 
+            FROM dbo.{tableName} AS AD 
             INNER JOIN dbo.CUENTASBUZONES          AS CB ON CB.ID = AD.IDCUENTA 
             LEFT  JOIN dbo.CC                      AS CC ON CC.NC = AD.IDBUZON 
                                                 AND CC.IDCLIENTE = CB.IDCLIENTE 
@@ -858,7 +883,7 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
-        private async Task generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, Banco banco, string tipoAcreditacion)
+        public async Task generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, Banco banco, string tipoAcreditacion)
         {
 
             if (listaCuentaBuzones == null)
@@ -1051,7 +1076,10 @@ namespace ANS.Model.Services
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = "select max(idoperacion) from AcreditacionDepositoDiegoTest where IDBUZON = @ncFound and IDCUENTA = @idCuenta and MONEDA = @idMoneda";
+                // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+                var tableName = TableNameResolver.AcreditacionDeposito;
+                TableNameResolver.ValidateTableName(tableName, "ServicioCuentaBuzon.getUltimaOperacionAcreditada");
+                string query = $"select max(idoperacion) from {tableName} where IDBUZON = @ncFound and IDCUENTA = @idCuenta and MONEDA = @idMoneda";
 
                 await conn.OpenAsync();
 
@@ -1472,8 +1500,11 @@ namespace ANS.Model.Services
                     fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                // ✅ Ruta desde configuración
+                // ✅ Ruta desde configuración (resuelve según RuntimeMode)
                 string path = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, fn);
+                
+                // Aplicar guardia y prefijo TEST_
+                path = AplicarGuardiaYPrefijoRuta(path, "ServicioCuentaBuzon | enviarExcelFormatoTanda");
 
                 wb.SaveAs(path);
 
@@ -1651,8 +1682,9 @@ namespace ANS.Model.Services
                 // (opcional) usar fechaBase para el nombre de archivo en vez de Now
                 var nombreArchivo = $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{fechaBase:yyyyMMdd}.xlsx";
 
-                // ✅ Ruta desde configuración
+                // ✅ Ruta desde configuración (resuelve según RuntimeMode)
                 var filePath = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
+                filePath = AplicarGuardiaYPrefijoRuta(filePath, "ServicioCuentaBuzon | enviarExcelTesoreria");
                 wb.SaveAs(filePath);
 
                 // Envío por correo
@@ -1766,8 +1798,9 @@ namespace ANS.Model.Services
                 var nombreArchivo =
                     $"Resumen_{banco.NombreBanco}_Tanda{numTanda}_{ciudad}_{DateTime.Now:yyyyMMdd}.xlsx";
 
-                // ✅ Ruta desde configuración
+                // ✅ Ruta desde configuración (resuelve según RuntimeMode)
                 var filePath = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
+                filePath = AplicarGuardiaYPrefijoRuta(filePath, "ServicioCuentaBuzon | enviarExcelTesoreria");
                 wb.SaveAs(filePath); 
 
                 // Envío por correo
@@ -2061,9 +2094,9 @@ namespace ANS.Model.Services
             string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
             //produccion:
-            // ✅ Ruta desde configuración
+            // ✅ Ruta desde configuración (resuelve según RuntimeMode)
             string ruta = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
-
+            ruta = AplicarGuardiaYPrefijoRuta(ruta, "ServicioCuentaBuzon | enviarExcelDiaADiaPorBanco");
 
             workbook.SaveAs(ruta);
 
@@ -2105,7 +2138,7 @@ namespace ANS.Model.Services
                 FROM ConfiguracionAcreditacion AS config 
                 INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
                 INNER JOIN cc ON cc.nc = config.NC 
-                INNER JOIN AcreditacionDepositoDiegoTest AS acc  
+                INNER JOIN {TableNameResolver.AcreditacionDeposito} AS acc  
                 ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
                 WHERE cb.BANCO =  @banco
                 and config.TipoAcreditacion not in ('tanda') 
@@ -2152,7 +2185,7 @@ namespace ANS.Model.Services
                         cc_unica.SUCURSAL AS CIUDAD,
                         cb.IDCLIENTE,
                         SUM(acc.MONTO) AS TotalMonto
-                        FROM AcreditacionDepositoDiegoTest acc
+                        FROM {TableNameResolver.AcreditacionDeposito} acc
                         JOIN CUENTASBUZONES cb
                         ON cb.ID = acc.IDCUENTA
                         JOIN config_unica cfg
@@ -2184,7 +2217,7 @@ namespace ANS.Model.Services
                 FROM ConfiguracionAcreditacion AS config
                 INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID
                 INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC
-                INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc 
+                INNER JOIN {TableNameResolver.AcreditacionDeposito} AS acc 
                 ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID
                 WHERE config.TipoAcreditacion = @tipoAcreditacion
                 AND cb.BANCO = @banco
@@ -2220,7 +2253,7 @@ namespace ANS.Model.Services
                 FROM ConfiguracionAcreditacion AS config 
                 INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
                 INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
-                INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
+                INNER JOIN {TableNameResolver.AcreditacionDeposito} AS acc  
                 ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
                 WHERE config.TipoAcreditacion = @tipoAcreditacion 
                 AND cb.BANCO = @banco 
@@ -2279,11 +2312,14 @@ namespace ANS.Model.Services
 
                 //Query "mejorada" que evita duplicaciones aunque configAcreditacion tenga registros duplicados para un mismo buzón y cuenta.
                 //A chequear...
-                query = @"WITH Acc AS (
+                // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
+                var tableName = TableNameResolver.AcreditacionDeposito;
+                TableNameResolver.ValidateTableName(tableName, "ServicioCuentaBuzon.getAcreditacionesParaExcelTesoreria");
+                query = $@"WITH Acc AS (
                         SELECT acc.IDBUZON, acc.IDCUENTA, acc.MONEDA, 
                         CONVERT(date, acc.FECHA) AS FECHA, 
                         SUM(acc.MONTO) AS TOTAL_ACREDITADO 
-                        FROM ACREDITACIONDEPOSITODIEGOTEST acc 
+                        FROM {tableName} acc 
                         WHERE CONVERT(date, acc.FECHA) = CONVERT(date, getdate()) 
                         GROUP BY acc.IDBUZON, acc.IDCUENTA, acc.MONEDA, CONVERT(date, acc.FECHA) 
                         ), 
@@ -2500,9 +2536,9 @@ namespace ANS.Model.Services
             //produccion:
 
 
-            // ✅ Ruta desde configuración
+            // ✅ Ruta desde configuración (resuelve según RuntimeMode)
             string ruta = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombre);
-
+            ruta = AplicarGuardiaYPrefijoRuta(ruta, "ServicioCuentaBuzon | generarExcelDelResumenDelDiaSantander");
 
             //testing:
             //string ruta = Path.Combine(@"C: \Users\dchiquiar.ABUDIL\Desktop\ANS TEST\EXCEL\", nombre);

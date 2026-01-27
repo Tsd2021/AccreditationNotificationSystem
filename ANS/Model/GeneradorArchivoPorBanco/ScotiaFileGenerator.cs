@@ -1,5 +1,6 @@
 using ANS.Model.Interfaces;
 using ANS.Model.Services;
+using ANS.Runtime.Guards;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -256,6 +257,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         private void crearYEscribirArchivo(StringBuilder txt, string route)
         {
+            // ✅ GUARDIA: Validar que la escritura esté permitida
+            FileSystemGuard.EnsureWriteAllowed(route, "ScotiaFileGenerator | crearYEscribirArchivo");
+            
             // Obtener el directorio a partir de la ruta completa
             string directory = Path.GetDirectoryName(route);
 
@@ -264,6 +268,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             {
                 Directory.CreateDirectory(directory);
             }
+
+            // Aplicar prefijo TEST_ al nombre de archivo si está en modo TEST
+            string fileName = Path.GetFileName(route);
+            string dir = Path.GetDirectoryName(route);
+            fileName = FileSystemGuard.GetFileNameWithTestPrefix(fileName);
+            route = Path.Combine(dir, fileName);
 
             // Escribir el contenido en el archivo
             File.WriteAllText(route, txt.ToString());
@@ -469,9 +479,17 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
         private void crearYEscribirArchivo(StringBuilder txt, string route)
         {
+            // ✅ GUARDIA: Validar que la escritura esté permitida
+            FileSystemGuard.EnsureWriteAllowed(route, "ScotiaFileGenerator | crearYEscribirArchivo");
+            
             var directory = Path.GetDirectoryName(route);
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
+            
+            // Aplicar prefijo TEST_ al nombre de archivo si está en modo TEST
+            string fileName = Path.GetFileName(route);
+            fileName = FileSystemGuard.GetFileNameWithTestPrefix(fileName);
+            route = Path.Combine(directory, fileName);
             
             string contenido = txt.ToString();
             File.WriteAllText(route, contenido);

@@ -1,0 +1,446 @@
+<UserControl x:Class="ANS.UserControls.AcreditacionManualOperationControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:conv="clr-namespace:ANS.Converters"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="800"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <conv:NotEmptyStringToVisibilityConverter x:Key="NotEmptyStringToVis"/>
+
+        <SolidColorBrush x:Key="Brush.Border"        Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary"   Color="#212121"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#757575"/>
+        <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="Brush.RowAlt" Color="#0F000000"/>
+
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#D32F2F"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="MinWidth" Value="160"/>
+            <Setter Property="BorderBrush" Value="#C62828"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E53935"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#B71C1C"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="GridBase" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="SelectionMode" Value="Extended"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="HeadersVisibility" Value="All"/>
+            <Setter Property="RowHeaderWidth" Value="0"/>
+            <Setter Property="RowHeight" Value="34"/>
+            <Setter Property="AlternationCount" Value="2"/>
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource Brush.RowAlt}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+
+        <!-- DataTemplate para indicador de acreditado -->
+        <DataTemplate x:Key="AcreditadoTemplate">
+            <Border Padding="6,2" CornerRadius="12" Background="#4CAF50" Margin="4,0">
+                <TextBlock Text="✓ Acreditado" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="NoAcreditadoTemplate">
+            <Border Padding="6,2" CornerRadius="12" Background="#FFE5E7EB" Margin="4,0">
+                <TextBlock Text="Pendiente" FontSize="11" Foreground="#6B7280"/>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <xctk:BusyIndicator IsBusy="{Binding IsLoading}"
+                            BusyContent="Procesando...">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <StackPanel Margin="16">
+                    <!-- Título -->
+                    <TextBlock Text="Acreditación Manual por Depósito"
+                               Style="{StaticResource SectionTitle}"
+                               Margin="0,0,0,16"/>
+
+                    <!-- Panel de búsqueda y selección -->
+                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="1. Buscar Buzón"
+                                       FontWeight="SemiBold"
+                                       FontSize="14"
+                                       Margin="0,0,0,8"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox Text="{Binding TextoBusquedaNN, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Column="0"
+                                         Margin="0,0,8,0"
+                                         VerticalContentAlignment="Center"
+                                         Padding="8,4"
+                                         ToolTip="Buscar por NN o nombre del buzón (búsqueda automática al escribir; Enter o Buscar para buscar ya)">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding BuscarBuzonCommand}"/>
+                                    </TextBox.InputBindings>
+                                </TextBox>
+
+                                <Button Content="Buscar"
+                                        Command="{Binding BuscarBuzonCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Grid.Column="1"
+                                        MinWidth="100"/>
+                            </Grid>
+
+                            <TextBlock Text="{Binding SearchStatusMessage}"
+                                       FontSize="12"
+                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                       Margin="0,6,0,0"
+                                       Visibility="{Binding SearchStatusMessage, Converter={StaticResource NotEmptyStringToVis}}"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Lista de buzones encontrados (visible cuando no hay selección) -->
+                            <ListBox ItemsSource="{Binding Buzones}"
+                                     SelectedItem="{Binding BuzonSeleccionado, Mode=TwoWay}"
+                                     Margin="0,8,0,0"
+                                     MaxHeight="200"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     Visibility="{Binding HasBuzonSeleccionado, Converter={StaticResource InverseBoolToVis}}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="8" Margin="2" CornerRadius="4"
+                                                Background="#0A000000"
+                                                BorderBrush="{StaticResource Brush.Border}"
+                                                BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding NN}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="13"/>
+                                                <TextBlock Text="{Binding NC}"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource Brush.TextSecondary}"/>
+                                                <TextBlock Text="{Binding Sucursal}"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource Brush.TextSecondary}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Buzón seleccionado -->
+                            <Border CornerRadius="6"
+                                    Padding="12"
+                                    Margin="0,8,0,0"
+                                    Background="#0FD32F2F"
+                                    Visibility="{Binding HasBuzonSeleccionado, Converter={StaticResource BoolToVis}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding BuzonSeleccionado.NN}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"/>
+                                        <TextBlock Text="{Binding BuzonSeleccionado.NC}"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource Brush.TextSecondary}"/>
+                                        <TextBlock Text="{Binding BuzonSeleccionado.Sucursal}"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource Brush.TextSecondary}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Content="Cambiar"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding LimpiarSeleccionCommand}"
+                                            MinWidth="80"
+                                            Padding="8,4"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Panel de banco, empresa, moneda y fechas -->
+                    <Border Style="{StaticResource CardStyle}"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding HasBuzonSeleccionado, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="2. Seleccionar Banco, Empresa y Fechas"
+                                       FontWeight="SemiBold"
+                                       FontSize="14"
+                                       Margin="0,0,0,12"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Combo Banco / Empresa (una opción por Banco+Empresa+Moneda) -->
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="Banco / Empresa"
+                                               FontSize="12"
+                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                               Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding Empresas}"
+                                              SelectedItem="{Binding EmpresaSeleccionada, Mode=TwoWay}"
+                                              IsEnabled="{Binding HasBuzonSeleccionado}"
+                                              MinHeight="28">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Cuenta}"
+                                                               FontSize="11"
+                                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                                               Visibility="{Binding Cuenta, Converter={StaticResource NotEmptyStringToVis}}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Fecha Desde -->
+                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                    <TextBlock Text="Desde"
+                                               FontSize="12"
+                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                               Margin="0,0,0,4"/>
+                                    <DatePicker SelectedDate="{Binding Desde, Mode=TwoWay}"
+                                                SelectedDateFormat="Short"/>
+                                </StackPanel>
+
+                                <!-- Fecha Hasta -->
+                                <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                    <TextBlock Text="Hasta"
+                                               FontSize="12"
+                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                               Margin="0,0,0,4"/>
+                                    <DatePicker SelectedDate="{Binding Hasta, Mode=TwoWay}"
+                                                SelectedDateFormat="Short"/>
+                                </StackPanel>
+
+                                <!-- Botón Cargar -->
+                                <Button Content="Cargar Depósitos"
+                                        Command="{Binding CargarDepositosCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Grid.Column="3"
+                                        VerticalAlignment="Bottom"
+                                        MinWidth="140"
+                                        Padding="12,6"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Grid de depósitos -->
+                    <Border Style="{StaticResource CardStyle}"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding HasEmpresaSeleccionada, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="3. Depósitos Encontrados"
+                                           FontWeight="SemiBold"
+                                           FontSize="14"
+                                           Grid.Column="0"/>
+                                <TextBlock Text="{Binding StatusMessage}"
+                                           FontSize="12"
+                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                           Grid.Column="1"
+                                           Margin="8,0,0,0"/>
+                            </Grid>
+
+                            <DataGrid ItemsSource="{Binding Depositos}"
+                                      Style="{StaticResource GridBase}"
+                                      MaxHeight="400">
+                                <DataGrid.Columns>
+                                    <!-- Checkbox selección -->
+                                    <DataGridTemplateColumn Header="" Width="40">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Estado Acreditado -->
+                                    <DataGridTemplateColumn Header="Estado" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ContentControl>
+                                                    <ContentControl.Style>
+                                                        <Style TargetType="ContentControl">
+                                                            <Setter Property="ContentTemplate" Value="{StaticResource NoAcreditadoTemplate}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsAcreditado}" Value="True">
+                                                                    <Setter Property="ContentTemplate" Value="{StaticResource AcreditadoTemplate}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ContentControl.Style>
+                                                </ContentControl>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTextColumn Header="ID Operación"
+                                                        Binding="{Binding IdOperacion}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Fecha"
+                                                        Binding="{Binding FechaDep, StringFormat=dd/MM/yyyy HH:mm}"
+                                                        Width="140"/>
+                                    <DataGridTextColumn Header="Monto"
+                                                        Binding="{Binding MontoTotal, StringFormat=N2}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Moneda"
+                                                        Binding="{Binding Moneda}"
+                                                        Width="80"/>
+                                    <DataGridTextColumn Header="Cuenta"
+                                                        Binding="{Binding Cuenta}"
+                                                        Width="120"/>
+                                    <DataGridTextColumn Header="Banco"
+                                                        Binding="{Binding Banco}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Usuario"
+                                                        Binding="{Binding Usuario}"
+                                                        Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Botón Acreditar -->
+                            <Button Content="Acreditar Seleccionados"
+                                    Command="{Binding AcreditarSeleccionadosCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    MinWidth="200"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Resultados por banco -->
+                    <Border Style="{StaticResource CardStyle}"
+                            Visibility="{Binding HasResultadosPorBanco, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="4. Resultados de Acreditación"
+                                       FontWeight="SemiBold"
+                                       FontSize="14"
+                                       Margin="0,0,0,12"/>
+
+                            <DataGrid ItemsSource="{Binding ResultadosPorBanco}"
+                                      Style="{StaticResource GridBase}"
+                                      MaxHeight="300">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Banco"
+                                                        Binding="{Binding Banco}"
+                                                        Width="120"/>
+                                    <DataGridTemplateColumn Header="Estado" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="6,2" CornerRadius="12" Margin="4,0">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#4CAF50"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Exitoso}" Value="False">
+                                                                    <Setter Property="Background" Value="#F44336"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding Mensaje}"
+                                                               FontSize="11"
+                                                               Foreground="White"
+                                                               FontWeight="SemiBold"
+                                                               TextWrapping="Wrap"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Seleccionados"
+                                                        Binding="{Binding TotalSeleccionados}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Insertados"
+                                                        Binding="{Binding TotalInsertados}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Omitidos"
+                                                        Binding="{Binding TotalOmitidos}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Errores"
+                                                        Binding="{Binding TotalErrores}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Archivo"
+                                                        Binding="{Binding NombreArchivo}"
+                                                        Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+        </xctk:BusyIndicator>
+    </Grid>
+</UserControl>

@@ -1,4 +1,4 @@
-﻿<Window x:Class="ANS.SeleccionDeBanco"
+<Window x:Class="ANS.SeleccionDeBanco"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -200,7 +200,7 @@
                                        HorizontalAlignment="Center"/>
                         </StackPanel>
 
-                        <StackPanel HorizontalAlignment="Center">
+                        <StackPanel HorizontalAlignment="Center" Margin="0,0,0,12">
                             <Button Width="96" Height="96" Background="White"
                                     BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
                                     Tag="EnvioManual" Click="BankButton_Click">
@@ -210,6 +210,19 @@
                                        Foreground="{StaticResource Brush.TextSecondary}">
                                 <Run Text="Envío "/><Run Language="es-uy" Text="1a1"/>
                             </TextBlock>
+                        </StackPanel>
+
+                        <StackPanel HorizontalAlignment="Center">
+                            <Button Width="96" Height="96" Background="White"
+                                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
+                                    Tag="AcreditacionManual" Click="BankButton_Click">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="48" Height="48" Foreground="#D32F2F"/>
+                            </Button>
+                            <TextBlock Text="Acreditación Manual" Margin="0,8,0,0"
+                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                       HorizontalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>

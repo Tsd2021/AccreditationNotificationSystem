@@ -1,4 +1,4 @@
-﻿using ANS.UserControls;
+using ANS.UserControls;
 using ANS.Views;
 using System.Windows;
 
@@ -42,6 +42,8 @@ namespace ANS
                     BankOperationsContent.Content = new EnvioManualOperationControl(); break;
                 case "EnvioNiveles":
                     BankOperationsContent.Content = new EnvioNivelesOperationControl(); break;
+                case "AcreditacionManual":
+                    BankOperationsContent.Content = new AcreditacionManualOperationControl(); break;
                 case "AltaEmailDestino":
                     var altaWin = new AltaEmailDestino();
                     altaWin.ShowDialog();

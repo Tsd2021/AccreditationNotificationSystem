@@ -1,4 +1,5 @@
 using ANS.Model.Interfaces;
+using ANS.Runtime.Guards;
 using MailKit.Security;
 using Microsoft.Data.SqlClient;
 using MimeKit;
@@ -9,6 +10,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
 using System.Text;
+using System.Linq;
 using ContentType = MimeKit.ContentType;
 
 
@@ -65,6 +67,14 @@ namespace ANS.Model.Services
 
         public async Task<MailKit.Net.Smtp.SmtpClient> getNewSmptClient()
         {
+            // ✅ GUARDIA: Validar si SMTP está permitido en TEST
+            if (ANS.Runtime.AppRuntime.IsTest)
+            {
+                // Verificar si TestAllowSmtp está habilitado
+                WebServiceGuard.EnsureSmtpAllowed("Conexión SMTP para envío de emails");
+                // Si llegamos aquí, TestAllowSmtp=true y está permitido conectar
+            }
+
             var smtp = new MailKit.Net.Smtp.SmtpClient();
 
             smtp.Timeout = 5 * 60 * 1000;
@@ -106,7 +116,6 @@ namespace ANS.Model.Services
 
         public bool enviarExcelPorMail(string excelPath, string asunto, string cuerpo, Cliente c, Banco b, string tarea ,string ciudad)
         {
-
             var listaEmails = ObtenerEmailsPorBancoTareaYCiudad(b, tarea, ciudad);
 
             if (listaEmails == null || listaEmails.Count == 0)
@@ -114,72 +123,66 @@ namespace ANS.Model.Services
 
             try
             {
-                cuerpo += "<html>" +
-              "<body>" +
-              "<p>Saludos cordiales.</p>" +
-              // Agrega un contenedor para la firma con un margen superior para separar del texto
-              //"<div style='margin-top:30px;'>" +
-              //"<img src='cid:bannerImage' alt='Firma Diego Chiquiar' style='width:400px; height:750;'/>" +
-              //"</div>" +
-              "</body>" +
-              "</html>";
-
-                // Crea la vista HTML para el correo
-                AlternateView avHtml = AlternateView.CreateAlternateViewFromString(cuerpo, null, MediaTypeNames.Text.Html);
-
-                // Crea el recurso vinculado (imagen) y establece su ContentId para que coincida con el del HTML
-                //LinkedResource inlineImage = new LinkedResource("Images/FirmaDiegoMail.png", MediaTypeNames.Image.Png)
-                //{
-                //    ContentId = "bannerImage",
-                //    TransferEncoding = TransferEncoding.Base64
-                //};
-
-                //avHtml.LinkedResources.Add(inlineImage);
-
-                // Configuración de remitente y destinatario
-
-
-                using (MailMessage mail = new MailMessage(remitente, destinatario))
-                {
-                    mail.Subject = asunto;
-                    mail.Body = cuerpo;
-                    mail.IsBodyHtml = true;
-                    mail.AlternateViews.Add(avHtml);
-
-                    //Cuando esté en producción activar esto:
-                    if (listaEmails != null && listaEmails.Count > 0)
-                    {
-                        foreach (var e in listaEmails)
-                        {
-                            mail.To.Add(e.Correo);
-                        }
-                    }
-
-                    //mail.CC.Add("pablo@tecnisegur.com.uy");
-
-                    // Adjunta el archivo Excel
-                    if (!string.IsNullOrEmpty(excelPath))
-                    {
-                        mail.Attachments.Add(new Attachment(excelPath));
-                    }
-
-                    SmtpClient clienteSmtp = new SmtpClient("smtp.gmail.com")
-                    {
-                        Port = 587,
-                        Credentials = new NetworkCredential(remitente, contrasena),
-                        UseDefaultCredentials = false,
-                        EnableSsl = true
-                    };
-
-                    clienteSmtp.Send(mail);
-                }
-                return true;
+                // ✅ Convertir a método async y usar MailKit con guardias
+                return enviarExcelPorMailAsync(excelPath, asunto, cuerpo, listaEmails, b, tarea, ciudad).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
                 // ✅ Logging mejorado: Registra error con contexto (banco, tarea, ciudad)
                 ServicioLog.instancia.WriteLog(ex, b?.NombreBanco ?? "Desconocido", 
                     $"Envío Excel | Tarea: {tarea} | Ciudad: {ciudad}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// ✅ Versión async de enviarExcelPorMail usando MailKit con guardias
+        /// SendWithGuards aplicará la política automáticamente
+        /// </summary>
+        private async Task<bool> enviarExcelPorMailAsync(string excelPath, string asunto, string cuerpo, List<Email> listaEmails, Banco b, string tarea, string ciudad)
+        {
+            try
+            {
+                cuerpo += "<html>" +
+                  "<body>" +
+                  "<p>Saludos cordiales.</p>" +
+                  "</body>" +
+                  "</html>";
+
+                // ✅ Crear mensaje base (SendWithGuards aplicará política y validará whitelist)
+                var message = new MimeMessage();
+                message.From.Add(MailboxAddress.Parse(remitente));
+                message.Subject = asunto;
+
+                // Agregar destinatarios originales (SendWithGuards los reemplazará en TEST)
+                var originalRecipients = listaEmails?.Select(e => e.Correo).ToList() ?? new List<string>();
+                foreach (var recipient in originalRecipients)
+                {
+                    message.To.Add(MailboxAddress.Parse(recipient));
+                }
+
+                var builder = new BodyBuilder();
+                builder.HtmlBody = cuerpo;
+
+                // Adjuntar Excel si existe
+                if (!string.IsNullOrEmpty(excelPath) && File.Exists(excelPath))
+                {
+                    builder.Attachments.Add(excelPath);
+                }
+
+                message.Body = builder.ToMessageBody();
+
+                // ✅ Obtener cliente SMTP (con guardias)
+                using (var smtpClient = await getNewSmptClient())
+                {
+                    // ✅ Usar método centralizado SendWithGuards (aplica política + valida whitelist + envía)
+                    return await SendWithGuards(message, smtpClient, $"enviarExcelPorMail | Tarea: {tarea} | Ciudad: {ciudad}");
+                }
+            }
+            catch (Exception ex)
+            {
+                ServicioLog.instancia.WriteLog(ex, b?.NombreBanco ?? "Desconocido", 
+                    $"enviarExcelPorMailAsync | Tarea: {tarea} | Ciudad: {ciudad}");
                 return false;
             }
         }
@@ -199,41 +202,117 @@ namespace ANS.Model.Services
             return retorno;
         }
 
-        public async Task<bool> EnviarMailDesconexion(MimeMessage msg, MailKit.Net.Smtp.SmtpClient smtpClient)
+        /// <summary>
+        /// ✅ Método centralizado para enviar emails con guardias de seguridad
+        /// Aplica ApplyEmailPolicy + ValidateRecipientsWhitelist antes de enviar
+        /// </summary>
+        private async Task<bool> SendWithGuards(
+            MimeMessage originalMessage,
+            MailKit.Net.Smtp.SmtpClient smtpClient,
+            string context = "Envío de email")
         {
             try
             {
-                await smtpClient.SendAsync(msg);
+                // ✅ Extraer destinatarios originales (To, Cc, Bcc)
+                var originalRecipients = new List<string>();
+                foreach (var to in originalMessage.To)
+                {
+                    if (to is MailboxAddress mb)
+                        originalRecipients.Add(mb.Address);
+                }
+                foreach (var cc in originalMessage.Cc)
+                {
+                    if (cc is MailboxAddress mb)
+                        originalRecipients.Add(mb.Address);
+                }
+                foreach (var bcc in originalMessage.Bcc)
+                {
+                    if (bcc is MailboxAddress mb)
+                        originalRecipients.Add(mb.Address);
+                }
+
+                var originalSubject = originalMessage.Subject ?? "";
+                var originalBody = originalMessage.HtmlBody ?? originalMessage.TextBody ?? "";
+
+                // ✅ Aplicar política de emails (reemplaza destinatarios en TEST)
+                var (recipients, subjectFinal, bodyFinal) = EmailGuard.ApplyEmailPolicy(
+                    originalRecipients,
+                    originalSubject,
+                    originalBody);
+
+                // ✅ VALIDACIÓN CRÍTICA: Verificar whitelist ANTES de enviar
+                EmailGuard.ValidateRecipientsWhitelist(recipients, context);
+
+                // ✅ Crear mensaje modificado con política aplicada
+                var message = new MimeMessage();
+                message.From.Add(originalMessage.From.Mailboxes.FirstOrDefault() ?? MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
+                
+                // Limpiar destinatarios originales y agregar solo whitelist
+                message.To.Clear();
+                message.Cc.Clear();
+                message.Bcc.Clear();
+                
+                foreach (var recipient in recipients)
+                {
+                    message.To.Add(MailboxAddress.Parse(recipient));
+                }
+
+                message.Subject = subjectFinal;
+
+                // Copiar attachments del mensaje original
+                var builder = new BodyBuilder();
+                if (originalMessage.Body is Multipart multipart)
+                {
+                    foreach (var part in multipart)
+                    {
+                        if (part is MimePart mimePart && mimePart.IsAttachment)
+                        {
+                            builder.Attachments.Add(mimePart);
+                        }
+                    }
+                }
+
+                builder.HtmlBody = bodyFinal;
+                message.Body = builder.ToMessageBody();
+
+                // ✅ Logging antes de enviar
+                ServicioLog.instancia.WriteInfo(
+                    $"ENVIANDO EMAIL (SendWithGuards) | Contexto: {context} | Subject: {subjectFinal} | " +
+                    $"Destinatarios finales: {string.Join(", ", recipients)} | " +
+                    $"Destinatarios originales: {string.Join(", ", originalRecipients)} | " +
+                    $"Modo: {(ANS.Runtime.AppRuntime.IsTest ? "TEST" : "PRODUCTION")}",
+                    "ServicioEmail | SendWithGuards");
+
+                await smtpClient.SendAsync(message);
 
                 return true;
             }
             catch (Exception ex)
             {
-                // ✅ Logging mejorado: Registra error con contexto
-                ServicioLog.instancia.WriteLog(ex, "Todos", "Envío Mail Desconexión");
+                ServicioLog.instancia.WriteLog(ex, "Todos", $"SendWithGuards | Contexto: {context}");
                 return false;
             }
+        }
+
+        public async Task<bool> EnviarMailDesconexion(MimeMessage msg, MailKit.Net.Smtp.SmtpClient smtpClient)
+        {
+            // ✅ Usar método centralizado con guardias
+            return await SendWithGuards(msg, smtpClient, "Envío Mail Desconexión");
         }
 
         public async Task<bool> EnviarExcelPorMailMasivoConMailKit(Stream? excelStream, string? fileName, string subject, string body, List<Email> _destinos, MailKit.Net.Smtp.SmtpClient smtpClient)
         {
             try
             {
-
+                // ✅ Crear mensaje base (SendWithGuards aplicará política y validará whitelist)
                 var message = new MimeMessage();
                 message.From.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
-                // ✅ PRODUCCIÓN: Recorrer todos los mails de destino
-                if (_destinos != null && _destinos.Count > 0)
+                
+                // Agregar destinatarios originales (SendWithGuards los reemplazará en TEST)
+                var originalRecipients = _destinos?.Select(e => e.Correo).ToList() ?? new List<string>();
+                foreach (var recipient in originalRecipients)
                 {
-                    foreach (var e in _destinos)
-                    {
-                        message.To.Add(MailboxAddress.Parse(e.Correo));
-                    }
-                }
-                else
-                {
-                    // Fallback: si no hay destinatarios, enviar a acreditaciones@tecnisegur.com.uy
-                    message.To.Add(MailboxAddress.Parse("acreditaciones@tecnisegur.com.uy"));
+                    message.To.Add(MailboxAddress.Parse(recipient));
                 }
           
                 message.Subject = subject;
@@ -250,9 +329,8 @@ namespace ANS.Model.Services
 
                 message.Body = builder.ToMessageBody();
 
-                await smtpClient.SendAsync(message);
-
-                return true;
+                // ✅ Usar método centralizado SendWithGuards (aplica política + valida whitelist + envía)
+                return await SendWithGuards(message, smtpClient, "EnviarExcelPorMailMasivoConMailKit");
             }
             catch (Exception ex)
             {
