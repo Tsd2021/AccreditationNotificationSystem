@@ -789,7 +789,10 @@ namespace ANS.Model.Services
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
             }
 
-                query =     @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
+
+
+            // Fix 27 de Enero de 2026 - Excluyendo NC = EA23L0810N12000113 que es el de ZUNINO - RASTAMAN ( No le enviamos email )
+            query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
                             from
                             cc as c 
                             left join 
@@ -797,7 +800,7 @@ namespace ANS.Model.Services
                             on ws.NC = c.NC 
                             where c.estado = 'alta'
                             AND CAST(c.CIERRE AS time) > @desdeTime 
-                            AND CAST(c.CIERRE AS time) <= @hastaTime";
+                            AND CAST(c.CIERRE AS time) <= @hastaTime AND c.NC NOT IN ('EA23L0810N12000113');";
 
             using (SqlConnection conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
             {
