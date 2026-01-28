@@ -290,9 +290,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             if (cb == null || !cb.Any())
                 throw new Exception("No hay cuentas para generar el archivo");
 
-            // ✅ Agrupo por DIVISA + CIUDAD + CASHOFFICE (cada grupo genera un archivo)
-            // IMPORTANTE: Incluir CashOffice en la agrupación para que se separen correctamente
-            var grupos = cb.GroupBy(c => new { c.Divisa, c.Ciudad, EsCashOffice = c.esCashOffice() });
+            // ✅ Agrupo por DIVISA + CIUDAD (cada grupo genera un archivo)
+            var grupos = cb.GroupBy(c => new { c.Divisa, c.Ciudad });
 
             foreach (var grupo in grupos)
             {
@@ -393,14 +392,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 var ejemploGrupo = grupo.First();
                 // Asumimos que ConfiguracionAcreditacion tiene propiedad 'Henderson'
                 //int henderson = ejemploGrupo.esHenderson() ?? 0;
-                // ✅ Usar el valor de la clave de agrupación en lugar de calcularlo de nuevo
-                bool cashOffice = grupo.Key.EsCashOffice;
                 string ciudad = grupo.Key.Ciudad;
                 
                 // ✅ Logging: Registrar información del grupo antes de procesarlo
                 ServicioLog.instancia.WriteInfo(
                     $"Procesando grupo Scotiabank | Ciudad: '{ciudad}' | Divisa: {grupo.Key.Divisa} | " +
-                    $"EsCashOffice: {cashOffice} | BancoBuzon: {ejemploGrupo.BancoBuzon ?? "NULL"} | " +
+                    $"BancoBuzon: {ejemploGrupo.BancoBuzon ?? "NULL"} | " +
                     $"BancoCuenta: {ejemploGrupo.Banco ?? "NULL"}",
                     "ScotiaFileGenerator | armarStringParaTxt_Agrupado");
 
@@ -410,17 +407,14 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 //            : "";
 
                 string modo = "";
-                if (cashOffice) modo = "CashOffice";
 
                 string suctecni = ciudad == "MONTEVIDEO" ? "Mont" : "Mald";
 
-                // Rutas según ciudad y cashOffice (usando configuración centralizada)
+                // Rutas según ciudad (usando configuración centralizada)
                 string rutaBase = ciudad == "MONTEVIDEO"
                     ? ConfiguracionGlobal.Rutas.ScotiabankMontevideo
                     : ConfiguracionGlobal.Rutas.ScotiabankMaldonado;
-                string basePath = cashOffice
-                    ? ConfiguracionGlobal.Rutas.ScotiabankCashOffice
-                    : rutaBase;
+                string basePath = rutaBase;
 
                 // Carpeta diaria yyyy-MM-dd
                 string folderName = DateTime.Now.ToString("yyyy-MM-dd");
