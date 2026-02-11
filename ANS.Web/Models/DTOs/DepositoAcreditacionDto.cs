@@ -26,5 +26,8 @@ namespace ANS.Web.Models.DTOs
         public bool IsAcreditado { get; set; }
         public DateTime? FechaAcreditacion { get; set; }
         public double? MontoAcreditado { get; set; } // Para detectar diferencias de monto
+
+        /// <summary>True si el depósito tiene cuenta asignada (matching ServicioDeposito). Si false, no es acreditable.</summary>
+        public bool HasCuentaAsignada { get; set; } = true;
     }
 }

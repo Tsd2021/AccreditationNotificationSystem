@@ -58,30 +58,25 @@ namespace ANS.Web.Controllers
             }
         }
 
-        // GET: AcreditacionManual/ObtenerDepositos?nc=...&empresa=...&desde=...&hasta=...&moneda=...
+        // GET: AcreditacionManual/ObtenerDepositos?nc=...&desde=...&hasta=...&idCuenta=... (idCuenta opcional)
         [HttpGet]
         public async Task<IActionResult> ObtenerDepositos(
             string nc,
-            string empresa,
             DateTime? desde,
             DateTime? hasta,
-            string moneda = null)
+            int? idCuenta = null)
         {
-            if (string.IsNullOrWhiteSpace(nc) || string.IsNullOrWhiteSpace(empresa))
+            if (string.IsNullOrWhiteSpace(nc))
                 return Json(new List<DepositoAcreditacionDto>());
 
             try
             {
-                // Por defecto: últimos 7 días
                 var fechaDesde = desde ?? DateTime.Today.AddDays(-7);
                 var fechaHasta = hasta ?? DateTime.Today;
 
-                var depositos = await _servicio.ObtenerDepositosUltimos7Dias(nc, empresa, fechaDesde, fechaHasta, moneda);
-                
-                // Mapear con estado de acreditación
-                var depositosConEstado = await _servicio.MapearDepositosConEstadoAcreditado(depositos);
+                var depositos = await _servicio.ObtenerDepositosPorBuzonEnRango(nc, fechaDesde, fechaHasta, idCuenta);
 
-                return Json(depositosConEstado);
+                return Json(depositos);
             }
             catch (Exception ex)
             {
