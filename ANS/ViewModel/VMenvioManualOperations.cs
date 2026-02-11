@@ -1,4 +1,4 @@
-﻿using ANS.Model;
+using ANS.Model;
 using ANS.Model.Services;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;

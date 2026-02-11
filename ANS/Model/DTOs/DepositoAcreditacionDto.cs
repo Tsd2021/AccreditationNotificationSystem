@@ -29,5 +29,11 @@ namespace ANS.Model.DTOs
         
         // Selección en UI
         public bool IsSelected { get; set; }
+
+        /// <summary>
+        /// True si al depósito se le asignó una cuenta (IdCuenta) según matching ServicioDeposito.
+        /// Si false, el depósito no debe poder acreditarse (mostrar en grilla pero sin selección).
+        /// </summary>
+        public bool HasCuentaAsignada { get; set; } = true;
     }
 }

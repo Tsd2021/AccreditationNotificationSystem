@@ -1,4 +1,4 @@
-﻿using ANS.Model.Services;
+using ANS.Model.Services;
 using ANS.Model;
 using ANS.ViewModel;
 using System;
@@ -19,7 +19,7 @@ using UserControl = System.Windows.Controls.UserControl;
 namespace ANS.UserControls
 {
     /// <summary>
-    /// Interaction logic for EnvioMasivoOperationControl.xaml
+    /// Interaction logic for EnvioManualOperationControl.xaml
     /// </summary>
     public partial class EnvioManualOperationControl : UserControl
     {

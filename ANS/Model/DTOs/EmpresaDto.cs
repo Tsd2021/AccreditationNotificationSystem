@@ -20,7 +20,7 @@ namespace ANS.Model.DTOs
         public string MonedaDisplay => MonedaDisplayHelper.ToMonedaDisplay(Moneda);
 
         /// <summary>
-        /// "{Banco} {Empresa} - {MonedaDisplay}" para el ComboBox.
+        /// "{Banco} {Empresa} - {MonedaDisplay}" para el ComboBox (legacy).
         /// </summary>
         public string DisplayName
         {
@@ -30,6 +30,20 @@ namespace ANS.Model.DTOs
                 var e = (Empresa ?? "").Trim();
                 var main = $"{b} {e}".Trim();
                 return string.IsNullOrEmpty(main) ? MonedaDisplay : $"{main} - {MonedaDisplay}";
+            }
+        }
+
+        /// <summary>
+        /// "{Empresa} ({Cuenta}) - {MonedaDisplay}" para mostrar en combo de empresas filtradas por banco.
+        /// </summary>
+        public string DisplayNameConCuenta
+        {
+            get
+            {
+                var e = (Empresa ?? "").Trim();
+                var c = (Cuenta ?? "").Trim();
+                var cuentaPart = string.IsNullOrEmpty(c) ? "" : $" ({c})";
+                return $"{e}{cuentaPart} - {MonedaDisplay}";
             }
         }
     }

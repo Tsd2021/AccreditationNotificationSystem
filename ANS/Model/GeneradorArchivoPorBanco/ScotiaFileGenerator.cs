@@ -428,50 +428,69 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         .Sum(d => d.Totales
                             .Sum(i => i.ImporteTotal)));
                 string divCode = grupo.Key.Divisa == VariablesGlobales.uyu ? "UYU" : "USD";
-                string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm");
                 
-                // Agregar tipo de acreditación al nombre del archivo si está disponible
-                string tipoAcreditacionSufijo = "";
+                string fileName;
+                bool esExcepcion = _config != null && _config.EsExcepcionScotiabank;
                 
-                // ✅ PRIORIDAD 1: Verificar si es cliente Farmashop/Coboe (ID 179)
-                // Si alguna cuenta del grupo pertenece a Farmashop, usar sufijo específico
-                bool esFarmashop = grupo.Any(c => c.IdCliente == 179);
-                if (esFarmashop)
+                if (esExcepcion)
                 {
-                    tipoAcreditacionSufijo = "_Farmashop";
+                    // ✅ EXCEPCIÓN: Nombre con timestamp de fecha (sin hora) para permitir append del mismo día
+                    string fechaHoy = DateTime.Now.ToString("dd-MM-yyyy");
+                    fileName = $"{fechaHoy}-AcreditacionBuzonesTecnisegur{suctecni}_{divCode}_Excepciones.txt";
+                    
+                    ServicioLog.instancia.WriteInfo(
+                        $"EXCEPCIÓN SCOTIABANK | Ciudad: '{ciudad}' | Divisa: {divCode} | " +
+                        $"Nombre archivo: {fileName} | Carpeta: {folderPath}",
+                        "ScotiaFileGenerator | armarStringParaTxt_Agrupado");
                 }
-                // ✅ PRIORIDAD 2: Si no es Farmashop, usar el tipo de acreditación de la configuración
-                else if (_config != null && !string.IsNullOrWhiteSpace(_config.TipoAcreditacion))
+                else
                 {
-                    // Normalizar el nombre del tipo de acreditación para el sufijo
-                    string tipoNormalizado = _config.TipoAcreditacion;
-                    if (tipoNormalizado.Equals("Tanda1", StringComparison.OrdinalIgnoreCase) ||
-                        tipoNormalizado.Equals("Tanda", StringComparison.OrdinalIgnoreCase))
+                    // ✅ NORMAL: Nombre con timestamp como siempre
+                    string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm");
+                    
+                    // Agregar tipo de acreditación al nombre del archivo si está disponible
+                    string tipoAcreditacionSufijo = "";
+                    
+                    // ✅ PRIORIDAD 1: Verificar si es cliente Farmashop/Coboe (ID 179)
+                    // Si alguna cuenta del grupo pertenece a Farmashop, usar sufijo específico
+                    bool esFarmashop = grupo.Any(c => c.IdCliente == 179);
+                    if (esFarmashop)
                     {
-                        tipoAcreditacionSufijo = "_Tanda1";
+                        tipoAcreditacionSufijo = "_Farmashop";
                     }
-                    else if (tipoNormalizado.Equals("Tanda2", StringComparison.OrdinalIgnoreCase))
+                    // ✅ PRIORIDAD 2: Si no es Farmashop, usar el tipo de acreditación de la configuración
+                    else if (_config != null && !string.IsNullOrWhiteSpace(_config.TipoAcreditacion))
                     {
-                        tipoAcreditacionSufijo = "_Tanda2";
+                        // Normalizar el nombre del tipo de acreditación para el sufijo
+                        string tipoNormalizado = _config.TipoAcreditacion;
+                        if (tipoNormalizado.Equals("Tanda1", StringComparison.OrdinalIgnoreCase) ||
+                            tipoNormalizado.Equals("Tanda", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tipoAcreditacionSufijo = "_Tanda1";
+                        }
+                        else if (tipoNormalizado.Equals("Tanda2", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tipoAcreditacionSufijo = "_Tanda2";
+                        }
+                        else if (tipoNormalizado.Equals("DiaADia", StringComparison.OrdinalIgnoreCase) ||
+                                 tipoNormalizado.Equals("DXD", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tipoAcreditacionSufijo = "_DiaADia";
+                        }
                     }
-                    else if (tipoNormalizado.Equals("DiaADia", StringComparison.OrdinalIgnoreCase) ||
-                             tipoNormalizado.Equals("DXD", StringComparison.OrdinalIgnoreCase))
-                    {
-                        tipoAcreditacionSufijo = "_DiaADia";
-                    }
+                    
+                    fileName = $"{timestamp}-{divCode}{totalGrupo}-" +
+                                $"AcreditacionBuzonesTecnisegur{modo}{suctecni}{tipoAcreditacionSufijo}.txt";
                 }
-                
-                string fileName = $"{timestamp}-{divCode}{totalGrupo}-" +
-                                    $"AcreditacionBuzonesTecnisegur{modo}{suctecni}{tipoAcreditacionSufijo}.txt";
 
                 string rutaDestino = Path.Combine(folderPath, fileName);
 
-                // 4) Grabo con tu método
-                crearYEscribirArchivo(txt, rutaDestino);
+                // 4) Grabo con tu método (pasar flag de excepción)
+                crearYEscribirArchivo(txt, rutaDestino, esExcepcion);
             }
         }
 
-        private void crearYEscribirArchivo(StringBuilder txt, string route)
+        private void crearYEscribirArchivo(StringBuilder txt, string route, bool esExcepcion = false)
         {
             // ✅ GUARDIA: Validar que la escritura esté permitida
             FileSystemGuard.EnsureWriteAllowed(route, "ScotiaFileGenerator | crearYEscribirArchivo");
@@ -486,13 +505,43 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             route = Path.Combine(directory, fileName);
             
             string contenido = txt.ToString();
-            File.WriteAllText(route, contenido);
             
-            // ✅ Logging: Registrar resumen del archivo generado
-            int totalLineas = contenido.Split(new[] { Environment.NewLine, "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Length;
-            ServicioLog.instancia.WriteInfo(
-                $"Archivo generado exitosamente | Ruta: {route} | Total líneas escritas: {totalLineas}",
-                "ScotiaFileGenerator | crearYEscribirArchivo");
+            // ✅ EXCEPCIÓN: Append si el archivo existe, crear nuevo si no existe
+            if (esExcepcion)
+            {
+                bool archivoExiste = File.Exists(route);
+                int lineasAgregadas = contenido.Split(new[] { Environment.NewLine, "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Length;
+                
+                if (archivoExiste)
+                {
+                    // Append al archivo existente
+                    File.AppendAllText(route, contenido);
+                    ServicioLog.instancia.WriteInfo(
+                        $"EXCEPCIÓN SCOTIABANK | Append realizado | Ruta: {route} | " +
+                        $"Líneas agregadas: {lineasAgregadas}",
+                        "ScotiaFileGenerator | crearYEscribirArchivo");
+                }
+                else
+                {
+                    // Crear nuevo archivo
+                    File.WriteAllText(route, contenido);
+                    ServicioLog.instancia.WriteInfo(
+                        $"EXCEPCIÓN SCOTIABANK | Archivo creado nuevo | Ruta: {route} | " +
+                        $"Total líneas escritas: {lineasAgregadas}",
+                        "ScotiaFileGenerator | crearYEscribirArchivo");
+                }
+            }
+            else
+            {
+                // ✅ NORMAL: WriteAllText como siempre
+                File.WriteAllText(route, contenido);
+                
+                // ✅ Logging: Registrar resumen del archivo generado
+                int totalLineas = contenido.Split(new[] { Environment.NewLine, "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Length;
+                ServicioLog.instancia.WriteInfo(
+                    $"Archivo generado exitosamente | Ruta: {route} | Total líneas escritas: {totalLineas}",
+                    "ScotiaFileGenerator | crearYEscribirArchivo");
+            }
         }
 
 

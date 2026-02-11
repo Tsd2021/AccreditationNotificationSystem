@@ -4,9 +4,11 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace ANS.ViewModel
@@ -72,6 +74,7 @@ namespace ANS.ViewModel
                         _searchDebounceTimer.Start();
                     }
                     BuscarBuzonCommand.RaiseCanExecuteChanged();
+                    LimpiarTextoBusquedaCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -95,6 +98,7 @@ namespace ANS.ViewModel
                     if (value == null)
                     {
                         Empresas.Clear();
+                        _todasLasEmpresas.Clear();
                         EmpresaSeleccionada = null;
                         Depositos.Clear();
                         ResultadosPorBanco.Clear();
@@ -102,7 +106,7 @@ namespace ANS.ViewModel
                     }
                     else
                     {
-                        // Cargar empresas automáticamente al seleccionar buzón
+                        // Cargar empresas del buzón (sin filtro por banco)
                         _ = CargarEmpresas();
                     }
                 }
@@ -111,8 +115,10 @@ namespace ANS.ViewModel
 
         public bool HasBuzonSeleccionado => BuzonSeleccionado != null;
 
-        // Empresas
+        // Empresas del buzón (opcional: si no se elige, se cargan depósitos de todas las cuentas)
         public ObservableCollection<EmpresaDto> Empresas { get; } = new ObservableCollection<EmpresaDto>();
+        
+        private List<EmpresaDto> _todasLasEmpresas = new List<EmpresaDto>(); // Cache de todas las empresas
 
         private EmpresaDto _empresaSeleccionada;
         public EmpresaDto EmpresaSeleccionada
@@ -138,6 +144,14 @@ namespace ANS.ViewModel
         }
 
         public bool HasEmpresaSeleccionada => EmpresaSeleccionada != null;
+
+        // Flag de excepciones (solo para Scotiabank)
+        private bool _esExcepcionScotiabank;
+        public bool EsExcepcionScotiabank
+        {
+            get => _esExcepcionScotiabank;
+            set => Set(ref _esExcepcionScotiabank, value);
+        }
 
         // Fechas
         private DateTime _desde = DateTime.Today.AddDays(-7);
@@ -170,6 +184,53 @@ namespace ANS.ViewModel
 
         // Depósitos
         public ObservableCollection<DepositoAcreditacionDto> Depositos { get; } = new ObservableCollection<DepositoAcreditacionDto>();
+        public ICollectionView DepositosView { get; }
+
+        // Filtro rápido sobre depósitos: Todos | Pendientes | Acreditados | Sin cuenta
+        private string _depositosQuickFilter = "Todos";
+        public string DepositosQuickFilter
+        {
+            get => _depositosQuickFilter;
+            set
+            {
+                if (Set(ref _depositosQuickFilter, value))
+                {
+                    DepositosView?.Refresh();
+                    RaisePropertyChanged(nameof(TotalDepositosVisible));
+                }
+            }
+        }
+
+        public System.Collections.Generic.List<string> DepositosQuickFilterOptions { get; } =
+            new System.Collections.Generic.List<string> { "Todos", "Pendientes", "Acreditados" };
+
+        public int TotalDepositosVisible => DepositosView != null
+            ? DepositosView.Cast<object>().Count()
+            : 0;
+
+        public int TotalSeleccionados => Depositos.Count(d => d.IsSelected);
+
+        // Checkbox: al marcar, selecciona todos los pendientes visibles; al "Seleccionar todos visibles" solo marca pendientes si está activo
+        private bool _seleccionarSoloPendientes;
+        public bool SeleccionarSoloPendientes
+        {
+            get => _seleccionarSoloPendientes;
+            set
+            {
+                if (Set(ref _seleccionarSoloPendientes, value) && value)
+                {
+                    // Al activar: marcar todos los pendientes visibles que tengan cuenta
+                    foreach (var item in DepositosView.Cast<DepositoAcreditacionDto>())
+                    {
+                        if (!item.HasCuentaAsignada || item.IsAcreditado) continue;
+                        item.IsSelected = true;
+                    }
+                    RaisePropertyChanged(nameof(TotalSeleccionados));
+                    AcreditarSeleccionadosCommand.RaiseCanExecuteChanged();
+                    LimpiarSeleccionDepositosCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
 
         // Resultados por banco
         public ObservableCollection<ResultadoBatchDto> ResultadosPorBanco { get; } = new ObservableCollection<ResultadoBatchDto>();
@@ -187,10 +248,17 @@ namespace ANS.ViewModel
         public RelayCommand CargarDepositosCommand { get; }
         public RelayCommand AcreditarSeleccionadosCommand { get; }
         public RelayCommand LimpiarSeleccionCommand { get; }
+        public RelayCommand<string> SetQuickFilterCommand { get; }
+        public RelayCommand SeleccionarTodosVisiblesCommand { get; }
+        public RelayCommand LimpiarSeleccionDepositosCommand { get; }
+        public RelayCommand LimpiarTextoBusquedaCommand { get; }
 
         public VMacreditacionManualOperations()
         {
             _servicio = ServicioAcreditacionManual.getInstancia();
+
+            DepositosView = CollectionViewSource.GetDefaultView(Depositos);
+            DepositosView.Filter = DepositosFilter;
 
             _searchDebounceTimer = new DispatcherTimer(DispatcherPriority.Background, System.Windows.Application.Current.Dispatcher)
             {
@@ -213,11 +281,11 @@ namespace ANS.ViewModel
 
             CargarDepositosCommand = new RelayCommand(
                 async () => await CargarDepositos(),
-                () => HasBuzonSeleccionado && HasEmpresaSeleccionada && !IsLoading);
+                () => HasBuzonSeleccionado && !IsLoading);
 
             AcreditarSeleccionadosCommand = new RelayCommand(
                 async () => await AcreditarSeleccionados(),
-                () => HasBuzonSeleccionado && HasEmpresaSeleccionada && Depositos.Any(d => d.IsSelected) && !IsLoading);
+                () => HasBuzonSeleccionado && Depositos.Any(d => d.IsSelected) && !IsLoading);
 
             LimpiarSeleccionCommand = new RelayCommand(() =>
             {
@@ -230,6 +298,58 @@ namespace ANS.ViewModel
                 StatusMessage = string.Empty;
                 SearchStatusMessage = string.Empty;
             });
+
+            SetQuickFilterCommand = new RelayCommand<string>(f =>
+            {
+                if (!string.IsNullOrEmpty(f) && DepositosQuickFilterOptions.Contains(f))
+                    DepositosQuickFilter = f;
+            });
+
+            SeleccionarTodosVisiblesCommand = new RelayCommand(() =>
+            {
+                foreach (var item in DepositosView.Cast<DepositoAcreditacionDto>())
+                {
+                    if (!item.HasCuentaAsignada) continue;
+                    if (SeleccionarSoloPendientes && item.IsAcreditado) continue;
+                    item.IsSelected = true;
+                }
+                RaisePropertyChanged(nameof(TotalSeleccionados));
+                AcreditarSeleccionadosCommand.RaiseCanExecuteChanged();
+            }, () => HasBuzonSeleccionado && Depositos.Any());
+
+            LimpiarSeleccionDepositosCommand = new RelayCommand(() =>
+            {
+                foreach (var d in Depositos)
+                    d.IsSelected = false;
+                RaisePropertyChanged(nameof(TotalSeleccionados));
+                AcreditarSeleccionadosCommand.RaiseCanExecuteChanged();
+            }, () => HasBuzonSeleccionado && Depositos.Any());
+
+            LimpiarTextoBusquedaCommand = new RelayCommand(() =>
+            {
+                TextoBusquedaNN = string.Empty;
+            }, () => !string.IsNullOrWhiteSpace(TextoBusquedaNN));
+        }
+
+        private bool DepositosFilter(object item)
+        {
+            if (!(item is DepositoAcreditacionDto d)) return false;
+            switch (_depositosQuickFilter)
+            {
+                case "Pendientes": return !d.IsAcreditado;
+                case "Acreditados": return d.IsAcreditado;
+                default: return true; // Todos
+            }
+        }
+
+        /// <summary>
+        /// Llamar desde la vista cuando el usuario marca/desmarca un depósito para refrescar el estado del botón Acreditar.
+        /// </summary>
+        public void NotifyDepositoSelectionChanged()
+        {
+            RaisePropertyChanged(nameof(TotalSeleccionados));
+            AcreditarSeleccionadosCommand.RaiseCanExecuteChanged();
+            LimpiarSeleccionDepositosCommand.RaiseCanExecuteChanged();
         }
 
         private async Task BuscarBuzon()
@@ -288,14 +408,22 @@ namespace ANS.ViewModel
             StatusMessage = "Cargando empresas...";
             try
             {
+                var todasLasEmpresas = await _servicio.ObtenerEmpresasPorBuzon(BuzonSeleccionado.NC);
+                _todasLasEmpresas = todasLasEmpresas ?? new List<EmpresaDto>();
+
                 Empresas.Clear();
-                var empresas = await _servicio.ObtenerEmpresasPorBuzon(BuzonSeleccionado.NC);
-                foreach (var empresa in empresas)
+                // Opción "TODAS" para quitar el filtro de empresa (IdCuenta = 0 se trata como null al cargar depósitos)
+                Empresas.Add(new EmpresaDto { Empresa = "TODAS", IdCuenta = 0, Cuenta = "", Moneda = "" });
+                foreach (var e in _todasLasEmpresas)
                 {
-                    Empresas.Add(empresa);
+                    Empresas.Add(e);
                 }
-                StatusMessage = empresas.Count > 0 
-                    ? $"Se encontraron {empresas.Count} empresa(s)" 
+
+                if (Empresas.Count > 0)
+                    EmpresaSeleccionada = Empresas[0]; // TODAS por defecto
+
+                StatusMessage = _todasLasEmpresas.Count > 0 
+                    ? $"Se encontraron {_todasLasEmpresas.Count} empresa(s) / cuenta(s)" 
                     : "No se encontraron empresas para este buzón";
             }
             catch (Exception ex)
@@ -311,7 +439,7 @@ namespace ANS.ViewModel
 
         private async Task CargarDepositos()
         {
-            if (BuzonSeleccionado == null || EmpresaSeleccionada == null)
+            if (BuzonSeleccionado == null)
                 return;
 
             IsLoading = true;
@@ -319,13 +447,15 @@ namespace ANS.ViewModel
             try
             {
                 Depositos.Clear();
-                var depositos = await _servicio.ObtenerDepositosUltimos7Dias(
+                // IdCuenta == 0 es la opción "TODAS" => sin filtro
+                int? idCuentaFiltro = (EmpresaSeleccionada == null || EmpresaSeleccionada.IdCuenta == 0)
+                    ? null
+                    : (int?)EmpresaSeleccionada.IdCuenta;
+                var depositos = await _servicio.ObtenerDepositosPorBuzonEnRango(
                     BuzonSeleccionado.NC,
-                    EmpresaSeleccionada.Empresa,
                     Desde,
                     Hasta,
-                    EmpresaSeleccionada.Moneda,
-                    EmpresaSeleccionada.IdCuenta);
+                    idCuentaFiltro);
 
                 // Mapear con estado de acreditación (batch)
                 var depositosConEstado = await _servicio.MapearDepositosConEstadoAcreditado(depositos);
@@ -334,6 +464,12 @@ namespace ANS.ViewModel
                 {
                     Depositos.Add(deposito);
                 }
+
+                DepositosView?.Refresh();
+                RaisePropertyChanged(nameof(TotalDepositosVisible));
+                RaisePropertyChanged(nameof(TotalSeleccionados));
+                SeleccionarTodosVisiblesCommand.RaiseCanExecuteChanged();
+                LimpiarSeleccionDepositosCommand.RaiseCanExecuteChanged();
 
                 StatusMessage = depositosConEstado.Count > 0 
                     ? $"Se encontraron {depositosConEstado.Count} depósito(s)" 
@@ -367,7 +503,8 @@ namespace ANS.ViewModel
             {
                 var resultados = await _servicio.AcreditarDepositos(
                     depositosSeleccionados,
-                    Environment.UserName);
+                    Environment.UserName,
+                    EsExcepcionScotiabank);
 
                 foreach (var resultado in resultados)
                 {
