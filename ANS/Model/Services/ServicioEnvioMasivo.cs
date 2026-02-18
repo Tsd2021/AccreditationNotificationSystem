@@ -25,6 +25,20 @@ namespace ANS.Model.Services
         {
             return _lazy.Value;
         }
+        /// <summary>
+        /// NCs con cierre 00:01 que solo deben participar en envío masivo 3, no en el 1.
+        /// </summary>
+        private static readonly string[] NcsSoloEnvioMasivo3 = new[]
+        {
+    "EA20L0108N12000027", "EA23L0725N12000083", "EA23L0725N12000094",
+    "EA23L0725N12000101", "EA23L0725N12000104", "EA23L0810N12000117",
+    "EA24L0101N13000011", "FROG05", "FROG06", "FROG09", "FROG10",
+    "FROG15", "FROG16", "FROG18", "FROG20", "FROG22", "FROG24",
+    "FROG25", "FROG26", "FROG3", "FROG4", "FROG6",
+    "EA24L1010N07000713", "EA24L1010N12000148"
+};
+
+
         public async Task procesarEnvioMasivo(int numEnvioMasivo)
         {
             // ✅ Logging informativo: Inicio del proceso
@@ -880,6 +894,19 @@ namespace ANS.Model.Services
 
 
 
+
+            //12 de febrero de 2026 - Lista de NCs que solo van al masivo 3 y que por lo tanto hay que excluir del masivo 1
+            // Construir lista de NCs a excluir: siempre Zunino, y en masivo 1 también los que solo van al masivo 3
+            var ncExcluir = new List<string> { "EA23L0810N12000113" };
+
+            if (numEnvioMasivo == 1)
+            {
+                ncExcluir.AddRange(NcsSoloEnvioMasivo3);
+            }
+            var notInValues = string.Join("','", ncExcluir.Select(n => n.Replace("'", "''")));
+
+
+
             // Fix 27 de Enero de 2026 - Excluyendo NC = EA23L0810N12000113 que es el de ZUNINO - RASTAMAN ( No le enviamos email )
             query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
                             from
@@ -889,7 +916,8 @@ namespace ANS.Model.Services
                             on ws.NC = c.NC 
                             where c.estado = 'alta'
                             AND CAST(c.CIERRE AS time) > @desdeTime 
-                            AND CAST(c.CIERRE AS time) <= @hastaTime AND c.NC NOT IN ('EA23L0810N12000113');";
+                            AND CAST(c.CIERRE AS time) <= @hastaTime 
+                            AND c.NC NOT IN ('" + notInValues + @"');";
 
             using (SqlConnection conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
             {
@@ -997,19 +1025,56 @@ namespace ANS.Model.Services
                 if (numEnvioMasivo == 3)
                 {
                     // ✅ Incluir buzones específicos del masivo 1 en el masivo 3
-                    string queryParaObtenerBuzonesEspecificos = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE, c.IDCLIENTE, ws.NombreWS
-                                                                    FROM cc as c 
-                                                                    LEFT JOIN cc_nombrews as ws ON ws.NC = c.NC 
-                                                                    WHERE c.estado = 'alta'
-                                                                    AND c.NC IN (
-                                                                        'EA20L0108N12000027',
-                                                                        'EA23L0725N12000083',
-                                                                        'EA23L0725N12000094',
-                                                                        'EA23L0725N12000101',
-                                                                        'EA23L0725N12000104',
-                                                                        'EA23L0810N12000117',
-                                                                        'EA24L0101N13000011'
-                                                                    )";
+                    //string queryParaObtenerBuzonesEspecificos = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE, c.IDCLIENTE, ws.NombreWS
+                    //                                                FROM cc as c 
+                    //                                                LEFT JOIN cc_nombrews as ws ON ws.NC = c.NC 
+                    //                                                WHERE c.estado = 'alta'
+                    //                                                AND c.NC IN (
+                    //                                                    'EA20L0108N12000027',
+                    //                                                    'EA23L0725N12000083',
+                    //                                                    'EA23L0725N12000094',
+                    //                                                    'EA23L0725N12000101',
+                    //                                                    'EA23L0725N12000104',
+                    //                                                    'EA23L0810N12000117',
+                    //                                                    'EA24L0101N13000011'
+                    //                                                )";
+
+                    string queryParaObtenerBuzonesEspecificos = @"SELECT
+                                                                c.NC,
+                                                                c.NN,
+                                                                c.SUCURSAL,
+                                                                c.CIERRE,
+                                                                c.IDCLIENTE,
+                                                                ws.NombreWS
+                                                                FROM cc AS c
+                                                                LEFT JOIN cc_nombrews AS ws
+                                                                ON ws.NC = c.NC
+                                                                WHERE c.estado = 'alta'
+                                                                AND c.NC IN (
+                                                                'EA20L0108N12000027',
+                                                                'EA23L0725N12000083',
+                                                                'EA23L0725N12000094',
+                                                                'EA23L0725N12000101',
+                                                                'EA23L0725N12000104',
+                                                                'EA23L0810N12000117',
+                                                                'EA24L0101N13000011',
+                                                                'FROG05',
+                                                                'FROG06',
+                                                                'FROG09',
+                                                                'FROG10',
+                                                                'FROG15',
+                                                                'FROG16',
+                                                                'FROG18',
+                                                                'FROG20',
+                                                                'FROG22',
+                                                                'FROG24',
+                                                                'FROG25',
+                                                                'FROG26',
+                                                                'FROG3',
+                                                                'FROG4',
+                                                                'FROG6',
+                                                                'EA24L1010N07000713',
+                                                                'EA24L1010N12000148');";
 
                     SqlCommand cmd3 = new SqlCommand(queryParaObtenerBuzonesEspecificos, conn);
 
