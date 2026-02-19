@@ -12,6 +12,7 @@
         public string Usuario { get; set; }
         public DateTime FechaDep { get; set; }
         public string Empresa { get; set; }
+        public DateTime FechaAcreditacion { get; set; }
         public void setMoneda()
         {
             if (Divisa == 1)
