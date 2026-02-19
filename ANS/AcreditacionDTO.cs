@@ -22,6 +22,7 @@ namespace ANS
         public int IdBanco { get; set; }
         public string NombreBanco { get; set; }
         public Banco Banco { get; set; }
+        public DateTime FechaAcreditacion { get; set; }
         public void setMoneda()
         {
             if (Divisa == 1)

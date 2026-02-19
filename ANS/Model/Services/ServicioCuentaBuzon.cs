@@ -2127,7 +2127,7 @@ namespace ANS.Model.Services
                 // Por lo tanto, la consulta es muy especifica.
                 isBBVA = true;
 
-                query = @"SELECT 
+                query = $@"SELECT 
                 cb.CUENTA,
                 cb.EMPRESA,
                 cb.SUCURSAL,
@@ -2152,7 +2152,7 @@ namespace ANS.Model.Services
                 cb.IDCLIENTE
                 ORDER BY cb.empresa asc";
 
-                query = @"
+                query = $@"
                         WITH config_unica AS (
                         SELECT NC, CuentasBuzonesId
                         FROM (
@@ -2204,7 +2204,7 @@ namespace ANS.Model.Services
 
             if (banco.NombreBanco == VariablesGlobales.santander.ToUpper() && tipoAcreditacion.TipoAcreditacion.ToUpper() == VariablesGlobales.diaxdia.ToUpper())
             {
-                query = @"SELECT 
+                query = $@"SELECT 
                 cb.EMPRESA,
                 cc.nn,
                 cc.SUCURSAL as CIUDAD,
@@ -2240,7 +2240,7 @@ namespace ANS.Model.Services
             {
 
                 //Si es Scotia,sacar 
-                query = @"SELECT 
+                query = $@"SELECT 
                 cC.NN,
                 CB.EMPRESA,
                 cc.SUCURSAL as CIUDAD,

@@ -154,7 +154,8 @@ namespace ANS.Model.Services
                             Monto = a.Monto,
                             Usuario = a.Usuario,
                             FechaDep = a.FechaDep,
-                            Empresa = a.Empresa
+                            Empresa = a.Empresa,
+                            FechaAcreditacion = a.FechaAcreditacion
                         }).ToList()
                     };
 
@@ -533,6 +534,7 @@ namespace ANS.Model.Services
             int monOrd = reader.GetOrdinal("MONEDA");
             int montoOrd = reader.GetOrdinal("MONTO");
             int bancoOrd = reader.GetOrdinal("IDBANCO");
+            int fechaOrd = reader.GetOrdinal("FECHA");
 
             int acreditacionesMapeadas = 0;
             int acreditacionesNoMapeadas = 0;
@@ -547,7 +549,8 @@ namespace ANS.Model.Services
                     IdCuenta = reader.GetInt32(cuentaOrd),
                     Divisa = reader.GetInt32(monOrd),
                     Monto = reader.GetDouble(montoOrd),
-                    IdBanco = reader.GetInt32(bancoOrd)
+                    IdBanco = reader.GetInt32(bancoOrd),
+                    FechaAcreditacion = reader.IsDBNull(fechaOrd) ? DateTime.MinValue : reader.GetDateTime(fechaOrd)
                 };
                 acc.setMoneda();
 
