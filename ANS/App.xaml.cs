@@ -17,6 +17,7 @@ using Quartz.Impl;
 using Quartz.Impl.Matchers;
 using System.IO;
 using System.Windows;
+using ANS.Model.Interfaces;
 
 
 namespace ANS
@@ -84,12 +85,22 @@ namespace ANS
             _historyStore = new RepositorioJobHistory(dbPath);
             await _historyStore.InitializeAsync();
 
-            // 2) Listeners
+            // 2) Cache y gate de feriados TAAS (jobs BBVA no corren en feriado activo)
+            var servicioFeriadosSinCache = new ServicioFeriadosTAAS(ConfiguracionGlobal.Conexion22, null);
+            var feriadosCache = new FeriadosCache(() => servicioFeriadosSinCache.GetFechasActivasAsync());
+            await feriadosCache.RefreshAsync();
+            var servicioFeriadosConCache = new ServicioFeriadosTAAS(ConfiguracionGlobal.Conexion22, feriadosCache);
+            ServicioFeriadosTAAS.SetInstanciaParaUI(servicioFeriadosConCache);
+            var feriadoGate = new FeriadoBBVAGateListener(feriadosCache);
+            _scheduler.ListenerManager.AddTriggerListener(feriadoGate, GroupMatcher<TriggerKey>.GroupEquals(ServicioFeriadosTAAS.GrupoBBVA));
+            StartFeriadosCacheRefreshTimer(feriadosCache);
+
+            // 3) Listeners
             var tracking = new JobTrackingListener(_historyStore);
             _scheduler.ListenerManager.AddJobListener(tracking, GroupMatcher<JobKey>.AnyGroup());
             _scheduler.ListenerManager.AddTriggerListener(tracking, GroupMatcher<TriggerKey>.AnyGroup());
 
-            // 3) Programar TODOS los jobs
+            // 4) Programar TODOS los jobs
 
             //await crearJobsPrueba(_scheduler);
             //await correrTestBbva();
@@ -106,7 +117,7 @@ namespace ANS
             //EL JOB NIVELES AUN SE DEBE TESTEAR
             //await crearJobEnviosNiveles(_scheduler);
 
-            // 4) Detectar ejecuciones omitidas entre el cierre anterior y appStartUtc (exclusivo)
+            // 5) Detectar ejecuciones omitidas entre el cierre anterior y appStartUtc (exclusivo)
             var lastShutdownUtc = await _historyStore.GetLastShutdownUtcAsync();
 
             if (lastShutdownUtc.HasValue && lastShutdownUtc.Value < appStartUtc)
@@ -122,7 +133,7 @@ namespace ANS
                 }
             }
 
-            // 5) Arrancar el scheduler
+            // 6) Arrancar el scheduler
             if (!_scheduler.IsStarted)
             {
                 await _scheduler.Start();
@@ -467,6 +478,18 @@ namespace ANS
 
             #endregion
 
+            #region Tarea 5: ENVIO SEMANAL FROG (viernes 16:30)
+
+            IJobDetail jobEnvioSemanalFrog = JobBuilder.Create<EnvioSemanalFrog>()
+                .WithIdentity("EnvioSemanalFrogJob", "GrupoEnvioMasivo")
+                .Build();
+
+            ITrigger triggerEnvioSemanalFrog = TriggerBuilder.Create()
+                .WithIdentity("EnvioSemanalFrogTrigger", "GrupoEnvioMasivo")
+                .WithCronSchedule("0 30 16 ? * FRI")
+                .Build();
+
+            #endregion
             #region Tarea 2: ENVIO MASIVO 2 (14:55:00)
 
             IJobDetail jobEnvioMasivo2 = JobBuilder.Create<EnvioMasivo>()
@@ -519,6 +542,8 @@ namespace ANS
                 await scheduler.ScheduleJob(jobEnvioMasivo3, triggerEnvioMasivo3);
 
                 await scheduler.ScheduleJob(jobEnvioMasivo4, triggerEnvioMasivo4);
+
+                await scheduler.ScheduleJob(jobEnvioSemanalFrog, triggerEnvioSemanalFrog);
 
             }
             catch (Exception e)
@@ -1050,6 +1075,27 @@ namespace ANS
                 // Si falla el cartel, loggear pero no bloquear el inicio
                 ServicioLog.instancia.WriteLog(ex, "App | MostrarCartelRuntimeMode", "error");
             }
+        }
+
+        /// <summary>
+        /// Refresco periódico del cache de feriados (cada 60 s) para reflejar cambios hechos desde la web.
+        /// </summary>
+        private static void StartFeriadosCacheRefreshTimer(IFeriadosProvider feriadosCache)
+        {
+            var intervalMs = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+            var timer = new System.Timers.Timer(intervalMs);
+            timer.Elapsed += async (_, _) =>
+            {
+                try
+                {
+                    await feriadosCache.RefreshAsync();
+                }
+                catch
+                {
+                    // no fallar por refresh en segundo plano
+                }
+            };
+            timer.Start();
         }
 
         protected override async void OnExit(ExitEventArgs e)

@@ -1,4 +1,4 @@
-﻿<Window x:Class="ANS.MainWindow"
+<Window x:Class="ANS.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:ANS.Model"
@@ -7,6 +7,7 @@
         Title="TAAS"
         Icon="/Images/favicon.ico"
         WindowState="Maximized"
+        MinWidth="800" MinHeight="600"
         Background="#FFF5F6F8"
         Closing="Window_Closing">
 

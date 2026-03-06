@@ -238,6 +238,10 @@ namespace ANS.Model.Jobs
             {
                 return new EnvioMasivo(ServicioEnvioMasivo.getInstancia());
             }
+            if (jobType == typeof(EnvioSemanalFrog))
+            {
+                return new EnvioSemanalFrog();
+            }
             #endregion
             #region ENVIO_NIVELES
             if (jobType == typeof(EnvioNiveles))

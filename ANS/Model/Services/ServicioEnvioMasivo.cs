@@ -525,6 +525,61 @@ namespace ANS.Model.Services
             }
         }
 
+        public async Task hidratarDTOconSusAcreditacionesPorRango(List<BuzonDTO> deps, DateTime fechaInicio, DateTime fechaFin)
+        {
+            if (deps == null || deps.Count == 0) return;
+
+            var mapaBuzones = deps
+                .GroupBy(b => b.NC?.Trim() ?? b.NC)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.First()
+                );
+
+            ServicioLog.instancia.WriteInfo(
+                $"Hidratando acreditaciones (rango libre) | Total buzones: {deps.Count} | " +
+                $"Buzones únicos en mapa: {mapaBuzones.Count} | " +
+                $"NCs en mapa: {string.Join(\", \", mapaBuzones.Keys.Take(10))} | " +
+                $"Desde: {fechaInicio:yyyy-MM-dd HH:mm:ss} | Hasta: {fechaFin:yyyy-MM-dd HH:mm:ss}",
+                "ServicioEnvioMasivo | hidratarDTOconSusAcreditacionesPorRango");
+
+            DataTable BuildTvp(List<string> list)
+            {
+                var tvp = new DataTable();
+                tvp.Columns.Add("NC", typeof(string));
+                foreach (var nc in list) tvp.Rows.Add(nc);
+                return tvp;
+            }
+
+            var allNcs = deps.Select(b => b.NC?.Trim() ?? b.NC).Distinct().ToList();
+            var tvpAll = BuildTvp(allNcs);
+
+            using (var conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
+            {
+                await conn.OpenAsync();
+
+                var tableName = TableNameResolver.AcreditacionDeposito;
+                TableNameResolver.ValidateTableName(tableName, "ServicioEnvioMasivo.hidratarDTOconSusAcreditacionesPorRango");
+
+                string sql = $@"
+                                SELECT * 
+                                FROM {tableName}
+                                WHERE FECHA >= @fechaInicio AND FECHA <= @fechaFin
+                                AND idbuzon IN (SELECT NC FROM @Lista)";
+
+                using var cmd = new SqlCommand(sql, conn);
+                var p = cmd.Parameters.Add("@Lista", SqlDbType.Structured);
+                p.Value = tvpAll;
+                p.TypeName = "dbo.ListaNC";
+
+                cmd.Parameters.AddWithValue("@fechaInicio", fechaInicio);
+                cmd.Parameters.AddWithValue("@fechaFin", fechaFin);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                await MapearAcreditaciones(reader, mapaBuzones);
+            }
+        }
+
         // Método auxiliar que mapea cada fila del reader al BuzonDTO correspondiente
         private async Task MapearAcreditaciones(SqlDataReader reader, Dictionary<string, BuzonDTO> mapa)
         {
@@ -920,6 +975,7 @@ namespace ANS.Model.Services
                             where c.estado = 'alta'
                             AND CAST(c.CIERRE AS time) > @desdeTime 
                             AND CAST(c.CIERRE AS time) <= @hastaTime 
+                            AND c.IDCLIENTE <> 160
                             AND c.NC NOT IN ('" + notInValues + @"');";
 
             using (SqlConnection conn = new SqlConnection(ConfiguracionGlobal.Conexion22))
@@ -1053,6 +1109,7 @@ namespace ANS.Model.Services
                                                                 LEFT JOIN cc_nombrews AS ws
                                                                 ON ws.NC = c.NC
                                                                 WHERE c.estado = 'alta'
+                                                                AND c.IDCLIENTE <> 160
                                                                 AND c.NC IN (
                                                                 'EA20L0108N12000027',
                                                                 'EA23L0725N12000083',

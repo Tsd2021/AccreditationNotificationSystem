@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Selección de Banco"
-        Width="1080" Height="680"
+        MinWidth="640" MinHeight="480"
         WindowStartupLocation="CenterScreen"
-        WindowState="Normal"
+        WindowState="Maximized"
         Background="White">
 
     <!-- ===== Recursos locales (mismos del main) ===== -->
@@ -127,24 +127,25 @@
             </Grid>
         </Border>
 
-        <!-- CONTENIDO CLARO -->
-        <Grid Grid.Row="1" Margin="16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <!-- CONTENIDO CLARO (ScrollViewer para ventana minimizada) -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="16">
+            <Grid MinWidth="600">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" MinWidth="280"/>
+                    <ColumnDefinition Width="*" MinWidth="200"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Bancos -->
-            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                <!-- Bancos -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                    <TextBlock Text="Bancos" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="Bancos" Style="{StaticResource SectionTitle}"/>
 
-                    <UniformGrid Grid.Row="1" Columns="3" Rows="2" Margin="4,8,4,0" HorizontalAlignment="Center">
+                        <UniformGrid Grid.Row="1" Columns="3" Rows="2" Margin="4,8,4,0" HorizontalAlignment="Center">
                         <Button Style="{StaticResource BankTileButton}" Tag="Bandes" Click="BankButton_Click">
                             <Image Source="/Images/bandes.png" Stretch="Uniform"/>
                         </Button>
@@ -212,7 +213,7 @@
                             </TextBlock>
                         </StackPanel>
 
-                        <StackPanel HorizontalAlignment="Center">
+                        <StackPanel HorizontalAlignment="Center" Margin="0,0,0,12">
                             <Button Width="96" Height="96" Background="White"
                                     BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
                                     Tag="AcreditacionManual" Click="BankButton_Click">
@@ -224,9 +225,23 @@
                                        TextWrapping="Wrap"
                                        TextAlignment="Center"/>
                         </StackPanel>
+
+                        <StackPanel HorizontalAlignment="Center">
+                            <Button Width="96" Height="96" Background="White"
+                                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
+                                    Tag="FeriadosTAAS" Click="BankButton_Click">
+                                <materialDesign:PackIcon Kind="Calendar" Width="48" Height="48" Foreground="#1976D2"/>
+                            </Button>
+                            <TextBlock Text="Feriados TAAS" Margin="0,8,0,0"
+                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                       HorizontalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"/>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
-        </Grid>
+            </Grid>
+        </ScrollViewer>
     </Grid>
 </Window>

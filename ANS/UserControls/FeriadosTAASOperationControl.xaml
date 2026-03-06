@@ -1,0 +1,120 @@
+<UserControl x:Class="ANS.UserControls.FeriadosTAASOperationControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <SolidColorBrush x:Key="Brush.Border" Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary" Color="#212121"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#757575"/>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,8,8"/>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#D32F2F"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="8" MinWidth="700">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="{Binding StatusMessage, FallbackValue=''}"
+                   Foreground="#C62828" Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="280"/>
+                <ColumnDefinition Width="*" MinWidth="320"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Tipos de Feriado -->
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,4,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Tipos de Feriado" Style="{StaticResource SectionTitle}"/>
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                        <TextBox Text="{Binding TipoNombre, UpdateSourceTrigger=PropertyChanged}" MinWidth="120" Width="180" Margin="0,0,4,0"
+                                 materialDesign:HintAssist.Hint="Nombre"/>
+                        <TextBox Text="{Binding TipoDias, UpdateSourceTrigger=PropertyChanged}" Width="50" Margin="0,0,4,0"/>
+                        <TextBlock Text="Días" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,8,0"/>
+                        <Button Content="Alta" Style="{StaticResource PrimaryButton}" Command="{Binding CrearTipoCommand}" Margin="0,0,4,0"/>
+                        <Button Content="Modificar" Command="{Binding ActualizarTipoCommand}" Margin="0,0,4,0"/>
+                        <Button Content="Baja" Command="{Binding BorrarTipoCommand}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Tipos}" SelectedItem="{Binding TipoSeleccionado, Mode=TwoWay}"
+                             DisplayMemberPath="TipoFeriado" SelectionChanged="TipoList_SelectionChanged"
+                             BorderThickness="1" BorderBrush="{StaticResource Brush.Border}"/>
+                </Grid>
+            </Border>
+
+            <!-- Feriados -->
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Feriados" Style="{StaticResource SectionTitle}"/>
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,8">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Año:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBox Text="{Binding FiltroAnioTexto, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,8,0"/>
+                        <Button Content="Cargar" Command="{Binding CargarTodoCommand}" Margin="0,0,8,0"/>
+                        <DatePicker SelectedDate="{Binding FeriadoFecha, Mode=TwoWay}" Margin="0,0,4,0"/>
+                        <CheckBox Content="Activo" IsChecked="{Binding FeriadoActivo, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <ComboBox ItemsSource="{Binding Tipos}" SelectedValue="{Binding FeriadoIdTipo, Mode=TwoWay}"
+                                  SelectedValuePath="Id" DisplayMemberPath="TipoFeriado" Width="140" Margin="0,0,4,0"/>
+                        <Button Content="Alta" Style="{StaticResource PrimaryButton}" Command="{Binding CrearFeriadoCommand}" Margin="0,0,4,0"/>
+                        <Button Content="Modificar" Command="{Binding ActualizarFeriadoCommand}" Margin="0,0,4,0"/>
+                        <Button Content="Baja" Command="{Binding BorrarFeriadoCommand}" Margin="0,0,4,0"/>
+                        <Button Content="Toggle Activo" Command="{Binding ToggleActivoFeriadoCommand}"/>
+                    </StackPanel>
+                    </ScrollViewer>
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding FeriadosDisplay}" SelectedItem="{Binding FeriadoDisplaySeleccionado, Mode=TwoWay}"
+                              SelectionChanged="FeriadoGrid_SelectionChanged"
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                              HeadersVisibility="Column" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha, StringFormat=\{0:dd/MM/yyyy\}}" Width="*"/>
+                            <DataGridTextColumn Header="Tipo feriado" Binding="{Binding TipoFeriadoNombre}" Width="*"/>
+                            <DataGridTextColumn Header="Activo" Binding="{Binding ActivoDisplay}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

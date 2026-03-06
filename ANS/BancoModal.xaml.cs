@@ -44,6 +44,8 @@ namespace ANS
                     BankOperationsContent.Content = new EnvioNivelesOperationControl(); break;
                 case "AcreditacionManual":
                     BankOperationsContent.Content = new AcreditacionManualOperationControl(); break;
+                case "FeriadosTAAS":
+                    BankOperationsContent.Content = new FeriadosTAASOperationControl(); break;
                 case "AltaEmailDestino":
                     var altaWin = new AltaEmailDestino();
                     altaWin.ShowDialog();
