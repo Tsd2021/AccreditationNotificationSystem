@@ -1,4 +1,6 @@
 using Microsoft.Reporting.NETCore;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using SharedDTOs;
 using System.Globalization;
 
@@ -630,6 +632,129 @@ namespace TAAS.Reports
             {
                 throw;
             }
+        }
+
+        public Stream ArmarExcelSemanalFrog(
+            IEnumerable<FrogAcreditacionSucursalDto> datos,
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            string buzonNombre,
+            DateTime ultimaFechaConexion,
+            out string subject,
+            out string body,
+            out string fileName)
+        {
+            var lista = datos?.ToList() ?? new List<FrogAcreditacionSucursalDto>();
+
+            // Ordenar por fecha de acreditación y luego por fecha de operación
+            lista = lista
+                .OrderBy(d => d.FechaAcreditacion)
+                .ThenBy(d => d.FechaOperacion)
+                .ToList();
+
+            // Crear workbook y hoja
+            IWorkbook workbook = new XSSFWorkbook();
+            ISheet sheet = workbook.CreateSheet("AcreditacionesFrog");
+
+            int rowIndex = 0;
+
+            // Estilos básicos
+            var headerStyle = workbook.CreateCellStyle();
+            var headerFont = workbook.CreateFont();
+            headerFont.IsBold = true;
+            headerStyle.SetFont(headerFont);
+
+            var dateStyle = workbook.CreateCellStyle();
+            short dateFormatId = workbook.CreateDataFormat().GetFormat("dd/MM/yyyy HH:mm");
+            dateStyle.DataFormat = dateFormatId;
+
+            var numberStyle = workbook.CreateCellStyle();
+            short numberFormatId = workbook.CreateDataFormat().GetFormat("#,##0.00");
+            numberStyle.DataFormat = numberFormatId;
+
+            // Encabezados
+            IRow header = sheet.CreateRow(rowIndex++);
+            string[] headers = new[]
+            {
+                "Buzón",
+                "Sucursal",
+                "Empresa",
+                "Operación",
+                "Moneda",
+                "Fecha Depósito",
+                "Fecha Acreditación",
+                "Importe Operación",
+                "Monto Total Día",
+                "Usuario"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = header.CreateCell(i);
+                cell.SetCellValue(headers[i]);
+                cell.CellStyle = headerStyle;
+            }
+
+            // Filas de datos
+            foreach (var d in lista)
+            {
+                IRow row = sheet.CreateRow(rowIndex++);
+                int col = 0;
+
+                row.CreateCell(col++).SetCellValue(d.Buzon ?? string.Empty);
+                row.CreateCell(col++).SetCellValue(d.Sucursal ?? string.Empty);
+                row.CreateCell(col++).SetCellValue(d.Empresa ?? string.Empty);
+                row.CreateCell(col++).SetCellValue(d.ImporteOperacion == 0 ? "" : d.IdOperacion.ToString());
+
+                row.CreateCell(col++).SetCellValue(d.Moneda ?? string.Empty);
+
+                var fechaDepCell = row.CreateCell(col++);
+                fechaDepCell.SetCellValue(d.FechaOperacion);
+                fechaDepCell.CellStyle = dateStyle;
+
+                var fechaAcredCell = row.CreateCell(col++);
+                fechaAcredCell.SetCellValue(d.FechaAcreditacion);
+                fechaAcredCell.CellStyle = dateStyle;
+
+                var importeCell = row.CreateCell(col++);
+                importeCell.SetCellValue((double)d.ImporteOperacion);
+                importeCell.CellStyle = numberStyle;
+
+                var totalDiaCell = row.CreateCell(col++);
+                totalDiaCell.SetCellValue((double)d.MontoTotalDia);
+                totalDiaCell.CellStyle = numberStyle;
+
+                row.CreateCell(col++).SetCellValue(d.Usuario ?? string.Empty);
+            }
+
+            // Autoajustar columnas
+            for (int i = 0; i < headers.Length; i++)
+            {
+                sheet.AutoSizeColumn(i);
+            }
+
+            // Preparar stream
+            var stream = new MemoryStream();
+            workbook.Write(stream);
+            stream.Position = 0;
+
+            string inicioStr = fechaDesde.ToString("dd/MM/yyyy HH:mm");
+            string cierreStr = fechaHasta.ToString("dd/MM/yyyy HH:mm");
+            string fechaRango = $"DEL {inicioStr} AL {cierreStr}";
+
+            fileName = $"FROG_{buzonNombre}_{fechaDesde:yyyyMMdd}_a_{fechaHasta:yyyyMMdd}.xlsx";
+
+            subject = $"Acreditaciones Buzón Inteligente FROG [{buzonNombre}] - Semana {fechaDesde:dd/MM/yyyy} al {fechaHasta:dd/MM/yyyy}";
+
+            body = $"Acreditaciones del Buzón Inteligente FROG {buzonNombre} del <strong>{fechaRango}</strong>";
+
+            if (ultimaFechaConexion != DateTime.MinValue)
+            {
+                string fechaUltimaConexionStr = ultimaFechaConexion.ToString("dd/MM/yyyy HH:mm");
+                body += $"<br/><br/>Por favor, tener en cuenta fecha y hora de última conexión del buzón registrada a las: <strong>{fechaUltimaConexionStr}</strong>";
+            }
+
+            return stream;
         }
 
     }

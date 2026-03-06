@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <ProjectReference Include="..\ANS\ANS.csproj" />
     <ProjectReference Include="..\SharedDTOs\SharedDTOs.csproj" />
   </ItemGroup>
 
