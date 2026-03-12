@@ -1500,6 +1500,11 @@ namespace ANS.Model.Services
                     fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+                if(c.IdCliente == 40)
+                {
+                    fn = $"{b.NombreBanco}_CASH_{ciudad}{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                }
                 // ✅ Ruta desde configuración (resuelve según RuntimeMode)
                 string path = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, fn);
                 

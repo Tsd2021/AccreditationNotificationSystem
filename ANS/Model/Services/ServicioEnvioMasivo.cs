@@ -536,11 +536,9 @@ namespace ANS.Model.Services
                     g => g.First()
                 );
 
+            var ncsPreview = string.Join(", ", mapaBuzones.Keys.Take(10));
             ServicioLog.instancia.WriteInfo(
-                $"Hidratando acreditaciones (rango libre) | Total buzones: {deps.Count} | " +
-                $"Buzones únicos en mapa: {mapaBuzones.Count} | " +
-                $"NCs en mapa: {string.Join(\", \", mapaBuzones.Keys.Take(10))} | " +
-                $"Desde: {fechaInicio:yyyy-MM-dd HH:mm:ss} | Hasta: {fechaFin:yyyy-MM-dd HH:mm:ss}",
+                $"Hidratando acreditaciones (rango libre) | Total buzones: {deps.Count} | Buzones únicos en mapa: {mapaBuzones.Count} | NCs en mapa: {ncsPreview} | Desde: {fechaInicio:yyyy-MM-dd HH:mm:ss} | Hasta: {fechaFin:yyyy-MM-dd HH:mm:ss}",
                 "ServicioEnvioMasivo | hidratarDTOconSusAcreditacionesPorRango");
 
             DataTable BuildTvp(List<string> list)

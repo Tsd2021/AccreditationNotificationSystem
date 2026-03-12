@@ -211,6 +211,7 @@ namespace ANS.Model.Services
                         Buzon = buzonNombre,
                         NC = buzon.NC,
                         Sucursal = buzon.Sucursal,
+                        IdOperacion = a.IdOperacion,
                         FechaOperacion = a.FechaDep,
                         FechaAcreditacion = a.FechaAcreditacion,
                         Moneda = a.Moneda,

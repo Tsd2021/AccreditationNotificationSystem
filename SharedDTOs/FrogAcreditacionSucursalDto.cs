@@ -7,6 +7,7 @@ namespace SharedDTOs
         public string Buzon { get; set; } = string.Empty;
         public string NC { get; set; } = string.Empty;
         public string Sucursal { get; set; } = string.Empty;
+        public long IdOperacion { get; set; }
         public DateTime FechaOperacion { get; set; }
         public DateTime FechaAcreditacion { get; set; }
         public string Moneda { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ANS.UserControls.EnvioMasivoOperationControl"
+<UserControl x:Class="ANS.UserControls.EnvioMasivoOperationControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -91,6 +91,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"    SharedSizeGroup="ColLabel"/>
@@ -137,11 +138,22 @@
                                    Text="Envío masivo 4"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
-                                   Margin="0,4,16,0"/>
+                                   Margin="0,4,16,4"/>
                         <Button Grid.Row="4" Grid.Column="1"
                                 Content="Enviar"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarEnvioMasivo4}"/>
+
+                        <!-- Envío masivo FROG (semanal) -->
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                   Text="Envío masivo FROG"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="5" Grid.Column="1"
+                                Content="Enviar"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarEnvioMasivoFrog}"/>
                     </Grid>
                 </Border>
             </Grid>

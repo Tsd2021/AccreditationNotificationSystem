@@ -57,6 +57,10 @@ namespace ANS.Model.Services
 
                         if (buzon.Empresa.ToUpper() == "PONILOR SAS".ToUpper())
                             query = QueryBuscaDepositoConIgual();
+                        if(buzon.Empresa.ToUpper() == "ABITAB".ToUpper())
+                        {
+                            query = QueryBuscaDepositoConIgual();
+                        }
 
                     }
                     //EXCEPCIONES BBVA
@@ -77,7 +81,11 @@ namespace ANS.Model.Services
                         if (buzon.Empresa.ToUpper() == "EUROPEAN".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
-                        }                        
+                        }
+                        if (buzon.Empresa.ToUpper() == "ABITAB BBVA".ToUpper())
+                        {
+                            query = QueryBuscaDepositoConIgual();
+                        }
                     }
 
                     #endregion
