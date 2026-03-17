@@ -337,40 +337,8 @@ namespace ANS.Model.Services
         {
             try
             {
-                // ✅ Logging específico para el buzón problemático
-                if (buzon?.NC?.Trim() == "EA22L0105N12000032")
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"Iniciando envío manual | NC: {buzon.NC} | NN: {buzon.NN} | " +
-                        $"IdCliente: {buzon.IdCliente} | EsHenderson: {buzon.EsHenderson} | " +
-                        $"NumTanda: {numTanda} | Fecha: {fecha:yyyy-MM-dd} | Cierre: {buzon.Cierre}",
-                        "ServicioEnvioAcreditacionManual | EnviarAcreditacionManual");
-                }
-                
+
                 await GetAcreditacionesByBuzonTandaYFecha(buzon, numTanda, fecha);
-
-                if (buzon.Acreditaciones == null || !buzon.Acreditaciones.Any())
-                {
-                    // ✅ Logging específico si no hay acreditaciones
-                    if (buzon?.NC?.Trim() == "EA22L0105N12000032")
-                    {
-                        ServicioLog.instancia.WriteWarning(
-                            $"No se encontraron acreditaciones para el buzón | NC: {buzon.NC} | " +
-                            $"NumTanda: {numTanda} | Fecha: {fecha:yyyy-MM-dd}",
-                            "ServicioEnvioAcreditacionManual | EnviarAcreditacionManual");
-                    }
-                    return;
-                }
-
-                // ✅ Logging específico si hay acreditaciones
-                if (buzon?.NC?.Trim() == "EA22L0105N12000032")
-                {
-                    ServicioLog.instancia.WriteInfo(
-                        $"Acreditaciones encontradas | NC: {buzon.NC} | " +
-                        $"Total acreditaciones: {buzon.Acreditaciones.Count} | " +
-                        $"Monto total: {buzon.Acreditaciones.Sum(a => a.Monto)}",
-                        "ServicioEnvioAcreditacionManual | EnviarAcreditacionManual");
-                }
 
                 var buzones = new List<BuzonDTO> { buzon };
  
@@ -407,30 +375,13 @@ namespace ANS.Model.Services
 
                     using (var cmd = ArmarCommand(conn, buzon, numTanda, fecha))
                     {
-                        // ✅ Logging específico para el buzón problemático
-                        if (buzon.NC == "EA22L0105N12000032")
-                        {
-                            var (desde, cierre) = CalcularVentana(buzon, numTanda, fecha);
-                            ServicioLog.instancia.WriteInfo(
-                                $"Ejecutando query para obtener acreditaciones | NC: {buzon.NC} | " +
-                                $"Desde: {desde:yyyy-MM-dd HH:mm:ss} | Cierre: {cierre:yyyy-MM-dd HH:mm:ss} | " +
-                                $"NumTanda: {numTanda} | Fecha: {fecha:yyyy-MM-dd}",
-                                "ServicioEnvioAcreditacionManual | GetAcreditacionesByBuzonTandaYFecha");
-                        }
+                 
                         
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
                             var acreditaciones = await MapearAcreditaciones(reader, buzon.NC);
                             buzon.Acreditaciones = acreditaciones;
                             
-                            // ✅ Logging específico después de mapear
-                            if (buzon.NC == "EA22L0105N12000032")
-                            {
-                                ServicioLog.instancia.WriteInfo(
-                                    $"Acreditaciones mapeadas | NC: {buzon.NC} | " +
-                                    $"Total: {acreditaciones.Count}",
-                                    "ServicioEnvioAcreditacionManual | GetAcreditacionesByBuzonTandaYFecha");
-                            }
                         }
                     }
                 }
@@ -575,6 +526,25 @@ namespace ANS.Model.Services
             var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
             var smtp = await ServicioEmail.instancia.getNewSmptClient();
             var sendLock = new SemaphoreSlim(1, 1);
+
+            // 1) Hidratar emails desde CCEMAIL (ServicioCC)
+            if (b._Emails == null || b._Emails.Count == 0)
+            {
+                var buzonCc = ServicioCC.getInstancia()
+                    .getBuzones()
+                    .FirstOrDefault(e =>
+                        string.Equals(e.NC?.Trim(), b.NC?.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (buzonCc != null)
+                    b._Emails = buzonCc._listaEmails;
+            }
+            // 2) Si sigue sin mails, no intentes enviar
+            if (b._Emails == null || b._Emails.Count == 0)
+            {
+                ServicioLog.instancia.WriteWarning(
+                    $"Buzón [{b.NC}] / [{b.NN}] sin emails configurados en CCEMAIL. No se envía Excel manual.",
+                    "ServicioEnvioAcreditacionManual | GenerarReporteYEnviarEmail");
+                return;
+            }
 
             // ❌ Antes: var reportService = new ReportService();
             // ✅ Ahora reutilizamos la instancia inyectada:

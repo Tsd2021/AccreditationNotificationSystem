@@ -61,7 +61,6 @@ namespace ANS.Model.Services
                         {
                             query = QueryBuscaDepositoConIgual();
                         }
-
                     }
                     //EXCEPCIONES BBVA
                     if (buzon.Banco.ToUpper() == VariablesGlobales.bbva.ToUpper())
@@ -83,6 +82,19 @@ namespace ANS.Model.Services
                             query = QueryBuscaDepositoConIgual();
                         }
                         if (buzon.Empresa.ToUpper() == "ABITAB BBVA".ToUpper())
+                        {
+                            query = QueryBuscaDepositoConIgual();
+                        }
+                    }
+
+                    if(buzon.Banco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                    {
+                        if (buzon.Empresa.ToUpper() == "DIANO".ToUpper())
+                        {
+                            query = QueryBuscaDepositoConIgual();
+                        }
+
+                        if (buzon.Empresa.ToUpper() == "NUMMI DIANO".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
                         }
