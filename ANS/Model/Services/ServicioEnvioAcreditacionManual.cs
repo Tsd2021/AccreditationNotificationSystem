@@ -293,6 +293,66 @@ namespace ANS.Model.Services
 {
     public class ServicioEnvioAcreditacionManual
     {
+        // Destinos fijos para el envío "Excel SOLO B2B" (buzones HENDERSON)
+        // (mismo formato que en ServicioEnvioMasivo: lista separada por ',' o ';')
+        private const string B2B_MAIL_DESTINO =
+            "sectorbancos@tiendainglesa.com.uy, SDeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy";
+
+        // Para pruebas en TEST: simulamos "B2B" usando esta empresa
+        private const string TEST_EMPRESA_B2B_SIMULADA = "FARMACIA TIENDA INGLESA";
+
+        private static bool IsB2BDestinoConfigurado()
+        {
+            return !string.IsNullOrWhiteSpace(B2B_MAIL_DESTINO) &&
+                   !string.Equals(B2B_MAIL_DESTINO, "PENDIENTE_DESTINO_B2B", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool EsEmpresaB2B(string? empresa)
+        {
+            var emp = empresa?.Trim();
+            if (string.IsNullOrWhiteSpace(emp))
+                return false;
+
+            if (string.Equals(emp, "B2B", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return AppRuntime.IsTest &&
+                   emp.Contains(TEST_EMPRESA_B2B_SIMULADA, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string AppendSuffixToFileName(string fileName, string suffix)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return fileName;
+            if (string.IsNullOrEmpty(suffix)) return fileName;
+
+            var ext = Path.GetExtension(fileName);
+            var baseName = Path.GetFileNameWithoutExtension(fileName);
+
+            if (string.IsNullOrWhiteSpace(ext))
+            {
+                return $"{baseName}{suffix}";
+            }
+
+            return $"{baseName}{suffix}{ext}";
+        }
+
+        private static List<Email> ParseDestinosB2B()
+        {
+            var correosB2B = B2B_MAIL_DESTINO
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(c => c.Trim())
+                .Where(c => !string.IsNullOrWhiteSpace(c))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return correosB2B.Select(c => new Email
+            {
+                Correo = c,
+                Activo = true,
+                EsPrincipal = true
+            }).ToList();
+        }
+
         // ✅ Thread-safe: Lazy<T> garantiza inicialización única
         // El constructor privado carga datos pesados (sucursales), thread-safety previene múltiples cargas
         private static readonly Lazy<ServicioEnvioAcreditacionManual> _lazy = 
@@ -524,7 +584,26 @@ namespace ANS.Model.Services
         private async Task GenerarReporteYEnviarEmail(BuzonDTO b, DateTime fechaElegida)
         {
             var semaphore = new SemaphoreSlim(initialCount: 20, maxCount: 20);
-            var smtp = await ServicioEmail.instancia.getNewSmptClient();
+            MailKit.Net.Smtp.SmtpClient? smtp = null;
+            bool shouldSend = true;
+
+            if (AppRuntime.IsTest)
+            {
+                var settings = AppRuntime.Settings.Email;
+                if (!settings.TestAllowSmtp)
+                {
+                    shouldSend = false; // WebServiceGuard bloquea SMTP: evitamos crear el cliente.
+                }
+                else
+                {
+                    smtp = await ServicioEmail.instancia.getNewSmptClient();
+                }
+            }
+            else
+            {
+                smtp = await ServicioEmail.instancia.getNewSmptClient();
+            }
+
             var sendLock = new SemaphoreSlim(1, 1);
 
             // 1) Hidratar emails desde CCEMAIL (ServicioCC)
@@ -583,7 +662,26 @@ namespace ANS.Model.Services
                 }).ToList()
             };
 
-            
+            // Si es Henderson + hay acreditaciones B2B:
+            // - el Excel normal debe excluirlas
+            // - el Excel B2B separado debe contener solo B2B
+            var acreditacionesB2B = b.EsHenderson
+                ? b2.Acreditaciones.Where(a => EsEmpresaB2B(a.Empresa)).ToList()
+                : new List<AcreditacionDTO2>();
+            var acreditacionesNoB2B = b.EsHenderson
+                ? b2.Acreditaciones.Where(a => !EsEmpresaB2B(a.Empresa)).ToList()
+                : b2.Acreditaciones.ToList();
+
+            if (b.EsHenderson && acreditacionesB2B.Count > 0)
+            {
+                b2.Acreditaciones = acreditacionesNoB2B;
+                b2.MontoTotal = acreditacionesNoB2B.Sum(a => a.Monto);
+
+                ServicioLog.instancia.WriteInfo(
+                    $"HENDERSON -> B2B detectadas: {acreditacionesB2B.Count} | Excel normal con no-B2B: {acreditacionesNoB2B.Count}",
+                    "ServicioEnvioAcreditacionManual | Henderson B2B");
+            }
+
             Stream excelStream; 
 
             string subject, body, fileName;
@@ -606,8 +704,117 @@ namespace ANS.Model.Services
                 await sendLock.WaitAsync();
                 try
                 {
-                    await ServicioEmail.instancia.EnviarExcelPorMailMasivoConMailKit(
-                        excelStream, fileName, subject, body, b._Emails, smtp);
+                    if (shouldSend)
+                    {
+                        await ServicioEmail.instancia.EnviarExcelPorMailMasivoConMailKit(
+                            excelStream, fileName, subject, body, b._Emails, smtp);
+                    }
+                    else
+                    {
+                        ServicioLog.instancia.WriteInfo(
+                            $"TEST: SMTP bloqueado, se omite envío mail normal en manual | NC: {b.NC}",
+                            "ServicioEnvioAcreditacionManual | Henderson B2B");
+                    }
+
+                    // Envío B2B separado (solo Henderson + acreditaciones B2B)
+                    if (b.EsHenderson)
+                    {
+                        if (acreditacionesB2B.Count > 0)
+                        {
+                            if (IsB2BDestinoConfigurado())
+                            {
+                                try
+                                {
+                                    ServicioLog.instancia.WriteInfo(
+                                        $"Generando mail B2B separado | NC: {b.NC} | acreditaciones B2B: {acreditacionesB2B.Count}",
+                                        "ServicioEnvioAcreditacionManual | Henderson B2B");
+
+                                    var b2BDto = new BuzonDTO2
+                                    {
+                                        NC = b2.NC,
+                                        NN = b2.NN,
+                                        Empresa = b2.Empresa,
+                                        FechaInicio = b2.FechaInicio,
+                                        Cierre = b2.Cierre,
+                                        MontoTotal = acreditacionesB2B.Sum(a => a.Monto),
+                                        Moneda = b2.Moneda,
+                                        Divisa = b2.Divisa,
+                                        IdOperacion = b2.IdOperacion,
+                                        Sucursal = b2.Sucursal,
+                                        IdOperacionFinal = b2.IdOperacionFinal,
+                                        IdOperacionInicio = b2.IdOperacionInicio,
+                                        NumeroEnvioMasivo = b2.NumeroEnvioMasivo,
+                                        UltimaFechaConexion = b2.UltimaFechaConexion,
+                                        EsHenderson = b2.EsHenderson,
+                                        NombreWS = b2.NombreWS,
+                                        IdCliente = b2.IdCliente,
+                                        Acreditaciones = acreditacionesB2B
+                                    };
+
+                                    Stream? excelStreamB2B;
+                                    string? subjectB2B;
+                                    string? bodyB2B;
+                                    string? fileNameB2B;
+
+                                    excelStreamB2B = b2BDto.IdCliente switch
+                                    {
+                                        179 => reportService.ArmarExcelMasivoParaCoboe(b2BDto, out subjectB2B, out bodyB2B, out fileNameB2B),
+                                        _ => reportService.ArmarYEnviarExcelDeUnBuzon(b2BDto, fechaElegida, out subjectB2B, out bodyB2B, out fileNameB2B)
+                                    };
+
+                                    if (excelStreamB2B != null && excelStreamB2B.CanSeek)
+                                    {
+                                        excelStreamB2B.Position = 0;
+                                    }
+
+                                    if (!string.IsNullOrWhiteSpace(fileNameB2B))
+                                    {
+                                        fileNameB2B = AppendSuffixToFileName(fileNameB2B, "_B2B");
+                                    }
+
+                                    var destinosB2B = ParseDestinosB2B();
+
+                                    if (excelStreamB2B != null &&
+                                        !string.IsNullOrWhiteSpace(fileNameB2B) &&
+                                        subjectB2B != null &&
+                                        bodyB2B != null &&
+                                        destinosB2B != null &&
+                                        destinosB2B.Count > 0)
+                                    {
+                                        if (shouldSend)
+                                        {
+                                            await ServicioEmail.instancia.EnviarExcelPorMailMasivoConMailKit(
+                                                excelStreamB2B,
+                                                fileNameB2B,
+                                                subjectB2B,
+                                                bodyB2B,
+                                                destinosB2B,
+                                                smtp);
+                                        }
+                                        else
+                                        {
+                                            ServicioLog.instancia.WriteInfo(
+                                                $"TEST: SMTP bloqueado, se omite envío mail B2B separado en manual | NC: {b.NC}",
+                                                "ServicioEnvioAcreditacionManual | Henderson B2B");
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    ServicioLog.instancia.WriteLog(
+                                        ex,
+                                        "Todos",
+                                        $"Fallo enviando mail B2B separado en manual | NC: {b.NC}. El mail normal ya fue enviado.");
+                                }
+                            }
+                            else
+                            {
+                                ServicioLog.instancia.WriteInfo(
+                                    $"Se omite mail B2B separado en manual porque B2B_MAIL_DESTINO sigue en modo placeholder | NC: {b.NC}",
+                                    "ServicioEnvioAcreditacionManual | Henderson B2B");
+                            }
+                        }
+                    }
                 }
                 finally
                 {

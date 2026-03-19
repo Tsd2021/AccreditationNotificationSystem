@@ -345,7 +345,6 @@ namespace ANS.Model.Services
             }
         }
 
-
         public int AgregarEmailDestino(
             string banco,
             int? idCliente,

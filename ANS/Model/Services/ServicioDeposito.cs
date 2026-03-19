@@ -7,14 +7,14 @@ namespace ANS.Model.Services
     public class ServicioDeposito : IServicioDeposito
     {
         private string _conexionWebBuzones = ConfiguracionGlobal.ConexionWebBuzones;
-        
+
         // ✅ Thread-safe: Lazy<T> garantiza inicialización única
         // Usado por múltiples jobs concurrentes para asignar depósitos a buzones
-        private static readonly Lazy<ServicioDeposito> _lazy = 
+        private static readonly Lazy<ServicioDeposito> _lazy =
             new Lazy<ServicioDeposito>(() => new ServicioDeposito());
-        
+
         private static ServicioDeposito instancia => _lazy.Value;
-        
+
         public static ServicioDeposito getInstancia()
         {
             return _lazy.Value;
@@ -46,7 +46,7 @@ namespace ANS.Model.Services
                         if (buzon.Empresa.ToUpper() == "SANTANDER ECHEDO".ToUpper())
                             query = QueryBuscaDepositoConIgual();
 
-                        if(buzon.Empresa.ToUpper() == "PONILOR".ToUpper())
+                        if (buzon.Empresa.ToUpper() == "PONILOR".ToUpper())
                             query = QueryBuscaDepositoConIgual();
 
                         if (buzon.Empresa.ToUpper() == "PONILOR PUNTA DE SANTIAGO".ToUpper())
@@ -57,7 +57,7 @@ namespace ANS.Model.Services
 
                         if (buzon.Empresa.ToUpper() == "PONILOR SAS".ToUpper())
                             query = QueryBuscaDepositoConIgual();
-                        if(buzon.Empresa.ToUpper() == "ABITAB".ToUpper())
+                        if (buzon.Empresa.ToUpper() == "ABITAB".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
                         }
@@ -87,7 +87,7 @@ namespace ANS.Model.Services
                         }
                     }
 
-                    if(buzon.Banco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
+                    if (buzon.Banco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
                     {
                         if (buzon.Empresa.ToUpper() == "DIANO".ToUpper())
                         {
@@ -151,27 +151,27 @@ namespace ANS.Model.Services
                         }
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
                             {
-                                while (await reader.ReadAsync())
+
+                                Deposito deposito = new Deposito
                                 {
+                                    IdDeposito = reader.GetInt32(0),
+                                    IdOperacion = reader.GetInt32(1),
+                                    Codigo = reader.GetString(2),
+                                    Tipo = reader.GetString(3),
+                                    Empresa = reader.GetString(4),
+                                    FechaDep = reader.GetDateTime(5)
+                                };
 
-                                    Deposito deposito = new Deposito
-                                    {
-                                        IdDeposito = reader.GetInt32(0),
-                                        IdOperacion = reader.GetInt32(1),
-                                        Codigo = reader.GetString(2),
-                                        Tipo = reader.GetString(3),
-                                        Empresa = reader.GetString(4),
-                                        FechaDep = reader.GetDateTime(5)
-                                    };
-
-                                    if (deposito.Tipo == "Validado")
-                                    {
-                                        depositosList.Add(deposito);
-                                    }
-
+                                if (deposito.Tipo == "Validado")
+                                {
+                                    depositosList.Add(deposito);
                                 }
-                            }        
+
+                            }
+                        }
                     }
                 }
 

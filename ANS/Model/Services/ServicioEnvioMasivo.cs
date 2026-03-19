@@ -38,6 +38,24 @@ namespace ANS.Model.Services
     "EA24L1010N07000713", "EA24L1010N12000148"
 };
 
+        // Destino fijo para el envío "Excel SOLO B2B" (buzones HENDERSON)
+        // TODO: confirmar destino real para B2B antes de producción.
+        // Mientras no se confirme, el mail B2B se omitirá.
+        // Se acepta lista separada por ',' o ';' (ej: "it@... , tienda@...")
+        private const string B2B_MAIL_DESTINO =
+            "sectorbancos@tiendainglesa.com.uy, SDeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy";
+        //private const string B2B_MAIL_DESTINO = "PENDIENTE_DESTINO_B2B";
+
+        // Para pruebas en TEST, cuando aún no existen acreditaciones reales de empresa "B2B",
+        // simulamos "B2B" usando esta empresa.
+        private const string TEST_EMPRESA_B2B_SIMULADA = "FARMACIA TIENDA INGLESA";
+
+        private static bool IsB2BDestinoConfigurado()
+        {
+            return !string.IsNullOrWhiteSpace(B2B_MAIL_DESTINO) &&
+                   !string.Equals(B2B_MAIL_DESTINO, "PENDIENTE_DESTINO_B2B", StringComparison.OrdinalIgnoreCase);
+        }
+
 
         public async Task procesarEnvioMasivo(int numEnvioMasivo)
         {
@@ -160,15 +178,127 @@ namespace ANS.Model.Services
                     };
 
 
+                    // Si el buzón es Henderson y hay acreditaciones B2B:
+                    // - Excel normal debe EXCLUIR B2B
+                    // - Excel B2B separado debe contener solo B2B
+                    var acreditacionesB2B = b.EsHenderson
+                        ? (b2.Acreditaciones?.Where(a => EsEmpresaB2B(a.Empresa)).ToList() ?? new List<AcreditacionDTO2>())
+                        : new List<AcreditacionDTO2>();
+
+                    var acreditacionesNoB2B = b.EsHenderson
+                        ? (b2.Acreditaciones?.Where(a => !EsEmpresaB2B(a.Empresa)).ToList() ?? new List<AcreditacionDTO2>())
+                        : (b2.Acreditaciones?.ToList() ?? new List<AcreditacionDTO2>());
+
+                    var b2ParaExcelNormal = (b.EsHenderson && acreditacionesB2B.Count > 0)
+                        ? CloneBuzonDTO2WithAcreditaciones(b2, acreditacionesNoB2B)
+                        : b2;
+
                     Stream excelStream;
                     string subject, body, fileName;
 
-                    excelStream = b2.IdCliente switch
+                    excelStream = b2ParaExcelNormal.IdCliente switch
                     {
-                        179 => reportService.ArmarExcelMasivoParaCoboe(b2, out subject, out body, out fileName),
-                        _ => reportService.ArmarExcelConReportViewer(b2, out subject, out body, out fileName)
+                        179 => reportService.ArmarExcelMasivoParaCoboe(b2ParaExcelNormal, out subject, out body, out fileName),
+                        _ => reportService.ArmarExcelConReportViewer(b2ParaExcelNormal, out subject, out body, out fileName)
                     };
 
+                    // Mail B2B separado (solo Henderson con acreditaciones de empresa B2B)
+                    Stream? excelStreamB2B = null;
+                    string? subjectB2B = null;
+                    string? bodyB2B = null;
+                    string? fileNameB2B = null;
+                    List<Email>? destinosB2B = null;
+
+                    if (b.EsHenderson)
+                    {
+                        ServicioLog.instancia.WriteInfo(
+                            $"Buzón identificado como HENDERSON | NC: {b.NC} | NN: {b.NN} | IdCliente: {b.IdCliente}",
+                            "ServicioEnvioMasivo | Henderson B2B");
+
+                        ServicioLog.instancia.WriteInfo(
+                            $"HENDERSON -> acreditaciones B2B detectadas: {acreditacionesB2B.Count} | Excel normal con no-B2B: {acreditacionesNoB2B.Count}",
+                            "ServicioEnvioMasivo | Henderson B2B");
+
+                        if (acreditacionesB2B.Count > 0)
+                        {
+                            ServicioLog.instancia.WriteInfo(
+                                $"Generando Excel B2B (solo acreditaciones B2B) | NC: {b.NC}",
+                                "ServicioEnvioMasivo | Henderson B2B");
+
+                            try
+                            {
+                                var b2BDto = CloneBuzonDTO2WithAcreditaciones(b2, acreditacionesB2B);
+
+                                excelStreamB2B = b2BDto.IdCliente switch
+                                {
+                                    179 => reportService.ArmarExcelMasivoParaCoboe(b2BDto, out subjectB2B, out bodyB2B, out fileNameB2B),
+                                    _ => reportService.ArmarExcelConReportViewer(b2BDto, out subjectB2B, out bodyB2B, out fileNameB2B)
+                                };
+
+                                // Asegurar que el stream esté listo para lectura/adjunto.
+                                // Si el stream soporta seek, reposicionamos al inicio.
+                                if (excelStreamB2B != null && excelStreamB2B.CanSeek)
+                                {
+                                    excelStreamB2B.Position = 0;
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(fileNameB2B))
+                                {
+                                    fileNameB2B = AppendSuffixToFileName(fileNameB2B, "_B2B");
+                                }
+
+                                if (IsB2BDestinoConfigurado())
+                                {
+                                    var correosB2B = B2B_MAIL_DESTINO
+                                        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                        .Select(c => c.Trim())
+                                        .Where(c => !string.IsNullOrWhiteSpace(c))
+                                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                                        .ToList();
+
+                                    destinosB2B = correosB2B
+                                        .Select(c => new Email
+                                        {
+                                            Correo = c,
+                                            Activo = true,
+                                            EsPrincipal = true
+                                        })
+                                        .ToList();
+
+                                    ServicioLog.instancia.WriteInfo(
+                                        $"Excel B2B generado OK | NC: {b.NC} | Destinos B2B: {correosB2B.Count}",
+                                        "ServicioEnvioMasivo | Henderson B2B");
+                                }
+                                else
+                                {
+                                    destinosB2B = null;
+                                    ServicioLog.instancia.WriteInfo(
+                                        $"Excel B2B generado, pero se omite el mail B2B porque B2B_MAIL_DESTINO sigue en modo placeholder | NC: {b.NC} | Destino fijo: {B2B_MAIL_DESTINO}",
+                                        "ServicioEnvioMasivo | Henderson B2B");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // Decisión segura: si falla el Excel B2B, se envía igual el Excel normal.
+                                excelStreamB2B = null;
+                                subjectB2B = null;
+                                bodyB2B = null;
+                                fileNameB2B = null;
+                                destinosB2B = null;
+
+                                ServicioLog.instancia.WriteLog(
+                                    ex,
+                                    "Todos",
+                                    $"Fallo generando Excel B2B | NC: {b.NC} | NN: {b.NN} | acreditacionesB2B: {acreditacionesB2B.Count}. Se enviará solo el Excel normal.");
+                            }
+                        }
+                        else
+                        {
+                            ServicioLog.instancia.WriteInfo(
+                                $"HENDERSON -> sin acreditaciones B2B, no se genera Excel B2B | NC: {b.NC}",
+                                "ServicioEnvioMasivo | Henderson B2B");
+                        }
+                    }
 
                     await semaphore.WaitAsync();
 
@@ -188,7 +318,35 @@ namespace ANS.Model.Services
                                     // TEST con SMTP habilitado: enviar realmente (pero con whitelist aplicada)
                                     await ServicioEmail.instancia
                                         .EnviarExcelPorMailMasivoConMailKit(
-                                           excelStream, fileName, subject, body, b._Emails, smtp);
+                                            excelStream, fileName, subject, body, b._Emails, smtp);
+
+                                    // Mail B2B separado (no afecta el envío normal)
+                                    if (excelStreamB2B != null && destinosB2B != null && fileNameB2B != null &&
+                                        subjectB2B != null && bodyB2B != null)
+                                    {
+                                        try
+                                        {
+                                            ServicioLog.instancia.WriteInfo(
+                                                $"Enviando mail B2B separado | NC: {b.NC} | Destino fijo: {B2B_MAIL_DESTINO}",
+                                                "ServicioEnvioMasivo | Henderson B2B");
+
+                                            await ServicioEmail.instancia
+                                                .EnviarExcelPorMailMasivoConMailKit(
+                                                    excelStreamB2B,
+                                                    fileNameB2B,
+                                                    subjectB2B,
+                                                    bodyB2B,
+                                                    destinosB2B,
+                                                    smtp);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            ServicioLog.instancia.WriteLog(
+                                                ex,
+                                                "Todos",
+                                                $"Fallo enviando mail B2B separado | NC: {b.NC}. El mail normal ya fue enviado.");
+                                        }
+                                    }
                                 }
                                 else
                                 {
@@ -204,14 +362,49 @@ namespace ANS.Model.Services
                                         $"Originales: {string.Join(", ", originalRecipients)} | " +
                                         $"Para habilitar envío real, configurar TestAllowSmtp=true en App.config",
                                         "ServicioEnvioMasivo | Envío Masivo TEST");
+
+                                    if (excelStreamB2B != null)
+                                    {
+                                        ServicioLog.instancia.WriteInfo(
+                                            $"TEST: SMTP bloqueado, se omite envío mail B2B separado | NC: {b.NC} | Destino fijo: {B2B_MAIL_DESTINO}",
+                                            "ServicioEnvioMasivo | Henderson B2B");
+                                    }
                                 }
                             }
                             else
                             {
-                                // PRODUCTION: comportamiento normal
+                                // PRODUCTION: comportamiento normal (mail normal intacto)
                                 await ServicioEmail.instancia
                                     .EnviarExcelPorMailMasivoConMailKit(
-                                       excelStream, fileName, subject, body, b._Emails, smtp);
+                                        excelStream, fileName, subject, body, b._Emails, smtp);
+
+                                // Mail B2B separado (no afecta el envío normal)
+                                if (excelStreamB2B != null && destinosB2B != null && fileNameB2B != null &&
+                                    subjectB2B != null && bodyB2B != null)
+                                {
+                                    try
+                                    {
+                                        ServicioLog.instancia.WriteInfo(
+                                            $"Enviando mail B2B separado | NC: {b.NC} | Destino fijo: {B2B_MAIL_DESTINO}",
+                                            "ServicioEnvioMasivo | Henderson B2B");
+
+                                        await ServicioEmail.instancia
+                                            .EnviarExcelPorMailMasivoConMailKit(
+                                                excelStreamB2B,
+                                                fileNameB2B,
+                                                subjectB2B,
+                                                bodyB2B,
+                                                destinosB2B,
+                                                smtp);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        ServicioLog.instancia.WriteLog(
+                                            ex,
+                                            "Todos",
+                                            $"Fallo enviando mail B2B separado | NC: {b.NC}. El mail normal ya fue enviado.");
+                                    }
+                                }
                             }
 
                         }
@@ -1172,6 +1365,71 @@ namespace ANS.Model.Services
 
             return retorno;
 
+        }
+
+        private static bool EsEmpresaB2B(string? empresa)
+        {
+            // Regla robusta:
+            // - PRODUCTION: empresa debe coincidir exactamente con "B2B" (trim + case-insensitive)
+            // - TEST: además permite la empresa simulada para validar el flujo completo
+            var emp = empresa?.Trim();
+            if (string.IsNullOrWhiteSpace(emp))
+            {
+                return false;
+            }
+
+            if (string.Equals(emp, "B2B", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return AppRuntime.IsTest &&
+                   emp.Contains(TEST_EMPRESA_B2B_SIMULADA, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static BuzonDTO2 CloneBuzonDTO2WithAcreditaciones(BuzonDTO2 source, List<AcreditacionDTO2> acreditaciones)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return new BuzonDTO2
+            {
+                NC = source.NC,
+                NN = source.NN,
+                Empresa = source.Empresa,
+                FechaInicio = source.FechaInicio,
+                Cierre = source.Cierre,
+                // Si el Excel se arma con un subconjunto de acreditaciones (p.ej. B2B),
+                // MontoTotal debe reflejar ese subconjunto.
+                MontoTotal = acreditaciones?.Sum(a => a.Monto) ?? 0,
+                Moneda = source.Moneda,
+                Divisa = source.Divisa,
+                IdOperacion = source.IdOperacion,
+                Sucursal = source.Sucursal,
+                IdOperacionFinal = source.IdOperacionFinal,
+                IdOperacionInicio = source.IdOperacionInicio,
+                NumeroEnvioMasivo = source.NumeroEnvioMasivo,
+                UltimaFechaConexion = source.UltimaFechaConexion,
+                EsHenderson = source.EsHenderson,
+                NombreWS = source.NombreWS,
+                IdCliente = source.IdCliente,
+                Acreditaciones = acreditaciones ?? new List<AcreditacionDTO2>()
+            };
+        }
+
+        private static string AppendSuffixToFileName(string fileName, string suffix)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return fileName;
+            if (string.IsNullOrEmpty(suffix)) return fileName;
+
+            var ext = Path.GetExtension(fileName);
+            var baseName = Path.GetFileNameWithoutExtension(fileName);
+
+            if (string.IsNullOrWhiteSpace(ext))
+            {
+                return $"{baseName}{suffix}";
+            }
+
+            return $"{baseName}{suffix}{ext}";
         }
 
         public class TotalesImprimir
