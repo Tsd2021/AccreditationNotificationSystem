@@ -134,6 +134,11 @@ namespace ANS.Model.Jobs
             {
                 return new ExcelSantanderTesoreria2(_servicioCuentaBuzon);
             }
+
+            if(jobType == typeof(ExcelB2BTanda))
+            {
+                return new ExcelB2BTanda(_servicioCuentaBuzon);
+            }
             #endregion
             #endregion
             #region SCOTIABANK_JOBS

@@ -316,8 +316,10 @@
                         </Grid>
 
                         <!-- DataGrid con scroll interno, sin MaxHeight -->
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding DepositosView}" Style="{StaticResource GridBase}"
-                                  MinHeight="80" Margin="0,8,0,0">
+                        <DataGrid Grid.Row="1" x:Name="DepositosDataGrid"
+                                  ItemsSource="{Binding DepositosView}" Style="{StaticResource GridBase}"
+                                  MinHeight="80" Margin="0,8,0,0"
+                                  SelectionChanged="DepositosDataGrid_SelectionChanged">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="" Width="40">
                                     <DataGridTemplateColumn.CellTemplate>

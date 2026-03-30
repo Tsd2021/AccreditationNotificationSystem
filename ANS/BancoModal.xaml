@@ -144,7 +144,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="Filtros" Style="{StaticResource SectionTitle}" />
                     <StackPanel Margin="0,8,0,0"  Grid.Row="1">
-                        <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                        <DatePicker SelectedDate="{Binding ElementName=BankOperationsContent, Path=Content.DataContext.FechaSeleccionada, Mode=TwoWay}"
                         SelectedDateFormat="Short"/>
                     </StackPanel>
                 </Grid>

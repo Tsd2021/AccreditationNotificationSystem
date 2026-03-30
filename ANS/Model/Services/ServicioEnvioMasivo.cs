@@ -30,20 +30,20 @@ namespace ANS.Model.Services
         /// </summary>
         private static readonly string[] NcsSoloEnvioMasivo3 = new[]
         {
-    "EA20L0108N12000027", "EA23L0725N12000083", "EA23L0725N12000094",
-    "EA23L0725N12000101", "EA23L0725N12000104", "EA23L0810N12000117",
-    "EA24L0101N13000011", "FROG05", "FROG06", "FROG09", "FROG10",
-    "FROG15", "FROG16", "FROG18", "FROG20", "FROG22", "FROG24",
-    "FROG25", "FROG26", "FROG3", "FROG4", "FROG6",
-    "EA24L1010N07000713", "EA24L1010N12000148"
-};
+            "EA20L0108N12000027", "EA23L0725N12000083", "EA23L0725N12000094",
+            "EA23L0725N12000101", "EA23L0725N12000104", "EA23L0810N12000117",
+            "EA24L0101N13000011", "FROG05", "FROG06", "FROG09", "FROG10",
+            "FROG15", "FROG16", "FROG18", "FROG20", "FROG22", "FROG24",
+            "FROG25", "FROG26", "FROG3", "FROG4", "FROG6",
+            "EA24L1010N07000713", "EA24L1010N12000148"
+        };
 
         // Destino fijo para el envío "Excel SOLO B2B" (buzones HENDERSON)
         // TODO: confirmar destino real para B2B antes de producción.
         // Mientras no se confirme, el mail B2B se omitirá.
         // Se acepta lista separada por ',' o ';' (ej: "it@... , tienda@...")
         private const string B2B_MAIL_DESTINO =
-            "sectorbancos@tiendainglesa.com.uy, SDeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy";
+            "sectorbancos@tiendainglesa.com.uy, sdeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy, pepper@tiendainglesa.com.uy";
         //private const string B2B_MAIL_DESTINO = "PENDIENTE_DESTINO_B2B";
 
         // Para pruebas en TEST, cuando aún no existen acreditaciones reales de empresa "B2B",

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ANS.UserControls.SantanderOperationControl"
+<UserControl x:Class="ANS.UserControls.SantanderOperationControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -213,8 +213,10 @@
                 <!-- =================== Columna Derecha: Excel =================== -->
                 <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,0,0,0">
                     <Grid Grid.IsSharedSizeScope="True">
-                        <!-- Filas: header + T1 + T2 + T1 Teso + T2 Teso + DXD + Reporte -->
+                        <!-- Filas: header + T1 + T1B2B + T2B2B + T2 + T1 Teso + T2 Teso + DXD + Reporte -->
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -245,57 +247,79 @@
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarTanda1HendersonExcelCommand}"/>
 
-                        <!-- Fila 2: Tanda 2 -->
+                        <!-- Fila 2: Tanda 1 B2B -->
                         <TextBlock Grid.Row="2" Grid.Column="0"
-                                   Text="Tanda 2 (Henderson)"
+                                   Text="Tanda 1 (B2B)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,4"/>
                         <Button Grid.Row="2" Grid.Column="1"
-                                Content="Generar Excel T2"
+                                Content="Generar Excel T1 B2B"
                                 Style="{StaticResource PrimaryButton}"
-                                Command="{Binding EjecutarTanda2HendersonExcelCommand}"/>
+                                Command="{Binding EjecutarTanda1B2BExcelCommand}"/>
 
-                        <!-- Fila 3: Tanda 1 Tesorería -->
+                        <!-- Fila 3: Tanda 2 B2B -->
                         <TextBlock Grid.Row="3" Grid.Column="0"
-                                   Text="Tanda 1 (Tesorería)"
+                                   Text="Tanda 2 (B2B)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,4"/>
                         <Button Grid.Row="3" Grid.Column="1"
-                                Content="Generar Excel T1 TESO"
+                                Content="Generar Excel T2 B2B"
                                 Style="{StaticResource PrimaryButton}"
-                                Command="{Binding EjecutarTanda1ExcelTesoreriaCommand}"/>
+                                Command="{Binding EjecutarTanda2B2BExcelCommand}"/>
 
-                        <!-- Fila 4: Tanda 2 Tesorería -->
+                        <!-- Fila 4: Tanda 2 -->
                         <TextBlock Grid.Row="4" Grid.Column="0"
-                                   Text="Tanda 2 (Tesorería)"
+                                   Text="Tanda 2 (Henderson)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,4"/>
                         <Button Grid.Row="4" Grid.Column="1"
-                                Content="Generar Excel T2 TESO"
+                                Content="Generar Excel T2"
                                 Style="{StaticResource PrimaryButton}"
-                                Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"/>
+                                Command="{Binding EjecutarTanda2HendersonExcelCommand}"/>
 
-                        <!-- Fila 5: Día a Día -->
+                        <!-- Fila 5: Tanda 1 Tesorería -->
                         <TextBlock Grid.Row="5" Grid.Column="0"
-                                   Text="Día a Día"
+                                   Text="Tanda 1 (Tesorería)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,4"/>
                         <Button Grid.Row="5" Grid.Column="1"
+                                Content="Generar Excel T1 TESO"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda1ExcelTesoreriaCommand}"/>
+
+                        <!-- Fila 6: Tanda 2 Tesorería -->
+                        <TextBlock Grid.Row="6" Grid.Column="0"
+                                   Text="Tanda 2 (Tesorería)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="6" Grid.Column="1"
+                                Content="Generar Excel T2 TESO"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda2ExcelTesoreriaCommand}"/>
+
+                        <!-- Fila 7: Día a Día -->
+                        <TextBlock Grid.Row="7" Grid.Column="0"
+                                   Text="Día a Día"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="7" Grid.Column="1"
                                 Content="Excel DXD"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarDiaADiaExcelCommand}"/>
 
-                        <!-- Fila 6: Reporte Diario -->
-                        <TextBlock Grid.Row="6" Grid.Column="0"
+                        <!-- Fila 8: Reporte Diario -->
+                        <TextBlock Grid.Row="8" Grid.Column="0"
                                    Text="Reporte Diario"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,0"/>
-                        <Button Grid.Row="6" Grid.Column="1"
+                        <Button Grid.Row="8" Grid.Column="1"
                                 Content="Reporte Diario"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarReporteDiarioCommand}"/>

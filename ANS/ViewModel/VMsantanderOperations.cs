@@ -1,4 +1,4 @@
-﻿using ANS.Model;
+using ANS.Model;
 using ANS.Model.Services;
 using ANS.Views;
 using GalaSoft.MvvmLight;
@@ -28,6 +28,8 @@ namespace ANS.ViewModel
         public ICommand EjecutarTanda2HendersonTXTCommand { get; }
         public ICommand EjecutarTanda1HendersonExcelCommand { get; }
         public ICommand EjecutarTanda2HendersonExcelCommand { get; }
+        public ICommand EjecutarTanda1B2BExcelCommand { get; }
+        public ICommand EjecutarTanda2B2BExcelCommand { get; }
         public ICommand EjecutarTanda1ExcelTesoreriaCommand { get; }
         public ICommand EjecutarTanda2ExcelTesoreriaCommand { get; }
         public ICommand EjecutarDeLasSierrasTXTCommand { get; }
@@ -50,6 +52,10 @@ namespace ANS.ViewModel
             EjecutarTanda1HendersonExcelCommand = new RelayCommand(async () => await ejecutarTanda1HendersonExcel());
 
             EjecutarTanda2HendersonExcelCommand = new RelayCommand(async () => await ejecutarTanda2HendersonExcel());
+
+            EjecutarTanda1B2BExcelCommand = new RelayCommand(async () => await ejecutarTanda1B2BExcel());
+
+            EjecutarTanda2B2BExcelCommand = new RelayCommand(async () => await ejecutarTanda2B2BExcel());
 
             EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaTXT());
 
@@ -162,6 +168,7 @@ namespace ANS.ViewModel
         {
 
             IsLoading = true;
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
 
             TimeSpan desde = new TimeSpan(7, 0, 0);
 
@@ -179,7 +186,7 @@ namespace ANS.ViewModel
                 await Task.Run(async () =>
                 {
 
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda,tarea);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda, tarea, diaOperativo);
 
                 });
 
@@ -198,6 +205,7 @@ namespace ANS.ViewModel
         {
 
             IsLoading = true;
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
 
             TimeSpan desde = new TimeSpan(14, 30, 0);
 
@@ -212,7 +220,7 @@ namespace ANS.ViewModel
             {
                 await Task.Run(async () =>
                 {
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda,tarea);
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda, tarea, diaOperativo);
 
                    // await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MALDONADO", numTanda);
                 });
@@ -221,6 +229,66 @@ namespace ANS.ViewModel
             {
                 Console.WriteLine(e);
                 ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Tanda 2 Henderson");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task ejecutarTanda1B2BExcel()
+        {
+            IsLoading = true;
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
+
+            TimeSpan desde = new TimeSpan(7, 0, 0);
+            TimeSpan hasta = new TimeSpan(7, 2, 0);
+
+            Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
+            int numTanda = 1;
+            string tarea = "Tanda1B2B";
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda, tarea, diaOperativo);
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Tanda 1 B2B");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task ejecutarTanda2B2BExcel()
+        {
+            IsLoading = true;
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
+
+            TimeSpan desde = new TimeSpan(14, 30, 0);
+            TimeSpan hasta = new TimeSpan(14, 32, 0);
+
+            Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
+            int numTanda = 2;
+            string tarea = "Tanda2B2B";
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda, tarea, diaOperativo);
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Tanda 2 B2B");
             }
             finally
             {
@@ -320,6 +388,7 @@ namespace ANS.ViewModel
         private async Task ejecutarDiaADiaExcel()
         {
             Banco bank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
 
             ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
@@ -332,7 +401,7 @@ namespace ANS.ViewModel
             {
                 await Task.Run(() =>
                 {
-                    _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bank, config,tarea).Wait();
+                    _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bank, config, tarea, diaOperativo).Wait();
                 });
 
             }
@@ -353,6 +422,7 @@ namespace ANS.ViewModel
         private async Task ejecutarReporteDiarioExcel()
         {
             IsLoading = true; await Task.Yield();
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
 
             string tarea = "ReporteDiario";
 
@@ -360,7 +430,7 @@ namespace ANS.ViewModel
             {
                 await Task.Run(() =>
                 {
-                     _servicioCuentaBuzon.generarExcelDelResumenDelDiaSantander(tarea).Wait();
+                     _servicioCuentaBuzon.generarExcelDelResumenDelDiaSantander(tarea, diaOperativo).Wait();
                 });
                 
             }

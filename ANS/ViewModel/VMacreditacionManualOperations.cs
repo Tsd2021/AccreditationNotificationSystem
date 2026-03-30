@@ -197,6 +197,7 @@ namespace ANS.ViewModel
                 {
                     DepositosView?.Refresh();
                     RaisePropertyChanged(nameof(TotalDepositosVisible));
+                    AcreditarSeleccionadosCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -470,6 +471,7 @@ namespace ANS.ViewModel
                 RaisePropertyChanged(nameof(TotalSeleccionados));
                 SeleccionarTodosVisiblesCommand.RaiseCanExecuteChanged();
                 LimpiarSeleccionDepositosCommand.RaiseCanExecuteChanged();
+                AcreditarSeleccionadosCommand.RaiseCanExecuteChanged();
 
                 StatusMessage = depositosConEstado.Count > 0 
                     ? $"Se encontraron {depositosConEstado.Count} depósito(s)" 

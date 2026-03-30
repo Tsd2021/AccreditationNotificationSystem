@@ -16,16 +16,16 @@ namespace ANS.Model.Services
     public class ServicioCuentaBuzon : IServicioCuentaBuzon
     {
         private string _conexionTSD = ConfiguracionGlobal.Conexion22;
-        
+
         // ✅ Thread-safe: Lazy<T> garantiza inicialización única
         // Este servicio es usado por múltiples jobs de Quartz concurrentes, thread-safety es esencial
-        private static readonly Lazy<ServicioCuentaBuzon> _lazy = 
+        private static readonly Lazy<ServicioCuentaBuzon> _lazy =
             new Lazy<ServicioCuentaBuzon>(() => new ServicioCuentaBuzon());
-        
+
         public static ServicioCuentaBuzon instancia => _lazy.Value;
-        
+
         public ServicioEmail _emailService { get; set; } = new ServicioEmail();
-        
+
         public static ServicioCuentaBuzon getInstancia()
         {
             return _lazy.Value;
@@ -41,13 +41,13 @@ namespace ANS.Model.Services
             string directory = Path.GetDirectoryName(rutaCompleta);
             fileName = FileSystemGuard.GetFileNameWithTestPrefix(fileName);
             string rutaFinal = Path.Combine(directory, fileName);
-            
+
             // ✅ GUARDIA: Validar que la escritura esté permitida
             FileSystemGuard.EnsureWriteAllowed(rutaFinal, contexto);
-            
+
             // Asegurar que el directorio existe
             Directory.CreateDirectory(directory);
-            
+
             return rutaFinal;
         }
         public List<DtoAcreditacionesPorEmpresa> getAcreditacionesDeHoy_BackUp(Banco b)
@@ -120,9 +120,10 @@ namespace ANS.Model.Services
             return lista;
         }
 
-        public List<DtoAcreditacionesPorEmpresa> getAcreditacionesDeHoy(Banco b)
+        public List<DtoAcreditacionesPorEmpresa> getAcreditacionesDeHoy(Banco b, DateTime? diaOperativo = null)
         {
             var lista = new List<DtoAcreditacionesPorEmpresa>();
+            var baseDia = (diaOperativo ?? DateTime.Today).Date;
 
             // ✅ Usar TableNameResolver para obtener nombre de tabla según RuntimeMode
             var tableName = TableNameResolver.AcreditacionDeposito;
@@ -141,7 +142,8 @@ namespace ANS.Model.Services
                                                 AND CC.IDCLIENTE = CB.IDCLIENTE 
             WHERE 
             AD.IDBANCO = @pIdBanco 
-            AND CONVERT(DATE, AD.FECHA) = CONVERT(DATE,getdate()) 
+            AND AD.FECHA >= @fechaDesde
+            AND AD.FECHA < DATEADD(day, 1, @fechaDesde)
             GROUP BY
             CB.EMPRESA,
             LTRIM(RTRIM(CC.SUCURSAL)),
@@ -154,7 +156,8 @@ namespace ANS.Model.Services
             using var conn = new SqlConnection(_conexionTSD);
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.Add("@pIdBanco", SqlDbType.Int).Value = b.BancoId;   // usa el ID de banco
-           
+            cmd.Parameters.Add("@fechaDesde", SqlDbType.DateTime).Value = baseDia;
+
 
             conn.Open();
             using var rdr = cmd.ExecuteReader();
@@ -402,7 +405,7 @@ namespace ANS.Model.Services
                             and config.TipoAcreditacion = @tipoAcreditacion;";
 
                     }
-                    
+
                     if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                     {
                         // Excluir Nike (ID 998) porque se acredita en su job específico a las 14:25
@@ -699,7 +702,7 @@ namespace ANS.Model.Services
             return buzonesFound;
         }
 
-        public async Task<List<CuentaBuzon>> getCuentasPorClienteBancoTipoAcreditacionYTanda(int idCliente, Banco bank, ConfiguracionAcreditacion configuracionAcreditacion,int numTanda)
+        public async Task<List<CuentaBuzon>> getCuentasPorClienteBancoTipoAcreditacionYTanda(int idCliente, Banco bank, ConfiguracionAcreditacion configuracionAcreditacion, int numTanda)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
@@ -800,9 +803,9 @@ namespace ANS.Model.Services
                         }
                     }
                 }
-      
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
@@ -900,16 +903,16 @@ namespace ANS.Model.Services
             int totalDepositos = listaCuentaBuzones.Sum(cb => cb.Depositos?.Count ?? 0);
             decimal totalMonto = listaCuentaBuzones
                 .Sum(cb => cb.Depositos?.Sum(d => d.Totales?.Sum(t => t.ImporteTotal) ?? 0) ?? 0);
-            
+
             // Agrupar por ciudad y divisa para información más detallada
             var cuentasPorCiudad = listaCuentaBuzones.GroupBy(cb => cb.Ciudad ?? "N/A");
             var cuentasPorDivisa = listaCuentaBuzones.GroupBy(cb => cb.Divisa ?? "N/A");
-            
-            var detallesCiudad = string.Join(", ", cuentasPorCiudad.Select(g => 
+
+            var detallesCiudad = string.Join(", ", cuentasPorCiudad.Select(g =>
                 $"{g.Key}: {g.Count()} cuenta(s)"));
-            var detallesDivisa = string.Join(", ", cuentasPorDivisa.Select(g => 
+            var detallesDivisa = string.Join(", ", cuentasPorDivisa.Select(g =>
                 $"{g.Key}: {g.Count()} cuenta(s)"));
-            
+
             ServicioLog.instancia.WriteInfo(
                 $"INICIO GENERACIÓN ARCHIVO | Banco: {banco.NombreBanco} | Tipo: {tipoAcreditacion} | " +
                 $"Total Cuentas: {listaCuentaBuzones.Count} | Total Depósitos: {totalDepositos} | " +
@@ -925,7 +928,7 @@ namespace ANS.Model.Services
             {
 
                 await bank.GenerarArchivo(listaCuentaBuzones);
-                
+
                 // ✅ Logging: Resumen detallado al final de generación de archivo
                 var tiempoTranscurrido = DateTime.Now;
                 ServicioLog.instancia.WriteInfo(
@@ -1112,7 +1115,7 @@ namespace ANS.Model.Services
                 foreach (CuentaBuzon acc in cuentas)
                 {
 
-                    if(acc.NC == "EA24L1010N07000720")
+                    if (acc.NC == "EA24L1010N07000720")
                     {
                         Console.WriteLine("ES TAPES FARMACIA");
                     }
@@ -1162,7 +1165,7 @@ namespace ANS.Model.Services
                 {
                     int ultimoIdOperacion = await obtenerUltimaOperacionByNC(acc);
 
-                    if(acc.NC == "EA24L1010N07000714")
+                    if (acc.NC == "EA24L1010N07000714")
                     {
                         Console.WriteLine("ES FARMASHOP");
                     }
@@ -1248,7 +1251,7 @@ namespace ANS.Model.Services
 
 
                         //APLICAR SOLO PARA NIKE DE PRUEBA, SI ANDA BIEN MAÑANA MARTES 23 DEE DICIEMBRE,ENTONCES APLICAR PARA TODOS.
-                        if(cli.IdCliente == 998)
+                        if (cli.IdCliente == 998)
                         {
                             TimeSpan horaCierreAUsar = horaCierreActual;
 
@@ -1284,14 +1287,15 @@ namespace ANS.Model.Services
 
         }
         //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
-        public async Task enviarExcelFormatoTanda(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda, string tarea)
+        public async Task enviarExcelFormatoTanda(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda, string tarea, DateTime? diaOperativo = null)
         {
             try
             {
+                var baseDia = (diaOperativo ?? DateTime.Today).Date;
 
-                DateTime fechaDesde = DateTime.Today.Add(desde);
+                DateTime fechaDesde = baseDia.Add(desde);
 
-                DateTime fechaHasta = DateTime.Today.Add(hasta);
+                DateTime fechaHasta = baseDia.Add(hasta);
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion();
                 //Si es SANTANDER ES CONFIG TANDA
@@ -1309,11 +1313,23 @@ namespace ANS.Model.Services
 
                 List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank, config);
 
+
+                if (bank.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper())
+                {
+                    bool esB2B = tarea.Contains("B2B", StringComparison.OrdinalIgnoreCase);
+
+                    if (esB2B)
+                        acreditacionesFound = acreditacionesFound.Where(a => a.Empresa.ToUpper().Contains("B2B")).ToList();
+                    else
+                        acreditacionesFound = acreditacionesFound.Where(a => !a.Empresa.ToUpper().Contains("B2B")).ToList();
+                }
+
+
                 List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
 
                 List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
 
-                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config, tarea);
+                generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config, tarea, baseDia);
 
             }
 
@@ -1324,11 +1340,12 @@ namespace ANS.Model.Services
 
         }
 
-        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config, string tarea)
+        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config, string tarea, DateTime? diaOperativo = null)
         {
             // Colores para el formato
             var pastelYellow = XLColor.LightYellow;
             var pastelCyan = XLColor.LightCyan;
+            var fechaReferencia = (diaOperativo ?? DateTime.Today).Date;
 
             void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
             {
@@ -1350,14 +1367,14 @@ namespace ANS.Model.Services
                 // Fecha
                 ws.Range(row, 1, row, 5).Merge();
                 var celdaFecha = ws.Cell(row, 1);
-                celdaFecha.Value = $"{b.NombreBanco} - Tanda {numTanda} - {DateTime.Now}";
+                celdaFecha.Value = $"{b.NombreBanco} - Tanda {numTanda} - {fechaReferencia:dd/MM/yyyy}";
                 if (b.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                 {
-                    celdaFecha.Value = $"{b.NombreBanco}  - {DateTime.Now}";
+                    celdaFecha.Value = $"{b.NombreBanco}  - {fechaReferencia:dd/MM/yyyy}";
                 }
-                if(c.IdCliente == 40)
+                if (c.IdCliente == 40)
                 {
-                    celdaFecha.Value = $"{b.NombreBanco} - Reporte CASH  - {DateTime.Now}";
+                    celdaFecha.Value = $"{b.NombreBanco} - Reporte CASH  - {fechaReferencia:dd/MM/yyyy}";
                 }
                 celdaFecha.Style.Font.Italic = true;
                 celdaFecha.Style.Font.FontSize = 11;
@@ -1495,19 +1512,28 @@ namespace ANS.Model.Services
                 string fn;
                 if (b.NombreBanco.Equals(VariablesGlobales.santander, StringComparison.OrdinalIgnoreCase)
                  || b.NombreBanco.Equals(VariablesGlobales.scotiabank, StringComparison.OrdinalIgnoreCase))
-                    fn = $"{b.NombreBanco}_Henderson_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                else if (b.NombreBanco.Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase))
-                    fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-                else
-                    fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-
-                if(c.IdCliente == 40)
                 {
-                    fn = $"{b.NombreBanco}_CASH_{ciudad}{numTanda}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                    fn = $"{b.NombreBanco}_Henderson_{ciudad}_Tanda_{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+                    if (tarea.Contains("B2B", StringComparison.OrdinalIgnoreCase))
+                    {
+                        fn = $"{b.NombreBanco}_B2B_{ciudad}_Tanda_{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+                    }
                 }
+
+                else if (b.NombreBanco.Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase))
+                    fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+
+                else
+                    fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+
+                if (c.IdCliente == 40)
+                {
+                    fn = $"{b.NombreBanco}_CASH_{ciudad}{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+                }
+
                 // ✅ Ruta desde configuración (resuelve según RuntimeMode)
                 string path = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, fn);
-                
+
                 // Aplicar guardia y prefijo TEST_
                 path = AplicarGuardiaYPrefijoRuta(path, "ServicioCuentaBuzon | enviarExcelFormatoTanda");
 
@@ -1539,6 +1565,12 @@ namespace ANS.Model.Services
                     {
                         asu = $"Acreditaciones {bank} (HENDERSON) Tanda {numTanda} - {cityUp}";
                         cue = $"Adjunto archivo de acreditaciones para {bank} (HENDERSON) Tanda {numTanda} ciudad {cityUp}.";
+
+                        if (tarea.Contains("B2B", StringComparison.OrdinalIgnoreCase))
+                        {
+                            asu = $"Acreditaciones {bank} (B2B) Tanda {numTanda} - {cityUp}";
+                            cue = $"Adjunto archivo de acreditaciones para {bank} (B2B) Tanda {numTanda} ciudad {cityUp}.";
+                        }
                     }
                     // 3) BBVA (TATA)
                     else if (bank.Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase))
@@ -1577,25 +1609,24 @@ namespace ANS.Model.Services
             }
             return null;
         }
-        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta, string tarea , DateTime? dia)
+        public async Task enviarExcelTesoreria(Banco banco, string city, int numTanda, TimeSpan desde, TimeSpan hasta, string tarea, DateTime? dia)
         {
-
-            DateTime fechaDesde = DateTime.Today.Add(desde);
-
-            DateTime fechaHasta = DateTime.Today.Add(hasta);
+            var baseDia = (dia ?? DateTime.Today).Date;
+            DateTime fechaDesde = baseDia.Add(desde);
+            DateTime fechaHasta = baseDia.Add(hasta);
 
             try
             {
-                List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco, numTanda, new ConfiguracionAcreditacion("Tanda"),dia);
+                List<DtoAcreditacionesPorEmpresa> lista = await ServicioAcreditacion.getInstancia().getAcreditacionesParaExcelTesoreria(banco, numTanda, new ConfiguracionAcreditacion("Tanda"), dia);
 
 
                 if (dia != null)
                 {
-                //filtro la lista por fecha si vino con un valor de fecha filtrada.
+                    //filtro la lista por fecha si vino con un valor de fecha filtrada.
                     lista = lista.Where(x => x.Fecha.Date == dia.Value.Date).ToList();
                 }
 
-                generarExcelTesoreriaTanda(lista, numTanda, banco, tarea,dia);
+                generarExcelTesoreriaTanda(lista, numTanda, banco, tarea, dia);
 
             }
 
@@ -1806,15 +1837,15 @@ namespace ANS.Model.Services
                 // ✅ Ruta desde configuración (resuelve según RuntimeMode)
                 var filePath = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
                 filePath = AplicarGuardiaYPrefijoRuta(filePath, "ServicioCuentaBuzon | enviarExcelTesoreria");
-                wb.SaveAs(filePath); 
+                wb.SaveAs(filePath);
 
                 // Envío por correo
                 try
                 {
                     var asunto = "";
-                    if(fechaFiltro!= null)
+                    if (fechaFiltro != null)
                     {
-                        if(fechaFiltro == DateTime.Now.Date)
+                        if (fechaFiltro == DateTime.Now.Date)
                         {
                             asunto =
                         $"Acreditaciones TESORERÍA {banco.NombreBanco} Tanda {numTanda} - {ciudad} - {fechaFiltro}";
@@ -1825,7 +1856,7 @@ namespace ANS.Model.Services
                         $"Acreditaciones TESORERÍA {banco.NombreBanco} Tanda {numTanda} - {ciudad}";
                         }
                     }
-                    
+
                     var cuerpo =
                         $"Adjunto acreditaciones de la tanda {numTanda} para {ciudad}.";
                     ServicioEmail.getInstancia().enviarExcelPorMail(
@@ -1840,10 +1871,10 @@ namespace ANS.Model.Services
         }
 
 
-        public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion, string tarea)
+        public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion, string tarea, DateTime? diaOperativo = null)
         {
 
-            List<DtoAcreditacionesPorEmpresa> acreditacionesPorBancoYTipoAcreditacion = getAcreditacionesPorBancoYTipoAcreditacion(banco, tipoAcreditacion);
+            List<DtoAcreditacionesPorEmpresa> acreditacionesPorBancoYTipoAcreditacion = getAcreditacionesPorBancoYTipoAcreditacion(banco, tipoAcreditacion, diaOperativo);
 
             // ✅ Agrupar por Empresa, Sucursal, Cuenta, Moneda, Ciudad, NN (buzón) e IdCliente para evitar duplicados
             // El NN (nombre del buzón) es importante para diferenciar buzones distintos de la misma empresa
@@ -1916,10 +1947,10 @@ namespace ANS.Model.Services
 
             }
             if (acreditacionesPesosMvd.Count > 0 || acreditacionesDolaresMvd.Count > 0)
-                GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco, tarea,null);
+                GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco, tarea, diaOperativo);
 
             if (acreditacionesPesosMaldonado.Count > 0 || acreditacionesDolaresMaldonado.Count > 0)
-                GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco, tarea,null);
+                GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco, tarea, diaOperativo);
 
             await Task.CompletedTask;
 
@@ -1933,11 +1964,7 @@ namespace ANS.Model.Services
             {
                 servicioCliente.getAllClientes();
             }
-            var fechaHoy = DateTime.Now.ToString("dd - MM - yy");
-            if (fechaFiltro!=null)
-            {
-                fechaHoy = fechaFiltro.ToString();
-            }
+            var fechaHoy = (fechaFiltro ?? DateTime.Today).ToString("dd - MM - yy");
             var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Acreditaciones");
 
@@ -1965,7 +1992,7 @@ namespace ANS.Model.Services
             foreach (var item in listaPesos)
             {
                 string nombreAMostrar;
-                
+
                 // Para BBVA, mostrar directamente la EMPRESA de la tabla CuentasBuzones
                 if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                 {
@@ -1977,13 +2004,13 @@ namespace ANS.Model.Services
                     else
                     {
                         nombreAMostrar = item.Empresa ?? "";
-                        
+
                         // ✅ Si hay otros registros con la misma empresa pero diferente IdCliente, agregar nombre del cliente entre paréntesis
-                        bool hayDuplicados = listaPesos.Any(x => 
-                            x != item && 
-                            x.Empresa?.Trim() == item.Empresa?.Trim() && 
+                        bool hayDuplicados = listaPesos.Any(x =>
+                            x != item &&
+                            x.Empresa?.Trim() == item.Empresa?.Trim() &&
                             x.IdCliente != item.IdCliente);
-                        
+
                         if (hayDuplicados)
                         {
                             var cliente = ServicioCliente.getInstancia().getById(item.IdCliente);
@@ -1999,7 +2026,7 @@ namespace ANS.Model.Services
                     // ✅ Patrón universal: Por defecto mostrar NN (nombre del buzón), pero si Empresa es un RUT, buscar el nombre del cliente
                     // Esto aplica para todos los bancos (Scotiabank, Santander, HSBC, ITAU, BANDES, etc.)
                     nombreAMostrar = item.NN ?? ""; // Por defecto: nombre del buzón (NN)
-                    
+
                     // Si Empresa es un RUT (solo dígitos), buscar el nombre del cliente por RUT
                     if (!string.IsNullOrWhiteSpace(item.Empresa) && item.Empresa.All(char.IsDigit))
                     {
@@ -2007,7 +2034,7 @@ namespace ANS.Model.Services
                         nombreAMostrar = cliente?.Nombre ?? item.NN ?? "";
                     }
                 }
-                
+
                 ws.Cell(row, 1).Value = nombreAMostrar;
                 ws.Cell(row, 2).Value = item.Sucursal;
                 ws.Cell(row, 3).Value = item.NumeroCuenta;
@@ -2037,7 +2064,7 @@ namespace ANS.Model.Services
             foreach (var item in listaDolares)
             {
                 string nombreAMostrar;
-                
+
                 // Para BBVA, mostrar directamente la EMPRESA de la tabla CuentasBuzones
                 if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                 {
@@ -2049,13 +2076,13 @@ namespace ANS.Model.Services
                     else
                     {
                         nombreAMostrar = item.Empresa ?? "";
-                        
+
                         // ✅ Si hay otros registros con la misma empresa pero diferente IdCliente, agregar nombre del cliente entre paréntesis
-                        bool hayDuplicados = listaDolares.Any(x => 
-                            x != item && 
-                            x.Empresa?.Trim() == item.Empresa?.Trim() && 
+                        bool hayDuplicados = listaDolares.Any(x =>
+                            x != item &&
+                            x.Empresa?.Trim() == item.Empresa?.Trim() &&
                             x.IdCliente != item.IdCliente);
-                        
+
                         if (hayDuplicados)
                         {
                             var cliente = ServicioCliente.getInstancia().getById(item.IdCliente);
@@ -2071,7 +2098,7 @@ namespace ANS.Model.Services
                     // ✅ Patrón universal: Por defecto mostrar NN (nombre del buzón), pero si Empresa es un RUT, buscar el nombre del cliente
                     // Esto aplica para todos los bancos (Scotiabank, Santander, HSBC, ITAU, BANDES, etc.)
                     nombreAMostrar = item.NN ?? ""; // Por defecto: nombre del buzón (NN)
-                    
+
                     // Si Empresa es un RUT (solo dígitos), buscar el nombre del cliente por RUT
                     if (!string.IsNullOrWhiteSpace(item.Empresa) && item.Empresa.All(char.IsDigit))
                     {
@@ -2079,7 +2106,7 @@ namespace ANS.Model.Services
                         nombreAMostrar = cliente?.Nombre ?? item.NN ?? "";
                     }
                 }
-                
+
                 ws.Cell(row, 1).Value = nombreAMostrar;
                 ws.Cell(row, 2).Value = item.Sucursal;
                 ws.Cell(row, 3).Value = item.NumeroCuenta;
@@ -2096,7 +2123,8 @@ namespace ANS.Model.Services
 
             ws.Columns().AdjustToContents();
 
-            string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            var fechaArchivo = (fechaFiltro ?? DateTime.Today).ToString("yyyyMMdd");
+            string nombreArchivo = $"AcreditacionesDiaADia_{banco.NombreBanco}_{ciudad}_{fechaArchivo}_{DateTime.Now:HHmmss}.xlsx";
 
             //produccion:
             // ✅ Ruta desde configuración (resuelve según RuntimeMode)
@@ -2116,10 +2144,11 @@ namespace ANS.Model.Services
             }
 
         }
-        private List<DtoAcreditacionesPorEmpresa> getAcreditacionesPorBancoYTipoAcreditacion(Banco banco, ConfiguracionAcreditacion tipoAcreditacion)
+        private List<DtoAcreditacionesPorEmpresa> getAcreditacionesPorBancoYTipoAcreditacion(Banco banco, ConfiguracionAcreditacion tipoAcreditacion, DateTime? diaOperativo = null)
         {
 
             List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
+            var baseDia = (diaOperativo ?? DateTime.Today).Date;
 
             string query = "";
             bool isBBVA = false;
@@ -2227,7 +2256,8 @@ namespace ANS.Model.Services
                 WHERE config.TipoAcreditacion = @tipoAcreditacion
                 AND cb.BANCO = @banco
                 AND cc.IDCLIENTE NOT IN ('268')
-                AND CONVERT(DATE, acc.FECHA) = CONVERT(DATE, GETDATE())
+                AND acc.FECHA >= @fechaDesde
+                AND acc.FECHA < DATEADD(day, 1, @fechaDesde)
                 GROUP BY 
                 cb.BANCO,
                 cb.CUENTA,
@@ -2366,6 +2396,7 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@banco", banco.NombreBanco);
 
                 cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion.TipoAcreditacion);
+                cmd.Parameters.Add("@fechaDesde", SqlDbType.DateTime).Value = baseDia;
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -2436,11 +2467,11 @@ namespace ANS.Model.Services
 
             return retorno;
         }
-        public async Task generarExcelDelResumenDelDiaSantander(string tarea)
+        public async Task generarExcelDelResumenDelDiaSantander(string tarea, DateTime? diaOperativo = null)
         {
             // Obtener datos
             var banco = ServicioBanco.getInstancia().getByNombre("SANTANDER");
-            var datos = getAcreditacionesDeHoy(banco);
+            var datos = getAcreditacionesDeHoy(banco, diaOperativo);
 
             // Agrupamos por ciudad de forma case-insensitive
             var porCiudad = datos
@@ -2453,7 +2484,8 @@ namespace ANS.Model.Services
                     ciudad,
                     grupo,
                     banco,
-                    tarea);
+                    tarea,
+                    diaOperativo);
             }
 
             // pausa breve para asegurar envío
@@ -2466,16 +2498,18 @@ namespace ANS.Model.Services
     string ciudad,
     IEnumerable<DtoAcreditacionesPorEmpresa> datosCiudad,
     Banco banco,
-    string tarea
+    string tarea,
+    DateTime? diaOperativo = null
     )
         {
             using var wb = new XLWorkbook();
             var ws = wb.Worksheets.Add("Resumen");
             int row = 1;
+            var fechaReferencia = (diaOperativo ?? DateTime.Today).Date;
 
             // -- Encabezado común
             InsertarLogoDesdeRecurso(ws, ref row);
-            ws.Cell(row, 1).Value = $"Reporte Diario Santander - {ciudad} - {DateTime.Now:dd/MM/yyyy}";
+            ws.Cell(row, 1).Value = $"Reporte Diario Santander - {ciudad} - {fechaReferencia:dd/MM/yyyy}";
             ws.Range(row, 1, row, 5)
               .Merge()
               .Style.Font.SetBold().Font.SetFontSize(14)
@@ -2536,7 +2570,7 @@ namespace ANS.Model.Services
 
             ws.Columns().AdjustToContents();
             // Guardar + enviar
-            string nombre = $"ReporteDiario_Santander_{ciudad}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+            string nombre = $"ReporteDiario_Santander_{ciudad}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
 
             //produccion:
 

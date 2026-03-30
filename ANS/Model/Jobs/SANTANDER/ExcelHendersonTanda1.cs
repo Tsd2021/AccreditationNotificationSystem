@@ -136,7 +136,4 @@ namespace ANS.Model.Jobs.SANTANDER
             await Task.CompletedTask;
         }
     }
-
-
-
 }

@@ -396,7 +396,9 @@ namespace ANS
                 "Tesoreria1",
                 "Tesoreria2",
                 "DiaADia",
-                "ReporteDiario"
+                "ReporteDiario",
+                "Tanda1B2B",
+                "Tanda2B2B"
             }
             };
             Banco scotiabank = new Banco(2, VariablesGlobales.scotiabank.ToUpper())
@@ -747,6 +749,22 @@ namespace ANS
                                                    .Build();
             #endregion
 
+            //Tarea 3.1: 07:07:00 EXCEL TANDA 1 B2B 
+            #region EXCEL_TANDA1_B2B
+            IJobDetail jobExcelTanda1B2B = JobBuilder.Create<ExcelB2BTanda>()
+                                        .WithIdentity("JobExcelTanda1B2B", "GrupoTrabajoSantander")
+                                        .UsingJobData("city", "MONTEVIDEO")
+                                        .UsingJobData("tarea", "Tanda1B2B")
+                                        .UsingJobData("numTanda", 1)
+                                        .Build();
+
+
+            ITrigger triggerExcelTanda1B2B = TriggerBuilder.Create()
+                                                   .WithIdentity("TriggerExcelTan1B2B", "GrupoTrabajoSantander")
+                                                   .WithCronSchedule("0 7 7 ? * MON-FRI") // 7:06:00 (1 minuto después de acreditar)
+                                                   .Build();
+            #endregion
+
             // Tarea 4: 07:06:00 EXCEL PARA TESORERIA TANDA 1 (1 minuto después de acreditar)
             #region EXCEL_TANDA1_TESORERIA
             IJobDetail jobTanda1ExcelTesoreria = JobBuilder.Create<ExcelSantanderTesoreria1>()
@@ -786,6 +804,23 @@ namespace ANS
                                                     .WithIdentity("TriggerExcelHendersonTan2", "GrupoTrabajoSantander")
                                                     .WithCronSchedule("0 51 14 ? * MON-FRI") // 14:51:00 (1 minuto después de acreditar)
                                                     .Build();
+            #endregion
+
+
+            // Tarea 6.1: 14:52:00 EXCEL TANDA 2 B2B
+            #region EXCEL_TANDA2_B2B
+            IJobDetail jobExcelTanda2B2B = JobBuilder.Create<ExcelB2BTanda>()
+                                        .WithIdentity("JobExcelTanda2B2B", "GrupoTrabajoSantander")
+                                        .UsingJobData("city", "MONTEVIDEO")
+                                        .UsingJobData("tarea", "Tanda2B2B")
+                                        .UsingJobData("numTanda", 2)
+                                        .Build();
+
+
+            ITrigger triggerExcelTanda2B2B = TriggerBuilder.Create()
+                                                   .WithIdentity("TriggerExcelTan2B2B", "GrupoTrabajoSantander")
+                                                   .WithCronSchedule("0 52 14 ? * MON-FRI") 
+                                                   .Build();
             #endregion
 
             // Tarea 7: 14:51:00 EXCEL PARA TESORERIA TANDA 2 (1 minuto después de acreditar)
@@ -891,6 +926,10 @@ namespace ANS
                 await scheduler.ScheduleJob(jobTanda2ExcelTesoreria, triggerTanda2ExcelTesoreria);
 
                 await scheduler.ScheduleJob(jobReporteDiarioSantander, triggerReporteDiarioSantander);
+
+                await scheduler.ScheduleJob(jobExcelTanda1B2B, triggerExcelTanda1B2B);
+
+                await scheduler.ScheduleJob(jobExcelTanda2B2B, triggerExcelTanda2B2B);
 
             }
             catch (Exception ex)
