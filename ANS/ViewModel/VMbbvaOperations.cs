@@ -1,4 +1,4 @@
-﻿
+
 using ANS.Model;
 using ANS.Model.GeneradorArchivoPorBanco;
 using ANS.Model.Interfaces;
@@ -26,6 +26,7 @@ namespace ANS.ViewModel
         #region Commands
         public ICommand EjecutarPuntoAPuntoTXTCommand { get; }
         public ICommand EjecutarDiaADiaTXTCommand { get; }
+        public ICommand EjecutarDiaADiaNikeTXTCommand { get; }
         public ICommand EjecutarExcelTataCommand { get; }
         public ICommand EjecutarExcelDiaADia { get; }
         public ICommand EjecutarAltaEmailDestinoCommand { get; }
@@ -42,6 +43,8 @@ namespace ANS.ViewModel
             EjecutarPuntoAPuntoTXTCommand = new RelayCommand(async () => await ejecutarPuntoAPuntoTXT());
 
             EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaTXT());
+
+            EjecutarDiaADiaNikeTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaNikeTXT());
 
             EjecutarExcelTataCommand = new RelayCommand(async () => await ejecutarExcelTata());
 
@@ -149,6 +152,31 @@ namespace ANS.ViewModel
                 IsLoading = false;
             }
 
+        }
+        private async Task ejecutarDiaADiaNikeTXT()
+        {
+            IsLoading = true;
+
+            try
+            {
+                Cliente nike = ServicioCliente.getInstancia().getById(998); // Nike
+
+                await Task.Run(async () =>
+                {
+                    // TimeSpan.Zero replica el comportamiento del job BBVA Nike (usa cierre de BD).
+                    await _servicioCuentaBuzon.acreditarDiaADiaPorCliente(nike, banco, TimeSpan.Zero);
+                });
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Hubo un error: " + e.Message);
+                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] Ejecutar DXD TXT NIKE");
+                throw;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
         private async Task ejecutarExcelTata()
         {
