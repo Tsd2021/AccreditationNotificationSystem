@@ -1135,7 +1135,7 @@ namespace ANS.Model.Services
                 case 4:
                     // rangos de 17:00 a 19:00
                     desdeTime = new TimeSpan(17, 0, 0);
-                    hastaTime = new TimeSpan(19, 0, 0);
+                    hastaTime = new TimeSpan(19, 30, 0);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(numEnvioMasivo));
