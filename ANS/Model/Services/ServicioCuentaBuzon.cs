@@ -988,7 +988,9 @@ namespace ANS.Model.Services
             if (resultadoGen.RequiereAuditoriaEnvioFallido)
             {
                 await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                    buzones, "FALLIDO_WS", resultadoGen.Motivo);
+                    buzones,
+                    resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                    resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
                 return;
             }
 
@@ -1035,7 +1037,9 @@ namespace ANS.Model.Services
                         if (resultadoGen.RequiereAuditoriaEnvioFallido)
                         {
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                                cuentasBuzonesConDepositos, "FALLIDO_WS", resultadoGen.Motivo);
+                                cuentasBuzonesConDepositos,
+                                resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                                resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
                             return;
                         }
 
@@ -1076,7 +1080,9 @@ namespace ANS.Model.Services
                     if (resultadoGenTanda.RequiereAuditoriaEnvioFallido)
                     {
                         await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                            cuentaBuzones, "FALLIDO_WS", resultadoGenTanda.Motivo);
+                            cuentaBuzones,
+                            resultadoGenTanda.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                            resultadoGenTanda.ObservacionParaAuditoria ?? resultadoGenTanda.Motivo);
                         return;
                     }
 
@@ -1151,7 +1157,9 @@ namespace ANS.Model.Services
                         if (resultadoGen.RequiereAuditoriaEnvioFallido)
                         {
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                                cuentas, "FALLIDO_WS", resultadoGen.Motivo);
+                                cuentas,
+                                resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                                resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
                             return;
                         }
 
@@ -1205,7 +1213,9 @@ namespace ANS.Model.Services
                         if (resultadoGenScotia.RequiereAuditoriaEnvioFallido)
                         {
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                                cuentasConDepositos, "FALLIDO_WS", resultadoGenScotia.Motivo);
+                                cuentasConDepositos,
+                                resultadoGenScotia.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                                resultadoGenScotia.ObservacionParaAuditoria ?? resultadoGenScotia.Motivo);
                             return;
                         }
 
@@ -1242,7 +1252,9 @@ namespace ANS.Model.Services
                 if (resultadoGenAcre.RequiereAuditoriaEnvioFallido)
                 {
                     await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                        buzonesPorBanco, "FALLIDO_WS", resultadoGenAcre.Motivo);
+                        buzonesPorBanco,
+                        resultadoGenAcre.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                        resultadoGenAcre.ObservacionParaAuditoria ?? resultadoGenAcre.Motivo);
                 }
 
                 return;
@@ -1305,7 +1317,9 @@ namespace ANS.Model.Services
                 if (resultadoGen.RequiereAuditoriaEnvioFallido)
                 {
                     await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                        cuentaBuzones, "FALLIDO_WS", resultadoGen.Motivo);
+                        cuentaBuzones,
+                        resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                        resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
                     return;
                 }
 

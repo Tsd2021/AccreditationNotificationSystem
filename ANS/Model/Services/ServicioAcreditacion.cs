@@ -183,6 +183,10 @@ namespace ANS.Model.Services
             if (obs.Length > 2000)
                 obs = obs.Substring(0, 2000);
 
+            string estadoCorto = estadoEnvioWs ?? "FALLIDO_WS";
+            if (estadoCorto.Length > 32)
+                estadoCorto = estadoCorto.Substring(0, 32);
+
             var tableName = TableNameResolver.AcreditacionesConError;
             TableNameResolver.ValidateTableName(tableName, "ServicioAcreditacion.RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs");
 
@@ -231,7 +235,7 @@ namespace ANS.Model.Services
                     cmd.Parameters.AddWithValue("@MONTO", montoTotalDelDeposito);
                     cmd.Parameters.AddWithValue("@FECHADEPREAL",
                         _dep.FechaDep != DateTime.MinValue ? (object)_dep.FechaDep : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@EstadoEnvioWS", estadoEnvioWs ?? "FALLIDO_WS");
+                    cmd.Parameters.AddWithValue("@EstadoEnvioWS", estadoCorto);
                     cmd.Parameters.AddWithValue("@Observacion", obs);
 
                     await cmd.ExecuteNonQueryAsync();
@@ -239,7 +243,7 @@ namespace ANS.Model.Services
             }
 
             ServicioLog.instancia.WriteInfo(
-                $"Auditoría Santander (envío WS fallido) | Depósitos registrados en {tableName} | EstadoEnvioWS: {estadoEnvioWs}",
+                $"Auditoría Santander (envío WS fallido) | Depósitos registrados en {tableName} | EstadoEnvioWS: {estadoCorto}",
                 "ServicioAcreditacion | RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs");
         }
 

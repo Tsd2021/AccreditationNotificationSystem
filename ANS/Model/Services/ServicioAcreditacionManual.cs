@@ -1254,10 +1254,13 @@ namespace ANS.Model.Services
 
                         if (resultadosGeneracion.Any(r => r.RequiereAuditoriaEnvioFallido))
                         {
-                            var motivoAuditoria = string.Join(" | ",
-                                resultadosGeneracion.Where(r => r.RequiereAuditoriaEnvioFallido).Select(r => r.Motivo));
+                            var fallidosGen = resultadosGeneracion.Where(r => r.RequiereAuditoriaEnvioFallido).ToList();
+                            var motivoAuditoria = string.Join(" | ", fallidosGen.Select(r => r.Motivo));
+                            var estadoAuditoria = fallidosGen.FirstOrDefault()?.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS";
+                            var observacionAuditoria = string.Join(" | ",
+                                fallidosGen.Select(r => r.ObservacionParaAuditoria ?? r.Motivo));
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                                cuentasBuzonesFiltradas, "FALLIDO_WS", motivoAuditoria);
+                                cuentasBuzonesFiltradas, estadoAuditoria, observacionAuditoria);
 
                             resultado.Exitoso = false;
                             resultado.Mensaje =

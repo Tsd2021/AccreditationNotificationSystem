@@ -1,3 +1,4 @@
+using ANS.Model;
 using ANS.Model.Interfaces;
 using ANS.Runtime.Guards;
 using System.Net;
@@ -175,8 +176,8 @@ namespace ANS.Model.Services
         /// </summary>
         /// <param name="nombreArchivo">Nombre del archivo a enviar</param>
         /// <param name="archivo">Contenido del archivo en bytes</param>
-        /// <returns>True si el envío fue exitoso (código de respuesta "0"), False en caso contrario</returns>
-        public async Task<bool> EnviarArchivoConClienteWS(string nombreArchivo, byte[] archivo)
+        /// <returns>Resultado con éxito (código "0") o clasificación de fallo para auditoría.</returns>
+        public async Task<EnvioSantanderResult> EnviarArchivoConClienteWS(string nombreArchivo, byte[] archivo)
         {
             // ✅ GUARDIA: Bloquear WebService de Santander en modo TEST
             WebServiceGuard.EnsureSantanderWebServiceAllowed($"EnviarArchivoConClienteWS - Archivo: {nombreArchivo}");
@@ -208,14 +209,14 @@ namespace ANS.Model.Services
                 {
                     ServicioLog.instancia.WriteError("El nombre del archivo no puede estar vacío", 
                         "ServicioSantander | EnviarArchivoConClienteWS");
-                    return false;
+                    return EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoValidacion, "El nombre del archivo no puede estar vacío");
                 }
 
                 if (archivo == null || archivo.Length == 0)
                 {
                     ServicioLog.instancia.WriteError("El archivo no puede ser null o vacío", 
                         "ServicioSantander | EnviarArchivoConClienteWS");
-                    return false;
+                    return EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoValidacion, "El archivo no puede ser null o vacío");
                 }
 
                 // ✅ Logging informativo: Inicio del proceso
@@ -284,52 +285,48 @@ namespace ANS.Model.Services
                         {
                             ServicioLog.instancia.WriteInfo($"El archivo {nombreArchivo} se envió correctamente a Santander", 
                                 "ServicioSantander | EnviarArchivoConClienteWS");
-                            return true; // ✅ Éxito: código "0"
+                            return EnvioSantanderResult.Exitoso();
                         }
-                        else
-                        {
-                            // ✅ Logging de advertencia: Respuesta con código de error
-                            ServicioLog.instancia.WriteWarning($"Problema al enviar archivo {nombreArchivo} | Código: {response.result.code} | Descripción: {response.result.description}", 
-                                "ServicioSantander | EnviarArchivoConClienteWS");
-                            return false; // ❌ Error: código diferente de "0"
-                        }
-                    }
-                    else
-                    {
-                        // ✅ Logging de error: Respuesta nula
-                        ServicioLog.instancia.WriteError("La respuesta del servicio Santander fue nula", 
+
+                        // ✅ Logging de advertencia: Respuesta con código de error
+                        ServicioLog.instancia.WriteWarning($"Problema al enviar archivo {nombreArchivo} | Código: {response.result.code} | Descripción: {response.result.description}", 
                             "ServicioSantander | EnviarArchivoConClienteWS");
-                        return false; // ❌ Error: respuesta nula
+                        return EnvioSantanderResult.Fallo(
+                            EnvioSantanderResult.EstadoRespuestaError,
+                            $"Código={response.result.code}; Descripción={response.result.description}; Archivo={nombreArchivo}");
                     }
+
+                    // ✅ Logging de error: Respuesta nula
+                    ServicioLog.instancia.WriteError("La respuesta del servicio Santander fue nula", 
+                        "ServicioSantander | EnviarArchivoConClienteWS");
+                    return EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoRespuestaNula, "La respuesta del servicio Santander fue nula (result nulo)");
                 }
             }
             catch (TimeoutException tex)
             {
-                // ✅ Logging mejorado: Timeout específico
                 ServicioLog.instancia.WriteError($"Error de tiempo de espera: {tex.Message}", 
                     "ServicioSantander | EnviarArchivoConClienteWS");
-                return false; // ❌ Error: timeout
+                return EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoTimeout, tex.Message);
             }
             catch (FaultException faultEx)
             {
-                // ✅ Logging mejorado: FaultException con código
                 string faultCode = faultEx.Code != null ? faultEx.Code.Name : "Sin código";
                 ServicioLog.instancia.WriteError($"FaultException en servicio Santander | Mensaje: {faultEx.Message} | Código: {faultCode}", 
                     "ServicioSantander | EnviarArchivoConClienteWS");
-                return false; // ❌ Error: FaultException
+                return EnvioSantanderResult.Fallo(
+                    EnvioSantanderResult.EstadoFaultSoap,
+                    $"FaultCode={faultCode}; Mensaje={faultEx.Message}");
             }
             catch (CommunicationException cex)
             {
-                // ✅ Logging mejorado: Error de comunicación
                 ServicioLog.instancia.WriteError($"Error de comunicación: {cex.Message}", 
                     "ServicioSantander | EnviarArchivoConClienteWS");
-                return false; // ❌ Error: comunicación
+                return EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoErrorComunicacion, cex.Message);
             }
             catch (Exception ex)
             {
-                // ✅ Logging mejorado: Error general con stack trace completo
                 ServicioLog.instancia.WriteLog(ex, "Santander", $"Enviar Archivo con Cliente WS | Archivo: {nombreArchivo}");
-                return false; // ❌ Error: excepción general
+                return EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoExcepcion, ex.Message);
             }
         }
         public class PasswordDigestMessageInspector : IClientMessageInspector

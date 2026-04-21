@@ -18,18 +18,37 @@ namespace ANS.Model
 
         public string Motivo { get; init; }
 
+        /// <summary>
+        /// Valor para columna EstadoEnvioWS en auditoría (p. ej. TIMEOUT, RESPUESTA_ERROR). Solo aplica si <see cref="RequiereAuditoriaEnvioFallido"/>.
+        /// </summary>
+        public string EstadoEnvioWsParaAuditoria { get; init; }
+
+        /// <summary>
+        /// Texto detallado para columna Observacion en auditoría. Solo aplica si <see cref="RequiereAuditoriaEnvioFallido"/>.
+        /// </summary>
+        public string ObservacionParaAuditoria { get; init; }
+
         public static GeneracionArchivoBancoResult ExitoSinRestricciones() => new GeneracionArchivoBancoResult
         {
             PermiteInsertarEnAcreditacionPrincipal = true,
             RequiereAuditoriaEnvioFallido = false,
-            Motivo = null
+            Motivo = null,
+            EstadoEnvioWsParaAuditoria = null,
+            ObservacionParaAuditoria = null
         };
 
-        public static GeneracionArchivoBancoResult SantanderEnvioWebServiceFallido(string motivo) => new GeneracionArchivoBancoResult
+        public static GeneracionArchivoBancoResult SantanderEnvioWebServiceFallido(
+            string motivo,
+            string estadoEnvioWsParaAuditoria = null,
+            string observacionParaAuditoria = null) => new GeneracionArchivoBancoResult
         {
             PermiteInsertarEnAcreditacionPrincipal = false,
             RequiereAuditoriaEnvioFallido = true,
-            Motivo = motivo
+            Motivo = motivo,
+            EstadoEnvioWsParaAuditoria = string.IsNullOrWhiteSpace(estadoEnvioWsParaAuditoria)
+                ? "FALLIDO_WS"
+                : estadoEnvioWsParaAuditoria.Trim(),
+            ObservacionParaAuditoria = observacionParaAuditoria ?? motivo
         };
     }
 }

@@ -574,6 +574,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             int archivosEnviadosExitosamente = 0;
             int archivosConError = 0;
             int archivosBloqueadosEnTest = 0;
+            EnvioSantanderResult ultimoEnvioFallido = null;
 
             if (archivosGenerados.Count > 0)
             {
@@ -675,16 +676,14 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                     $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
                                     $"El archivo se mantiene en carpeta NO_ENVIADOS (comportamiento esperado en TEST)",
                                     "SantanderFileGenerator | CrearArchivo | TEST MODE");
-                                if (ANS.Runtime.AppRuntime.IsTest)
-                                    return GeneracionArchivoBancoResult.ExitoSinRestricciones();
                                 continue; // Saltar al siguiente archivo sin intentar enviar
                             }
                             
                             // Enviar archivo al servicio Santander (solo en PRODUCTION)
-                            bool enviadoExitosamente = await ServicioSantander.getInstancia()
+                            var envioWs = await ServicioSantander.getInstancia()
                                 .EnviarArchivoConClienteWS(archivoInfo.nombreArchivo, archivoInfo.contenidoBytes);
                             
-                            if (enviadoExitosamente)
+                            if (envioWs.Exito)
                             {
                                 archivosEnviadosExitosamente++;
                                 
@@ -714,8 +713,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             else
                             {
                                 archivosConError++;
+                                ultimoEnvioFallido = envioWs;
                                 ServicioLog.instancia.WriteWarning(
                                     $"Archivo NO enviado exitosamente | {archivoInfo.nombreArchivo} | " +
+                                    $"EstadoWS: {envioWs.EstadoEnvio} | Detalle: {envioWs.Detalle} | " +
                                     $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
                                     $"Se mantiene en carpeta NO_ENVIADOS",
                                     "SantanderFileGenerator | CrearArchivo");
@@ -736,6 +737,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         catch (Exception ex)
                         {
                             archivosConError++;
+                            ultimoEnvioFallido = EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoExcepcion, ex.Message);
                             ServicioLog.instancia.WriteLog(ex, "Santander", 
                                 $"Error al enviar archivo {archivoInfo.nombreArchivo}");
                         }
@@ -778,8 +780,14 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 if (archivosEnviadosExitosamente == totalArchivos && archivosConError == 0)
                     return GeneracionArchivoBancoResult.ExitoSinRestricciones();
 
-                return GeneracionArchivoBancoResult.SantanderEnvioWebServiceFallido(
-                    $"Santander WebService: enviados_ok={archivosEnviadosExitosamente}/{totalArchivos}, con_error={archivosConError}");
+                string motivoResumen =
+                    $"Santander WebService: enviados_ok={archivosEnviadosExitosamente}/{totalArchivos}, con_error={archivosConError}";
+                string estadoAud = ultimoEnvioFallido?.EstadoEnvio;
+                string obsAud = ultimoEnvioFallido != null && !string.IsNullOrEmpty(ultimoEnvioFallido.Detalle)
+                    ? $"{ultimoEnvioFallido.Detalle} | {motivoResumen}"
+                    : motivoResumen;
+
+                return GeneracionArchivoBancoResult.SantanderEnvioWebServiceFallido(motivoResumen, estadoAud, obsAud);
             }
             
             // ============================================================================
