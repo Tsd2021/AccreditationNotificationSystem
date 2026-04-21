@@ -1165,11 +1165,6 @@ namespace ANS.Model.Services
                 {
                     int ultimoIdOperacion = await obtenerUltimaOperacionByNC(acc);
 
-                    if (acc.NC == "EA24L1010N07000714")
-                    {
-                        Console.WriteLine("ES FARMASHOP");
-                    }
-
                     if (ultimoIdOperacion > 0)
                     {
                         await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(acc, ultimoIdOperacion, horaCierreActual);
