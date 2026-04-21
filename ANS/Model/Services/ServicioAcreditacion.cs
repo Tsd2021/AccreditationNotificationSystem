@@ -174,7 +174,8 @@ namespace ANS.Model.Services
         public async Task RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
             List<CuentaBuzon> accounts,
             string estadoEnvioWs,
-            string observacion)
+            string observacion,
+            string nombreArchivoOriginal = null)
         {
             if (accounts == null || accounts.Count == 0)
                 return;
@@ -186,6 +187,10 @@ namespace ANS.Model.Services
             string estadoCorto = estadoEnvioWs ?? "FALLIDO_WS";
             if (estadoCorto.Length > 32)
                 estadoCorto = estadoCorto.Substring(0, 32);
+
+            string nombreArch = nombreArchivoOriginal?.Trim();
+            if (!string.IsNullOrEmpty(nombreArch) && nombreArch.Length > 500)
+                nombreArch = nombreArch.Substring(0, 500);
 
             var tableName = TableNameResolver.AcreditacionesConError;
             TableNameResolver.ValidateTableName(tableName, "ServicioAcreditacion.RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs");
@@ -220,9 +225,9 @@ namespace ANS.Model.Services
                         )
                         BEGIN
                             INSERT INTO {tableName}
-                            (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP, EstadoEnvioWS, Observacion)
+                            (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP, EstadoEnvioWS, Observacion, NombreArchivoOriginal)
                             VALUES
-                            (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL, @EstadoEnvioWS, @Observacion);
+                            (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL, @EstadoEnvioWS, @Observacion, @NombreArchivoOriginal);
                         END";
 
                     cmd.Parameters.AddWithValue("@IDBUZON", _acc.NC);
@@ -237,6 +242,8 @@ namespace ANS.Model.Services
                         _dep.FechaDep != DateTime.MinValue ? (object)_dep.FechaDep : DBNull.Value);
                     cmd.Parameters.AddWithValue("@EstadoEnvioWS", estadoCorto);
                     cmd.Parameters.AddWithValue("@Observacion", obs);
+                    cmd.Parameters.AddWithValue("@NombreArchivoOriginal",
+                        string.IsNullOrEmpty(nombreArch) ? (object)DBNull.Value : nombreArch);
 
                     await cmd.ExecuteNonQueryAsync();
                 }

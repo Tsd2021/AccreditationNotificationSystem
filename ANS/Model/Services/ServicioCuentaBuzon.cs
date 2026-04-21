@@ -990,7 +990,8 @@ namespace ANS.Model.Services
                 await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                     buzones,
                     resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                    resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
+                    resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo,
+                    resultadoGen.NombreArchivoOriginalParaAuditoria);
                 return;
             }
 
@@ -1039,7 +1040,8 @@ namespace ANS.Model.Services
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                                 cuentasBuzonesConDepositos,
                                 resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                                resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
+                                resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo,
+                                resultadoGen.NombreArchivoOriginalParaAuditoria);
                             return;
                         }
 
@@ -1082,7 +1084,8 @@ namespace ANS.Model.Services
                         await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                             cuentaBuzones,
                             resultadoGenTanda.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                            resultadoGenTanda.ObservacionParaAuditoria ?? resultadoGenTanda.Motivo);
+                            resultadoGenTanda.ObservacionParaAuditoria ?? resultadoGenTanda.Motivo,
+                            resultadoGenTanda.NombreArchivoOriginalParaAuditoria);
                         return;
                     }
 
@@ -1159,7 +1162,8 @@ namespace ANS.Model.Services
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                                 cuentas,
                                 resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                                resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
+                                resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo,
+                                resultadoGen.NombreArchivoOriginalParaAuditoria);
                             return;
                         }
 
@@ -1215,7 +1219,8 @@ namespace ANS.Model.Services
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                                 cuentasConDepositos,
                                 resultadoGenScotia.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                                resultadoGenScotia.ObservacionParaAuditoria ?? resultadoGenScotia.Motivo);
+                                resultadoGenScotia.ObservacionParaAuditoria ?? resultadoGenScotia.Motivo,
+                                resultadoGenScotia.NombreArchivoOriginalParaAuditoria);
                             return;
                         }
 
@@ -1254,7 +1259,8 @@ namespace ANS.Model.Services
                     await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                         buzonesPorBanco,
                         resultadoGenAcre.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                        resultadoGenAcre.ObservacionParaAuditoria ?? resultadoGenAcre.Motivo);
+                        resultadoGenAcre.ObservacionParaAuditoria ?? resultadoGenAcre.Motivo,
+                        resultadoGenAcre.NombreArchivoOriginalParaAuditoria);
                 }
 
                 return;
@@ -1319,7 +1325,8 @@ namespace ANS.Model.Services
                     await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                         cuentaBuzones,
                         resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                        resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo);
+                        resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo,
+                        resultadoGen.NombreArchivoOriginalParaAuditoria);
                     return;
                 }
 

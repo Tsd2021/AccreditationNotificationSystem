@@ -28,19 +28,26 @@ namespace ANS.Model
         /// </summary>
         public string ObservacionParaAuditoria { get; init; }
 
+        /// <summary>
+        /// Nombre del archivo generado asociado al fallo (p. ej. TEC_004_....dat). Columna NombreArchivoOriginal en AcreditacionesConError.
+        /// </summary>
+        public string NombreArchivoOriginalParaAuditoria { get; init; }
+
         public static GeneracionArchivoBancoResult ExitoSinRestricciones() => new GeneracionArchivoBancoResult
         {
             PermiteInsertarEnAcreditacionPrincipal = true,
             RequiereAuditoriaEnvioFallido = false,
             Motivo = null,
             EstadoEnvioWsParaAuditoria = null,
-            ObservacionParaAuditoria = null
+            ObservacionParaAuditoria = null,
+            NombreArchivoOriginalParaAuditoria = null
         };
 
         public static GeneracionArchivoBancoResult SantanderEnvioWebServiceFallido(
             string motivo,
             string estadoEnvioWsParaAuditoria = null,
-            string observacionParaAuditoria = null) => new GeneracionArchivoBancoResult
+            string observacionParaAuditoria = null,
+            string nombreArchivoOriginalParaAuditoria = null) => new GeneracionArchivoBancoResult
         {
             PermiteInsertarEnAcreditacionPrincipal = false,
             RequiereAuditoriaEnvioFallido = true,
@@ -48,7 +55,10 @@ namespace ANS.Model
             EstadoEnvioWsParaAuditoria = string.IsNullOrWhiteSpace(estadoEnvioWsParaAuditoria)
                 ? "FALLIDO_WS"
                 : estadoEnvioWsParaAuditoria.Trim(),
-            ObservacionParaAuditoria = observacionParaAuditoria ?? motivo
+            ObservacionParaAuditoria = observacionParaAuditoria ?? motivo,
+            NombreArchivoOriginalParaAuditoria = string.IsNullOrWhiteSpace(nombreArchivoOriginalParaAuditoria)
+                ? null
+                : nombreArchivoOriginalParaAuditoria.Trim()
         };
     }
 }

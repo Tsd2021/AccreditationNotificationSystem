@@ -1259,8 +1259,16 @@ namespace ANS.Model.Services
                             var estadoAuditoria = fallidosGen.FirstOrDefault()?.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS";
                             var observacionAuditoria = string.Join(" | ",
                                 fallidosGen.Select(r => r.ObservacionParaAuditoria ?? r.Motivo));
+                            var nombresArchivoAuditoria = string.Join(" | ",
+                                fallidosGen
+                                    .Select(r => r.NombreArchivoOriginalParaAuditoria)
+                                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                                    .Distinct());
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                                cuentasBuzonesFiltradas, estadoAuditoria, observacionAuditoria);
+                                cuentasBuzonesFiltradas,
+                                estadoAuditoria,
+                                observacionAuditoria,
+                                string.IsNullOrWhiteSpace(nombresArchivoAuditoria) ? null : nombresArchivoAuditoria);
 
                             resultado.Exitoso = false;
                             resultado.Mensaje =

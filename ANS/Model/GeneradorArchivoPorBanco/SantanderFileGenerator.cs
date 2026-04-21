@@ -575,6 +575,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             int archivosConError = 0;
             int archivosBloqueadosEnTest = 0;
             EnvioSantanderResult ultimoEnvioFallido = null;
+            string ultimoNombreArchivoFallido = null;
 
             if (archivosGenerados.Count > 0)
             {
@@ -714,6 +715,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             {
                                 archivosConError++;
                                 ultimoEnvioFallido = envioWs;
+                                ultimoNombreArchivoFallido = archivoInfo.nombreArchivo;
                                 ServicioLog.instancia.WriteWarning(
                                     $"Archivo NO enviado exitosamente | {archivoInfo.nombreArchivo} | " +
                                     $"EstadoWS: {envioWs.EstadoEnvio} | Detalle: {envioWs.Detalle} | " +
@@ -738,6 +740,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         {
                             archivosConError++;
                             ultimoEnvioFallido = EnvioSantanderResult.Fallo(EnvioSantanderResult.EstadoExcepcion, ex.Message);
+                            ultimoNombreArchivoFallido = archivoInfo.nombreArchivo;
                             ServicioLog.instancia.WriteLog(ex, "Santander", 
                                 $"Error al enviar archivo {archivoInfo.nombreArchivo}");
                         }
@@ -787,7 +790,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     ? $"{ultimoEnvioFallido.Detalle} | {motivoResumen}"
                     : motivoResumen;
 
-                return GeneracionArchivoBancoResult.SantanderEnvioWebServiceFallido(motivoResumen, estadoAud, obsAud);
+                return GeneracionArchivoBancoResult.SantanderEnvioWebServiceFallido(
+                    motivoResumen, estadoAud, obsAud, ultimoNombreArchivoFallido);
             }
             
             // ============================================================================
