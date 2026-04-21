@@ -1,3 +1,4 @@
+using ANS.Model;
 using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using ANS.Runtime;
@@ -227,25 +228,21 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             var nombreArchivo = $"TEC_{sucursal}_{timestamp}.dat";
             return Path.Combine(directorioBase, nombreArchivo);
         }
-        public async Task GenerarArchivo(List<CuentaBuzon> cb)
+        public async Task<GeneracionArchivoBancoResult> GenerarArchivo(List<CuentaBuzon> cb)
         {
             if (_config.TipoAcreditacion == VariablesGlobales.p2p)
             {
-                //Generar archivo P2P
-                await GenerarLineasPorTotales(cb);
+                return await GenerarLineasPorTotales(cb);
             }
-            else if (_config.TipoAcreditacion == VariablesGlobales.tanda)
+            if (_config.TipoAcreditacion == VariablesGlobales.tanda)
             {
-                await GenerarLineasPorCuentasBuzones(cb);
+                return await GenerarLineasPorCuentasBuzones(cb);
             }
-            else if (_config.TipoAcreditacion == VariablesGlobales.diaxdia)
+            if (_config.TipoAcreditacion == VariablesGlobales.diaxdia)
             {
-                await GenerarLineasPorCuentasBuzones(cb);
+                return await GenerarLineasPorCuentasBuzones(cb);
             }
-            else
-            {
-                throw new Exception("Tipo de acreditación no soportado");
-            }
+            throw new Exception("Tipo de acreditación no soportado");
         }
         /// <summary>
         /// Genera líneas para archivos P2P (Punto a Punto)
@@ -253,7 +250,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         /// no el banco de la cuenta (cuentasbuzones.BANCO). Los buzones con CC.BANCO = 'CASHOFFICE' 
         /// se envían a la ruta de Cash Office configurada en App.config.
         /// </summary>
-        private async Task GenerarLineasPorTotales(List<CuentaBuzon> cb)
+        private async Task<GeneracionArchivoBancoResult> GenerarLineasPorTotales(List<CuentaBuzon> cb)
         {
             StringBuilder maldonadoPesos = new StringBuilder();
             StringBuilder maldonadoDolares = new StringBuilder();
@@ -361,7 +358,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     }
                 }
             }
-            await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
+            return await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
         }
         /// <summary>
         /// Genera líneas para archivos Tanda y Día a Día (agrupados por cuenta)
@@ -369,7 +366,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         /// no el banco de la cuenta (cuentasbuzones.BANCO). Los buzones con CC.BANCO = 'CASHOFFICE' 
         /// se envían a la ruta de Cash Office configurada en App.config.
         /// </summary>
-        private async Task GenerarLineasPorCuentasBuzones(List<CuentaBuzon> cb)
+        private async Task<GeneracionArchivoBancoResult> GenerarLineasPorCuentasBuzones(List<CuentaBuzon> cb)
         {
             StringBuilder maldonadoPesos = new StringBuilder();
             StringBuilder maldonadoDolares = new StringBuilder();
@@ -519,9 +516,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 }
             }
 
-            await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
+            return await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
         }
-        private async Task CrearArchivo(StringBuilder maldonadoPesos, StringBuilder maldonadoDolares, StringBuilder montevideoPesos, StringBuilder montevideoDolares, StringBuilder cashOfficePesos, StringBuilder cashOfficeDolares)
+        private async Task<GeneracionArchivoBancoResult> CrearArchivo(StringBuilder maldonadoPesos, StringBuilder maldonadoDolares, StringBuilder montevideoPesos, StringBuilder montevideoDolares, StringBuilder cashOfficePesos, StringBuilder cashOfficeDolares)
         {
             // ✅ Lista para almacenar información de archivos generados (para envío en producción)
             var archivosGenerados = new List<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)>();
@@ -574,6 +571,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             //    - Si responseTens == false: se mantiene en NO_ENVIADOS
             //
             // ✅ CÓDIGO PARA PRODUCCIÓN - ACTIVADO
+            int archivosEnviadosExitosamente = 0;
+            int archivosConError = 0;
+            int archivosBloqueadosEnTest = 0;
+
             if (archivosGenerados.Count > 0)
             {
                 // ✅ Logging específico según modo
@@ -597,10 +598,6 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         $"Iniciando envío de {archivosGenerados.Count} archivo(s) al servicio Santander",
                         "SantanderFileGenerator | CrearArchivo");
                 }
-                
-                int archivosEnviadosExitosamente = 0;
-                int archivosConError = 0;
-                int archivosBloqueadosEnTest = 0;
                 
                 // ✅ Agrupar archivos por nombre para detectar duplicados
                 var archivosPorNombre = archivosGenerados
@@ -678,6 +675,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                     $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa} | " +
                                     $"El archivo se mantiene en carpeta NO_ENVIADOS (comportamiento esperado en TEST)",
                                     "SantanderFileGenerator | CrearArchivo | TEST MODE");
+                                if (ANS.Runtime.AppRuntime.IsTest)
+                                    return GeneracionArchivoBancoResult.ExitoSinRestricciones();
                                 continue; // Saltar al siguiente archivo sin intentar enviar
                             }
                             
@@ -771,6 +770,16 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         $"Con error: {archivosConError}",
                         "SantanderFileGenerator | CrearArchivo");
                 }
+
+                if (ANS.Runtime.AppRuntime.IsTest)
+                    return GeneracionArchivoBancoResult.ExitoSinRestricciones();
+
+                int totalArchivos = archivosGenerados.Count;
+                if (archivosEnviadosExitosamente == totalArchivos && archivosConError == 0)
+                    return GeneracionArchivoBancoResult.ExitoSinRestricciones();
+
+                return GeneracionArchivoBancoResult.SantanderEnvioWebServiceFallido(
+                    $"Santander WebService: enviados_ok={archivosEnviadosExitosamente}/{totalArchivos}, con_error={archivosConError}");
             }
             
             // ============================================================================
@@ -787,6 +796,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 await ServicioSantander.getInstancia().EnviarArchivoVacioConCliente();
             }
             */
+            return GeneracionArchivoBancoResult.ExitoSinRestricciones();
         }
         /// <summary>
         /// ✅ Crea uno o múltiples archivos si el contenido supera 500 líneas.

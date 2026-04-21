@@ -1,4 +1,5 @@
-﻿using ANS.Model.Interfaces;
+﻿using ANS.Model;
+using ANS.Model.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +16,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         {
             _config = cfg;
         }
-        public async Task GenerarArchivo(List<CuentaBuzon> cb)
+        public Task<GeneracionArchivoBancoResult> GenerarArchivo(List<CuentaBuzon> cb)
         {
             Console.WriteLine("Hsbc no hace nada");
+            return Task.FromResult(GeneracionArchivoBancoResult.ExitoSinRestricciones());
         }
     }
 }

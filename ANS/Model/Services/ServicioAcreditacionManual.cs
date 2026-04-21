@@ -1,3 +1,4 @@
+using ANS.Model;
 using ANS.Model.DTOs;
 using ANS.Model.GeneradorArchivoPorBanco;
 using ANS.Runtime;
@@ -1242,11 +1243,32 @@ namespace ANS.Model.Services
                             resultados.Add(resultado);
                             continue;
                         }
+                        var resultadosGeneracion = new List<GeneracionArchivoBancoResult>();
                         foreach (var grupo in porTipoAcreditacion)
                         {
                             var tipoAcred = grupo.Key;
                             var lista = grupo.ToList();
-                            await servicioCuentaBuzon.generarArchivoPorBanco(lista, banco, tipoAcred);
+                            resultadosGeneracion.Add(
+                                await servicioCuentaBuzon.generarArchivoPorBanco(lista, banco, tipoAcred));
+                        }
+
+                        if (resultadosGeneracion.Any(r => r.RequiereAuditoriaEnvioFallido))
+                        {
+                            var motivoAuditoria = string.Join(" | ",
+                                resultadosGeneracion.Where(r => r.RequiereAuditoriaEnvioFallido).Select(r => r.Motivo));
+                            await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                                cuentasBuzonesFiltradas, "FALLIDO_WS", motivoAuditoria);
+
+                            resultado.Exitoso = false;
+                            resultado.Mensaje =
+                                "Archivo generado en disco; el envío al Web Service de Santander falló. " +
+                                "Se registró auditoría en AcreditacionDepositoSantanderPendiente (no se insertó en acreditaciones principales).";
+                            resultado.TotalErrores = depositosDelBanco.Count;
+                            resultados.Add(resultado);
+                            ServicioLog.instancia.WriteWarning(
+                                $"BATCH ACREDITACIÓN MANUAL | Envío WS Santander fallido | Banco: {bancoNombre} | {motivoAuditoria}",
+                                "ServicioAcreditacionManual | AcreditarDepositos");
+                            continue;
                         }
 
                         resultado.Exitoso = true;

@@ -166,6 +166,83 @@ namespace ANS.Model.Services
                 await Task.Delay(50);
             }
         }
+
+        /// <summary>
+        /// Registra en tabla de auditoría los depósitos que no se acreditan en la tabla principal
+        /// porque el envío del archivo a Santander (Web Service) no fue satisfactorio.
+        /// </summary>
+        public async Task RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+            List<CuentaBuzon> accounts,
+            string estadoEnvioWs,
+            string observacion)
+        {
+            if (accounts == null || accounts.Count == 0)
+                return;
+
+            string obs = observacion ?? string.Empty;
+            if (obs.Length > 2000)
+                obs = obs.Substring(0, 2000);
+
+            var tableName = TableNameResolver.AcreditacionesConError;
+            TableNameResolver.ValidateTableName(tableName, "ServicioAcreditacion.RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs");
+
+            using var conn = new SqlConnection(_conexionTSD);
+            await conn.OpenAsync();
+
+            foreach (var _acc in accounts)
+            {
+                if (_acc.Depositos == null)
+                    continue;
+
+                foreach (var _dep in _acc.Depositos)
+                {
+                    var banco = ServicioBanco.getInstancia().getByNombre(_acc.Banco);
+                    if (banco == null)
+                        throw new InvalidOperationException($"Banco '{_acc.Banco}' no encontrado");
+
+                    int moneyId = getMoneyIdByAccount(_acc);
+                    double montoTotalDelDeposito = _dep.Totales.Sum(e => e.ImporteTotal);
+                    DateTime fechaIns = DateTime.Now;
+
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = $@"
+                        IF NOT EXISTS (
+                            SELECT 1
+                            FROM {tableName}
+                            WHERE IDBUZON = @IDBUZON
+                              AND IDOPERACION = @IDOPERACION
+                              AND MONEDA = @MONEDA
+                              AND IDCUENTA = @IDCUENTA
+                        )
+                        BEGIN
+                            INSERT INTO {tableName}
+                            (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP, EstadoEnvioWS, Observacion)
+                            VALUES
+                            (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL, @EstadoEnvioWS, @Observacion);
+                        END";
+
+                    cmd.Parameters.AddWithValue("@IDBUZON", _acc.NC);
+                    cmd.Parameters.AddWithValue("@IDOPERACION", _dep.IdOperacion);
+                    cmd.Parameters.AddWithValue("@FECHA", fechaIns);
+                    cmd.Parameters.AddWithValue("@IDBANCO", banco.BancoId);
+                    cmd.Parameters.AddWithValue("@IDCUENTA", _acc.IdCuenta);
+                    cmd.Parameters.AddWithValue("@MONEDA", moneyId);
+                    cmd.Parameters.AddWithValue("@NO_ENVIADO", false);
+                    cmd.Parameters.AddWithValue("@MONTO", montoTotalDelDeposito);
+                    cmd.Parameters.AddWithValue("@FECHADEPREAL",
+                        _dep.FechaDep != DateTime.MinValue ? (object)_dep.FechaDep : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@EstadoEnvioWS", estadoEnvioWs ?? "FALLIDO_WS");
+                    cmd.Parameters.AddWithValue("@Observacion", obs);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+
+            ServicioLog.instancia.WriteInfo(
+                $"Auditoría Santander (envío WS fallido) | Depósitos registrados en {tableName} | EstadoEnvioWS: {estadoEnvioWs}",
+                "ServicioAcreditacion | RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs");
+        }
+
         public async Task crearAcreditacionesByListaCuentaBuzonesTanda(List<CuentaBuzon> accounts, int tanda)
         {
             if (accounts != null && accounts.Count > 0)

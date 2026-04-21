@@ -29,6 +29,20 @@ namespace ANS.Runtime
         }
 
         /// <summary>
+        /// Auditoría de depósitos Santander cuando el Web Service no confirma el envío del archivo.
+        /// </summary>
+        public static string AcreditacionesConError
+        {
+            get
+            {
+                EnsureInitialized();
+                return AppRuntime.IsTest
+                    ? "AcreditacionesConError"
+                    : "AcreditacionesConError";
+            }
+        }
+
+        /// <summary>
         /// Valida que el nombre de tabla usado sea el correcto según el modo
         /// Guardia anti-accidente: si en TEST se intenta usar tabla de PROD, aborta
         /// </summary>
@@ -51,6 +65,14 @@ namespace ANS.Runtime
                     ServicioLog.instancia.WriteError(msg, "TableNameResolver | ValidateTableName");
                     throw new InvalidOperationException(msg);
                 }
+                if (tableNameUsed.Equals("AcreditacionDepositoSantanderPendiente", StringComparison.OrdinalIgnoreCase))
+                {
+                    var msg = $"ERROR CRÍTICO DE SEGURIDAD: En modo TEST se intentó usar la tabla de PRODUCCIÓN 'AcreditacionDepositoSantanderPendiente'. " +
+                             $"En TEST debe usarse 'AcreditacionDepositoSantanderPendiente_Replica'. " +
+                             $"Contexto: {context}.";
+                    ServicioLog.instancia.WriteError(msg, "TableNameResolver | ValidateTableName");
+                    throw new InvalidOperationException(msg);
+                }
             }
             else
             {
@@ -62,6 +84,14 @@ namespace ANS.Runtime
                         $"ADVERTENCIA: En modo PRODUCTION se está usando tabla de TEST 'AcreditacionDepositoDiegoTest_Replica'. " +
                         $"Contexto: {context}. " +
                         $"Verificar que se use TableNameResolver.AcreditacionDeposito.",
+                        "TableNameResolver | ValidateTableName");
+                }
+                if (tableNameUsed.Equals("AcreditacionesConError", StringComparison.OrdinalIgnoreCase))
+                {
+                    ServicioLog.instancia.WriteWarning(
+                        $"ADVERTENCIA: En modo PRODUCTION se está usando tabla de TEST 'AcreditacionesConError'. " +
+                        $"Contexto: {context}. " +
+                        $"Verificar que se use TableNameResolver.AcreditacionesConError.",
                         "TableNameResolver | ValidateTableName");
                 }
             }

@@ -1071,7 +1071,8 @@ namespace ANS
             {
                 var modo = AppRuntime.Mode.ToString().ToUpperInvariant();
                 var tablaAcreditaciones = TableNameResolver.AcreditacionDeposito;
-                
+                var tablaErrores = TableNameResolver.AcreditacionesConError;
+
                 // Determinar color del título según modo
                 var titulo = AppRuntime.IsTest 
                     ? "⚠️ MODO TEST ACTIVO" 
@@ -1099,6 +1100,9 @@ namespace ANS
                              "• Archivos en rutas de producción\n" +
                              "• Emails a destinatarios reales\n";
                 }
+
+                mensaje += $"Las acreditaciones fallidas se registrarán en la tabla {tablaErrores} de errores";
+                          
                 
                 mensaje += "\n════════════════════════════════════════\n\n" +
                           "Verifique que la configuración sea correcta antes de continuar.";

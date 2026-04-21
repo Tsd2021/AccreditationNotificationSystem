@@ -1,3 +1,4 @@
+using ANS.Model;
 using ANS.Model.GeneradorArchivoPorBanco;
 using ANS.Model.Interfaces;
 using ANS.Runtime;
@@ -886,7 +887,7 @@ namespace ANS.Model.Services
 
             return buzonesFound;
         }
-        public async Task generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, Banco banco, string tipoAcreditacion)
+        public async Task<GeneracionArchivoBancoResult> generarArchivoPorBanco(List<CuentaBuzon> listaCuentaBuzones, Banco banco, string tipoAcreditacion)
         {
 
             if (listaCuentaBuzones == null)
@@ -927,19 +928,19 @@ namespace ANS.Model.Services
 
             {
 
-                await bank.GenerarArchivo(listaCuentaBuzones);
+                var resultadoGeneracion = await bank.GenerarArchivo(listaCuentaBuzones);
 
                 // ✅ Logging: Resumen detallado al final de generación de archivo
-                var tiempoTranscurrido = DateTime.Now;
                 ServicioLog.instancia.WriteInfo(
                     $"FIN GENERACIÓN ARCHIVO | Banco: {banco.NombreBanco} | Tipo: {tipoAcreditacion} | " +
-                    $"Archivo generado exitosamente | " +
+                    $"Archivo generado (disco) | Permite acreditar en tabla principal: {resultadoGeneracion.PermiteInsertarEnAcreditacionPrincipal} | " +
+                    $"Auditoría envío fallido: {resultadoGeneracion.RequiereAuditoriaEnvioFallido} | " +
                     $"Total Cuentas procesadas: {listaCuentaBuzones.Count} | " +
                     $"Total Depósitos: {totalDepositos} | " +
                     $"Monto Total procesado: ${ServicioLog.instancia.FormatearMontoPublico(totalMonto)}",
                     $"ServicioCuentaBuzon | generarArchivoPorBanco");
 
-                return;
+                return resultadoGeneracion;
 
             }
 
@@ -983,7 +984,13 @@ namespace ANS.Model.Services
 
             }
 
-            await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
+            var resultadoGen = await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
+            if (resultadoGen.RequiereAuditoriaEnvioFallido)
+            {
+                await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                    buzones, "FALLIDO_WS", resultadoGen.Motivo);
+                return;
+            }
 
             await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(buzones);
 
@@ -1002,10 +1009,7 @@ namespace ANS.Model.Services
                 {
                     foreach (var unaCuentaBuzon in cuentaBuzones)
                     {
-                        if (unaCuentaBuzon.NC == "EA23L0410N12000062")
-                        {
-                            Console.WriteLine("es fonbay");
-                        }
+                 
                         int ultIdOperacion = await obtenerUltimaOperacionByNC(unaCuentaBuzon);
 
                         if (ultIdOperacion > 0)
@@ -1027,7 +1031,13 @@ namespace ANS.Model.Services
 
                     if (cuentasBuzonesConDepositos.Count > 0)
                     {
-                        await generarArchivoPorBanco(cuentasBuzonesConDepositos, banco, VariablesGlobales.diaxdia);
+                        var resultadoGen = await generarArchivoPorBanco(cuentasBuzonesConDepositos, banco, VariablesGlobales.diaxdia);
+                        if (resultadoGen.RequiereAuditoriaEnvioFallido)
+                        {
+                            await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                                cuentasBuzonesConDepositos, "FALLIDO_WS", resultadoGen.Motivo);
+                            return;
+                        }
 
                         await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentasBuzonesConDepositos);
                     }
@@ -1062,7 +1072,13 @@ namespace ANS.Model.Services
 
                     else return; //abandona. no genera nada.
 
-                    await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
+                    var resultadoGenTanda = await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
+                    if (resultadoGenTanda.RequiereAuditoriaEnvioFallido)
+                    {
+                        await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                            cuentaBuzones, "FALLIDO_WS", resultadoGenTanda.Motivo);
+                        return;
+                    }
 
                     //luego de generar, tiene que insertar en ACREDITACIONESDEPOSITO los depositos que fueron insertados ok
 
@@ -1131,7 +1147,13 @@ namespace ANS.Model.Services
                 if (cuentas.Count > 0)
                 {
                     {
-                        await generarArchivoPorBanco(cuentas, santander, VariablesGlobales.tanda);
+                        var resultadoGen = await generarArchivoPorBanco(cuentas, santander, VariablesGlobales.tanda);
+                        if (resultadoGen.RequiereAuditoriaEnvioFallido)
+                        {
+                            await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                                cuentas, "FALLIDO_WS", resultadoGen.Motivo);
+                            return;
+                        }
 
                         await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzonesTanda(cuentas, numTanda);
                     }
@@ -1179,7 +1201,13 @@ namespace ANS.Model.Services
                     {
                         // Pasar el tipo específico de acreditación según el número de tanda
                         string tipoAcreditacionEspecifico = numTanda == 1 ? "Tanda1" : "Tanda2";
-                        await generarArchivoPorBanco(cuentasConDepositos, scotia, tipoAcreditacionEspecifico);
+                        var resultadoGenScotia = await generarArchivoPorBanco(cuentasConDepositos, scotia, tipoAcreditacionEspecifico);
+                        if (resultadoGenScotia.RequiereAuditoriaEnvioFallido)
+                        {
+                            await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                                cuentasConDepositos, "FALLIDO_WS", resultadoGenScotia.Motivo);
+                            return;
+                        }
 
                         await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzonesTanda(cuentasConDepositos, numTanda);
                     }
@@ -1210,7 +1238,12 @@ namespace ANS.Model.Services
                     }
                 }
 
-                await generarArchivoPorBanco(buzonesPorBanco, bank, VariablesGlobales.diaxdia);
+                var resultadoGenAcre = await generarArchivoPorBanco(buzonesPorBanco, bank, VariablesGlobales.diaxdia);
+                if (resultadoGenAcre.RequiereAuditoriaEnvioFallido)
+                {
+                    await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                        buzonesPorBanco, "FALLIDO_WS", resultadoGenAcre.Motivo);
+                }
 
                 return;
             }
@@ -1268,7 +1301,13 @@ namespace ANS.Model.Services
                     }
                 }
 
-                await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
+                var resultadoGen = await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
+                if (resultadoGen.RequiereAuditoriaEnvioFallido)
+                {
+                    await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                        cuentaBuzones, "FALLIDO_WS", resultadoGen.Motivo);
+                    return;
+                }
 
                 await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentaBuzones);
 

@@ -1,4 +1,5 @@
-﻿using ANS.Model.Interfaces;
+﻿using ANS.Model;
+using ANS.Model.Interfaces;
 
 namespace ANS.Model.GeneradorArchivoPorBanco
 {
@@ -10,9 +11,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         {
             _config = config;
         }
-        public async Task GenerarArchivo(List<CuentaBuzon> cb)
+        public Task<GeneracionArchivoBancoResult> GenerarArchivo(List<CuentaBuzon> cb)
         {
             Console.WriteLine("Bandes no hace nada");
+            return Task.FromResult(GeneracionArchivoBancoResult.ExitoSinRestricciones());
         }
     }
 }

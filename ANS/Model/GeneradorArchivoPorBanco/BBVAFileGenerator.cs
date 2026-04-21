@@ -1,3 +1,4 @@
+using ANS.Model;
 using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using ANS.Runtime.Guards;
@@ -215,7 +216,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             }
         }
 
-        public async Task GenerarArchivo(List<CuentaBuzon> cuentas)
+        public async Task<GeneracionArchivoBancoResult> GenerarArchivo(List<CuentaBuzon> cuentas)
         {
             try
             {
@@ -241,6 +242,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             {
                 throw;
             }
+
+            return GeneracionArchivoBancoResult.ExitoSinRestricciones();
         }
 
         // ======================

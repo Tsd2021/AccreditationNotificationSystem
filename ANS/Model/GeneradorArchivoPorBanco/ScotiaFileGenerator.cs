@@ -1,3 +1,4 @@
+using ANS.Model;
 using ANS.Model.Interfaces;
 using ANS.Model.Services;
 using ANS.Runtime.Guards;
@@ -20,7 +21,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         string _sucursal;
         private ConfiguracionAcreditacion _config { get; set; }
 
-        public async Task GenerarArchivo(List<CuentaBuzon> cb)
+        public Task<GeneracionArchivoBancoResult> GenerarArchivo(List<CuentaBuzon> cb)
         {
 
             if (cb == null || cb.Count == 0)
@@ -29,7 +30,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             }
 
             armarStringParaTxt_Agrupado(cb);
-
+            return Task.FromResult(GeneracionArchivoBancoResult.ExitoSinRestricciones());
         }
 
         public ScotiaFileGenerator(ConfiguracionAcreditacion config)
