@@ -166,7 +166,7 @@
                     <!-- Izquierda: icono + título -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="CalendarClock" Width="22" Height="22" Foreground="White" Margin="0,0,8,0"/>
-                        <TextBlock Text="Tecnisegur Automatic Accreditation System"
+                        <TextBlock Text="Tecnisegur TAAS"
                        Foreground="White" FontSize="16" FontWeight="SemiBold"
                        VerticalAlignment="Center"/>
                     </StackPanel>

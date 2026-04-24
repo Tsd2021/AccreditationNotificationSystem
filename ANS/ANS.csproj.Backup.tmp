@@ -23,14 +23,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="favicon.ico" />
     <None Remove="Images\bandes.png" />
     <None Remove="Images\bbva.png" />
     <None Remove="Images\disconnected.png" />
     <None Remove="Images\emailIcon.png" />
     <None Remove="Images\enviomanual.png" />
     <None Remove="Images\envioMasivo.png" />
-    <None Remove="Images\favicon.ico" />
     <None Remove="Images\FirmaDiegoMail.png" />
     <None Remove="Images\hsbc.png" />
     <None Remove="Images\itau.png" />
@@ -80,7 +78,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="favicon.ico" />
     <Resource Include="Images\bandes.png" />
     <Resource Include="Images\bbva.png" />
     <Resource Include="Images\disconnected.png" />
@@ -89,7 +86,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\envioMasivo.png" />
-    <Resource Include="Images\favicon.ico" />
     <Resource Include="Images\hsbc.png" />
     <Resource Include="Images\itau.png" />
     <Resource Include="Images\itau2.png">

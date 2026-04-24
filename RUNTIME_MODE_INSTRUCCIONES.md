@@ -6,7 +6,7 @@ Sistema robusto de conmutación entre modo TEST y PRODUCTION que garantiza que e
 ## Cómo Cambiar el Modo
 
 ### Opción 1: Archivo `ans.mode` (Recomendado)
-1. Crear/editar el archivo `ans.mode` en la carpeta donde está el ejecutable (misma carpeta que ANS.exe)
+1. Crear/editar el archivo `ans.mode` en la carpeta donde está el ejecutable (misma carpeta que TAAS.exe)
 2. Escribir una de estas líneas:
    - `TEST` o `test` → Modo TEST
    - `PRODUCTION` o `PROD` o `production` o `prod` → Modo PRODUCTION
@@ -15,8 +15,8 @@ Sistema robusto de conmutación entre modo TEST y PRODUCTION que garantiza que e
 
 **Ejemplo:**
 ```
-C:\ANS\ANS.exe
-C:\ANS\ans.mode  ← Crear este archivo con contenido "TEST" o "PRODUCTION"
+C:\TAAS\TAAS.exe
+C:\TAAS\ans.mode  ← Crear este archivo con contenido "TEST" o "PRODUCTION"
 ```
 
 ### Opción 2: App.config

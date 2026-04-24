@@ -16,6 +16,7 @@ using Quartz;
 using Quartz.Impl;
 using Quartz.Impl.Matchers;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using ANS.Model.Interfaces;
 
@@ -26,6 +27,11 @@ namespace ANS
     /// </summary>
     public partial class App : System.Windows.Application
     {
+        /// <summary>
+        /// Mutex global: una sola instancia del proceso WPF en el equipo (evita doble clic y envíos duplicados).
+        /// </summary>
+        private static Mutex _singleInstanceMutex;
+
         private IScheduler _scheduler;
 
         private IJobHistoryStore _historyStore;
@@ -34,6 +40,24 @@ namespace ANS
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            const string singleInstanceMutexName = @"Global\TAAS.DesktopSingleInstance";
+            bool createdNew;
+            var instanceMutex = new Mutex(true, singleInstanceMutexName, out createdNew);
+            if (!createdNew)
+            {
+                instanceMutex.Dispose();
+                MessageBox.Show(
+                    "La aplicación TAAS ya está en ejecución en este equipo.\n\n" +
+                    "No se puede abrir otra instancia para evitar envíos duplicados a los servicios bancarios.",
+                    "TAAS",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                Shutdown();
+                return;
+            }
+
+            _singleInstanceMutex = instanceMutex;
 
             // ✅ INICIALIZAR RUNTIME MODE PRIMERO (antes de cualquier otra operación)
             AppRuntime.Initialize();
@@ -1075,8 +1099,8 @@ namespace ANS
 
                 // Determinar color del título según modo
                 var titulo = AppRuntime.IsTest 
-                    ? "⚠️ MODO TEST ACTIVO" 
-                    : "✅ MODO PRODUCCIÓN ACTIVO";
+                    ? "TAAS — ⚠️ MODO TEST ACTIVO" 
+                    : "TAAS — ✅ MODO PRODUCCIÓN ACTIVO";
                 
                 var mensaje = $"MODO DE EJECUCIÓN: {modo}\n\n" +
                              $"TABLA DE ACREDITACIONES:\n{tablaAcreditaciones}\n\n" +
@@ -1158,6 +1182,29 @@ namespace ANS
             }
             finally
             {
+                if (_singleInstanceMutex != null)
+                {
+                    try
+                    {
+                        _singleInstanceMutex.ReleaseMutex();
+                    }
+                    catch (ApplicationException)
+                    {
+                        // El hilo actual no era titular del mutex; ignorar.
+                    }
+
+                    try
+                    {
+                        _singleInstanceMutex.Dispose();
+                    }
+                    catch
+                    {
+                        // No impedir el cierre de la app.
+                    }
+
+                    _singleInstanceMutex = null;
+                }
+
                 base.OnExit(e);
             }
         }
