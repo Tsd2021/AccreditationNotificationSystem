@@ -94,7 +94,7 @@ namespace ANS.Model.Services
                             query = QueryBuscaDepositoConIgual();
                         }
 
-                        if (buzon.Empresa.ToUpper() == "NUMMI DIANO".ToUpper())
+                        if (buzon.Empresa.ToUpper() == "NUMMIDIANO".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
                         }

@@ -225,9 +225,9 @@ namespace ANS.Model.Services
                         )
                         BEGIN
                             INSERT INTO {tableName}
-                            (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP, EstadoEnvioWS, Observacion, NombreArchivoOriginal)
+                            (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP, EstadoEnvioWS, Observacion, NombreArchivoOrigen)
                             VALUES
-                            (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL, @EstadoEnvioWS, @Observacion, @NombreArchivoOriginal);
+                            (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL, @EstadoEnvioWS, @Observacion, @NombreArchivoOrigen);
                         END";
 
                     cmd.Parameters.AddWithValue("@IDBUZON", _acc.NC);
@@ -242,7 +242,7 @@ namespace ANS.Model.Services
                         _dep.FechaDep != DateTime.MinValue ? (object)_dep.FechaDep : DBNull.Value);
                     cmd.Parameters.AddWithValue("@EstadoEnvioWS", estadoCorto);
                     cmd.Parameters.AddWithValue("@Observacion", obs);
-                    cmd.Parameters.AddWithValue("@NombreArchivoOriginal",
+                    cmd.Parameters.AddWithValue("@NombreArchivoOrigen",
                         string.IsNullOrEmpty(nombreArch) ? (object)DBNull.Value : nombreArch);
 
                     await cmd.ExecuteNonQueryAsync();

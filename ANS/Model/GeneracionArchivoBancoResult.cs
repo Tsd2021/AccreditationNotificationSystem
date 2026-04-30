@@ -29,9 +29,18 @@ namespace ANS.Model
         public string ObservacionParaAuditoria { get; init; }
 
         /// <summary>
-        /// Nombre del archivo generado asociado al fallo (p. ej. TEC_004_....dat). Columna NombreArchivoOriginal en AcreditacionesConError.
+        /// Nombre del archivo generado asociado al fallo (p. ej. TEC_004_....dat). Columna NombreArchivoOrigen en AcreditacionesConError.
         /// </summary>
         public string NombreArchivoOriginalParaAuditoria { get; init; }
+
+        /// <summary>
+        /// Verdadero cuando el fallo de envío al WS Santander fue por TIME OUT.
+        /// Estado ambiguo: el banco puede haber procesado el archivo aunque no se recibió confirmación.
+        /// En ese caso se registra en auditoría Y también se inserta en la tabla principal.
+        /// </summary>
+        public bool EsTimeoutWs =>
+            RequiereAuditoriaEnvioFallido &&
+            string.Equals(EstadoEnvioWsParaAuditoria, EnvioSantanderResult.EstadoTimeout, StringComparison.OrdinalIgnoreCase);
 
         public static GeneracionArchivoBancoResult ExitoSinRestricciones() => new GeneracionArchivoBancoResult
         {

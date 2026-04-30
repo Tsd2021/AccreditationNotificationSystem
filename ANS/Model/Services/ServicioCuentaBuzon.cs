@@ -947,6 +947,52 @@ namespace ANS.Model.Services
             throw new Exception("Error en método generarArchivoPorBanco: el modo de" +
                 " acreditacion por banco no fue encontrado.");
         }
+        private static void LogearTimeoutSantander(List<CuentaBuzon> buzones, GeneracionArchivoBancoResult resultado, string tipoAcreditacion)
+        {
+            int totalDepositos = buzones.Sum(b => b.Depositos?.Count ?? 0);
+            decimal totalMonto = buzones.Sum(b =>
+                (decimal)(b.Depositos?.Sum(d => d.Totales?.Sum(t => t.ImporteTotal) ?? 0) ?? 0));
+            ServicioLog.instancia.WriteWarning(
+                $"TIME OUT Santander: se registra en auditoría y también se inserta en tabla principal por posible procesamiento bancario. | " +
+                $"Banco: Santander | Tipo: {tipoAcreditacion} | " +
+                $"NombreArchivoOrigen: {resultado.NombreArchivoOriginalParaAuditoria ?? "N/A"} | " +
+                $"Buzones: {buzones.Count} | Depósitos: {totalDepositos} | " +
+                $"Monto aprox.: {ServicioLog.instancia.FormatearMontoPublico(totalMonto)}",
+                "ServicioCuentaBuzon | TIME OUT Santander");
+        }
+
+        /// <summary>
+        /// Maneja el caso TIME OUT Santander: primero inserta en tabla principal (crítico),
+        /// luego intenta registrar en AcreditacionesConError (no crítico — fallo logueado sin relanzar).
+        /// La inserción en tabla principal es prioritaria porque previene reprocesamientos de IDOPERACION
+        /// que Santander puede haber procesado aunque nuestro sistema no recibió confirmación.
+        /// </summary>
+        private async Task ManejarTimeoutSantander(
+            List<CuentaBuzon> buzones,
+            GeneracionArchivoBancoResult resultado,
+            string tipoAcreditacion,
+            Func<Task> insertarEnPrincipal)
+        {
+            LogearTimeoutSantander(buzones, resultado, tipoAcreditacion);
+            await insertarEnPrincipal();
+            try
+            {
+                await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                    buzones,
+                    resultado.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                    resultado.ObservacionParaAuditoria ?? resultado.Motivo,
+                    resultado.NombreArchivoOriginalParaAuditoria);
+            }
+            catch (Exception ex)
+            {
+                ServicioLog.instancia.WriteError(
+                    $"[CRÍTICO] TIME OUT Santander: falló el registro en AcreditacionesConError luego de insertar en tabla principal. " +
+                    $"Tipo: {tipoAcreditacion} | NombreArchivoOrigen: {resultado.NombreArchivoOriginalParaAuditoria ?? "N/A"} | " +
+                    $"Error: {ex.Message}",
+                    "ServicioCuentaBuzon | ManejarTimeoutSantander");
+            }
+        }
+
         #region MÉTODOS ACREDITAR POR CONFIGURACIÓN!
         public async Task acreditarPuntoAPuntoPorBanco(Banco bank)
         {
@@ -987,6 +1033,12 @@ namespace ANS.Model.Services
             var resultadoGen = await generarArchivoPorBanco(buzones, bank, VariablesGlobales.p2p);
             if (resultadoGen.RequiereAuditoriaEnvioFallido)
             {
+                if (resultadoGen.EsTimeoutWs)
+                {
+                    await ManejarTimeoutSantander(buzones, resultadoGen, VariablesGlobales.p2p,
+                        () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(buzones));
+                    return;
+                }
                 await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                     buzones,
                     resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
@@ -1037,6 +1089,12 @@ namespace ANS.Model.Services
                         var resultadoGen = await generarArchivoPorBanco(cuentasBuzonesConDepositos, banco, VariablesGlobales.diaxdia);
                         if (resultadoGen.RequiereAuditoriaEnvioFallido)
                         {
+                            if (resultadoGen.EsTimeoutWs)
+                            {
+                                await ManejarTimeoutSantander(cuentasBuzonesConDepositos, resultadoGen, VariablesGlobales.diaxdia,
+                                    () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentasBuzonesConDepositos));
+                                return;
+                            }
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                                 cuentasBuzonesConDepositos,
                                 resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
@@ -1081,6 +1139,12 @@ namespace ANS.Model.Services
                     var resultadoGenTanda = await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
                     if (resultadoGenTanda.RequiereAuditoriaEnvioFallido)
                     {
+                        if (resultadoGenTanda.EsTimeoutWs)
+                        {
+                            await ManejarTimeoutSantander(cuentaBuzones, resultadoGenTanda, VariablesGlobales.tanda,
+                                () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentaBuzones));
+                            return;
+                        }
                         await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                             cuentaBuzones,
                             resultadoGenTanda.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
@@ -1159,6 +1223,12 @@ namespace ANS.Model.Services
                         var resultadoGen = await generarArchivoPorBanco(cuentas, santander, VariablesGlobales.tanda);
                         if (resultadoGen.RequiereAuditoriaEnvioFallido)
                         {
+                            if (resultadoGen.EsTimeoutWs)
+                            {
+                                await ManejarTimeoutSantander(cuentas, resultadoGen, VariablesGlobales.tanda,
+                                    () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzonesTanda(cuentas, numTanda));
+                                return;
+                            }
                             await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                                 cuentas,
                                 resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
@@ -1256,11 +1326,19 @@ namespace ANS.Model.Services
                 var resultadoGenAcre = await generarArchivoPorBanco(buzonesPorBanco, bank, VariablesGlobales.diaxdia);
                 if (resultadoGenAcre.RequiereAuditoriaEnvioFallido)
                 {
-                    await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                        buzonesPorBanco,
-                        resultadoGenAcre.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
-                        resultadoGenAcre.ObservacionParaAuditoria ?? resultadoGenAcre.Motivo,
-                        resultadoGenAcre.NombreArchivoOriginalParaAuditoria);
+                    if (resultadoGenAcre.EsTimeoutWs)
+                    {
+                        await ManejarTimeoutSantander(buzonesPorBanco, resultadoGenAcre, VariablesGlobales.diaxdia,
+                            () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(buzonesPorBanco));
+                    }
+                    else
+                    {
+                        await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
+                            buzonesPorBanco,
+                            resultadoGenAcre.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
+                            resultadoGenAcre.ObservacionParaAuditoria ?? resultadoGenAcre.Motivo,
+                            resultadoGenAcre.NombreArchivoOriginalParaAuditoria);
+                    }
                 }
 
                 return;
@@ -1322,6 +1400,12 @@ namespace ANS.Model.Services
                 var resultadoGen = await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
                 if (resultadoGen.RequiereAuditoriaEnvioFallido)
                 {
+                    if (resultadoGen.EsTimeoutWs)
+                    {
+                        await ManejarTimeoutSantander(cuentaBuzones, resultadoGen, VariablesGlobales.tanda,
+                            () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentaBuzones));
+                        return;
+                    }
                     await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
                         cuentaBuzones,
                         resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
