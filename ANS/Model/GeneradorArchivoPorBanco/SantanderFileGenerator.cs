@@ -683,32 +683,44 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             // Enviar archivo al servicio Santander (solo en PRODUCTION)
                             var envioWs = await ServicioSantander.getInstancia()
                                 .EnviarArchivoConClienteWS(archivoInfo.nombreArchivo, archivoInfo.contenidoBytes);
-                            
-                            if (envioWs.Exito)
+
+                            if (DebeMoverAApprovedPorResultadoSantander(envioWs))
                             {
                                 archivosEnviadosExitosamente++;
-                                
-                                // Si se envió exitosamente, mover a carpeta APPROVED
+
+                                // Si se envió exitosamente O fue TIMEOUT, mover a carpeta APPROVED
                                 string fecha = DateTime.Now.ToString("ddMMyyyy");
                                 string directorioBase = Path.GetDirectoryName(archivoInfo.rutaFinal);
                                 string directorioApproved = Path.Combine(
-                                    Path.GetDirectoryName(directorioBase), 
+                                    Path.GetDirectoryName(directorioBase),
                                     $"{fecha}_APPROVED");
-                                
+
                                 if (!Directory.Exists(directorioApproved))
                                     Directory.CreateDirectory(directorioApproved);
-                                
+
                                 string rutaApproved = Path.Combine(directorioApproved, archivoInfo.nombreArchivo);
-                                
+
                                 // Mover archivo de NO_ENVIADOS a APPROVED
                                 if (File.Exists(archivoInfo.rutaFinal))
                                 {
                                     File.Move(archivoInfo.rutaFinal, rutaApproved, overwrite: true);
-                                    
-                                    ServicioLog.instancia.WriteInfo(
-                                        $"Archivo movido a APPROVED | {archivoInfo.nombreArchivo} | " +
-                                        $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa}",
-                                        "SantanderFileGenerator | CrearArchivo");
+
+                                    // Log diferenciado según tipo de éxito
+                                    if (EsTimeoutSantander(envioWs))
+                                    {
+                                        ServicioLog.instancia.WriteWarning(
+                                            $"Archivo movido a APPROVED por TIMEOUT Santander | {archivoInfo.nombreArchivo} | " +
+                                            $"El banco puede haber procesado el archivo aunque no devolvió respuesta OK | " +
+                                            $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa}",
+                                            "SantanderFileGenerator | CrearArchivo - TIMEOUT");
+                                    }
+                                    else
+                                    {
+                                        ServicioLog.instancia.WriteInfo(
+                                            $"Archivo movido a APPROVED | {archivoInfo.nombreArchivo} | " +
+                                            $"Ciudad: {archivoInfo.ciudad} | Divisa: {archivoInfo.divisa}",
+                                            "SantanderFileGenerator | CrearArchivo");
+                                    }
                                 }
                             }
                             else
@@ -1525,6 +1537,30 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             {
                 semaforo.Release();
             }
+        }
+
+        /// <summary>
+        /// Determina si un resultado de envío a Santander debe ser tratado como operacionalmente exitoso.
+        /// Esto incluye respuestas OK (Exito=true) y TIMEOUT (ya que el banco puede procesar aunque no responda).
+        /// </summary>
+        private static bool DebeMoverAApprovedPorResultadoSantander(EnvioSantanderResult envioWs)
+        {
+            return envioWs != null &&
+                   (envioWs.Exito ||
+                    string.Equals(envioWs.EstadoEnvio,
+                                  EnvioSantanderResult.EstadoTimeout,
+                                  StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Determina si un resultado de envío corresponde a un TIMEOUT de Santander.
+        /// </summary>
+        private static bool EsTimeoutSantander(EnvioSantanderResult envioWs)
+        {
+            return envioWs != null &&
+                   string.Equals(envioWs.EstadoEnvio,
+                                 EnvioSantanderResult.EstadoTimeout,
+                                 StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -3,36 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\servicioacreditacion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\servicioacreditacion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\serviciosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\serviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\jobs\\santander\\acreditarpuntoapuntosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\santander\\acreditarpuntoapuntosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\servicioacreditacion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\servicioacreditacion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\jobs\\santander\\excelreportediariosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\jobs\\santander\\excelreportediariosantander.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\ans.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\ans.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\servicioenviomasivo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\servicioenviomasivo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -42,34 +22,8 @@
       "DocumentGroups": [
         {
           "DockedHeight": 209,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "ServicioAcreditacion.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "RelativeToolTip": "ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "ViewState": "AgIAAOgCAAAAAAAAAAAAwEMDAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-30T15:13:18.866Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ServicioSantander.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioSantander.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioSantander.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioSantander.cs",
-              "RelativeToolTip": "ANS\\Model\\Services\\ServicioSantander.cs",
-              "ViewState": "AgIAAHUAAAAAAAAAAAAAAJEBAABcAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-30T15:12:05.207Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
@@ -84,80 +38,41 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "AcreditarPuntoAPuntoSantander.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "RelativeToolTip": "ANS\\Model\\Jobs\\SANTANDER\\AcreditarPuntoAPuntoSantander.cs",
-              "ViewState": "AgIAABkAAAAAAAAAAAAqwCwAAAA9AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-30T15:09:46.564Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "App.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\App.xaml.cs",
-              "RelativeDocumentMoniker": "ANS\\App.xaml.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\App.xaml.cs",
-              "RelativeToolTip": "ANS\\App.xaml.cs",
-              "ViewState": "AgIAAIkDAAAAAAAAAAAnwIsDAAAXAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-30T15:08:33.56Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "ServicioCuentaBuzon.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
-              "RelativeToolTip": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
-              "ViewState": "AgIAAIwKAAAAAAAAAAA3wDILAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-29T20:44:35.766Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "ExcelReporteDiarioSantander.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\SANTANDER\\ExcelReporteDiarioSantander.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Jobs\\SANTANDER\\ExcelReporteDiarioSantander.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Jobs\\SANTANDER\\ExcelReporteDiarioSantander.cs",
-              "RelativeToolTip": "ANS\\Model\\Jobs\\SANTANDER\\ExcelReporteDiarioSantander.cs",
-              "ViewState": "AgIAAB8AAAAAAAAAAAAqwDIAAABFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-29T20:44:24.296Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "ServicioDeposito.cs",
               "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioDeposito.cs",
               "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioDeposito.cs",
               "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioDeposito.cs",
               "RelativeToolTip": "ANS\\Model\\Services\\ServicioDeposito.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAnwBEAAAA1AAAAAAAAAA==",
+              "ViewState": "AgIAAEkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-29T18:10:56.994Z",
+              "WhenOpened": "2026-05-21T20:01:17.745Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "ANS.csproj",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\ANS.csproj",
-              "RelativeDocumentMoniker": "ANS\\ANS.csproj",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\ANS.csproj",
-              "RelativeToolTip": "ANS\\ANS.csproj",
-              "ViewState": "AgIAABMAAAAAAAAAAAAywGQAAAA7AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-04-24T19:43:45.93Z",
+              "DocumentIndex": 2,
+              "Title": "ServicioEnvioMasivo.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
+              "RelativeToolTip": "ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
+              "ViewState": "AgIAABMFAAAAAAAAAAAnwCsFAABIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-21T19:50:08.864Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ServicioAcreditacion.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioAcreditacion.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioAcreditacion.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioAcreditacion.cs",
+              "RelativeToolTip": "ANS\\Model\\Services\\ServicioAcreditacion.cs",
+              "ViewState": "AgIAACoBAAAAAAAAAAAIwHUBAABVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-30T15:13:18.866Z",
               "EditorCaption": ""
             }
           ]

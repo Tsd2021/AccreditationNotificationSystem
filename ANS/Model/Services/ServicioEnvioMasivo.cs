@@ -35,7 +35,7 @@ namespace ANS.Model.Services
             "EA24L0101N13000011", "FROG05", "FROG06", "FROG09", "FROG10",
             "FROG15", "FROG16", "FROG18", "FROG20", "FROG22", "FROG24",
             "FROG25", "FROG26", "FROG3", "FROG4", "FROG6",
-            "EA24L1010N07000713", "EA24L1010N12000148"
+            "EA24L1010N07000713", "EA24L1010N12000148" , "EA24L1010N12000159" , "EA24L1103N12000163" , "EA24L1206N12000168" , "EA25L1610N12000208"
         };
 
         // Destino fijo para el envío "Excel SOLO B2B" (buzones HENDERSON)
@@ -1325,7 +1325,11 @@ namespace ANS.Model.Services
                                                                 'FROG4',
                                                                 'FROG6',
                                                                 'EA24L1010N07000713',
-                                                                'EA24L1010N12000148');";
+                                                                'EA24L1010N12000148',
+                                                                'EA24L1010N12000159',
+                                                                'EA24L1103N12000163',
+                                                                'EA24L1206N12000168',
+                                                                'EA25L1610N12000208');";
 
                     SqlCommand cmd3 = new SqlCommand(queryParaObtenerBuzonesEspecificos, conn);
 
