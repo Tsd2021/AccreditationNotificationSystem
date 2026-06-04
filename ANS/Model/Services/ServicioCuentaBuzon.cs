@@ -1450,7 +1450,7 @@ namespace ANS.Model.Services
                     config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
                 }
 
-                List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank, config);
+                List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank, config).ConfigureAwait(false);
 
 
                 if (bank.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper())
@@ -1464,8 +1464,41 @@ namespace ANS.Model.Services
                 }
 
 
-                List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
+                // Bloque exclusivo BBVA idcliente 242: split en dos envíos (TATA y BAS)
+                if (bank.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper() && cli.IdCliente == 242)
+                {
+                    // Blindar exclusión de FRONTOY (97) y SANROQUE (262) aunque el SQL ya los filtra
+                    var acreditacionesFiltradas = acreditacionesFound
+                        .Where(x => x.IdCliente != 97 && x.IdCliente != 262)
+                        .ToList();
 
+                    // Partición: BAS = empresa contiene "BAS"; TATA = el resto
+                    var grupoTata = acreditacionesFiltradas
+                        .Where(x => !x.Empresa.ToUpperInvariant().Contains("BAS"))
+                        .ToList();
+                    var grupoBas = acreditacionesFiltradas
+                        .Where(x => x.Empresa.ToUpperInvariant().Contains("BAS"))
+                        .ToList();
+
+                    if (grupoTata.Any())
+                    {
+                        var mvdTata = grupoTata.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
+                        var mldTata = grupoTata.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+                        generarExcelFormatoTanda(mvdTata, mldTata, numTanda, bank, cli, config, tarea, baseDia, etiqueta: "TATA");
+                    }
+
+                    if (grupoBas.Any())
+                    {
+                        var mvdBas = grupoBas.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
+                        var mldBas = grupoBas.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+                        // Reutiliza la misma tarea (mismos destinatarios que TATA); solo cambia la etiqueta en filename/asunto
+                        generarExcelFormatoTanda(mvdBas, mldBas, numTanda, bank, cli, config, tarea, baseDia, etiqueta: "BAS");
+                    }
+
+                    return;
+                }
+
+                List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
                 List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
 
                 generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config, tarea, baseDia);
@@ -1479,14 +1512,14 @@ namespace ANS.Model.Services
 
         }
 
-        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config, string tarea, DateTime? diaOperativo = null)
+        private void generarExcelFormatoTanda(List<DtoAcreditacionesPorEmpresa> acreditacionesMontevideo, List<DtoAcreditacionesPorEmpresa> acreditacionesMaldonado, int numTanda, Banco b, Cliente c, ConfiguracionAcreditacion config, string tarea, DateTime? diaOperativo = null, string etiqueta = null)
         {
             // Colores para el formato
             var pastelYellow = XLColor.LightYellow;
             var pastelCyan = XLColor.LightCyan;
             var fechaReferencia = (diaOperativo ?? DateTime.Today).Date;
 
-            void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row)
+            void InsertarLogoDesdeRecurso(IXLWorksheet ws, ref int row, string etq = null)
             {
                 var assembly = Assembly.GetExecutingAssembly();
                 string resourcePath = "ANS.Images.logoTecniFinal.png";
@@ -1524,7 +1557,9 @@ namespace ANS.Model.Services
                 // Título
                 ws.Range(row, 1, row, 5).Merge();
                 var celdaTitulo = ws.Cell(row, 1);
-                celdaTitulo.Value = "Buzones Inteligentes";
+                celdaTitulo.Value = string.IsNullOrWhiteSpace(etq)
+                    ? "Buzones Inteligentes"
+                    : $"Buzones Inteligentes  -  SOLO {etq.ToUpperInvariant()}";
                 celdaTitulo.Style.Font.Bold = true;
                 celdaTitulo.Style.Font.FontSize = 16;
                 celdaTitulo.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -1539,7 +1574,8 @@ namespace ANS.Model.Services
                 ws.ShowGridLines = false;
 
                 int row = 1;
-                InsertarLogoDesdeRecurso(ws, ref row);
+                string tituloEtq = string.IsNullOrWhiteSpace(etiqueta) ? null : etiqueta.ToUpperInvariant();
+                InsertarLogoDesdeRecurso(ws, ref row, tituloEtq);
 
                 int freezeRow = 0;
 
@@ -1660,7 +1696,10 @@ namespace ANS.Model.Services
                 }
 
                 else if (b.NombreBanco.Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase))
-                    fn = $"{b.NombreBanco}_{ciudad}_TATA_{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+                {
+                    string etq = string.IsNullOrWhiteSpace(etiqueta) ? "TATA" : etiqueta.ToUpperInvariant();
+                    fn = $"{b.NombreBanco}_{ciudad}_{etq}_{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+                }
 
                 else
                     fn = $"{b.NombreBanco}_{ciudad}_Tanda_{numTanda}_{fechaReferencia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
@@ -1711,11 +1750,12 @@ namespace ANS.Model.Services
                             cue = $"Adjunto archivo de acreditaciones para {bank} (B2B) Tanda {numTanda} ciudad {cityUp}.";
                         }
                     }
-                    // 3) BBVA (TATA)
+                    // 3) BBVA
                     else if (bank.Equals(VariablesGlobales.bbva, StringComparison.OrdinalIgnoreCase))
                     {
-                        asu = $"Acreditaciones {bank} (TATA) - {cityUp}";
-                        cue = $"Adjunto archivo de acreditaciones para buzones TATA ciudad {cityUp} banco {bank}.";
+                        string etq = string.IsNullOrWhiteSpace(etiqueta) ? "TATA" : etiqueta.ToUpperInvariant();
+                        asu = $"Acreditaciones {bank} ({etq}) - {cityUp}";
+                        cue = $"Adjunto archivo de acreditaciones para buzones {etq} ciudad {cityUp} banco {bank}.";
                     }
                     // 4) Default (fallback para otros bancos)
                     else

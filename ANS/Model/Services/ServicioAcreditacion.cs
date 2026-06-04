@@ -409,6 +409,8 @@ namespace ANS.Model.Services
             SELECT
                 cc.NN,
                 cb.CUENTA,
+                cb.EMPRESA,
+                cb.IDCLIENTE,
                 acc.MONEDA     AS MonedaCode,
                 cc.SUCURSAL as CIUDAD,
                 SUM(acc.MONTO) AS TotalMonto
@@ -421,10 +423,10 @@ namespace ANS.Model.Services
                 ON acc.IDBUZON   = config.NC
                AND acc.IDCUENTA  = cb.ID
             WHERE UPPER(cb.BANCO)     = UPPER(@banco)
-              AND cb.IDCLIENTE        in (@idCliente,262) --262 es SANROQUE QUE DEBE IR INCLUIDO
+              AND cb.IDCLIENTE        in (@idCliente)
               AND CAST(acc.FECHA AS date) = CAST(GETDATE() AS date)
             GROUP BY
-                cc.NN, cb.CUENTA, acc.MONEDA, cc.SUCURSAL;"
+                cc.NN, cb.CUENTA, cb.EMPRESA, cb.IDCLIENTE, acc.MONEDA, cc.SUCURSAL;"
                 : $@"
             SELECT
                 cc.NN,
@@ -512,22 +514,23 @@ namespace ANS.Model.Services
             {
                 int ordNN = reader.GetOrdinal("NN");
                 int ordCuenta = reader.GetOrdinal("CUENTA");
+                int ordEmpresa = reader.GetOrdinal("EMPRESA");
+                int ordIdCliente = reader.GetOrdinal("IDCLIENTE");
                 int ordMonedaCode = reader.GetOrdinal("MonedaCode");
                 int ordTotal = reader.GetOrdinal("TotalMonto");
                 int ordCiudad = reader.GetOrdinal("CIUDAD");
 
                 while (await reader.ReadAsync())
                 {
-
-               
                     var dto = new DtoAcreditacionesPorEmpresa
                     {
                         NN = reader.GetString(ordNN).Trim(),
                         NumeroCuenta = reader.GetString(ordCuenta).Trim(),
+                        Empresa = reader.GetString(ordEmpresa).Trim(),
+                        IdCliente = reader.GetInt32(ordIdCliente),
                         Divisa = reader.GetInt32(ordMonedaCode),
                         Monto = reader.GetDouble(ordTotal),
-                        Ciudad = reader.GetString(ordCiudad).Trim()
-                        // Empresa, Sucursal y Ciudad no interesan para BBVA
+                        Ciudad = reader.GetString(ordCiudad).Trim(),
                     };
                     dto.setMoneda();
                     retorno.Add(dto);
@@ -545,7 +548,7 @@ namespace ANS.Model.Services
 
                 while (await reader.ReadAsync())
                 {
-
+                
                     var dto = new DtoAcreditacionesPorEmpresa
                     {
                         NN = reader.GetString(ordNN).Trim(),
