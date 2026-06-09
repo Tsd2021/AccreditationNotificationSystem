@@ -338,9 +338,24 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     // Número de cuenta: limpiar espacios y pad 11 + prefijo según moneda
                     string cuentaLimpia = (ejemplo.Cuenta ?? "").Trim().Replace(" ", "");
                     string nroCuenta = cuentaLimpia.PadLeft(11, '0');
+                    // Fallback: si TipoCuenta viene de BD lo usa; si no, cae al heurístico viejo por número de cuenta
+                    string prefijo;
+                    if (ejemplo.TipoCuenta != null)
+                    {
+                        prefijo = ejemplo.EsCajaDeAhorro()
+                            ? VariablesGlobales.scotiaPrefijoCA
+                            : VariablesGlobales.scotiaPrefijoCC;
+                    }
+                    else
+                    {
+                        // Heurístico original — mantiene comportamiento byte-idéntico para cuentas sin TIPO en BD
+                        prefijo = (cuentaLimpia == "3939379401" || cuentaLimpia == "3917050701")
+                            ? VariablesGlobales.scotiaPrefijoCA
+                            : VariablesGlobales.scotiaPrefijoCC;
+                    }
                     nroCuenta = moneda == "00"
-                        ? "2101" + "0000" + nroCuenta
-                        : "2101" + "2225" + nroCuenta;
+                        ? prefijo + "0000" + nroCuenta
+                        : prefijo + "2225" + nroCuenta;
 
                     // 876 caracteres
                     var linea = new StringBuilder();

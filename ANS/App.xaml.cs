@@ -293,7 +293,7 @@ namespace ANS
         }
         private async Task crearJobsItau(IScheduler scheduler)
         {
-            //Tarea 1: Acreditar dia a dia ITAU  (15:05:05)
+            //Tarea 1: Acreditar dia a dia ITAU  (14:30:00)
             #region TAREA_ACREDITAR_DXD
             IJobDetail jobAcreditarItau = JobBuilder.Create<AcreditarPorBancoITAU>()
             .WithIdentity("ItauJobAcreditar", "GrupoTrabajoITAU")
@@ -301,11 +301,11 @@ namespace ANS
 
             ITrigger triggerAcreditarItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerAcreditar", "GrupoTrabajoITAU")
-            .WithCronSchedule("05 05 15 ? * MON-FRI")
+            .WithCronSchedule("00 30 14 ? * MON-FRI")
             .Build();
             #endregion
 
-            //Tarea 2: Enviar excel dia a dia ITAU  (15:06:05)
+            //Tarea 2: Enviar excel dia a dia ITAU  (14:31:30)
             #region TAREA_ENVIAR_EXCEL_DXD
             IJobDetail jobEnviarExcelItau = JobBuilder.Create<EnviarExcelItau>()
             .WithIdentity("ItauJobEnviarExcel", "GrupoTrabajoITAU")
@@ -314,7 +314,7 @@ namespace ANS
 
             ITrigger triggerEnviarExcelItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerEnviarExcel", "GrupoTrabajoITAU")
-            .WithCronSchedule("05 06 15 ? * MON-FRI")
+            .WithCronSchedule("30 31 14 ? * MON-FRI")
             .Build();
             #endregion
 

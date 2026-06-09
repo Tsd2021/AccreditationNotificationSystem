@@ -22,6 +22,19 @@ namespace ANS.Model
         public const string maldonado = "MALDONADO";
         public const string cashoffice = "CASHOFFICE";
         public const string endPointTens = "https://uyasdmz02.uy.corp:9982/TenSOnlineTxnWS/services/tenSOnlineTxn";
+
+        // ── Tipo de cuenta (columna TIPO en CUENTASBUZONES) ──────────────────
+        public const string tipoCuentaCorriente = "CuentaCorriente";
+        public const string tipoCajaAhorro      = "CajaAhorro";
+
+        // BBVA: flag "Producto" columna 19 del layout
+        public const char bbvaProductoCC = '1'; // Cuenta Corriente
+        public const char bbvaProductoCA = '2'; // Caja de Ahorro
+
+        // Scotia: prefijo del número de cuenta
+        public const string scotiaPrefijoCC = "2101"; // Cuenta Corriente
+        public const string scotiaPrefijoCA = "2201"; // Caja de Ahorro
+        // ─────────────────────────────────────────────────────────────────────
        
 
         // SANTANDER //

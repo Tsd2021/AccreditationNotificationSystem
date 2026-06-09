@@ -29,6 +29,14 @@ namespace ANS.Model
         public int Producto { get; set; }
         public int IdCuenta { get; set; }
         public bool CashOffice { get; set; }
+        /// <summary>
+        /// Tipo de cuenta leído de CUENTASBUZONES.TIPO.
+        /// Valores: "CuentaCorriente" | "CajaAhorro" | null (se trata como CC por retrocompatibilidad).
+        /// </summary>
+        public string TipoCuenta { get; set; }
+
+        public bool EsCajaDeAhorro()      => TipoCuenta == VariablesGlobales.tipoCajaAhorro;
+        public bool EsCuentaCorriente()   => TipoCuenta != VariablesGlobales.tipoCajaAhorro; // null → CC
         public List<Acreditacion> ListaAcreditaciones { get; set; } = new List<Acreditacion>();
         public void setDivisa()
         {

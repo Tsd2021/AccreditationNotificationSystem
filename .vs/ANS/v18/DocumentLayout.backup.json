@@ -3,16 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\serviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciodeposito.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\generadorarchivoporbanco\\bbvafilegenerator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\generadorarchivoporbanco\\bbvafilegenerator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\servicioacreditacion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\servicioacreditacion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\serviciocuentabuzon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\model\\services\\servicioenviomasivo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\model\\services\\servicioenviomasivo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|c:\\users\\dchiquiar.abudil\\source\\repos\\tsd2021\\accreditationnotificationsystem\\ans\\app.config||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{052C561E-76EF-4D28-9BC6-7B794EFE6F93}|ANS\\ANS.csproj|solutionrelative:ans\\app.config||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
     }
   ],
   "DocumentGroupContainers": [
@@ -39,40 +43,53 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "ServicioDeposito.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioDeposito.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioDeposito.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioDeposito.cs",
-              "RelativeToolTip": "ANS\\Model\\Services\\ServicioDeposito.cs",
-              "ViewState": "AgIAAEkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Title": "BBVAFileGenerator.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\GeneradorArchivoPorBanco\\BBVAFileGenerator.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\GeneradorArchivoPorBanco\\BBVAFileGenerator.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\GeneradorArchivoPorBanco\\BBVAFileGenerator.cs",
+              "RelativeToolTip": "ANS\\Model\\GeneradorArchivoPorBanco\\BBVAFileGenerator.cs",
+              "ViewState": "AgIAAOkBAAAAAAAAAAAAAP8BAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-21T20:01:17.745Z",
+              "WhenOpened": "2026-06-08T20:48:33.431Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "ServicioEnvioMasivo.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
-              "RelativeToolTip": "ANS\\Model\\Services\\ServicioEnvioMasivo.cs",
-              "ViewState": "AgIAABMFAAAAAAAAAAAnwCsFAABIAAAAAAAAAA==",
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\App.xaml.cs",
+              "RelativeDocumentMoniker": "ANS\\App.xaml.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\App.xaml.cs",
+              "RelativeToolTip": "ANS\\App.xaml.cs",
+              "ViewState": "AgIAAAIBAAAAAAAAAAAWwDYBAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-21T19:50:08.864Z",
+              "WhenOpened": "2026-06-08T20:27:33.687Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "App.config",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\App.config",
+              "RelativeDocumentMoniker": "ANS\\App.config",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\App.config",
+              "RelativeToolTip": "ANS\\App.config",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAACYAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000601|",
+              "WhenOpened": "2026-06-08T20:15:41.939Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "ServicioAcreditacion.cs",
-              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "RelativeToolTip": "ANS\\Model\\Services\\ServicioAcreditacion.cs",
-              "ViewState": "AgIAACoBAAAAAAAAAAAIwHUBAABVAAAAAAAAAA==",
+              "Title": "ServicioCuentaBuzon.cs",
+              "DocumentMoniker": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "RelativeDocumentMoniker": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "ToolTip": "C:\\Users\\dchiquiar.ABUDIL\\source\\repos\\Tsd2021\\AccreditationNotificationSystem\\ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "RelativeToolTip": "ANS\\Model\\Services\\ServicioCuentaBuzon.cs",
+              "ViewState": "AgIAAKsCAAAAAAAAAAAWwF0BAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-30T15:13:18.866Z",
+              "WhenOpened": "2026-06-08T20:11:25.882Z",
               "EditorCaption": ""
             }
           ]

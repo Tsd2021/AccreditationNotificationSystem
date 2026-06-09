@@ -357,25 +357,26 @@ namespace ANS.Model.Services
             {
 
                 // POR DEFAULT 
-                query = @"select distinct c.NC, 
-                        cb.BANCO, 
+                query = @"select distinct c.NC,
+                        cb.BANCO,
                         c.BANCO as BANCOBUZON,
-                        c.CIERRE, 
-                        c.IDCLIENTE, 
-                        cb.CUENTA, 
-                        cb.MONEDA, 
-                        cb.EMPRESA, 
-                        config.TipoAcreditacion, 
-                        c.SUCURSAL as CIUDAD, 
-                        cb.SUCURSAL, 
-                        c.IDCC, 
-                        cb.ID, 
-                        c.NN  
-                        from ConfiguracionAcreditacion config 
-                        inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                        inner join cc c on cb.idcliente = c.IDCLIENTE 
-                        and c.nc = config.nc  
-                        where cb.BANCO = @bank 
+                        c.CIERRE,
+                        c.IDCLIENTE,
+                        cb.CUENTA,
+                        cb.MONEDA,
+                        cb.EMPRESA,
+                        config.TipoAcreditacion,
+                        c.SUCURSAL as CIUDAD,
+                        cb.SUCURSAL,
+                        c.IDCC,
+                        cb.ID,
+                        c.NN,
+                        cb.TIPO
+                        from ConfiguracionAcreditacion config
+                        inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                        inner join cc c on cb.idcliente = c.IDCLIENTE
+                        and c.nc = config.nc
+                        where cb.BANCO = @bank
                         and config.TipoAcreditacion = @tipoAcreditacion;";
 
                 //Excluye DELASSIERRAS ya que acredita DIA A DIA pero en una hora específica.
@@ -396,12 +397,13 @@ namespace ANS.Model.Services
                             cb.SUCURSAL,
                             c.IDCC,
                             cb.ID,
-                            c.NN  
-                            from ConfiguracionAcreditacion config 
-                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                            inner join cc c on cb.idcliente = c.IDCLIENTE 
-                            and c.nc = config.nc 
-                            where cb.BANCO = @bank 
+                            c.NN,
+                            cb.TIPO
+                            from ConfiguracionAcreditacion config
+                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                            inner join cc c on cb.idcliente = c.IDCLIENTE
+                            and c.nc = config.nc
+                            where cb.BANCO = @bank
                             and cb.IDCLIENTE NOT IN (268)
                             and config.TipoAcreditacion = @tipoAcreditacion;";
 
@@ -423,12 +425,13 @@ namespace ANS.Model.Services
                             cb.SUCURSAL,
                             c.IDCC,
                             cb.ID,
-                            c.NN  
-                            from ConfiguracionAcreditacion config 
-                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                            inner join cc c on cb.idcliente = c.IDCLIENTE 
-                            and c.nc = config.nc 
-                            where cb.BANCO = @bank 
+                            c.NN,
+                            cb.TIPO
+                            from ConfiguracionAcreditacion config
+                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                            inner join cc c on cb.idcliente = c.IDCLIENTE
+                            and c.nc = config.nc
+                            where cb.BANCO = @bank
                             and cb.IDCLIENTE NOT IN (998)
                             and config.TipoAcreditacion = @tipoAcreditacion;";
 
@@ -456,12 +459,13 @@ namespace ANS.Model.Services
                                 cb.SUCURSAL,
                                 c.IDCC,
                                 cb.ID,
-                                c.NN  
-                                from ConfiguracionAcreditacion config 
-                                inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                                inner join cc c on cb.idcliente = c.IDCLIENTE 
-                                and c.nc = config.nc 
-                                where cb.BANCO = @bank 
+                                c.NN,
+                                cb.TIPO
+                                from ConfiguracionAcreditacion config
+                                inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                                inner join cc c on cb.idcliente = c.IDCLIENTE
+                                and c.nc = config.nc
+                                where cb.BANCO = @bank
                                 and cb.idcliente not in (164, 179)
                                 and config.TipoAcreditacion = @tipoAcreditacion;";
                     }
@@ -492,6 +496,7 @@ namespace ANS.Model.Services
                     int idReferenciaAlCliente = reader.GetOrdinal("IDCC");
                     int idCuenta = reader.GetOrdinal("ID");
                     int nnOrdinal = reader.GetOrdinal("NN");
+                    int tipoOrdinal = reader.GetOrdinal("TIPO");
 
                     while (reader.Read())
                     {
@@ -509,7 +514,8 @@ namespace ANS.Model.Services
                             Ciudad = reader.GetString(ciudadOrdinal),
                             IdReferenciaAlCliente = reader.GetString(idReferenciaAlCliente),
                             IdCuenta = reader.GetInt32(idCuenta),
-                            NN = reader.GetString(nnOrdinal)
+                            NN = reader.GetString(nnOrdinal),
+                            TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
 
                         };
 
@@ -553,25 +559,26 @@ namespace ANS.Model.Services
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
                 string query = @"
-                SELECT DISTINCT 
-                c.NC, 
-                cb.BANCO, 
+                SELECT DISTINCT
+                c.NC,
+                cb.BANCO,
                 c.BANCO as BANCOBUZON,
-                c.CIERRE, 
-                c.IDCLIENTE, 
-                cb.CUENTA, 
-                cb.MONEDA, 
-                cb.EMPRESA, 
-                c.SUCURSAL AS CIUDAD, 
-                cb.SUCURSAL, 
-                c.IDCC, 
-                cb.ID, 
-                c.NN, 
-                config.TipoAcreditacion AS CONFIGURACION 
-                from ConfiguracionAcreditacion config 
-                inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                inner join cc c on cb.idcliente = c.IDCLIENTE 
-                and c.nc = config.nc 
+                c.CIERRE,
+                c.IDCLIENTE,
+                cb.CUENTA,
+                cb.MONEDA,
+                cb.EMPRESA,
+                c.SUCURSAL AS CIUDAD,
+                cb.SUCURSAL,
+                c.IDCC,
+                cb.ID,
+                c.NN,
+                config.TipoAcreditacion AS CONFIGURACION,
+                cb.TIPO
+                from ConfiguracionAcreditacion config
+                inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                inner join cc c on cb.idcliente = c.IDCLIENTE
+                and c.nc = config.nc
                 where cb.BANCO = @banco";
 
                 conn.Open();
@@ -597,6 +604,7 @@ namespace ANS.Model.Services
                         int idCuentaOrdinal = reader.GetOrdinal("ID");
                         int nnOrdinal = reader.GetOrdinal("NN");
                         int configOrdinal = reader.GetOrdinal("CONFIGURACION");
+                        int tipoOrdinal = reader.GetOrdinal("TIPO");
 
                         while (reader.Read())
                         {
@@ -614,7 +622,8 @@ namespace ANS.Model.Services
                                 SucursalCuenta = reader.GetString(sucursalOrdinal),
                                 IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
                                 IdCuenta = reader.GetInt32(idCuentaOrdinal),
-                                NN = reader.GetString(nnOrdinal)
+                                NN = reader.GetString(nnOrdinal),
+                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
 
                             };
 
@@ -637,11 +646,11 @@ namespace ANS.Model.Services
         public async Task<List<CuentaBuzon>> getCuentasPorClienteBancoYTipoAcreditacion(int idCliente, Banco bank, ConfiguracionAcreditacion configuracionAcreditacion)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
-            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
-                            from ConfiguracionAcreditacion config 
-                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                            inner join cc c on c.nc = config.nc 
-                            where CB.BANCO = @banco AND config.TipoAcreditacion = @tipoAcreditacion  
+            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO
+                            from ConfiguracionAcreditacion config
+                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                            inner join cc c on c.nc = config.nc
+                            where CB.BANCO = @banco AND config.TipoAcreditacion = @tipoAcreditacion
                             AND CB.IDCLIENTE = @idCliente";
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
@@ -668,6 +677,7 @@ namespace ANS.Model.Services
                         int idCuentaOrdinal = reader.GetOrdinal("ID");
                         int nnOrdinal = reader.GetOrdinal("NN");
                         int configOrdinal = reader.GetOrdinal("CONFIGURACION");
+                        int tipoOrdinal = reader.GetOrdinal("TIPO");
                         while (await reader.ReadAsync())
                         {
                             CuentaBuzon cuentaBuzon = new CuentaBuzon
@@ -684,7 +694,8 @@ namespace ANS.Model.Services
                                 IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
                                 IdCuenta = reader.GetInt32(idCuentaOrdinal),
                                 NN = reader.GetString(nnOrdinal),
-                                Ciudad = reader.GetString(sucursalCiudadOrdinal)
+                                Ciudad = reader.GetString(sucursalCiudadOrdinal),
+                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
                             };
 
                             ConfiguracionAcreditacion configActual = new ConfiguracionAcreditacion(reader.GetString(configOrdinal));
@@ -707,11 +718,11 @@ namespace ANS.Model.Services
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
-            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
-                            from ConfiguracionAcreditacion config 
-                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                            inner join cc c on c.nc = config.nc 
-                            where CB.BANCO = @banco AND config.TipoAcreditacion = @tipoAcreditacion  
+            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO
+                            from ConfiguracionAcreditacion config
+                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                            inner join cc c on c.nc = config.nc
+                            where CB.BANCO = @banco AND config.TipoAcreditacion = @tipoAcreditacion
                             AND CB.IDCLIENTE = @idCliente";
 
 
@@ -762,6 +773,7 @@ namespace ANS.Model.Services
                         {
                             int ncOrdinal = reader.GetOrdinal("NC");
                             int bancoOrdinal = reader.GetOrdinal("BANCO");
+                            int bancoBuzonOrdinal = reader.GetOrdinal("BANCOBUZON");
                             int cierreOrdinal = reader.GetOrdinal("CIERRE");
                             int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
                             int cuentaOrdinal = reader.GetOrdinal("CUENTA");
@@ -773,12 +785,14 @@ namespace ANS.Model.Services
                             int idCuentaOrdinal = reader.GetOrdinal("ID");
                             int nnOrdinal = reader.GetOrdinal("NN");
                             int configOrdinal = reader.GetOrdinal("CONFIGURACION");
+                            int tipoOrdinal = reader.GetOrdinal("TIPO");
                             while (await reader.ReadAsync())
                             {
                                 CuentaBuzon cuentaBuzon = new CuentaBuzon
                                 {
                                     NC = reader.GetString(ncOrdinal),
                                     Banco = reader.GetString(bancoOrdinal),
+                                    BancoBuzon = reader.IsDBNull(bancoBuzonOrdinal) ? null : reader.GetString(bancoBuzonOrdinal),
                                     Cierre = reader.IsDBNull(cierreOrdinal) ? (DateTime?)null : reader.GetDateTime(cierreOrdinal),
                                     IdCliente = reader.GetInt32(idClienteOrdinal),
                                     Cuenta = reader.GetString(cuentaOrdinal).Replace("\r", "").Replace("\n", ""),
@@ -788,7 +802,8 @@ namespace ANS.Model.Services
                                     IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
                                     IdCuenta = reader.GetInt32(idCuentaOrdinal),
                                     NN = reader.GetString(nnOrdinal),
-                                    Ciudad = reader.GetString(sucursalCiudadOrdinal)
+                                    Ciudad = reader.GetString(sucursalCiudadOrdinal),
+                                    TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
                                 };
 
                                 ConfiguracionAcreditacion configActual = new ConfiguracionAcreditacion(reader.GetString(configOrdinal));
@@ -816,11 +831,11 @@ namespace ANS.Model.Services
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
-            string query = @"select DISTINCT config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn 
-                            from ConfiguracionAcreditacion config 
-                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
-                            inner join cc c on cb.idcliente = c.IDCLIENTE 
-                            and c.nc = config.nc 
+            string query = @"select DISTINCT config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO
+                            from ConfiguracionAcreditacion config
+                            inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
+                            inner join cc c on cb.idcliente = c.IDCLIENTE
+                            and c.nc = config.nc
                             where cb.BANCO = @bank
                             and cb.IDCLIENTE = @idcli";
 
@@ -851,6 +866,7 @@ namespace ANS.Model.Services
                         int idCuentaOrdinal = reader.GetOrdinal("ID");
                         int nnOrdinal = reader.GetOrdinal("NN");
                         int configOrdinal = reader.GetOrdinal("CONFIGURACION");
+                        int tipoOrdinal = reader.GetOrdinal("TIPO");
 
                         while (await reader.ReadAsync())
                         {
@@ -869,6 +885,7 @@ namespace ANS.Model.Services
                                 IdCuenta = reader.GetInt32(idCuentaOrdinal),
                                 NN = reader.GetString(nnOrdinal),
                                 Ciudad = reader.GetString(sucursalCiudadOrdinal),
+                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
                             };
 
                             ConfiguracionAcreditacion configActual = new ConfiguracionAcreditacion(reader.GetString(configOrdinal));
@@ -1472,12 +1489,12 @@ namespace ANS.Model.Services
                         .Where(x => x.IdCliente != 97 && x.IdCliente != 262)
                         .ToList();
 
-                    // Partición: BAS = empresa contiene "BAS"; TATA = el resto
+                    // Partición por valor exacto de EMPRESA (confirmado en BD: IDCLIENTE=242, BBVA → solo "TATA" y "BAS")
                     var grupoTata = acreditacionesFiltradas
-                        .Where(x => !x.Empresa.ToUpperInvariant().Contains("BAS"))
+                        .Where(x => x.Empresa.Trim().Equals("TATA", StringComparison.OrdinalIgnoreCase))
                         .ToList();
                     var grupoBas = acreditacionesFiltradas
-                        .Where(x => x.Empresa.ToUpperInvariant().Contains("BAS"))
+                        .Where(x => x.Empresa.Trim().Equals("BAS", StringComparison.OrdinalIgnoreCase))
                         .ToList();
 
                     if (grupoTata.Any())

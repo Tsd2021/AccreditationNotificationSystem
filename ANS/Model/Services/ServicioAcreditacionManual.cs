@@ -1465,7 +1465,8 @@ namespace ANS.Model.Services
                     cb.SUCURSAL,
                     c.IDCC,
                     c.NN,
-                    config.TipoAcreditacion AS CONFIGURACION
+                    config.TipoAcreditacion AS CONFIGURACION,
+                    cb.TIPO
                 FROM cuentasbuzones cb
                 INNER JOIN ConfiguracionAcreditacion config ON config.CuentasBuzonesId = cb.ID
                 INNER JOIN cc c ON c.NC = config.NC AND c.IDCLIENTE = cb.IDCLIENTE
@@ -1488,6 +1489,7 @@ namespace ANS.Model.Services
                 return null;
 
             var idccOrdinal = reader.GetOrdinal("IDCC");
+            var tipoOrdinal = reader.GetOrdinal("TIPO");
             var cuentaBuzon = new CuentaBuzon
             {
                 IdCuenta = reader.GetInt32(reader.GetOrdinal("ID")),
@@ -1502,7 +1504,8 @@ namespace ANS.Model.Services
                 Ciudad = reader.GetString(reader.GetOrdinal("CIUDAD")),
                 SucursalCuenta = reader.GetString(reader.GetOrdinal("SUCURSAL")),
                 IdReferenciaAlCliente = reader.IsDBNull(idccOrdinal) ? null : reader.GetString(idccOrdinal),
-                NN = reader.GetString(reader.GetOrdinal("NN"))
+                NN = reader.GetString(reader.GetOrdinal("NN")),
+                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
             };
 
             cuentaBuzon.setDivisa();

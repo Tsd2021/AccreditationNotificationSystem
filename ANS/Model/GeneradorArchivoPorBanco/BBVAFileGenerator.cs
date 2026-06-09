@@ -283,7 +283,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         string sub = parts[1];
                         string mon = buz.Divisa;
 
-                        char producto = GetProductoFlag(cuentaBase); // '2' si 992512102, si no '1'
+                        // Fallback: si TipoCuenta viene de BD lo usa; si no, cae al heurístico viejo por número de cuenta
+                        char producto = buz.TipoCuenta != null
+                            ? (buz.EsCajaDeAhorro() ? VariablesGlobales.bbvaProductoCA : VariablesGlobales.bbvaProductoCC)
+                            : GetProductoFlag(cuentaBase);
 
                         string remito = ((buz.IdReferenciaAlCliente ?? "") + "X" + dep.IdOperacion).Trim();
                         decimal suma = Convert.ToDecimal(dep.Totales?.Sum(t => t.ImporteTotal) ?? 0m);
@@ -514,7 +517,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         x.Sucursal,
                         x.Cuenta,
                         x.SubCuenta,
-                        x.Moneda
+                        x.Moneda,
+                        TipoCuenta = x.cb.TipoCuenta // CC y CA con mismo número de cuenta generan líneas separadas
                     })
                     .Select(g => new
                     {
@@ -528,7 +532,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                 .Sum(t => (decimal)t.ImporteTotal) ?? 0m)),
                         Seed = (g.Select(xx => xx.cb.IdReferenciaAlCliente).FirstOrDefault()
                                 ?? g.Key.Cuenta
-                                ?? "0000")
+                                ?? "0000"),
+                        TipoCuenta = g.Key.TipoCuenta
                     })
                     .OrderBy(x => x.Sucursal)
                     .ThenBy(x => x.Cuenta)
@@ -551,7 +556,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     string remViejoLike = pref4 + DateTime.Now.ToString("HHmmssff");
                     string remitoFinal = Remito12Left(remViejoLike);
 
-                    char producto = GetProductoFlag(g.Cuenta);
+                    // Fallback: si TipoCuenta viene de BD lo usa; si no, cae al heurístico viejo por número de cuenta
+                    char producto = g.TipoCuenta != null
+                        ? (g.TipoCuenta == VariablesGlobales.tipoCajaAhorro ? VariablesGlobales.bbvaProductoCA : VariablesGlobales.bbvaProductoCC)
+                        : GetProductoFlag(g.Cuenta); // heurístico viejo solo cuando TIPO es NULL en BD
 
                     string lineaDetalle = BuildDetalleBbvaLineLegacy(
                         g.Sucursal, g.Cuenta, g.Moneda, g.SubCuenta,
@@ -668,7 +676,7 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             Put(buf, 56, mon2, LEN_MON);
 
             if (buf.Length != LEN_DETALLE) throw new InvalidOperationException("Detalle mal formado.");
-            if (buf[18] != '1') throw new InvalidOperationException("Columna 19 debe ser '1'.");
+            if (buf[18] != '1' && buf[18] != '2') throw new InvalidOperationException($"Columna 19 debe ser '1' (CC) o '2' (CA). Valor actual: '{buf[18]}'.");
 
             return new string(buf);
         }
@@ -773,8 +781,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
             if (buf.Length != LEN_DETALLE)
                 throw new InvalidOperationException($"Detalle mal formado. Largo={buf.Length}, esperado={LEN_DETALLE}.");
-            if (buf[18] != '1')
-                throw new InvalidOperationException("El dígito de Producto no quedó en columna 19 = '1'.");
+            if (buf[18] != '1' && buf[18] != '2')
+                throw new InvalidOperationException($"El dígito de Producto no quedó en columna 19 = '1' (CC) ni '2' (CA). Valor actual: '{buf[18]}'.");
 
             return new string(buf);
         }
