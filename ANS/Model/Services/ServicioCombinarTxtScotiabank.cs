@@ -64,11 +64,13 @@ namespace ANS.Model.Services
                 .Where(f =>
                 {
                     string fileName = Path.GetFileName(f).ToUpper();
-                    if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") || 
+                    if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") ||
                         fileName.Contains("COMBINADO") ||
                         fileName.Contains("CASHOFFICE") ||
                         fileName.Contains("_TANDA1") ||
-                        fileName.Contains("_DIAADIA"))
+                        fileName.Contains("_DIAADIA") ||
+                        fileName.Contains("_FARMASHOP") ||
+                        fileName.Contains("_ABASTOELPLACER"))
                         return false;
 
                     bool tieneSufijoTanda2 = fileName.Contains("_TANDA2");
@@ -94,9 +96,11 @@ namespace ANS.Model.Services
                 .Where(f =>
                 {
                     string fileName = Path.GetFileName(f).ToUpper();
-                    if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") || 
+                    if (!fileName.Contains("ACREDITACIONBUZONESTECNISEGUR") ||
                         fileName.Contains("COMBINADO") ||
-                        fileName.Contains("CASHOFFICE"))
+                        fileName.Contains("CASHOFFICE") ||
+                        fileName.Contains("_FARMASHOP") ||
+                        fileName.Contains("_ABASTOELPLACER"))
                         return false;
 
                     bool tieneSufijoDiaADia = fileName.Contains("_DIAADIA");

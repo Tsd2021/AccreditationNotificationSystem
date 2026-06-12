@@ -62,6 +62,9 @@ namespace ANS.Model
         public static TimeSpan horaCierreScotiabankHendersonTanda2_EXCEL = new TimeSpan(14, 35, 0);
 
         public static TimeSpan horaCierreScotiabankCoboe_TXT = new TimeSpan(2, 0, 0);
+
+        // SCOTIABANK - ABASTO EL PLACER (ID 1015) - DIA A DIA - EXCEPCION DE MAÑANA (de tarde acredita con el DXD normal) //
+        public static TimeSpan horaCierreScotiabankAbastoElPlacer_TXT = new TimeSpan(7, 0, 0);
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // ITAU //

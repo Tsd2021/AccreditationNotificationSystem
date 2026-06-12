@@ -293,7 +293,7 @@ namespace ANS
         }
         private async Task crearJobsItau(IScheduler scheduler)
         {
-            //Tarea 1: Acreditar dia a dia ITAU  (14:30:00)
+            //Tarea 1: Acreditar dia a dia ITAU  (14:15:00)
             #region TAREA_ACREDITAR_DXD
             IJobDetail jobAcreditarItau = JobBuilder.Create<AcreditarPorBancoITAU>()
             .WithIdentity("ItauJobAcreditar", "GrupoTrabajoITAU")
@@ -301,11 +301,11 @@ namespace ANS
 
             ITrigger triggerAcreditarItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerAcreditar", "GrupoTrabajoITAU")
-            .WithCronSchedule("00 30 14 ? * MON-FRI")
+            .WithCronSchedule("00 16 14 ? * MON-FRI")
             .Build();
             #endregion
 
-            //Tarea 2: Enviar excel dia a dia ITAU  (14:31:30)
+            //Tarea 2: Enviar excel dia a dia ITAU  (14:15:30)
             #region TAREA_ENVIAR_EXCEL_DXD
             IJobDetail jobEnviarExcelItau = JobBuilder.Create<EnviarExcelItau>()
             .WithIdentity("ItauJobEnviarExcel", "GrupoTrabajoITAU")
@@ -314,7 +314,7 @@ namespace ANS
 
             ITrigger triggerEnviarExcelItau = TriggerBuilder.Create()
             .WithIdentity("ItauTriggerEnviarExcel", "GrupoTrabajoITAU")
-            .WithCronSchedule("30 31 14 ? * MON-FRI")
+            .WithCronSchedule("30 16 14 ? * MON-FRI")
             .Build();
             #endregion
 
@@ -592,6 +592,16 @@ namespace ANS
                 //.Build();
 
                 #endregion
+                #region Tarea 0.1: ABASTO EL PLACER (ID 1015) - DXD excepción de mañana (07:02:00) - de tarde acredita con el DXD normal (16:10)
+                IJobDetail jobDiaADiaAbastoElPlacer = JobBuilder.Create<AcreditarDiaADiaAbastoElPlacer>()
+                    .WithIdentity("ScotiabankAbastoElPlacerJob", "GrupoTrabajoScotiabank")
+                    .Build();
+
+                ITrigger triggerDiaADiaAbastoElPlacer = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankAbastoElPlacerTrigger", "GrupoTrabajoScotiabank")
+                    .WithSchedule(CronScheduleBuilder.CronSchedule("0 2 7 ? * MON-FRI"))
+                    .Build();
+                #endregion
                 #region Tarea 1: ACREDITAR TANDA 1 (7:06:00 AM)
                 // Job para acreditar (método implementado en la clase AcreditarTanda1HendersonScotiabank)
                 IJobDetail jobAcreditarTanda1Scotiabank = JobBuilder.Create<AcreditarTanda1HendersonScotiabank>()
@@ -706,6 +716,8 @@ namespace ANS
                 {
 
                     //await scheduler.ScheduleJob(jobDiaADiaFarmashop, triggerDiaADiaFarmashop);
+
+                    await scheduler.ScheduleJob(jobDiaADiaAbastoElPlacer, triggerDiaADiaAbastoElPlacer);
 
                     await scheduler.ScheduleJob(jobAcreditarTanda1Scotiabank, triggerAcreditarTanda1Scotiabank);
 

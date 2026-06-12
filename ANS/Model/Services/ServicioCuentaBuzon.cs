@@ -1374,6 +1374,9 @@ namespace ANS.Model.Services
 
             List<CuentaBuzon> cuentaBuzones = await getCuentaBuzonesByClienteYBanco(cli.IdCliente, bank);
 
+            // ✅ Igual que en acreditarDiaADiaPorBanco: solo van al archivo los buzones con depósitos asignados.
+            // Evita líneas con importe 0 y archivos vacíos por divisa (ej: USD0 de Abasto El Placer).
+            List<CuentaBuzon> cuentasConDepositos = new List<CuentaBuzon>();
 
             if (cuentaBuzones != null && cuentaBuzones.Count > 0)
             {
@@ -1411,27 +1414,41 @@ namespace ANS.Model.Services
                         //eSTO ESTUVO HASTA EL 22 DE DICIEMBRE, NO TOMA LA HORA DE CIERRE DE LOS BUZONES QUE SON ACREDITADOS POR CLIENTE ESPECIFICO Y BANCO.
                         //await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
 
+                        if (cu.Depositos != null && cu.Depositos.Count > 0)
+                        {
+                            cuentasConDepositos.Add(cu);
+                        }
+
                     }
                 }
 
-                var resultadoGen = await generarArchivoPorBanco(cuentaBuzones, bank, VariablesGlobales.tanda);
+                if (cuentasConDepositos.Count == 0)
+                {
+                    ServicioLog.instancia.WriteInfo(
+                        $"No hay depósitos para acreditar | Cliente: {cli.Nombre} (Id: {cli.IdCliente}) | Banco: {bank.NombreBanco} | " +
+                        $"Buzones consultados: {cuentaBuzones.Count} | No se genera archivo.",
+                        "ServicioCuentaBuzon | acreditarDiaADiaPorCliente");
+                    return;
+                }
+
+                var resultadoGen = await generarArchivoPorBanco(cuentasConDepositos, bank, VariablesGlobales.tanda);
                 if (resultadoGen.RequiereAuditoriaEnvioFallido)
                 {
                     if (resultadoGen.EsTimeoutWs)
                     {
-                        await ManejarTimeoutSantander(cuentaBuzones, resultadoGen, VariablesGlobales.tanda,
-                            () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentaBuzones));
+                        await ManejarTimeoutSantander(cuentasConDepositos, resultadoGen, VariablesGlobales.tanda,
+                            () => ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentasConDepositos));
                         return;
                     }
                     await ServicioAcreditacion.getInstancia().RegistrarSantanderPendienteAuditoriaPorFalloEnvioWs(
-                        cuentaBuzones,
+                        cuentasConDepositos,
                         resultadoGen.EstadoEnvioWsParaAuditoria ?? "FALLIDO_WS",
                         resultadoGen.ObservacionParaAuditoria ?? resultadoGen.Motivo,
                         resultadoGen.NombreArchivoOriginalParaAuditoria);
                     return;
                 }
 
-                await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentaBuzones);
+                await ServicioAcreditacion.getInstancia().crearAcreditacionesByListaCuentaBuzones(cuentasConDepositos);
 
             }
 

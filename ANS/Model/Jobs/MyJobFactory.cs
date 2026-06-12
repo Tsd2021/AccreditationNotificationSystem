@@ -164,6 +164,11 @@ namespace ANS.Model.Jobs
                 return new AcreditarDiaADiaFarmashop(_servicioCuentaBuzon);
             }
 
+            if (jobType == typeof(AcreditarDiaADiaAbastoElPlacer))
+            {
+                return new AcreditarDiaADiaAbastoElPlacer(_servicioCuentaBuzon);
+            }
+
             #endregion
 
             #region JOBS_QUE_ENVIAN_EXCEL

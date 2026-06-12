@@ -470,9 +470,21 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     // ✅ PRIORIDAD 1: Verificar si es cliente Farmashop/Coboe (ID 179)
                     // Si alguna cuenta del grupo pertenece a Farmashop, usar sufijo específico
                     bool esFarmashop = grupo.Any(c => c.IdCliente == 179);
+
+                    // ✅ PRIORIDAD 1b: Abasto El Placer (ID 1015) - solo en la acreditación forzada de la mañana (tipo "Tanda").
+                    // Se exige que TODO el grupo sea de Abasto: en el DXD normal de la tarde sus buzones van mezclados
+                    // con los demás clientes y el archivo debe conservar el sufijo _DiaADia.
+                    bool esAbastoElPlacer = grupo.All(c => c.IdCliente == 1015) &&
+                                            _config != null &&
+                                            VariablesGlobales.tanda.Equals(_config.TipoAcreditacion, StringComparison.OrdinalIgnoreCase);
+
                     if (esFarmashop)
                     {
                         tipoAcreditacionSufijo = "_Farmashop";
+                    }
+                    else if (esAbastoElPlacer)
+                    {
+                        tipoAcreditacionSufijo = "_AbastoElPlacer";
                     }
                     // ✅ PRIORIDAD 2: Si no es Farmashop, usar el tipo de acreditación de la configuración
                     else if (_config != null && !string.IsNullOrWhiteSpace(_config.TipoAcreditacion))
