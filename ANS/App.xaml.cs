@@ -1055,10 +1055,11 @@ namespace ANS
             #endregion
 
             //Tarea 3: Enviar excel resumen punto a punto 21:05
-            #region TAREA_EXCEL_RESUMENDIARIO
+            #region TAREA_EXCEL_RESUMENDIARIO (MONTEVIDEO 20:30)
             IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
             .WithIdentity("BBVAJobExcelReporteDiario", "GrupoTrabajoBBVA")
             .UsingJobData("tarea", "ReporteDiario")
+            .UsingJobData("ciudad", "MONTEVIDEO")
             .Build();
 
             ITrigger triggerBBVAEnviarExcelResumen = TriggerBuilder.Create()
@@ -1067,16 +1068,45 @@ namespace ANS
             .Build();
             #endregion
 
+            //Tarea 3 (Maldonado): Resumen Diario solo MALDONADO, adelantado a las 20:00
+            #region TAREA_EXCEL_RESUMENDIARIO_MALDONADO (20:00)
+            IJobDetail jobBBVAEnviarExcelResumenMaldonado = JobBuilder.Create<ExcelBBVAReporteDiario>()
+            .WithIdentity("BBVAJobExcelReporteDiarioMaldonado", "GrupoTrabajoBBVA")
+            .UsingJobData("tarea", "ReporteDiario")
+            .UsingJobData("ciudad", "MALDONADO")
+            .Build();
+
+            ITrigger triggerBBVAEnviarExcelResumenMaldonado = TriggerBuilder.Create()
+            .WithIdentity("BBVAJTriggerReporteDiarioMaldonado", "GrupoTrabajoBBVA")
+            .WithCronSchedule("00 00 20 ? * MON-FRI")
+            .Build();
+            #endregion
+
             //Tarea 4: Enviar excel solo Tata formato Henderson ( por nn y empresa )
-            #region TAREA_EXCEL_TATA 20:32
+            #region TAREA_EXCEL_TATA (MONTEVIDEO 20:32)
             IJobDetail jobBBVAEnviarExcelTata = JobBuilder.Create<ExcelBBVATata>()
             .WithIdentity("BBVAJobExcelTata", "GrupoTrabajoBBVA")
             .UsingJobData("tarea", "ExcelTata")
+            .UsingJobData("ciudad", "MONTEVIDEO")
             .Build();
 
             ITrigger triggerBBVAEnviarExcelTata = TriggerBuilder.Create()
             .WithIdentity("BBVAJTriggerTata", "GrupoTrabajoBBVA")
             .WithCronSchedule("10 32 20 ? * MON-FRI")
+            .Build();
+            #endregion
+
+            //Tarea 4 (Maldonado): Tata solo MALDONADO, adelantado a las 20:00 (ventana de datos cierra 20:00)
+            #region TAREA_EXCEL_TATA_MALDONADO (20:00)
+            IJobDetail jobBBVAEnviarExcelTataMaldonado = JobBuilder.Create<ExcelBBVATata>()
+            .WithIdentity("BBVAJobExcelTataMaldonado", "GrupoTrabajoBBVA")
+            .UsingJobData("tarea", "ExcelTata")
+            .UsingJobData("ciudad", "MALDONADO")
+            .Build();
+
+            ITrigger triggerBBVAEnviarExcelTataMaldonado = TriggerBuilder.Create()
+            .WithIdentity("BBVAJTriggerTataMaldonado", "GrupoTrabajoBBVA")
+            .WithCronSchedule("30 00 20 ? * MON-FRI")
             .Build();
             #endregion
 
@@ -1090,11 +1120,15 @@ namespace ANS
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelResumen, triggerBBVAEnviarExcelResumen);
 
+            await _scheduler.ScheduleJob(jobBBVAEnviarExcelResumenMaldonado, triggerBBVAEnviarExcelResumenMaldonado);
+
             await _scheduler.ScheduleJob(jobBBVADiaADia, triggerBBVADiaADia);
 
             await _scheduler.ScheduleJob(jobBBVADiaADiaNike, triggerBBVADiaADiaNike);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
+
+            await _scheduler.ScheduleJob(jobBBVAEnviarExcelTataMaldonado, triggerBBVAEnviarExcelTataMaldonado);
 
         }
 

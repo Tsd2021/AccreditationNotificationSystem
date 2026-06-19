@@ -27,8 +27,10 @@ namespace ANS.ViewModel
         public ICommand EjecutarPuntoAPuntoTXTCommand { get; }
         public ICommand EjecutarDiaADiaTXTCommand { get; }
         public ICommand EjecutarDiaADiaNikeTXTCommand { get; }
-        public ICommand EjecutarExcelTataCommand { get; }
-        public ICommand EjecutarExcelDiaADia { get; }
+        public ICommand EjecutarExcelTataMvdCommand { get; }
+        public ICommand EjecutarExcelTataMldCommand { get; }
+        public ICommand EjecutarExcelDiaADiaMvdCommand { get; }
+        public ICommand EjecutarExcelDiaADiaMldCommand { get; }
         public ICommand EjecutarAltaEmailDestinoCommand { get; }
         public ICommand EjecutarTxtTest { get; }
         #endregion
@@ -46,9 +48,13 @@ namespace ANS.ViewModel
 
             EjecutarDiaADiaNikeTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaNikeTXT());
 
-            EjecutarExcelTataCommand = new RelayCommand(async () => await ejecutarExcelTata());
+            EjecutarExcelTataMvdCommand = new RelayCommand(async () => await ejecutarExcelTata("MONTEVIDEO"));
 
-            EjecutarExcelDiaADia = new RelayCommand(async () => await ejecutarExcelDiaADia());
+            EjecutarExcelTataMldCommand = new RelayCommand(async () => await ejecutarExcelTata("MALDONADO"));
+
+            EjecutarExcelDiaADiaMvdCommand = new RelayCommand(async () => await ejecutarExcelDiaADia("MONTEVIDEO"));
+
+            EjecutarExcelDiaADiaMldCommand = new RelayCommand(async () => await ejecutarExcelDiaADia("MALDONADO"));
 
             EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
 
@@ -178,7 +184,7 @@ namespace ANS.ViewModel
                 IsLoading = false;
             }
         }
-        private async Task ejecutarExcelTata()
+        private async Task ejecutarExcelTata(string soloCiudad)
         {
             IsLoading = true;
 
@@ -188,7 +194,10 @@ namespace ANS.ViewModel
 
                 TimeSpan desde = new TimeSpan(6, 30, 0);
 
-                TimeSpan hasta = new TimeSpan(20, 30, 0);
+                // Maldonado cierra ventana a las 20:00 (igual al job); el resto mantiene 20:30.
+                TimeSpan hasta = string.Equals(soloCiudad, "MALDONADO", StringComparison.OrdinalIgnoreCase)
+                    ? new TimeSpan(20, 0, 0)
+                    : new TimeSpan(20, 30, 0);
 
                 string tarea = "ExcelTata";
 
@@ -198,14 +207,14 @@ namespace ANS.ViewModel
 
                 int numTanda = 1;
 
-                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda,tarea);
+                await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, tata, bbva, "MONTEVIDEO", numTanda, tarea, soloCiudad: soloCiudad);
 
 
             }
             catch (Exception e)
             {
                 Debug.WriteLine("Hubo un error: " + e.Message);
-                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] ENVIAR EXCEL TATA");
+                ServicioLog.instancia.WriteLog(e, "BBVA", $"[MANUAL] ENVIAR EXCEL TATA ({soloCiudad})");
                 throw;
             }
             finally
@@ -214,21 +223,21 @@ namespace ANS.ViewModel
             }
 
         }
-        private async Task ejecutarExcelDiaADia()
+        private async Task ejecutarExcelDiaADia(string soloCiudad)
         {
             IsLoading = true;
 
             ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
             string tarea = "ReporteDiario";
- 
+
             try
             {
 
                 await Task.Run(async () =>
                 {
-                
-                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco, config, tarea);
+
+                    await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(banco, config, tarea, soloCiudad: soloCiudad);
 
                 });
             }
@@ -236,7 +245,7 @@ namespace ANS.ViewModel
             catch (Exception e)
             {
                 Debug.WriteLine("Hubo un error: " + e.Message);
-                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] ENVIAR EXCEL reporte diario");
+                ServicioLog.instancia.WriteLog(e, "BBVA", $"[MANUAL] ENVIAR EXCEL reporte diario ({soloCiudad})");
                 throw;
             }
 

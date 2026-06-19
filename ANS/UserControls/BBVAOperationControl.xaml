@@ -205,6 +205,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
@@ -213,27 +215,49 @@
 
                         <TextBlock Text="Excel" Style="{StaticResource SectionTitle}" Grid.ColumnSpan="2"/>
 
-                        <!-- Excel general -->
+                        <!-- Excel general - Montevideo -->
                         <TextBlock Grid.Row="1" Grid.Column="0"
-                                   Text="Excel de todos los buzones"
+                                   Text="Excel de todos los buzones (Montevideo)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,4"/>
                         <Button Grid.Row="1" Grid.Column="1"
-                                Content="Generar Excel"
+                                Content="Excel MVD"
                                 Style="{StaticResource PrimaryButton}"
-                                Command="{Binding EjecutarExcelDiaADia}"/>
+                                Command="{Binding EjecutarExcelDiaADiaMvdCommand}"/>
 
-                        <!-- Excel TATA -->
+                        <!-- Excel general - Maldonado -->
                         <TextBlock Grid.Row="2" Grid.Column="0"
-                                   Text="Excel solo TATA"
+                                   Text="Excel de todos los buzones (Maldonado)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,4"/>
+                        <Button Grid.Row="2" Grid.Column="1"
+                                Content="Excel MLD"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarExcelDiaADiaMldCommand}"/>
+
+                        <!-- Excel TATA - Montevideo -->
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Text="Excel solo TATA (Montevideo)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,0"/>
-                        <Button Grid.Row="2" Grid.Column="1"
-                                Content="Generar Excel TATA"
+                        <Button Grid.Row="3" Grid.Column="1"
+                                Content="Excel TATA MVD"
                                 Style="{StaticResource PrimaryButton}"
-                                Command="{Binding EjecutarExcelTataCommand}"/>
+                                Command="{Binding EjecutarExcelTataMvdCommand}"/>
+
+                        <!-- Excel TATA - Maldonado -->
+                        <TextBlock Grid.Row="4" Grid.Column="0"
+                                   Text="Excel solo TATA (Maldonado)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="4" Grid.Column="1"
+                                Content="Excel TATA MLD"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarExcelTataMldCommand}"/>
                     </Grid>
                 </Border>
             </Grid>

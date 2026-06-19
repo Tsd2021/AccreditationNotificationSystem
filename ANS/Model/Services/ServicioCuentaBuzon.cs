@@ -1460,10 +1460,14 @@ namespace ANS.Model.Services
 
         }
         //Enviar Excel Específico para Henderson. (07:10)T1 (14:35)T2
-        public async Task enviarExcelFormatoTanda(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda, string tarea, DateTime? diaOperativo = null)
+        public async Task enviarExcelFormatoTanda(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank, string city, int numTanda, string tarea, DateTime? diaOperativo = null, string soloCiudad = null)
         {
             try
             {
+                // Filtro opcional de ciudad (default null = ambas, comportamiento original para todos los bancos).
+                // Solo los jobs de BBVA pasan soloCiudad para desdoblar el envío por horario.
+                bool Incluir(string ciudad) => string.IsNullOrEmpty(soloCiudad) || soloCiudad.Equals(ciudad, StringComparison.OrdinalIgnoreCase);
+
                 var baseDia = (diaOperativo ?? DateTime.Today).Date;
 
                 DateTime fechaDesde = baseDia.Add(desde);
@@ -1516,15 +1520,15 @@ namespace ANS.Model.Services
 
                     if (grupoTata.Any())
                     {
-                        var mvdTata = grupoTata.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
-                        var mldTata = grupoTata.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+                        var mvdTata = Incluir("MONTEVIDEO") ? grupoTata.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList() : new List<DtoAcreditacionesPorEmpresa>();
+                        var mldTata = Incluir("MALDONADO") ? grupoTata.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList() : new List<DtoAcreditacionesPorEmpresa>();
                         generarExcelFormatoTanda(mvdTata, mldTata, numTanda, bank, cli, config, tarea, baseDia, etiqueta: "TATA");
                     }
 
                     if (grupoBas.Any())
                     {
-                        var mvdBas = grupoBas.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
-                        var mldBas = grupoBas.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+                        var mvdBas = Incluir("MONTEVIDEO") ? grupoBas.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList() : new List<DtoAcreditacionesPorEmpresa>();
+                        var mldBas = Incluir("MALDONADO") ? grupoBas.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList() : new List<DtoAcreditacionesPorEmpresa>();
                         // Reutiliza la misma tarea (mismos destinatarios que TATA); solo cambia la etiqueta en filename/asunto
                         generarExcelFormatoTanda(mvdBas, mldBas, numTanda, bank, cli, config, tarea, baseDia, etiqueta: "BAS");
                     }
@@ -1532,8 +1536,8 @@ namespace ANS.Model.Services
                     return;
                 }
 
-                List<DtoAcreditacionesPorEmpresa> listaMontevideo = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList();
-                List<DtoAcreditacionesPorEmpresa> listaMaldonado = acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList();
+                List<DtoAcreditacionesPorEmpresa> listaMontevideo = Incluir("MONTEVIDEO") ? acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MONTEVIDEO").ToList() : new List<DtoAcreditacionesPorEmpresa>();
+                List<DtoAcreditacionesPorEmpresa> listaMaldonado = Incluir("MALDONADO") ? acreditacionesFound.Where(x => x.Ciudad.ToUpper() == "MALDONADO").ToList() : new List<DtoAcreditacionesPorEmpresa>();
 
                 generarExcelFormatoTanda(listaMontevideo, listaMaldonado, numTanda, bank, cli, config, tarea, baseDia);
 
@@ -2084,7 +2088,7 @@ namespace ANS.Model.Services
         }
 
 
-        public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion, string tarea, DateTime? diaOperativo = null)
+        public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion, string tarea, DateTime? diaOperativo = null, string soloCiudad = null)
         {
 
             List<DtoAcreditacionesPorEmpresa> acreditacionesPorBancoYTipoAcreditacion = getAcreditacionesPorBancoYTipoAcreditacion(banco, tipoAcreditacion, diaOperativo);
@@ -2159,10 +2163,15 @@ namespace ANS.Model.Services
                 }
 
             }
-            if (acreditacionesPesosMvd.Count > 0 || acreditacionesDolaresMvd.Count > 0)
+            // Filtro opcional de ciudad (default null = ambas, comportamiento original para todos los bancos).
+            // Solo los jobs de BBVA pasan soloCiudad para desdoblar el envío por horario.
+            bool incluyeMvd = string.IsNullOrEmpty(soloCiudad) || soloCiudad.Equals("MONTEVIDEO", StringComparison.OrdinalIgnoreCase);
+            bool incluyeMld = string.IsNullOrEmpty(soloCiudad) || soloCiudad.Equals("MALDONADO", StringComparison.OrdinalIgnoreCase);
+
+            if (incluyeMvd && (acreditacionesPesosMvd.Count > 0 || acreditacionesDolaresMvd.Count > 0))
                 GenerarExcelFormatoDiaADia("MONTEVIDEO", acreditacionesPesosMvd, acreditacionesDolaresMvd, banco, tarea, diaOperativo);
 
-            if (acreditacionesPesosMaldonado.Count > 0 || acreditacionesDolaresMaldonado.Count > 0)
+            if (incluyeMld && (acreditacionesPesosMaldonado.Count > 0 || acreditacionesDolaresMaldonado.Count > 0))
                 GenerarExcelFormatoDiaADia("MALDONADO", acreditacionesPesosMaldonado, acreditacionesDolaresMaldonado, banco, tarea, diaOperativo);
 
             await Task.CompletedTask;

@@ -27,6 +27,10 @@ namespace ANS.Model.Jobs.SANTANDER
 
             string _tarea = context.JobDetail.JobDataMap.GetString("tarea") ?? string.Empty;
 
+            // Ciudad opcional: si viene en JobData, se envía solo esa ciudad (split MVD/MLD por horario).
+            // Si viene vacía, se mantiene el comportamiento original (ambas ciudades).
+            string _ciudad = context.JobDetail.JobDataMap.GetString("ciudad");
+
             // ✅ Logging: Inicio de ejecución del job
             ServicioLog.instancia.WriteInfo(
                 $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC | Tarea: {_tarea}",
@@ -40,14 +44,15 @@ namespace ANS.Model.Jobs.SANTANDER
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Ejecutando tarea Excel Resumen Diario BBVA", Color.FromRgb(0, 68, 129));
+                    string sufijoCiudad = string.IsNullOrEmpty(_ciudad) ? "" : $" ({_ciudad})";
+                    main.MostrarAviso($"Ejecutando tarea Excel Resumen Diario BBVA{sufijoCiudad}", Color.FromRgb(0, 68, 129));
 
                 });
                 Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
 
                 ConfiguracionAcreditacion config = new ConfiguracionAcreditacion(VariablesGlobales.diaxdia);
 
-                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bbva, config, _tarea);
+                await _servicioCuentaBuzon.enviarExcelDiaADiaPorBanco(bbva, config, _tarea, soloCiudad: _ciudad);
 
             }
 
