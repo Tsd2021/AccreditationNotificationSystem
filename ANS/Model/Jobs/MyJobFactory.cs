@@ -50,6 +50,12 @@ namespace ANS.Model.Jobs
 
                 return new AcreditarDiaADiaBBVANike(_servicioCuentaBuzon);
             }
+
+            if (jobType == typeof(AcreditarDiaADiaBBVAMans))
+            {
+
+                return new AcreditarDiaADiaBBVAMans(_servicioCuentaBuzon);
+            }
             #endregion
             #region JOBS_QUE_ENVIAN_EXCEL
             if (jobType == typeof(ExcelBBVAReporteDiario))

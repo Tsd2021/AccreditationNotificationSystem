@@ -1054,6 +1054,20 @@ namespace ANS
 
             #endregion
 
+            // Tarea 2.2: Acreditar dia a dia Mans SRL (ID 1016). 14:15
+            #region TAREA_ACREDITAR_DIAADIA_MANS
+
+            IJobDetail jobBBVADiaADiaMans = JobBuilder.Create<AcreditarDiaADiaBBVAMans>()
+                .WithIdentity("BBVAJobDADMans", "GrupoTrabajoBBVA")
+                .Build();
+
+            ITrigger triggerBBVADiaADiaMans = TriggerBuilder.Create()
+                .WithIdentity("BBVATriggerDADMans", "GrupoTrabajoBBVA")
+                .WithCronSchedule("0 15 14 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
             //Tarea 3: Enviar excel resumen punto a punto 21:05
             #region TAREA_EXCEL_RESUMENDIARIO (MONTEVIDEO 20:30)
             IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
@@ -1125,6 +1139,8 @@ namespace ANS
             await _scheduler.ScheduleJob(jobBBVADiaADia, triggerBBVADiaADia);
 
             await _scheduler.ScheduleJob(jobBBVADiaADiaNike, triggerBBVADiaADiaNike);
+
+            await _scheduler.ScheduleJob(jobBBVADiaADiaMans, triggerBBVADiaADiaMans);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 

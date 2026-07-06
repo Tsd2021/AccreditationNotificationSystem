@@ -411,7 +411,9 @@ namespace ANS.Model.Services
 
                     if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                     {
-                        // Excluir Nike (ID 998) porque se acredita en su job específico a las 14:25
+                        // Excluir Nike (ID 998) y Mans SRL (ID 1016) porque se acreditan en sus jobs específicos
+                        // (Nike a su hora dedicada, Mans a las 14:15). Si no se excluyen, el job genérico de las 17:00
+                        // los volvería a acreditar.
                         query = @"select distinct c.NC,
                             cb.BANCO,
                             c.BANCO as BANCOBUZON,
@@ -432,7 +434,7 @@ namespace ANS.Model.Services
                             inner join cc c on cb.idcliente = c.IDCLIENTE
                             and c.nc = config.nc
                             where cb.BANCO = @bank
-                            and cb.IDCLIENTE NOT IN (998)
+                            and cb.IDCLIENTE NOT IN (998, 1016)
                             and config.TipoAcreditacion = @tipoAcreditacion;";
 
                     }
