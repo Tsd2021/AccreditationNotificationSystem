@@ -1,11 +1,11 @@
-".vs/" 
-"bin/" 
-"obj/" 
-"*.user" 
-"*.suo" 
-"*.log" 
-"*.cache" 
-"*.ide" 
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.log
+*.cache
+*.ide
 *.exe
 **/bin/
 **/obj/
@@ -20,3 +20,8 @@ ProjectEvaluation/
 v17/
 *.suo
 /.vscode/settings.json
+
+# Archivos locales de Claude Code (agents, commands, skills, roadmaps, drivers) - NUNCA subir a git
+.claude/
+**/.claude/
+HORARIOS_DINAMICOS_PROPUESTA.md
