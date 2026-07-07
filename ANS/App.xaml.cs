@@ -652,28 +652,28 @@ namespace ANS
                     .WithCronSchedule("0 53 14 ? * MON-FRI")
                     .Build();
                 #endregion
-                #region Tarea 5: Acreditar DXD (16:10:50)
+                #region Tarea 5: Acreditar DXD (17:01:36)
                 IJobDetail jobAcreditarDiaADiaScotiabank = JobBuilder.Create<AcreditarDiaADiaScotiabank>()
                                                             .WithIdentity("ScotiabankJobAcreditarDXD", "GrupoTrabajoScotiabank")
                                                             .Build();
 
-                // Trigger que dispara la ejecución a las 14:35:36 de lunes a viernes.
+                // Trigger que dispara la ejecución a las 17:01:36 de lunes a viernes.
                 ITrigger triggerAcreditarDiaADiaScotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerAcreditarDXD", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("50 10 16 ? * MON-FRI")
+                    .WithCronSchedule("36 01 17 ? * MON-FRI")
                     .Build();
                 #endregion
-                #region Tarea 6: EXCEL DXD (16:11:20)
+                #region Tarea 6: EXCEL DXD (17:05:20)
                 IJobDetail jobExcelDiaADiaScotiabank = JobBuilder.Create<ExcelScotiabankDiaADia>()
                     .WithIdentity("ScotiabankJobExcelDXD", "GrupoTrabajoScotiabank")
                     .UsingJobData("tarea", "DiaADia")
                     .Build();
                 ITrigger triggerExcelDiaADiaScotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerExcelDXD", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("20 11 16 ? * MON-FRI")
+                    .WithCronSchedule("20 05 17 ? * MON-FRI")
                     .Build();
                 #endregion
-                #region Tarea 7: EXCEL CASH (16:30:00)
+                #region Tarea 7: EXCEL CASH (17:06:00)
 
                 IJobDetail jobExcelCashScotiabank = JobBuilder.Create<ExcelCash>()
                     .WithIdentity("ScotiabankJobExcelCASH", "GrupoTrabajoScotiabank")
@@ -682,10 +682,12 @@ namespace ANS
 
                 ITrigger triggerExcelCashScotiabank = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerExcelCASH", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("0 30 16 ? * MON-FRI")
+                    .WithCronSchedule("0 06 17 ? * MON-FRI")
                     .Build();
                 #endregion
-                #region Tarea 8: COMBINAR TXT MONTEVIDEO POR DIVISA (16:45:00)
+                #region Tarea 8: COMBINAR TXT MONTEVIDEO POR DIVISA (17:10:00)
+                // Debe correr DESPUÉS de Acreditar DXD (17:01:36) y los Excel: el
+                // combinado consume el TXT día a día generado por la acreditación.
 
                 IJobDetail jobCombinarTxtScotiabankMontevideo = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMontevideo>()
                     .WithIdentity("ScotiabankJobCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
@@ -693,11 +695,11 @@ namespace ANS
 
                 ITrigger triggerCombinarTxtScotiabankMontevideo = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("0 45 16 ? * MON-FRI")
+                    .WithCronSchedule("0 10 17 ? * MON-FRI")
                     .Build();
                 #endregion
-                // Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (16:46:00)
-                #region Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (16:46:00)
+                // Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (17:10:10)
+                #region Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (17:10:10)
 
                 IJobDetail jobCombinarTxtScotiabankMaldonado = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMaldonado>()
                     .WithIdentity("ScotiabankJobCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
@@ -705,7 +707,7 @@ namespace ANS
 
                 ITrigger triggerCombinarTxtScotiabankMaldonado = TriggerBuilder.Create()
                     .WithIdentity("ScotiabankTriggerCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("0 46 16 ? * MON-FRI")
+                    .WithCronSchedule("10 10 17 ? * MON-FRI")
                     .Build();
                 #endregion
 
