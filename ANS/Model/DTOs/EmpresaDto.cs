@@ -14,6 +14,9 @@ namespace ANS.Model.DTOs
         public string Banco { get; set; }
         public int IdBanco { get; set; }
 
+        // Tipo de buzón (CC.TIPO). 3 == PERMAQUIN. Se usa para transportar TipoBuzon al flujo manual.
+        public int TipoBuzon { get; set; }
+
         /// <summary>
         /// Moneda normalizada para mostrar: PESOS, DÓLARES, EUROS, etc.
         /// </summary>

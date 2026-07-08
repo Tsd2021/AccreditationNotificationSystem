@@ -155,6 +155,8 @@ namespace ANS.Model.Services
                             while (await reader.ReadAsync())
                             {
 
+                                int nsuOrd = reader.GetOrdinal("NSU");
+
                                 Deposito deposito = new Deposito
                                 {
                                     IdDeposito = reader.GetInt32(0),
@@ -162,7 +164,9 @@ namespace ANS.Model.Services
                                     Codigo = reader.GetString(2),
                                     Tipo = reader.GetString(3),
                                     Empresa = reader.GetString(4),
-                                    FechaDep = reader.GetDateTime(5)
+                                    FechaDep = reader.GetDateTime(5),
+                                    // NSU siempre se lee (columna INT NULL); solo se usa aguas abajo si el buzón es PERMAQUIN.
+                                    NSU = reader.IsDBNull(nsuOrd) ? (int?)null : reader.GetInt32(nsuOrd)
                                 };
 
                                 if (deposito.Tipo == "Validado")
@@ -262,9 +266,10 @@ namespace ANS.Model.Services
                     WHEN CHARINDEX('-', d.empresa) > 0 
                     THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
                     ELSE LTRIM(RTRIM(d.empresa))
-                    END AS empresa, 
-                    d.fechadep         
-                    FROM 
+                    END AS empresa,
+                    d.fechadep,
+                    d.NSU
+                    FROM
                     Depositos d
                     INNER JOIN 
                     relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
@@ -295,8 +300,9 @@ namespace ANS.Model.Services
                     WHEN CHARINDEX('-', d.empresa) > 0 
                     THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
                     ELSE LTRIM(RTRIM(d.empresa))
-                    END AS empresa, 
-                    d.fechadep
+                    END AS empresa,
+                    d.fechadep,
+                    d.NSU
                     FROM
                     Depositos d
                     INNER JOIN
@@ -328,9 +334,10 @@ namespace ANS.Model.Services
                     WHEN CHARINDEX('-', d.empresa) > 0 
                     THEN LTRIM(RTRIM(SUBSTRING(d.empresa, LEN(d.empresa) - CHARINDEX('-', REVERSE(d.empresa)) + 2, LEN(d.empresa))))
                     ELSE LTRIM(RTRIM(d.empresa))
-                    END AS empresa, 
-                    d.fechadep         
-                    FROM 
+                    END AS empresa,
+                    d.fechadep,
+                    d.NSU
+                    FROM
                     Depositos d
                     INNER JOIN 
                     relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 

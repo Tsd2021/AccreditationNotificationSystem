@@ -262,6 +262,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             // ✅ HashSet para evitar duplicados: clave única = NC + IdOperacion + Cuenta + Divisa + Monto
             var lineasAgregadas = new HashSet<string>();
 
+            // Feature NOMBRE_ARCHIVO: bucket (ciudad, divisa) -> buzones que fueron a ese archivo.
+            var buzonesPorBucket = new Dictionary<(string ciudad, string divisa), List<CuentaBuzon>>();
+
             if (cb != null && cb.Count > 0)
             {
                 foreach (var unaCuenta in cb)
@@ -338,6 +341,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                     if (agregadaAlArchivo)
                                     {
                                         lineasAgregadas.Add(claveUnica);
+                                        // Feature NOMBRE_ARCHIVO: registro este buzón en su bucket (misma condición que las ramas de arriba).
+                                        RegistrarBuzonesEnBucket(buzonesPorBucket,
+                                            unaCuenta.esCashOffice() ? VariablesGlobales.cashoffice
+                                                : (unaCuenta.Ciudad == VariablesGlobales.maldonado ? VariablesGlobales.maldonado : VariablesGlobales.montevideo),
+                                            unaCuenta.Divisa == VariablesGlobales.uyu ? VariablesGlobales.uyu : VariablesGlobales.usd,
+                                            new[] { unaCuenta });
                                     }
                                     
                                     // ✅ Logging: Registrar depósitos que NO se agregaron al archivo pero tienen totales
@@ -358,7 +367,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     }
                 }
             }
-            return await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
+            var _resultadoCrear = await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
+            // Feature NOMBRE_ARCHIVO: ya se generaron los archivos → taggeo cada CuentaBuzon con su .dat por bucket.
+            AsignarNombreArchivoABuzones(buzonesPorBucket);
+            return _resultadoCrear;
         }
         /// <summary>
         /// Genera líneas para archivos Tanda y Día a Día (agrupados por cuenta)
@@ -374,6 +386,9 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             StringBuilder montevideoDolares = new StringBuilder();
             StringBuilder cashOfficePesos = new StringBuilder();
             StringBuilder cashOfficeDolares = new StringBuilder();
+
+            // Feature NOMBRE_ARCHIVO: bucket (ciudad, divisa) -> buzones que fueron a ese archivo.
+            var buzonesPorBucket = new Dictionary<(string ciudad, string divisa), List<CuentaBuzon>>();
 
             if (cb != null && cb.Count > 0)
             {
@@ -406,7 +421,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                         IdReferenciaAlCliente = g.First().IdReferenciaAlCliente ?? "", // Para construir la referencia final
                         // Sumar TODOS los depósitos de todas las CuentaBuzon que tienen la misma Empresa+Ciudad+Divisa
                         SumaMontos = g.Sum(c => c.Depositos.Sum(d => d.Totales.Sum(t => (double)t.ImporteTotal))),
-                        CuentaBuzonEjemplo = g.First() // Para obtener otros datos necesarios
+                        CuentaBuzonEjemplo = g.First(), // Para obtener otros datos necesarios
+                        Buzones = g.ToList() // Feature NOMBRE_ARCHIVO: buzones reales del grupo para taggear con su .dat
                     })
                     .OrderBy(x => x.Cuenta) // Ordenar por cuenta para que queden agrupadas
                     .ThenBy(x => x.Sucursal)
@@ -496,6 +512,16 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             }
                         }
                         
+                        // Feature NOMBRE_ARCHIVO: registro los buzones del grupo en su bucket (misma condición que las ramas de arriba).
+                        if (agregadaAlArchivo)
+                        {
+                            RegistrarBuzonesEnBucket(buzonesPorBucket,
+                                grupo.EsCashOffice ? VariablesGlobales.cashoffice
+                                    : (ciudadNormalizada == VariablesGlobales.maldonado.ToUpperInvariant() ? VariablesGlobales.maldonado : VariablesGlobales.montevideo),
+                                divisaNormalizada == VariablesGlobales.uyu ? VariablesGlobales.uyu : VariablesGlobales.usd,
+                                grupo.Buzones);
+                        }
+
                         // ✅ Logging: Registrar cuentas que NO se agregaron al archivo
                         if (!agregadaAlArchivo)
                         {
@@ -516,8 +542,50 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 }
             }
 
-            return await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
+            var _resultadoCrear = await CrearArchivo(maldonadoPesos, maldonadoDolares, montevideoPesos, montevideoDolares, cashOfficePesos, cashOfficeDolares);
+            // Feature NOMBRE_ARCHIVO: ya se generaron los archivos → taggeo cada CuentaBuzon con su .dat por bucket.
+            AsignarNombreArchivoABuzones(buzonesPorBucket);
+            return _resultadoCrear;
         }
+        // Feature NOMBRE_ARCHIVO: archivos .dat generados en la corrida actual (nombres ORIGINALES, pre-envío/rename WS).
+        // El generador se instancia por corrida (BankFactory) → un campo es seguro.
+        private List<(string rutaFinal, string nombreArchivo, byte[] contenidoBytes, string ciudad, string divisa)> _archivosDeLaCorrida;
+
+        // Feature NOMBRE_ARCHIVO: acumula, por bucket (ciudad, divisa), los CuentaBuzon que fueron a ese archivo.
+        private static void RegistrarBuzonesEnBucket(
+            Dictionary<(string ciudad, string divisa), List<CuentaBuzon>> dict,
+            string ciudad, string divisa, IEnumerable<CuentaBuzon> buzones)
+        {
+            var key = (ciudad, divisa);
+            if (!dict.TryGetValue(key, out var lista))
+            {
+                lista = new List<CuentaBuzon>();
+                dict[key] = lista;
+            }
+            lista.AddRange(buzones);
+        }
+
+        // Feature NOMBRE_ARCHIVO: asigna a cada CuentaBuzon el nombre base (sin ruta ni prefijo TEST_) del .dat donde entró.
+        // Empareja por (ciudad, divisa) contra los archivos generados. Si un bucket se partió en chunks, gana el
+        // primer archivo (primer chunk) — decisión pragmática acordada. No toca el archivo ni lo que se envía al WS.
+        private void AsignarNombreArchivoABuzones(
+            Dictionary<(string ciudad, string divisa), List<CuentaBuzon>> buzonesPorBucket)
+        {
+            if (_archivosDeLaCorrida == null || buzonesPorBucket.Count == 0) return;
+            foreach (var archivo in _archivosDeLaCorrida)
+            {
+                if (!buzonesPorBucket.TryGetValue((archivo.ciudad, archivo.divisa), out var buzones))
+                    continue;
+                string nombreBase = !string.IsNullOrEmpty(archivo.nombreArchivo)
+                        && archivo.nombreArchivo.StartsWith("TEST_", StringComparison.OrdinalIgnoreCase)
+                    ? archivo.nombreArchivo.Substring(5)
+                    : archivo.nombreArchivo;
+                foreach (var cb in buzones)
+                    if (string.IsNullOrEmpty(cb.NombreArchivoGenerado)) // primer chunk gana
+                        cb.NombreArchivoGenerado = nombreBase;
+            }
+        }
+
         private async Task<GeneracionArchivoBancoResult> CrearArchivo(StringBuilder maldonadoPesos, StringBuilder maldonadoDolares, StringBuilder montevideoPesos, StringBuilder montevideoDolares, StringBuilder cashOfficePesos, StringBuilder cashOfficeDolares)
         {
             // ✅ Lista para almacenar información de archivos generados (para envío en producción)
@@ -553,7 +621,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 var archivos = await CrearArchivoCashOffice(cashOfficeDolares, VariablesGlobales.usd, false);
                 archivosGenerados.AddRange(archivos);
             }
-            
+
+            // Feature NOMBRE_ARCHIVO: snapshot de los archivos generados (nombres ORIGINALES, antes del envío/rename WS).
+            _archivosDeLaCorrida = archivosGenerados;
+
             // ============================================================================
             // ✅ IMPLEMENTACIÓN PARA PRODUCCIÓN (COMENTADA - ACTIVAR CUANDO SE NECESITE)
             // ============================================================================

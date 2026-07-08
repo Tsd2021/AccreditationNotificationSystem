@@ -14,6 +14,9 @@ namespace ANS.Model
         public string Empresa { get; set; }
         public DateTime FechaDep { get; set; }
         public string Tipo { get; set; }
+        // NSU del depósito (tabla Depositos, WebBuzones). Solo se usa para buzones PERMAQUIN (TipoBuzon == 3).
+        // Puede venir null: la columna es INT NULL y para no-PERMAQUIN se ignora.
+        public int? NSU { get; set; }
         public List<Total> Totales { get; set; } = new List<Total>();
         public double getTotalPesos() {             double totalPesos = 0;
             foreach (var total in Totales)

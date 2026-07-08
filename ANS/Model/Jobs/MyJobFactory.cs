@@ -175,6 +175,11 @@ namespace ANS.Model.Jobs
                 return new AcreditarDiaADiaAbastoElPlacer(_servicioCuentaBuzon);
             }
 
+            if (jobType == typeof(AcreditarDiaADiaUruimporta))
+            {
+                return new AcreditarDiaADiaUruimporta(_servicioCuentaBuzon);
+            }
+
             #endregion
 
             #region JOBS_QUE_ENVIAN_EXCEL

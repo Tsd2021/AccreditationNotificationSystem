@@ -602,6 +602,16 @@ namespace ANS
                     .WithSchedule(CronScheduleBuilder.CronSchedule("0 2 7 ? * MON-FRI"))
                     .Build();
                 #endregion
+                #region Tarea 0.2: URUIMPORTA (ID 1014) - DXD dedicado de mañana (07:03:00) - excluido del DXD normal de la tarde (no duplica)
+                IJobDetail jobDiaADiaUruimporta = JobBuilder.Create<AcreditarDiaADiaUruimporta>()
+                    .WithIdentity("ScotiabankUruimportaJob", "GrupoTrabajoScotiabank")
+                    .Build();
+
+                ITrigger triggerDiaADiaUruimporta = TriggerBuilder.Create()
+                    .WithIdentity("ScotiabankUruimportaTrigger", "GrupoTrabajoScotiabank")
+                    .WithSchedule(CronScheduleBuilder.CronSchedule("0 3 7 ? * MON-FRI"))
+                    .Build();
+                #endregion
                 #region Tarea 1: ACREDITAR TANDA 1 (7:06:00 AM)
                 // Job para acreditar (método implementado en la clase AcreditarTanda1HendersonScotiabank)
                 IJobDetail jobAcreditarTanda1Scotiabank = JobBuilder.Create<AcreditarTanda1HendersonScotiabank>()
@@ -720,6 +730,8 @@ namespace ANS
                     //await scheduler.ScheduleJob(jobDiaADiaFarmashop, triggerDiaADiaFarmashop);
 
                     await scheduler.ScheduleJob(jobDiaADiaAbastoElPlacer, triggerDiaADiaAbastoElPlacer);
+
+                    await scheduler.ScheduleJob(jobDiaADiaUruimporta, triggerDiaADiaUruimporta);
 
                     await scheduler.ScheduleJob(jobAcreditarTanda1Scotiabank, triggerAcreditarTanda1Scotiabank);
 

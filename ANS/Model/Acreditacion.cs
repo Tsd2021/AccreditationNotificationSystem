@@ -15,6 +15,12 @@
         public string Divisa { get; set; }
         public DateTime FechaTanda { get; set; } = DateTime.MinValue;
         public DateTime FechaDepReal { get; set; }
+        // NSU a insertar en la columna NSU de la tabla de acreditaciones.
+        // Solo PERMAQUIN (TipoBuzon == 3) lo trae con valor; para el resto queda null → NULL en BD.
+        public int? NSU { get; set; }
+        // Nombre (base, sin ruta) del archivo TXT en el que se acreditó este depósito. Columna NOMBRE_ARCHIVO.
+        // Solo bancos que generan archivo (BBVA/Scotiabank; Santander en etapa 2); el resto queda null.
+        public string NombreArchivo { get; set; }
         public void setDivisa()
         {
             if (Moneda == 0)

@@ -212,14 +212,14 @@ namespace ANS.Model.Services
 
                 string queryUnionTotal = "SELECT DISTINCT * " +
                 "FROM ( " +
-                "    SELECT cc.nc, cc.nn, cc.banco, cb.EMPRESA, cb.CUENTA, cc.IDCLIENTE, cb.MONEDA, cb.ID AS IDCUENTABUZON " +
+                "    SELECT cc.nc, cc.nn, cc.banco, cb.EMPRESA, cb.CUENTA, cc.IDCLIENTE, cb.MONEDA, cb.ID AS IDCUENTABUZON, cc.TIPO AS TIPOBUZON " +
                 "    FROM cc " +
                 "    INNER JOIN cuentasbuzones cb ON cc.IDCLIENTE = cb.IDCLIENTE " +
                 "    WHERE cc.banco IS NOT NULL " +
                 "      AND LTRIM(RTRIM(cc.banco)) <> '' " +
                 "      AND cc.banco <> 'SIN ASIGNAR' " +
                 "    UNION " +
-                "    SELECT cc.nc, cc.nn, cb.BANCO AS banco, cb.EMPRESA, cb.CUENTA, cc.IDCLIENTE, cb.MONEDA, cb.ID AS IDCUENTABUZON " +
+                "    SELECT cc.nc, cc.nn, cb.BANCO AS banco, cb.EMPRESA, cb.CUENTA, cc.IDCLIENTE, cb.MONEDA, cb.ID AS IDCUENTABUZON, cc.TIPO AS TIPOBUZON " +
                 "    FROM cc " +
                 "    INNER JOIN ClientesRelacionadosTest crt ON cc.IDCLIENTE = crt.IdRazonSocial " +
                 "    INNER JOIN cuentasbuzones cb ON crt.idcliente = cb.IDCLIENTE " +
@@ -227,7 +227,7 @@ namespace ANS.Model.Services
                 "      AND cc.IDCLIENTE = 164 " +
                 "      AND cb.banco LIKE '%sant%' " +
                 "    UNION " +
-                "    SELECT cc.nc, cc.nn, cb.BANCO AS banco, cb.EMPRESA, cb.CUENTA, cc.IDCLIENTE, cb.MONEDA, cb.ID AS IDCUENTABUZON " +
+                "    SELECT cc.nc, cc.nn, cb.BANCO AS banco, cb.EMPRESA, cb.CUENTA, cc.IDCLIENTE, cb.MONEDA, cb.ID AS IDCUENTABUZON, cc.TIPO AS TIPOBUZON " +
                 "    FROM cc " +
                 "    INNER JOIN ClientesRelacionadosTest crt ON cc.IDCLIENTE = crt.IdRazonSocial " +
                 "    INNER JOIN cuentasbuzones cb ON crt.idcliente = cb.IDCLIENTE " +
@@ -264,7 +264,8 @@ namespace ANS.Model.Services
                             IdCuenta = reader.GetInt32(idCuentaOrdinal),
                             Moneda = reader.GetString(monedaOrdinal),
                             Empresa = reader.GetString(empresaOrdinal),
-                            NN = reader.GetString(nnOrdinal)
+                            NN = reader.GetString(nnOrdinal),
+                            TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, reader.GetOrdinal("TIPOBUZON"))
                         };
                         listaTotalDeCuentasBuzones.Add(cuentaBuzon);
                     }
@@ -282,7 +283,7 @@ namespace ANS.Model.Services
 
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
-                string query = @"SELECT c.NC, cb.BANCO, c.BANCO as BANCOBUZON, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, cb.TANDA, c.NN
+                string query = @"SELECT c.NC, cb.BANCO, c.BANCO as BANCOBUZON, c.CIERRE, c.IDCLIENTE, cb.CUENTA, cb.MONEDA, cb.EMPRESA, config.TipoAcreditacion,c.SUCURSAL as CIUDAD, cb.SUCURSAL, cb.TANDA, c.NN, c.TIPO AS TIPOBUZON
                                 from ConfiguracionAcreditacion config 
                                 inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id 
                                 inner join cc c on cb.idcliente = c.IDCLIENTE 
@@ -326,7 +327,8 @@ namespace ANS.Model.Services
                             SucursalCuenta = reader.GetString(sucursalOrdinal),
                             Ciudad = reader.GetString(ciudadOrdinal),
                             Producto = reader.GetInt32(tandaOrdinal),
-                            NN = reader.GetString(nnOrdinal)
+                            NN = reader.GetString(nnOrdinal),
+                            TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, reader.GetOrdinal("TIPOBUZON"))
                         };
 
                         cuentaBuzon.setDivisa();
@@ -371,7 +373,8 @@ namespace ANS.Model.Services
                         c.IDCC,
                         cb.ID,
                         c.NN,
-                        cb.TIPO
+                        cb.TIPO,
+                        c.TIPO AS TIPOBUZON
                         from ConfiguracionAcreditacion config
                         inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                         inner join cc c on cb.idcliente = c.IDCLIENTE
@@ -398,7 +401,8 @@ namespace ANS.Model.Services
                             c.IDCC,
                             cb.ID,
                             c.NN,
-                            cb.TIPO
+                            cb.TIPO,
+                            c.TIPO AS TIPOBUZON
                             from ConfiguracionAcreditacion config
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                             inner join cc c on cb.idcliente = c.IDCLIENTE
@@ -428,7 +432,8 @@ namespace ANS.Model.Services
                             c.IDCC,
                             cb.ID,
                             c.NN,
-                            cb.TIPO
+                            cb.TIPO,
+                            c.TIPO AS TIPOBUZON
                             from ConfiguracionAcreditacion config
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                             inner join cc c on cb.idcliente = c.IDCLIENTE
@@ -462,13 +467,14 @@ namespace ANS.Model.Services
                                 c.IDCC,
                                 cb.ID,
                                 c.NN,
-                                cb.TIPO
+                                cb.TIPO,
+                                c.TIPO AS TIPOBUZON
                                 from ConfiguracionAcreditacion config
                                 inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                                 inner join cc c on cb.idcliente = c.IDCLIENTE
                                 and c.nc = config.nc
                                 where cb.BANCO = @bank
-                                and cb.idcliente not in (164, 179)
+                                and cb.idcliente not in (164, 179, 1014)
                                 and config.TipoAcreditacion = @tipoAcreditacion;";
                     }
                 }
@@ -517,7 +523,8 @@ namespace ANS.Model.Services
                             IdReferenciaAlCliente = reader.GetString(idReferenciaAlCliente),
                             IdCuenta = reader.GetInt32(idCuenta),
                             NN = reader.GetString(nnOrdinal),
-                            TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
+                            TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim(),
+                            TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, reader.GetOrdinal("TIPOBUZON"))
 
                         };
 
@@ -576,7 +583,8 @@ namespace ANS.Model.Services
                 cb.ID,
                 c.NN,
                 config.TipoAcreditacion AS CONFIGURACION,
-                cb.TIPO
+                cb.TIPO,
+                c.TIPO AS TIPOBUZON
                 from ConfiguracionAcreditacion config
                 inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                 inner join cc c on cb.idcliente = c.IDCLIENTE
@@ -625,7 +633,8 @@ namespace ANS.Model.Services
                                 IdReferenciaAlCliente = reader.GetString(idReferenciaOrdinal),
                                 IdCuenta = reader.GetInt32(idCuentaOrdinal),
                                 NN = reader.GetString(nnOrdinal),
-                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
+                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim(),
+                                TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, reader.GetOrdinal("TIPOBUZON"))
 
                             };
 
@@ -648,7 +657,7 @@ namespace ANS.Model.Services
         public async Task<List<CuentaBuzon>> getCuentasPorClienteBancoYTipoAcreditacion(int idCliente, Banco bank, ConfiguracionAcreditacion configuracionAcreditacion)
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
-            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO
+            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO, c.TIPO AS TIPOBUZON
                             from ConfiguracionAcreditacion config
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                             inner join cc c on c.nc = config.nc
@@ -697,7 +706,8 @@ namespace ANS.Model.Services
                                 IdCuenta = reader.GetInt32(idCuentaOrdinal),
                                 NN = reader.GetString(nnOrdinal),
                                 Ciudad = reader.GetString(sucursalCiudadOrdinal),
-                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
+                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim(),
+                                TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, reader.GetOrdinal("TIPOBUZON"))
                             };
 
                             ConfiguracionAcreditacion configActual = new ConfiguracionAcreditacion(reader.GetString(configOrdinal));
@@ -720,7 +730,7 @@ namespace ANS.Model.Services
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
-            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO
+            string query = @"select config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO, c.TIPO AS TIPOBUZON
                             from ConfiguracionAcreditacion config
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                             inner join cc c on c.nc = config.nc
@@ -805,7 +815,8 @@ namespace ANS.Model.Services
                                     IdCuenta = reader.GetInt32(idCuentaOrdinal),
                                     NN = reader.GetString(nnOrdinal),
                                     Ciudad = reader.GetString(sucursalCiudadOrdinal),
-                                    TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
+                                    TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim(),
+                                    TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, reader.GetOrdinal("TIPOBUZON"))
                                 };
 
                                 ConfiguracionAcreditacion configActual = new ConfiguracionAcreditacion(reader.GetString(configOrdinal));
@@ -833,7 +844,7 @@ namespace ANS.Model.Services
         {
             List<CuentaBuzon> buzonesFound = new List<CuentaBuzon>();
 
-            string query = @"select DISTINCT config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO
+            string query = @"select DISTINCT config.nc, cb.banco, c.banco as BANCOBUZON, c.cierre, cb.idcliente, cb.cuenta, cb.moneda, cb.empresa, config.TipoAcreditacion AS CONFIGURACION, c.sucursal as ciudad, cb.sucursal, c.idcc, cb.id, c.nn, cb.TIPO, c.TIPO AS TIPOBUZON
                             from ConfiguracionAcreditacion config
                             inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                             inner join cc c on cb.idcliente = c.IDCLIENTE
@@ -887,7 +898,8 @@ namespace ANS.Model.Services
                                 IdCuenta = reader.GetInt32(idCuentaOrdinal),
                                 NN = reader.GetString(nnOrdinal),
                                 Ciudad = reader.GetString(sucursalCiudadOrdinal),
-                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
+                                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim(),
+                                TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, reader.GetOrdinal("TIPOBUZON"))
                             };
 
                             ConfiguracionAcreditacion configActual = new ConfiguracionAcreditacion(reader.GetString(configOrdinal));
@@ -1397,7 +1409,8 @@ namespace ANS.Model.Services
 
 
                         //APLICAR SOLO PARA NIKE DE PRUEBA, SI ANDA BIEN MAÑANA MARTES 23 DEE DICIEMBRE,ENTONCES APLICAR PARA TODOS.
-                        if (cli.IdCliente == 998)
+                        //URUIMPORTA (1014): usa la hora de cierre de cada buzón (cu.Cierre), no una hora fija.
+                        if (cli.IdCliente == 998 || cli.IdCliente == 1014)
                         {
                             TimeSpan horaCierreAUsar = horaCierreActual;
 

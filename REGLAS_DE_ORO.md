@@ -32,3 +32,17 @@ dinero real.
 
 **Alcance:** `ScotiaFileGenerator`, `SantanderFileGenerator`, generadores BBVA,
 `ServicioCombinarTxtScotiabank` y cualquier otro generador/combinador por banco.
+
+### Qué SÍ es formato (protegido) y qué NO
+
+La regla protege el **formato/bytes de la línea**, no la cantidad de líneas ni
+cómo se agrupan los importes.
+
+- **Protegido (no tocar sin permiso):** ancho de línea, posiciones de campos,
+  espacios/padding, cálculo y ancho del importe, prefijos y armado de cuenta,
+  encoding, nombres y sufijos de archivo.
+- **NO es violación de formato:** agregar/quitar líneas, o cambiar la
+  granularidad de agrupación (p.ej. una línea por buzón en vez de una por
+  cuenta), **siempre que cada línea conserve el mismo layout byte a byte**. Eso
+  es un cambio de lógica/negocio y se decide con el dueño como cualquier cambio
+  funcional, pero no rompe el formato del archivo.

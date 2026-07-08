@@ -20,6 +20,36 @@ namespace ANS.Model.Services
         {
             return _lazy.Value;
         }
+
+        // Valor de CC.TIPO que identifica un buzón PERMAQUIN.
+        public const int TipoBuzonPermaquin = 3;
+
+        /// <summary>
+        /// Lee CC.TIPO (aliaseado como TIPOBUZON) de forma defensiva.
+        /// null → 0 (valor seguro, no dispara comportamiento PERMAQUIN); no numérico → 0.
+        /// </summary>
+        public static int LeerTipoBuzon(SqlDataReader r, int ord)
+        {
+            if (r.IsDBNull(ord)) return 0;
+            var v = r.GetValue(ord);
+            return int.TryParse(v?.ToString(), out var t) ? t : 0;
+        }
+
+        /// <summary>
+        /// Resuelve el NSU a insertar según el tipo de buzón.
+        /// No-PERMAQUIN → null (NULL en BD). PERMAQUIN con NSU → NSU.
+        /// PERMAQUIN sin NSU → fallback a IDOPERACION (se marca como posible inconsistencia, no rompe el flujo).
+        /// </summary>
+        public static int? ResolverNsuParaInsert(bool esPermaquin, int? nsuDeposito, int idOperacion, string nc)
+        {
+            if (!esPermaquin) return null;
+            if (nsuDeposito.HasValue) return nsuDeposito;
+            ServicioLog.instancia.WriteWarning(
+                $"PERMAQUIN sin NSU: se usa IDOPERACION como fallback | NC: {nc} | IDOPERACION: {idOperacion}",
+                "ServicioAcreditacion | ResolverNsuParaInsert");
+            return idOperacion;
+        }
+
         public void insertar(Acreditacion a)
         {
             if (a == null) return;
@@ -48,9 +78,9 @@ namespace ANS.Model.Services
                                     )
                                     BEGIN
                                     INSERT INTO {tableName}
-                                    (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP)
+                                    (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP, NSU, NOMBRE_ARCHIVO)
                                     VALUES
-                                    (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL);
+                                    (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL, @NSU, @NOMBRE_ARCHIVO);
                                     END";
 
                 // Parámetros
@@ -63,8 +93,16 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@NO_ENVIADO", a.No_Enviado);
                 cmd.Parameters.AddWithValue("@MONTO", a.Monto);
                 // Manejar DateTime.MinValue como NULL para compatibilidad con registros antiguos
-                cmd.Parameters.AddWithValue("@FECHADEPREAL", 
+                cmd.Parameters.AddWithValue("@FECHADEPREAL",
                     a.FechaDepReal != DateTime.MinValue ? (object)a.FechaDepReal : DBNull.Value);
+                // NSU: solo PERMAQUIN trae valor; el resto va NULL. (int? → cast a object para DBNull)
+                cmd.Parameters.AddWithValue("@NSU", (object)a.NSU ?? DBNull.Value);
+                // NOMBRE_ARCHIVO: archivo TXT de origen (BBVA/Scotiabank). Null para bancos sin archivo. Truncar a 255 por seguridad.
+                string nombreArchivo = a.NombreArchivo?.Trim();
+                if (!string.IsNullOrEmpty(nombreArchivo) && nombreArchivo.Length > 255)
+                    nombreArchivo = nombreArchivo.Substring(0, 255);
+                cmd.Parameters.AddWithValue("@NOMBRE_ARCHIVO",
+                    string.IsNullOrEmpty(nombreArchivo) ? (object)DBNull.Value : nombreArchivo);
 
                 conn.Open();
                 int rowsAffected = cmd.ExecuteNonQuery();
@@ -131,7 +169,10 @@ namespace ANS.Model.Services
                             Moneda = moneyId,
                             No_Enviado = false,
                             Monto = montoTotalDelDeposito,
-                            FechaDepReal = _dep.FechaDep
+                            FechaDepReal = _dep.FechaDep,
+                            NSU = ResolverNsuParaInsert(
+                                _acc.getTipoBuzon() == "PERMAQUIN", _dep.NSU, _dep.IdOperacion, _acc.NC),
+                            NombreArchivo = _acc.NombreArchivoGenerado
                         };
 
 
@@ -277,7 +318,10 @@ namespace ANS.Model.Services
                             Moneda = moneyId,
                             No_Enviado = false,
                             Monto = montoTotalDelDeposito,
-                            FechaDepReal = _dep.FechaDep
+                            FechaDepReal = _dep.FechaDep,
+                            NSU = ResolverNsuParaInsert(
+                                _acc.getTipoBuzon() == "PERMAQUIN", _dep.NSU, _dep.IdOperacion, _acc.NC),
+                            NombreArchivo = _acc.NombreArchivoGenerado
                         };
 
                         if (tanda == 1)

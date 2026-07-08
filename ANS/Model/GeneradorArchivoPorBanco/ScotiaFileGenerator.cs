@@ -21,6 +21,12 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         string _sucursal;
         private ConfiguracionAcreditacion _config { get; set; }
 
+        // Cliente que exige una línea por BUZÓN en el TXT de Scotia: los importes se
+        // parten por buzón aunque los buzones compartan el mismo número de cuenta Scotia.
+        // Sólo cambia la granularidad de agrupación; el layout de cada línea (875 chars)
+        // es idéntico byte a byte. Ver REGLAS_DE_ORO.md.
+        private const int IdClienteSeparaLineaPorBuzon = 1014;
+
         public Task<GeneracionArchivoBancoResult> GenerarArchivo(List<CuentaBuzon> cb)
         {
 
@@ -298,8 +304,16 @@ namespace ANS.Model.GeneradorArchivoPorBanco
             {
                 var txt = new StringBuilder();
 
-                // 2) Dentro de cada DIVISA/Ciudad, agrupo por CUENTA+SUCURSAL y sumo depósitos
-                foreach (var gCuenta in grupo.GroupBy(c => new { c.Cuenta, c.SucursalCuenta }))
+                // 2) Dentro de cada DIVISA/Ciudad, agrupo por CUENTA+SUCURSAL y sumo depósitos.
+                //    Excepción cliente 1014: separa una línea por BUZÓN (NC) aunque los buzones
+                //    compartan la misma cuenta Scotia. Para el resto, Buzon = null => agrupa
+                //    exactamente como antes (una línea por cuenta), salida byte a byte idéntica.
+                foreach (var gCuenta in grupo.GroupBy(c => new
+                {
+                    c.Cuenta,
+                    c.SucursalCuenta,
+                    Buzon = c.IdCliente == IdClienteSeparaLineaPorBuzon ? c.NC : null
+                }))
                 {
                     var ejemplo = gCuenta.First();
 
@@ -478,6 +492,13 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                                             _config != null &&
                                             VariablesGlobales.tanda.Equals(_config.TipoAcreditacion, StringComparison.OrdinalIgnoreCase);
 
+                    // ✅ PRIORIDAD 1c: URUIMPORTA (ID 1014) - DXD dedicado de la mañana (tipo "Tanda").
+                    // Se le da archivo propio (_Uruimporta) para que no se mezcle ni con Tanda1 ni con el DXD,
+                    // y para que el combinador de las 17:10 lo excluya (igual que Abasto El Placer).
+                    bool esUruimporta = grupo.All(c => c.IdCliente == 1014) &&
+                                        _config != null &&
+                                        VariablesGlobales.tanda.Equals(_config.TipoAcreditacion, StringComparison.OrdinalIgnoreCase);
+
                     if (esFarmashop)
                     {
                         tipoAcreditacionSufijo = "_Farmashop";
@@ -485,6 +506,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                     else if (esAbastoElPlacer)
                     {
                         tipoAcreditacionSufijo = "_AbastoElPlacer";
+                    }
+                    else if (esUruimporta)
+                    {
+                        tipoAcreditacionSufijo = "_Uruimporta";
                     }
                     // ✅ PRIORIDAD 2: Si no es Farmashop, usar el tipo de acreditación de la configuración
                     else if (_config != null && !string.IsNullOrWhiteSpace(_config.TipoAcreditacion))
@@ -512,6 +537,11 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 }
 
                 string rutaDestino = Path.Combine(folderPath, fileName);
+
+                // Feature NOMBRE_ARCHIVO: cada buzón de este grupo (Divisa/Ciudad) quedó escrito en este archivo.
+                // Se guarda el nombre base (sin ruta ni prefijo TEST_), que es el nombre real en PRODUCCIÓN.
+                foreach (var _cbArchivo in grupo)
+                    _cbArchivo.NombreArchivoGenerado = fileName;
 
                 // 4) Grabo con tu método (pasar flag de excepción)
                 crearYEscribirArchivo(txt, rutaDestino, esExcepcion);

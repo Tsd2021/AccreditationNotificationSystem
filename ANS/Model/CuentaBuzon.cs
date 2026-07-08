@@ -34,7 +34,13 @@ namespace ANS.Model
         /// Valores: "CuentaCorriente" | "CajaAhorro" | null (se trata como CC por retrocompatibilidad).
         /// </summary>
         public string TipoCuenta { get; set; }
-
+        public int TipoBuzon { get; set;  }
+        /// <summary>
+        /// Nombre (base, sin ruta) del archivo TXT/DAT en el que este buzón fue escrito por el generador del banco.
+        /// Lo setea cada FileGenerator (BBVA/Scotiabank) por buzón; viaja hasta la columna NOMBRE_ARCHIVO de la acreditación.
+        /// Queda null para bancos que no generan archivo.
+        /// </summary>
+        public string NombreArchivoGenerado { get; set; }
         public bool EsCajaDeAhorro()      => TipoCuenta == VariablesGlobales.tipoCajaAhorro;
         public bool EsCuentaCorriente()   => TipoCuenta != VariablesGlobales.tipoCajaAhorro; // null → CC
         public List<Acreditacion> ListaAcreditaciones { get; set; } = new List<Acreditacion>();
@@ -77,6 +83,20 @@ namespace ANS.Model
                 return 2;
             }
             return -1;
+        }
+
+        public string getTipoBuzon()
+        {
+            switch (this.TipoBuzon)
+            {
+                case 0:
+                    return "CASHCONTROL";
+                case 1:
+                    return "INTIMUS";
+                case 3:
+                    return "PERMAQUIN";
+            }
+            return "N/A";
         }
 
         public bool esHenderson()

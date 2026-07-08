@@ -355,7 +355,7 @@ namespace ANS.Model.Services
                                     var originalRecipients = b._Emails?.Select(e => e.Correo).ToList() ?? new List<string>();
                                     var (recipients, subjectFinal, bodyFinal) = ANS.Runtime.Guards.EmailGuard.ApplyEmailPolicy(
                                         originalRecipients, subject, body);
-                                    
+
                                     ServicioLog.instancia.WriteInfo(
                                         $"EMAIL TEST (NO ENVIADO - SMTP bloqueado) | Subject: {subjectFinal} | " +
                                         $"Destinatarios (whitelist): {string.Join(", ", recipients)} | " +
@@ -506,7 +506,7 @@ namespace ANS.Model.Services
                                         var originalRecipients = b._Emails?.Select(e => e.Correo).ToList() ?? new List<string>();
                                         var (recipients, subjectFinal, bodyFinal) = ANS.Runtime.Guards.EmailGuard.ApplyEmailPolicy(
                                             originalRecipients, subjectSin, bodySin);
-                                        
+
                                         ServicioLog.instancia.WriteInfo(
                                             $"EMAIL TEST (NO ENVIADO - SMTP bloqueado) | Subject: {subjectFinal} | " +
                                             $"Destinatarios (whitelist): {string.Join(", ", recipients)} | " +
@@ -1148,24 +1148,41 @@ namespace ANS.Model.Services
             // Construir lista de NCs a excluir: siempre Zunino, y en masivo 1 también los que solo van al masivo 3
             var ncExcluir = new List<string> { "EA23L0810N12000113" };
 
+            // 08 de Julio de 2026 - NCs con cierre fuera del rango del masivo 1 (cierre 23:00, cae en el hueco
+            // 19:30-24:00 que no cubre ningún masivo) pero que igual deben recibir el masivo 1 (que corre 07:00).
+            // Se fuerzan SOLO en el masivo 1.
+            var ncIncluirMasivo1 = new List<string>
+                            {
+                                "EA25L1806N12000222",
+                                "EA25L1806N12000226",
+                                "EA25L1806N12000227",
+                                "EA26L2015N12000283"
+                            };
+
             if (numEnvioMasivo == 1)
             {
                 ncExcluir.AddRange(NcsSoloEnvioMasivo3);
             }
             var notInValues = string.Join("','", ncExcluir.Select(n => n.Replace("'", "''")));
 
-
+            // Filtro por rango de hora de cierre. En el masivo 1 se relaja SOLO ese filtro para los NCs
+            // de ncIncluirMasivo1 (siguen aplicando estado='alta', IDCLIENTE<>160 y la exclusión NOT IN).
+            string filtroCierre = "(CAST(c.CIERRE AS time) > @desdeTime AND CAST(c.CIERRE AS time) <= @hastaTime)";
+            if (numEnvioMasivo == 1 && ncIncluirMasivo1.Count > 0)
+            {
+                var inValues = string.Join("','", ncIncluirMasivo1.Select(n => n.Replace("'", "''")));
+                filtroCierre = "(" + filtroCierre + " OR c.NC IN ('" + inValues + "'))";
+            }
 
             // Fix 27 de Enero de 2026 - Excluyendo NC = EA23L0810N12000113 que es el de ZUNINO - RASTAMAN ( No le enviamos email )
             query = @"SELECT c.NC, c.NN, c.SUCURSAL, c.CIERRE,c.IDCLIENTE , ws.NombreWS
                             from
-                            cc as c 
-                            left join 
-                            cc_nombrews as ws 
-                            on ws.NC = c.NC 
+                            cc as c
+                            left join
+                            cc_nombrews as ws
+                            on ws.NC = c.NC
                             where c.estado = 'alta'
-                            AND CAST(c.CIERRE AS time) > @desdeTime 
-                            AND CAST(c.CIERRE AS time) <= @hastaTime 
+                            AND " + filtroCierre + @"
                             AND c.IDCLIENTE <> 160
                             AND c.NC NOT IN ('" + notInValues + @"');";
 

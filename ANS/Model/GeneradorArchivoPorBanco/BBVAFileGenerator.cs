@@ -344,6 +344,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 // 26/09/2025: Unificación de nombre (sin sufijos por ciudad)
                 string nombreA = $"REME{f}{correlativo:D3}.txt";
                 string nombreB = $"FREME{f}{correlativo:D3}.txt";
+                // Feature NOMBRE_ARCHIVO: los buzones de esta ciudad se acreditan en el REME (nombreA).
+                // Se guarda el nombre base (sin prefijo TEST_), que es el nombre real en PRODUCCIÓN.
+                foreach (var _cbArchivo in cuentas)
+                    _cbArchivo.NombreArchivoGenerado = nombreA;
                 // Aplicar prefijo TEST_ si está en modo TEST
                 nombreA = FileSystemGuard.GetFileNameWithTestPrefix(nombreA);
                 nombreB = FileSystemGuard.GetFileNameWithTestPrefix(nombreB);
@@ -614,6 +618,10 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                 // 26/09/2025: Unificación de nombre (sin sufijos por ciudad)
                 string nombreA = $"REME{f}{correlativo:D3}.txt";
                 string nombreB = $"FREME{f}{correlativo:D3}.txt";
+                // Feature NOMBRE_ARCHIVO: los buzones de esta ciudad se acreditan en el REME (nombreA).
+                // Se guarda el nombre base (sin prefijo TEST_), que es el nombre real en PRODUCCIÓN.
+                foreach (var _cbArchivo in cuentas)
+                    _cbArchivo.NombreArchivoGenerado = nombreA;
                 // Aplicar prefijo TEST_ si está en modo TEST
                 nombreA = FileSystemGuard.GetFileNameWithTestPrefix(nombreA);
                 nombreB = FileSystemGuard.GetFileNameWithTestPrefix(nombreB);

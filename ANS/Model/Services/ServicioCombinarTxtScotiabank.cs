@@ -70,7 +70,8 @@ namespace ANS.Model.Services
                         fileName.Contains("_TANDA1") ||
                         fileName.Contains("_DIAADIA") ||
                         fileName.Contains("_FARMASHOP") ||
-                        fileName.Contains("_ABASTOELPLACER"))
+                        fileName.Contains("_ABASTOELPLACER") ||
+                        fileName.Contains("_URUIMPORTA"))
                         return false;
 
                     bool tieneSufijoTanda2 = fileName.Contains("_TANDA2");
@@ -100,7 +101,8 @@ namespace ANS.Model.Services
                         fileName.Contains("COMBINADO") ||
                         fileName.Contains("CASHOFFICE") ||
                         fileName.Contains("_FARMASHOP") ||
-                        fileName.Contains("_ABASTOELPLACER"))
+                        fileName.Contains("_ABASTOELPLACER") ||
+                        fileName.Contains("_URUIMPORTA"))
                         return false;
 
                     bool tieneSufijoDiaADia = fileName.Contains("_DIAADIA");

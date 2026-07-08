@@ -91,7 +91,8 @@ namespace ANS.Model.Services
                     cb.CUENTA,
                     cb.MONEDA,
                     cb.BANCO,
-                    b.BancoId AS IdBanco
+                    b.BancoId AS IdBanco,
+                    c.TIPO AS TIPOBUZON
                 FROM ConfiguracionAcreditacion config
                 INNER JOIN cuentasbuzones cb ON config.CuentasBuzonesId = cb.ID
                 INNER JOIN cc c ON c.NC = config.NC AND c.IDCLIENTE = cb.IDCLIENTE
@@ -126,6 +127,7 @@ namespace ANS.Model.Services
             int monedaOrd = reader.GetOrdinal("MONEDA");
             int bancoOrd = reader.GetOrdinal("BANCO");
             int idBancoOrd = reader.GetOrdinal("IdBanco");
+            int tipoBuzonOrd = reader.GetOrdinal("TIPOBUZON");
 
             var seenIds = new HashSet<int>();
             while (await reader.ReadAsync())
@@ -141,7 +143,8 @@ namespace ANS.Model.Services
                     Cuenta = reader.GetString(cuentaOrd),
                     Moneda = reader.IsDBNull(monedaOrd) ? null : reader.GetString(monedaOrd),
                     Banco = reader.IsDBNull(bancoOrd) ? null : reader.GetString(bancoOrd),
-                    IdBanco = reader.IsDBNull(idBancoOrd) ? 0 : reader.GetInt32(idBancoOrd)
+                    IdBanco = reader.IsDBNull(idBancoOrd) ? 0 : reader.GetInt32(idBancoOrd),
+                    TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, tipoBuzonOrd)
                 });
             }
 
@@ -179,7 +182,8 @@ namespace ANS.Model.Services
                         ELSE LTRIM(RTRIM(d.empresa))
                     END AS empresa, 
                     d.fechadep,
-                    d.usuario
+                    d.usuario,
+                    d.NSU
                 FROM Depositos d
                 INNER JOIN relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
                 INNER JOIN Totales t ON rd.IdTotal = t.IdTotal
@@ -188,7 +192,7 @@ namespace ANS.Model.Services
                   AND d.fechadep >= @desde
                   AND d.fechadep < DATEADD(day, 1, @hasta)";
 
-            var depositosConTotales = new Dictionary<int, (int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, double TotalPesos, double TotalDolares)>();
+            var depositosConTotales = new Dictionary<int, (int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, double TotalPesos, double TotalDolares, int? NSU)>();
 
             using (var conn = new SqlConnection(_conexionWebBuzones))
             {
@@ -199,7 +203,7 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@desde", desde.Date);
                 cmd.Parameters.AddWithValue("@hasta", hasta.Date);
 
-                var depositosBase = new List<(int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario)>();
+                var depositosBase = new List<(int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, int? NSU)>();
 
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
@@ -210,6 +214,7 @@ namespace ANS.Model.Services
                     int empresaOrd = reader.GetOrdinal("empresa");
                     int fechaOrd = reader.GetOrdinal("fechadep");
                     int usuarioOrd = reader.GetOrdinal("usuario");
+                    int nsuOrd = reader.GetOrdinal("NSU");
 
                     while (await reader.ReadAsync())
                     {
@@ -220,7 +225,8 @@ namespace ANS.Model.Services
                             reader.GetString(tipoOrd),
                             reader.GetString(empresaOrd),
                             reader.GetDateTime(fechaOrd),
-                            reader.IsDBNull(usuarioOrd) ? null : reader.GetString(usuarioOrd)
+                            reader.IsDBNull(usuarioOrd) ? null : reader.GetString(usuarioOrd),
+                            reader.IsDBNull(nsuOrd) ? (int?)null : reader.GetInt32(nsuOrd)
                         ));
                     }
                 }
@@ -241,12 +247,12 @@ namespace ANS.Model.Services
 
                     if (!depositosConTotales.ContainsKey(dep.IdOperacion))
                     {
-                        depositosConTotales[dep.IdOperacion] = (dep.IdDeposito, dep.IdOperacion, dep.Codigo, dep.Tipo, dep.Empresa, dep.FechaDep, dep.Usuario, totalPesos, totalDolares);
+                        depositosConTotales[dep.IdOperacion] = (dep.IdDeposito, dep.IdOperacion, dep.Codigo, dep.Tipo, dep.Empresa, dep.FechaDep, dep.Usuario, totalPesos, totalDolares, dep.NSU);
                     }
                     else
                     {
                         var ex = depositosConTotales[dep.IdOperacion];
-                        depositosConTotales[dep.IdOperacion] = (ex.IdDeposito, ex.IdOperacion, ex.Codigo, ex.Tipo, ex.Empresa, ex.FechaDep, ex.Usuario, ex.TotalPesos + totalPesos, ex.TotalDolares + totalDolares);
+                        depositosConTotales[dep.IdOperacion] = (ex.IdDeposito, ex.IdOperacion, ex.Codigo, ex.Tipo, ex.Empresa, ex.FechaDep, ex.Usuario, ex.TotalPesos + totalPesos, ex.TotalDolares + totalDolares, ex.NSU);
                     }
                 }
             }
@@ -281,6 +287,8 @@ namespace ANS.Model.Services
                             Moneda = VariablesGlobales.pesos,
                             Divisa = VariablesGlobales.uyu,
                             MontoTotal = dep.TotalPesos,
+                            NSU = dep.NSU,
+                            TipoBuzon = cuenta.TipoBuzon,
                             HasCuentaAsignada = true
                         };
                         if (idCuentaFiltro == null || dto.IdCuenta == idCuentaFiltro.Value)
@@ -315,6 +323,8 @@ namespace ANS.Model.Services
                             Moneda = VariablesGlobales.dolares,
                             Divisa = VariablesGlobales.usd,
                             MontoTotal = dep.TotalDolares,
+                            NSU = dep.NSU,
+                            TipoBuzon = cuenta.TipoBuzon,
                             HasCuentaAsignada = true
                         };
                         if (idCuentaFiltro == null || dto.IdCuenta == idCuentaFiltro.Value)
@@ -416,7 +426,7 @@ namespace ANS.Model.Services
         /// Crea un DTO de depósito sin cuenta asignada (se muestra en grilla pero no es acreditable).
         /// </summary>
         private static DepositoAcreditacionDto CrearDtoSinCuentaAsignada(
-            (int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, double TotalPesos, double TotalDolares) dep,
+            (int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, double TotalPesos, double TotalDolares, int? NSU) dep,
             string moneda, string divisa, double montoTotal)
         {
             return new DepositoAcreditacionDto
@@ -435,6 +445,7 @@ namespace ANS.Model.Services
                 Moneda = moneda,
                 Divisa = divisa,
                 MontoTotal = montoTotal,
+                NSU = dep.NSU,
                 HasCuentaAsignada = false,
                 IsSelected = false
             };
@@ -711,7 +722,8 @@ namespace ANS.Model.Services
                         ELSE LTRIM(RTRIM(d.empresa))
                     END AS empresa, 
                     d.fechadep,
-                    d.usuario
+                    d.usuario,
+                    d.NSU
                 FROM Depositos d
                 INNER JOIN relaciondeposito rd ON d.IdDeposito = rd.IdDeposito 
                 INNER JOIN Totales t ON rd.IdTotal = t.IdTotal
@@ -736,7 +748,7 @@ namespace ANS.Model.Services
             cmd.Parameters.AddWithValue("@desde", desde.Date);
             cmd.Parameters.AddWithValue("@hasta", hasta.Date.AddDays(1));
 
-            var depositosBase = new List<(int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario)>();
+            var depositosBase = new List<(int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, int? NSU)>();
 
             using var reader = await cmd.ExecuteReaderAsync();
             int idDepOrd = reader.GetOrdinal("iddeposito");
@@ -746,6 +758,7 @@ namespace ANS.Model.Services
             int empresaOrd = reader.GetOrdinal("empresa");
             int fechaOrd = reader.GetOrdinal("fechadep");
             int usuarioOrd = reader.GetOrdinal("usuario");
+            int nsuOrd = reader.GetOrdinal("NSU");
 
             while (await reader.ReadAsync())
             {
@@ -756,12 +769,13 @@ namespace ANS.Model.Services
                 var emp = reader.GetString(empresaOrd);
                 var fecha = reader.GetDateTime(fechaOrd);
                 var usuario = reader.IsDBNull(usuarioOrd) ? null : reader.GetString(usuarioOrd);
+                var nsu = reader.IsDBNull(nsuOrd) ? (int?)null : reader.GetInt32(nsuOrd);
 
-                depositosBase.Add((idDep, idOp, codigo, tipo, emp, fecha, usuario));
+                depositosBase.Add((idDep, idOp, codigo, tipo, emp, fecha, usuario, nsu));
             }
 
             // Obtener totales para cada depósito y agrupar por IdOperacion
-            var depositosConTotales = new Dictionary<int, (int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, double TotalPesos, double TotalDolares)>();
+            var depositosConTotales = new Dictionary<int, (int IdDeposito, int IdOperacion, string Codigo, string Tipo, string Empresa, DateTime FechaDep, string Usuario, double TotalPesos, double TotalDolares, int? NSU)>();
 
             foreach (var depBase in depositosBase)
             {
@@ -781,7 +795,8 @@ namespace ANS.Model.Services
                         depBase.FechaDep,
                         depBase.Usuario,
                         totalPesos,
-                        totalDolares
+                        totalDolares,
+                        depBase.NSU
                     );
                 }
                 else
@@ -797,7 +812,8 @@ namespace ANS.Model.Services
                         existente.FechaDep,
                         existente.Usuario,
                         existente.TotalPesos + totalPesos,
-                        existente.TotalDolares + totalDolares
+                        existente.TotalDolares + totalDolares,
+                        existente.NSU
                     );
                 }
             }
@@ -830,7 +846,9 @@ namespace ANS.Model.Services
                             IdBanco = cuentaPesos.IdBanco,
                             Moneda = VariablesGlobales.pesos,
                             Divisa = VariablesGlobales.uyu,
-                            MontoTotal = dep.TotalPesos
+                            MontoTotal = dep.TotalPesos,
+                            NSU = dep.NSU,
+                            TipoBuzon = cuentaPesos.TipoBuzon
                         });
                     }
                 }
@@ -857,7 +875,9 @@ namespace ANS.Model.Services
                             IdBanco = cuentaDolares.IdBanco,
                             Moneda = VariablesGlobales.dolares,
                             Divisa = VariablesGlobales.usd,
-                            MontoTotal = dep.TotalDolares
+                            MontoTotal = dep.TotalDolares,
+                            NSU = dep.NSU,
+                            TipoBuzon = cuentaDolares.TipoBuzon
                         });
                     }
                 }
@@ -1307,6 +1327,11 @@ namespace ANS.Model.Services
                     try
                     {
                         int insertados = 0;
+                        // Feature NOMBRE_ARCHIVO: mapa IdCuenta → archivo generado (lo setean los FileGenerators por buzón).
+                        var nombreArchivoPorCuenta = cuentasBuzonesFiltradas
+                            .Where(c => !string.IsNullOrEmpty(c.NombreArchivoGenerado))
+                            .GroupBy(c => c.IdCuenta)
+                            .ToDictionary(g => g.Key, g => g.First().NombreArchivoGenerado);
                         // ✅ Insertar solo depósitos nuevos (ya filtrados arriba)
                         foreach (var deposito in depositosDelBanco)
                         {
@@ -1320,7 +1345,11 @@ namespace ANS.Model.Services
                                 Moneda = deposito.Moneda == VariablesGlobales.pesos ? 1 : 2,
                                 No_Enviado = false,
                                 Monto = deposito.MontoTotal,
-                                FechaDepReal = deposito.FechaDep
+                                FechaDepReal = deposito.FechaDep,
+                                NSU = ServicioAcreditacion.ResolverNsuParaInsert(
+                                    deposito.TipoBuzon == ServicioAcreditacion.TipoBuzonPermaquin,
+                                    deposito.NSU, deposito.IdOperacion, deposito.Codigo),
+                                NombreArchivo = nombreArchivoPorCuenta.TryGetValue(deposito.IdCuenta, out var _na) ? _na : null
                             };
 
                             // Usar el método insertar existente pero dentro de transacción
@@ -1424,7 +1453,8 @@ namespace ANS.Model.Services
                         Codigo = depositoDto.Codigo,
                         Empresa = depositoDto.Empresa,
                         FechaDep = depositoDto.FechaDep,
-                        Tipo = depositoDto.Tipo
+                        Tipo = depositoDto.Tipo,
+                        NSU = depositoDto.NSU
                     };
 
                     // Agregar totales
@@ -1466,7 +1496,8 @@ namespace ANS.Model.Services
                     c.IDCC,
                     c.NN,
                     config.TipoAcreditacion AS CONFIGURACION,
-                    cb.TIPO
+                    cb.TIPO,
+                    c.TIPO AS TIPOBUZON
                 FROM cuentasbuzones cb
                 INNER JOIN ConfiguracionAcreditacion config ON config.CuentasBuzonesId = cb.ID
                 INNER JOIN cc c ON c.NC = config.NC AND c.IDCLIENTE = cb.IDCLIENTE
@@ -1490,6 +1521,7 @@ namespace ANS.Model.Services
 
             var idccOrdinal = reader.GetOrdinal("IDCC");
             var tipoOrdinal = reader.GetOrdinal("TIPO");
+            var tipoBuzonOrdinal = reader.GetOrdinal("TIPOBUZON");
             var cuentaBuzon = new CuentaBuzon
             {
                 IdCuenta = reader.GetInt32(reader.GetOrdinal("ID")),
@@ -1505,7 +1537,8 @@ namespace ANS.Model.Services
                 SucursalCuenta = reader.GetString(reader.GetOrdinal("SUCURSAL")),
                 IdReferenciaAlCliente = reader.IsDBNull(idccOrdinal) ? null : reader.GetString(idccOrdinal),
                 NN = reader.GetString(reader.GetOrdinal("NN")),
-                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim()
+                TipoCuenta = reader.IsDBNull(tipoOrdinal) ? null : reader.GetString(tipoOrdinal).Trim(),
+                TipoBuzon = ServicioAcreditacion.LeerTipoBuzon(reader, tipoBuzonOrdinal)
             };
 
             cuentaBuzon.setDivisa();
@@ -1546,9 +1579,9 @@ namespace ANS.Model.Services
                 )
                 BEGIN
                     INSERT INTO {tableName}
-                    (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP)
+                    (IDBUZON, IDOPERACION, FECHA, IDBANCO, IDCUENTA, MONEDA, NO_ENVIADO, MONTO, FECHADEP, NSU, NOMBRE_ARCHIVO)
                     VALUES
-                    (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL);
+                    (@IDBUZON, @IDOPERACION, @FECHA, @IDBANCO, @IDCUENTA, @MONEDA, @NO_ENVIADO, @MONTO, @FECHADEPREAL, @NSU, @NOMBRE_ARCHIVO);
                 END";
 
             cmd.Parameters.AddWithValue("@IDBUZON", a.IdBuzon);
@@ -1561,6 +1594,12 @@ namespace ANS.Model.Services
             cmd.Parameters.AddWithValue("@MONTO", a.Monto);
             cmd.Parameters.AddWithValue("@FECHADEPREAL",
                 a.FechaDepReal != DateTime.MinValue ? (object)a.FechaDepReal : DBNull.Value);
+            cmd.Parameters.AddWithValue("@NSU", (object)a.NSU ?? DBNull.Value);
+            string nombreArchivoTx = a.NombreArchivo?.Trim();
+            if (!string.IsNullOrEmpty(nombreArchivoTx) && nombreArchivoTx.Length > 255)
+                nombreArchivoTx = nombreArchivoTx.Substring(0, 255);
+            cmd.Parameters.AddWithValue("@NOMBRE_ARCHIVO",
+                string.IsNullOrEmpty(nombreArchivoTx) ? (object)DBNull.Value : nombreArchivoTx);
 
             await cmd.ExecuteNonQueryAsync();
         }

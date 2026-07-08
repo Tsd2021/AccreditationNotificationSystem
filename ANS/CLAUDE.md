@@ -131,8 +131,31 @@ Cuando el Web Service de Santander responde TIME OUT (`EnvioSantanderResult.Esta
 
 **Columna correcta en `AcreditacionesConError`:** `NombreArchivoOrigen` (no `NombreArchivoOriginal`).
 
+## Columnas de acreditación pobladas por el flujo de generación (NSU, NOMBRE_ARCHIVO)
+
+La tabla de acreditaciones (`TableNameResolver.AcreditacionDeposito`) tiene dos columnas que se llenan durante la generación del archivo. Ambas se insertan **siempre** en `ServicioAcreditacion.insertar` y en `ServicioAcreditacionManual.InsertarAcreditacionEnTransaccion`.
+
+- **`NSU INT NULL`** — solo para buzones **PERMAQUIN** (`CC.TIPO = 3`, mapeado a `CuentaBuzon.TipoBuzon` vía `c.TIPO AS TIPOBUZON` en los builders de `ServicioCuentaBuzon`/`ServicioAcreditacionManual`). Se trae `Depositos.NSU` (base WebBuzones) y se guarda en la columna `NSU`. **`IDOPERACION` NO cambia**; el guard anti-duplicados sigue por `IDOPERACION`. No-PERMAQUIN → `NULL`. PERMAQUIN sin NSU → fallback a `IDOPERACION` (con warning). Helpers estáticos: `ServicioAcreditacion.LeerTipoBuzon` y `ResolverNsuParaInsert` (+ `TipoBuzonPermaquin = 3`). La columna `Depositos.NSU` (WebBuzones) la administra otro equipo.
+- **`NOMBRE_ARCHIVO nvarchar(255) NULL`** — nombre **base** (sin ruta ni prefijo `TEST_`, estilo PROD) del TXT donde se acreditó cada depósito. Solo bancos que generan archivo (BBVA, Scotiabank, Santander). Mecanismo: cada FileGenerator setea `CuentaBuzon.NombreArchivoGenerado` por buzón durante la generación (la misma lista de `CuentaBuzon` fluye de `generarArchivoPorBanco` a `crearAcreditaciones*`, así que la mutación llega al insert); viaja a `Acreditacion.NombreArchivo` → columna. Santander (contenido aplanado a 6 StringBuilders antes de existir el nombre) lo resuelve con "subir el nombre": snapshot de los archivos en `_archivosDeLaCorrida` + emparejar por bucket `(ciudad, divisa)`; si un bucket se parte en chunks (>500 líneas), gana el primer chunk. Setear el string NO cambia el archivo → no viola la regla de oro de formatos TXT.
+
+## Jobs día a día dedicados por cliente (patrón Nike/Mans/Abasto/URUIMPORTA)
+
+Un cliente puntual puede acreditarse a su propia hora con un job Quartz dedicado. **4 puntos:** (1) clase `AcreditarDiaADia{Cliente}` que llama `acreditarDiaADiaPorCliente(cli, banco, hora)`; (2) case en `MyJobFactory`; (3) region + trigger + `ScheduleJob` en `App.xaml.cs`; (4) **excluir al cliente del run genérico** del banco (lista estática `NOT IN` en `getAllByTipoAcreditacionYBanco`) para no duplicar.
+
+- **URUIMPORTA (ID 1014)** — Scotiabank, DXD dedicado **07:03 MON-FRI** (`AcreditarDiaADiaUruimporta`). Excluido del DXD genérico Scotia (`NOT IN (164, 179, 1014)`). Usa la **hora de cierre de cada buzón** (`TimeSpan.Zero` + rama `cli.IdCliente == 998 || 1014` en `acreditarDiaADiaPorCliente`). Archivo TXT propio con sufijo `_Uruimporta` (excluido del combinador de las 17:10).
+- **Semántica del 3er parámetro `horaCierreActual`:** hora fija = corte a esa hora para todos los buzones; `TimeSpan.Zero` = query **sin corte**, SALVO clientes en la rama gated (998 Nike, 1014 Uruimporta) que usan la cierre propia de cada buzón (`cu.Cierre`).
+
+## Envío masivo — selección por hora de cierre
+
+`ServicioEnvioMasivo.getBuzonesByNumeroEnvioMasivo` selecciona buzones por rango de `CC.CIERRE`: masivo **1** `(00:00, 07:00]` (dispara **07:10 MON-FRI**), **2** `(07:00, 14:30]`, **3** `(14:30, 17:00]`, **4** `(17:00, 19:30]`. **Hay un hueco sin cubrir: `(19:30, 24:00]`** → los buzones con cierre en ese rango (ej. 23:00) no entran en ningún masivo. Como parche, la lista hardcodeada `ncIncluirMasivo1` fuerza NCs puntuales dentro del masivo 1: relaja **solo** el filtro de cierre (siguen aplicando `estado='alta'`, `IDCLIENTE<>160` y las exclusiones `NOT IN`).
+
+## TO-DO / Pendientes
+
+- [ ] **Reemplazar `IDOPERACION` por `NSU` en el TXT de BBVA para buzones tipo 3 (PERMAQUIN).** Hoy la línea de detalle de BBVA arma el remito como `IdReferenciaAlCliente + "X" + dep.IdOperacion` (`BBVAFileGenerator.Exporta_Reme` / `Exporta_Reme_Agrupado`). Para buzones PERMAQUIN (`TipoBuzon == 3`) debe usar el `NSU` del depósito en lugar de `IdOperacion`. Es un cambio en el **contenido del archivo** que se le manda a BBVA (formato TXT → requiere permiso del dueño, ver `REGLAS_DE_ORO.md`). Nota: la columna `NSU` en la tabla de acreditaciones **ya** se persiste; esto es aparte, solo para el TXT.
+
 ## Scripts
 
-`Scripts/` contains two SQL migration scripts (run manually against the database):
+`Scripts/` contiene scripts SQL de migración (se corren **manualmente** contra la base):
 - `AddNombreArchivoOriginalAcreditacionesConError.sql`
 - `CreateAcreditacionDepositoSantanderPendiente.sql`
+- `AddNsuAcreditaciones.sql` — agrega `NSU INT NULL` a `AcreditacionDepositoDiegoTest` y `_Replica` (lado acreditaciones). El `ALTER` de `Depositos.NSU` (WebBuzones) lo corre otro equipo. La columna `NOMBRE_ARCHIVO` se agregó manualmente en ambas tablas (sin script en el repo).

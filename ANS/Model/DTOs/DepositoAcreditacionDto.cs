@@ -21,7 +21,13 @@ namespace ANS.Model.DTOs
         public string Banco { get; set; }
         public int IdBanco { get; set; }
         public string Usuario { get; set; }
-        
+
+        // NSU del depósito (Depositos.NSU, WebBuzones). Solo relevante para buzones PERMAQUIN.
+        public int? NSU { get; set; }
+
+        // Tipo de buzón (CC.TIPO). 3 == PERMAQUIN. Se transporta para decidir el NSU al insertar.
+        public int TipoBuzon { get; set; }
+
         // Estado de acreditación
         public bool IsAcreditado { get; set; }
         public DateTime? FechaAcreditacion { get; set; }
