@@ -151,7 +151,7 @@ Un cliente puntual puede acreditarse a su propia hora con un job Quartz dedicado
 
 ## TO-DO / Pendientes
 
-- [ ] **Reemplazar `IDOPERACION` por `NSU` en el TXT de BBVA para buzones tipo 3 (PERMAQUIN).** Hoy la línea de detalle de BBVA arma el remito como `IdReferenciaAlCliente + "X" + dep.IdOperacion` (`BBVAFileGenerator.Exporta_Reme` / `Exporta_Reme_Agrupado`). Para buzones PERMAQUIN (`TipoBuzon == 3`) debe usar el `NSU` del depósito en lugar de `IdOperacion`. Es un cambio en el **contenido del archivo** que se le manda a BBVA (formato TXT → requiere permiso del dueño, ver `REGLAS_DE_ORO.md`). Nota: la columna `NSU` en la tabla de acreditaciones **ya** se persiste; esto es aparte, solo para el TXT.
+- [x] **Reemplazar `IDOPERACION` por `NSU` en el TXT de BBVA para buzones tipo 3 (PERMAQUIN)** — hecho **solo en el path p2p (`Exporta_Reme`)** por decisión del dueño. El remito conserva la forma `IdReferenciaAlCliente + "X" + <valor>`; para PERMAQUIN (`buz.TipoBuzon == ServicioAcreditacion.TipoBuzonPermaquin`) el `<valor>` es el `NSU` del depósito en vez de `IdOperacion`. Se reutiliza `ServicioAcreditacion.ResolverNsuParaInsert(true, dep.NSU, dep.IdOperacion, buz.NC)` para que el remito coincida **siempre** con la columna `NSU` persistida (mismo fallback a `IDOPERACION` + warning si `NSU` es nulo). No-PERMAQUIN → `IdOperacion` (sin cambios). **`Exporta_Reme_Agrupado` NO se tocó** (ahí el remito nunca contuvo `IdOperacion`: es `prefijo(4)+HHmmssff`). Datos verificados como poblados en el flujo: `CuentaBuzon.TipoBuzon` (builders de `ServicioCuentaBuzon`) y `Depositos.NSU` (`ServicioDeposito.cs:158-169`, solo depósitos `"Validado"`).
 
 ## Scripts
 

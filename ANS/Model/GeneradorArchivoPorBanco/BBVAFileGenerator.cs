@@ -288,7 +288,15 @@ namespace ANS.Model.GeneradorArchivoPorBanco
                             ? (buz.EsCajaDeAhorro() ? VariablesGlobales.bbvaProductoCA : VariablesGlobales.bbvaProductoCC)
                             : GetProductoFlag(cuentaBase);
 
-                        string remito = ((buz.IdReferenciaAlCliente ?? "") + "X" + dep.IdOperacion).Trim();
+                        // Feature PERMAQUIN (TipoBuzon == 3): el remito del TXT usa el NSU del depósito
+                        // en lugar de IDOPERACION. Se reutiliza ResolverNsuParaInsert para que el valor del
+                        // remito coincida SIEMPRE con la columna NSU persistida en acreditaciones (misma regla
+                        // de fallback a IDOPERACION + warning si el NSU viene nulo). No-PERMAQUIN → IDOPERACION.
+                        bool esPermaquin = buz.TipoBuzon == ServicioAcreditacion.TipoBuzonPermaquin;
+                        int idParaRemito = esPermaquin
+                            ? (ServicioAcreditacion.ResolverNsuParaInsert(true, dep.NSU, dep.IdOperacion, buz.NC) ?? dep.IdOperacion)
+                            : dep.IdOperacion;
+                        string remito = ((buz.IdReferenciaAlCliente ?? "") + "X" + idParaRemito).Trim();
                         decimal suma = Convert.ToDecimal(dep.Totales?.Sum(t => t.ImporteTotal) ?? 0m);
 
                         string lineaDetalle = BuildDetalleBbvaLine(
