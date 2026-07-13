@@ -25,7 +25,7 @@ namespace ANS.Model.Jobs.HSBC
             // ✅ Logging: Inicio de ejecución del job
             ServicioLog.instancia.WriteInfo(
                 $"Iniciando ejecución del job | ScheduledTime: {scheduledTime:yyyy-MM-dd HH:mm:ss} UTC",
-                $"Job: {jobName} | Group: {jobGroup} | Banco: HSBC | Tipo: Acreditar día a día");
+                $"Job: {jobName} | Group: {jobGroup} | Banco: BTG PACTUAL | Tipo: Acreditar día a día");
 
             Exception e = null;
 
@@ -37,7 +37,7 @@ namespace ANS.Model.Jobs.HSBC
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Acreditando por banco HSBC", Color.FromRgb(255, 102, 102));
+                    main.MostrarAviso("Acreditando por banco BTG PACTUAL", Color.FromRgb(255, 102, 102));
 
                 });
 
@@ -53,7 +53,7 @@ namespace ANS.Model.Jobs.HSBC
             {
                 e = ex;
                 Console.WriteLine($"Error al ejecutar la tarea de HSBC {ex.Message}");
-                ServicioLog.instancia.WriteLog(ex, "HSBC", "Acreditar Día a Día");
+                ServicioLog.instancia.WriteLog(ex, IdentidadBanco.BtgPactual, "Acreditar Día a Día");
             }
 
             finally
@@ -76,7 +76,7 @@ namespace ANS.Model.Jobs.HSBC
 
                     mensaje.Color = Color.FromRgb(123, 27, 56);
 
-                    mensaje.Banco = "HSBC";
+                    mensaje.Banco = IdentidadBanco.BtgPactual;
 
                     mensaje.Tipo = "Acreditar cuentas día a día";
 
@@ -85,7 +85,7 @@ namespace ANS.Model.Jobs.HSBC
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job Acreditar Día a Día HSBC", Colors.Red);
+                        main.MostrarAviso("Error Job Acreditar Día a Día BTG PACTUAL", Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -94,14 +94,14 @@ namespace ANS.Model.Jobs.HSBC
                     else
                     {
 
-                        main.MostrarAviso("Success Job Acreditar Día a Día HSBC", Colors.Green);
+                        main.MostrarAviso("Success Job Acreditar Día a Día BTG PACTUAL", Colors.Green);
 
                         mensaje.Estado = "Success";
                         
                         // ✅ Logging: Finalización exitosa del job
                         ServicioLog.instancia.WriteInfo(
                             $"Job completado exitosamente | Duración: {(DateTimeOffset.UtcNow - scheduledTime).TotalSeconds:F2} segundos",
-                            $"Job: {jobName} | Group: {jobGroup} | Banco: HSBC | Tipo: Acreditar día a día");
+                            $"Job: {jobName} | Group: {jobGroup} | Banco: BTG PACTUAL | Tipo: Acreditar día a día");
 
                     }
                     ServicioMensajeria.getInstancia().agregar(mensaje);

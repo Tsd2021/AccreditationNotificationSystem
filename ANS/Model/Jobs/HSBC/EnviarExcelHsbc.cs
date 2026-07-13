@@ -39,7 +39,7 @@ namespace ANS.Model.Jobs.HSBC
 
                     MainWindow main = (MainWindow)Application.Current.MainWindow;
 
-                    main.MostrarAviso("Enviando Excel HSBC", Color.FromRgb(123, 27, 56));
+                    main.MostrarAviso("Enviando Excel BTG PACTUAL", Color.FromRgb(123, 27, 56));
 
                 });
 
@@ -54,8 +54,8 @@ namespace ANS.Model.Jobs.HSBC
             {
                 e = ex;
 
-                Console.WriteLine($"Error al enviar excel HSBC {ex.Message}");
-                ServicioLog.instancia.WriteLog(ex, "HSBC", "Excel Día a Día");
+                Console.WriteLine($"Error al enviar excel BTG PACTUAL {ex.Message}");
+                ServicioLog.instancia.WriteLog(ex, IdentidadBanco.BtgPactual, "Excel Día a Día");
 
             }
             finally
@@ -78,16 +78,16 @@ namespace ANS.Model.Jobs.HSBC
 
                     mensaje.Color = Color.FromRgb(123, 27, 56);
 
-                    mensaje.Banco = "HSBC";
+                    mensaje.Banco = IdentidadBanco.BtgPactual;
 
-                    mensaje.Tipo = "Envío Excel HSBC";
+                    mensaje.Tipo = "Envío Excel BTG PACTUAL";
 
                     mensaje.Icon = PackIconKind.Bank;
 
                     if (e != null)
                     {
 
-                        main.MostrarAviso("Error Job Envío Excel HSBC", Colors.Red);
+                        main.MostrarAviso("Error Job Envío Excel BTG PACTUAL", Colors.Red);
 
                         mensaje.Estado = "Error";
 
@@ -96,7 +96,7 @@ namespace ANS.Model.Jobs.HSBC
                     else
                     {
 
-                        main.MostrarAviso("Success Job Envío Excel HSBC", Colors.Green);
+                        main.MostrarAviso("Success Job Envío Excel BTG PACTUAL", Colors.Green);
 
                         mensaje.Estado = "Success";
 

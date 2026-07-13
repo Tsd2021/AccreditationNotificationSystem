@@ -10,7 +10,8 @@ namespace ANS.Model
         public const string santander = "santander";
         public const string itau = "itau";
         public const string heritage = "heritage";
-        public const string hsbc = "hsbc";
+        public const string hsbc = "hsbc";            // ALIAS LEGADO temporal (ex nombre del banco). Ver IdentidadBanco.
+        public const string btgpactual = "btg pactual"; // Nombre canónico nuevo del banco (ex-HSBC). Ver IdentidadBanco.
         public const string bandes = "bandes";
         public const string brou = "brou";
         public const string scotiabank = "scotiabank";

@@ -379,7 +379,7 @@ namespace ANS.Model.Services
                         inner join cuentasbuzones cb on config.CuentasBuzonesId = cb.id
                         inner join cc c on cb.idcliente = c.IDCLIENTE
                         and c.nc = config.nc
-                        where cb.BANCO = @bank
+                        where UPPER(LTRIM(RTRIM(cb.BANCO))) IN (@bank, @bankAlias)
                         and config.TipoAcreditacion = @tipoAcreditacion;";
 
                 //Excluye DELASSIERRAS ya que acredita DIA A DIA pero en una hora específica.
@@ -486,6 +486,8 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion);
 
                 cmd.Parameters.AddWithValue("@bank", banco.NombreBanco);
+                // Alias legado para tolerar la BD sin migrar (BTG PACTUAL <-> HSBC). Para el resto de bancos == @bank (IN inocuo).
+                cmd.Parameters.AddWithValue("@bankAlias", IdentidadBanco.AliasLegado(banco.NombreBanco));
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -2545,7 +2547,7 @@ namespace ANS.Model.Services
                 ORDER BY cc.NN ASC";
             }
 
-            if (banco.NombreBanco.ToUpper() == VariablesGlobales.hsbc.ToUpper() ||
+            if (IdentidadBanco.EsBtgPactual(banco.NombreBanco) ||
                 banco.NombreBanco.ToUpper() == VariablesGlobales.itau.ToUpper() ||
                 banco.NombreBanco.ToUpper() == VariablesGlobales.bandes.ToUpper())
             {
@@ -2616,10 +2618,10 @@ namespace ANS.Model.Services
                         SELECT DISTINCT IDCLIENTE, NC, NN, SUCURSAL 
                         FROM cc 
                         ) AS cc 
-                        ON cb.IDCLIENTE = cc.IDCLIENTE 
-                        AND cfg.NC = cc.NC 
-                        WHERE cb.BANCO=@banco  
-                        AND a.TOTAL_ACREDITADO > 0 
+                        ON cb.IDCLIENTE = cc.IDCLIENTE
+                        AND cfg.NC = cc.NC
+                        WHERE UPPER(LTRIM(RTRIM(cb.BANCO))) IN (@banco, @bancoAlias)
+                        AND a.TOTAL_ACREDITADO > 0
                         ORDER BY cb.EMPRESA ASC;";
             }
 
@@ -2631,6 +2633,8 @@ namespace ANS.Model.Services
                 SqlCommand cmd = new SqlCommand(query, conn);
 
                 cmd.Parameters.AddWithValue("@banco", banco.NombreBanco);
+                // Alias legado (BTG PACTUAL <-> HSBC) para tolerar la BD sin migrar. Para el resto de bancos == @banco.
+                cmd.Parameters.AddWithValue("@bancoAlias", IdentidadBanco.AliasLegado(banco.NombreBanco));
 
                 cmd.Parameters.AddWithValue("@tipoAcreditacion", tipoAcreditacion.TipoAcreditacion);
                 cmd.Parameters.Add("@fechaDesde", SqlDbType.DateTime).Value = baseDia;

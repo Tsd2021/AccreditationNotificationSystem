@@ -1,4 +1,5 @@
 ﻿
+using ANS.Model;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -25,15 +26,16 @@ namespace ANS.Model.Services
         private string ExtraerBancoDelContexto(string context, string message)
         {
             // Lista de bancos a buscar (en orden de especificidad)
-            var bancos = new[] { 
-                "SCOTIABANK", "SCOTIA", 
-                "SANTANDER", 
-                "BBVA", 
-                "ITAU", 
-                "HSBC", 
-                "BANDES", 
-                "BROU", 
-                "HERITAGE" 
+            var bancos = new[] {
+                "SCOTIABANK", "SCOTIA",
+                "SANTANDER",
+                "BBVA",
+                "ITAU",
+                "BTG PACTUAL",   // nombre canónico nuevo (ex-HSBC)
+                "HSBC",          // alias legado: logs históricos siguen clasificándose (al mismo folder canónico)
+                "BANDES",
+                "BROU",
+                "HERITAGE"
             };
             
             // Combinar contexto y mensaje para búsqueda completa
@@ -87,8 +89,9 @@ namespace ANS.Model.Services
                     return "BBVA";
                 if (textoCompleto.Contains("ITAU"))
                     return "ITAU";
-                if (textoCompleto.Contains("HSBC"))
-                    return "HSBC";
+                // BTG PACTUAL (ex-HSBC): ambos tokens -> mismo folder canónico. Ver IdentidadBanco.
+                if (textoCompleto.Contains("BTG PACTUAL") || textoCompleto.Contains("HSBC"))
+                    return IdentidadBanco.BtgPactual;
                 if (textoCompleto.Contains("BANDES"))
                     return "BANDES";
             }
@@ -106,8 +109,9 @@ namespace ANS.Model.Services
                     return "BBVA";
                 if (textoCompleto.Contains("ITAUJOB") || textoCompleto.Contains("ITAU JOB"))
                     return "ITAU";
-                if (textoCompleto.Contains("HSBCJOB") || textoCompleto.Contains("HSBC JOB"))
-                    return "HSBC";
+                if (textoCompleto.Contains("BTGJOB") || textoCompleto.Contains("BTG JOB") ||
+                    textoCompleto.Contains("HSBCJOB") || textoCompleto.Contains("HSBC JOB"))
+                    return IdentidadBanco.BtgPactual;
                 if (textoCompleto.Contains("BANDESJOB") || textoCompleto.Contains("BANDES JOB"))
                     return "BANDES";
             }
@@ -122,8 +126,9 @@ namespace ANS.Model.Services
                 return "SCOTIABANK";
             if (textoCompleto.Contains("SERVICIOITAU") || textoCompleto.Contains("SERVICIO ITAU"))
                 return "ITAU";
-            if (textoCompleto.Contains("SERVICIOHSBC") || textoCompleto.Contains("SERVICIO HSBC"))
-                return "HSBC";
+            if (textoCompleto.Contains("SERVICIOBTG") || textoCompleto.Contains("SERVICIO BTG") ||
+                textoCompleto.Contains("SERVICIOHSBC") || textoCompleto.Contains("SERVICIO HSBC"))
+                return IdentidadBanco.BtgPactual;
             if (textoCompleto.Contains("SERVICIOBANDES") || textoCompleto.Contains("SERVICIO BANDES"))
                 return "BANDES";
             if (textoCompleto.Contains("SERVICIOBROU") || textoCompleto.Contains("SERVICIO BROU"))
@@ -171,7 +176,10 @@ namespace ANS.Model.Services
                 "SANTANDER" => "SANTANDER",
                 "BBVA" => "BBVA",
                 "ITAU" => "ITAU",
-                "HSBC" => "HSBC",
+                // BTG PACTUAL (ex-HSBC): el alias legado y el nombre nuevo colapsan al mismo folder canónico.
+                "HSBC" => IdentidadBanco.BtgPactual,
+                "BTG PACTUAL" => IdentidadBanco.BtgPactual,
+                "BTG" => IdentidadBanco.BtgPactual,
                 "BANDES" => "BANDES",
                 "BROU" => "BROU",
                 "HERITAGE" => "HERITAGE",

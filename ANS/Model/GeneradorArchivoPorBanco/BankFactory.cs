@@ -7,7 +7,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
         public static IBancoModoAcreditacion GetModoAcreditacionByBanco(string banco, string tipoAcreditacion)
         {
 
-            return banco.ToLower() switch
+            // Trim + lower para tolerar variantes (mayúsc/minúsc, espacios accidentales en el nombre del banco).
+            return banco.Trim().ToLowerInvariant() switch
             {
 
                 VariablesGlobales.scotiabank => new ScotiaFileGenerator(new ConfiguracionAcreditacion(tipoAcreditacion)),
@@ -20,7 +21,8 @@ namespace ANS.Model.GeneradorArchivoPorBanco
 
                 VariablesGlobales.heritage => new HeritageFileGenerator(),
 
-                VariablesGlobales.hsbc => new HSBCFileGenerator(new ConfiguracionAcreditacion(tipoAcreditacion)),
+                // BTG PACTUAL (ex-HSBC): ambos nombres resuelven al mismo generador durante la migración. Ver IdentidadBanco.
+                VariablesGlobales.hsbc or VariablesGlobales.btgpactual => new HSBCFileGenerator(new ConfiguracionAcreditacion(tipoAcreditacion)),
 
                 VariablesGlobales.itau => new ItauFileGenerator(new ConfiguracionAcreditacion(tipoAcreditacion)),
 

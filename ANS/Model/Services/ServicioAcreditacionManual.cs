@@ -103,7 +103,8 @@ namespace ANS.Model.Services
                             (2, 'BBVA'),
                             (3, 'Scotiabank'),
                             (4, 'Itau'),
-                            (5, 'HSBC'),
+                            (5, 'HSBC'),           -- alias legado (ex nombre del banco); se retira tras confirmar la migración de BD
+                            (5, 'BTG PACTUAL'),    -- nombre canónico nuevo (mismo BancoId): ambos valores de cb.BANCO mapean al banco 5
                             (6, 'Bandes'),
                             (7, 'BROU'),
                             (8, 'Heritage')

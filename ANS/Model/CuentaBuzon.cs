@@ -62,7 +62,7 @@ namespace ANS.Model
         public void setCashOffice()
         {
             // ✅ Validación corregida: se usa el banco del BUZÓN (CC.BANCO), no el banco de la cuenta (cuentasbuzones.BANCO)
-            // El banco del buzón puede ser CASHOFFICE, mientras que el banco de la cuenta solo puede ser BBVA, HSBC, ITAU, BANDES, SANTANDER o SCOTIABANK
+            // El banco del buzón puede ser CASHOFFICE, mientras que el banco de la cuenta solo puede ser BBVA, BTG PACTUAL (ex-HSBC), ITAU, BANDES, SANTANDER o SCOTIABANK
             if (BancoBuzon != null && BancoBuzon.ToUpperInvariant() == VariablesGlobales.cashoffice.ToUpperInvariant())
             {
                 CashOffice = true;

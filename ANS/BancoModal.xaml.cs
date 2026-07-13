@@ -1,3 +1,4 @@
+using ANS.Model;
 using ANS.UserControls;
 using ANS.Views;
 using System.Windows;
@@ -20,7 +21,9 @@ namespace ANS
         {
             InitializeComponent();
 
-            BancoTitle.Text = $"Operaciones - {banco}";
+            // Título VISIBLE: mapea el alias legado al nombre nuevo (Hsbc -> BTG PACTUAL).
+            // El 'banco' recibido sigue siendo la clave de ruteo interna (Tag del botón), no se toca.
+            BancoTitle.Text = $"Operaciones - {IdentidadBanco.NombreVisible(banco)}";
 
             switch (banco)
             {

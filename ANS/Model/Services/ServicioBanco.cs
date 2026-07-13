@@ -1,4 +1,5 @@
 ﻿
+using ANS.Model;
 
 namespace ANS.Model.Services
 {
@@ -34,9 +35,13 @@ namespace ANS.Model.Services
         }
         public Banco getByNombre(string nombre)
         {
+            // Normaliza ambos lados: así "hsbc", "HSBC", "btg pactual" y "BTG PACTUAL"
+            // resuelven al MISMO banco en memoria (no se duplica la entidad durante la migración).
+            // Para el resto de bancos la normalización es un no-op (upper/trim).
+            string objetivo = IdentidadBanco.Normalizar(nombre);
             foreach (Banco b in ListaBancos)
             {
-                if (b.NombreBanco.ToUpper() == nombre.ToUpper())
+                if (IdentidadBanco.Normalizar(b.NombreBanco) == objetivo)
                 {
                     return b;
                 }

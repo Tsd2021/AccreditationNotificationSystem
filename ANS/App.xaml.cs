@@ -435,7 +435,9 @@ namespace ANS
                 "ExcelScotiabankCash"
             }
             };
-            Banco hsbc = new Banco(3, VariablesGlobales.hsbc.ToUpper())
+            // BTG PACTUAL (ex-HSBC). BancoId=3 se mantiene estable (los IDs no son fiables entre módulos;
+            // la identidad real es el nombre canónico). getByNombre normaliza, así el alias "hsbc" sigue resolviendo.
+            Banco hsbc = new Banco(3, IdentidadBanco.BtgPactual)
             {
                 TareasEmail = new List<string>
             {
