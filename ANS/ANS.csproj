@@ -32,6 +32,7 @@
     <None Remove="Images\envioMasivo.png" />
     <None Remove="Images\favicon.ico" />
     <None Remove="Images\FirmaDiegoMail.png" />
+    <None Remove="Images\heritage.png" />
     <None Remove="Images\hsbc.png" />
     <None Remove="Images\itau.png" />
     <None Remove="Images\itau2.png" />
@@ -90,6 +91,7 @@
     </Resource>
     <Resource Include="Images\envioMasivo.png" />
     <Resource Include="Images\favicon.ico" />
+    <Resource Include="Images\heritage.png" />
     <Resource Include="Images\hsbc.png" />
     <Resource Include="Images\itau.png" />
     <Resource Include="Images\itau2.png">

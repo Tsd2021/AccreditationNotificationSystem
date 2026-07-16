@@ -145,9 +145,12 @@
 
                         <TextBlock Text="Bancos" Style="{StaticResource SectionTitle}"/>
 
-                        <UniformGrid Grid.Row="1" Columns="3" Rows="2" Margin="4,8,4,0" HorizontalAlignment="Center">
+                        <UniformGrid Grid.Row="1" Columns="3" Rows="3" Margin="4,8,4,0" HorizontalAlignment="Center">
                         <Button Style="{StaticResource BankTileButton}" Tag="Bandes" Click="BankButton_Click">
                             <Image Source="/Images/bandes.png" Stretch="Uniform"/>
+                        </Button>
+                        <Button Style="{StaticResource BankTileButton}" Tag="Heritage" Click="BankButton_Click">
+                            <Image Source="/Images/heritage.png" Stretch="Uniform"/>
                         </Button>
                         <Button Style="{StaticResource BankTileButton}" Tag="Hsbc" Click="BankButton_Click">
                             <Image Source="/Images/hsbc.png" Stretch="Uniform"/>

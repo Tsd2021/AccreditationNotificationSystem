@@ -2549,7 +2549,8 @@ namespace ANS.Model.Services
 
             if (IdentidadBanco.EsBtgPactual(banco.NombreBanco) ||
                 banco.NombreBanco.ToUpper() == VariablesGlobales.itau.ToUpper() ||
-                banco.NombreBanco.ToUpper() == VariablesGlobales.bandes.ToUpper())
+                banco.NombreBanco.ToUpper() == VariablesGlobales.bandes.ToUpper() ||
+                banco.NombreBanco.ToUpper() == VariablesGlobales.heritage.ToUpper())
             {
 
                 //ESTA QUERY ANDA BIEN PERO SI LOS REGISTROS DE CONFIGBUZON ESTAN DUPLICADOS ,L O MUESTRA DOBLE EL RESULTADO.

@@ -9,6 +9,7 @@ using ANS.Model.Services;
 using ANS.Model.Jobs.ITAU;
 using ANS.Model.Jobs.HSBC;
 using ANS.Model.Jobs.BANDES;
+using ANS.Model.Jobs.HERITAGE;
 
 namespace ANS.Model.Jobs
 {
@@ -252,6 +253,19 @@ namespace ANS.Model.Jobs
             {
 
                 return new EnviarExcelBandes(_servicioCuentaBuzon);
+            }
+            #endregion
+            #region HERITAGE_JOBS
+            if (jobType == typeof(AcreditarPorBancoHERITAGE))
+            {
+
+                return new AcreditarPorBancoHERITAGE(_servicioCuentaBuzon);
+            }
+
+            if (jobType == typeof(EnviarExcelHeritage))
+            {
+
+                return new EnviarExcelHeritage(_servicioCuentaBuzon);
             }
             #endregion
             #region ENVIO_MASIVO

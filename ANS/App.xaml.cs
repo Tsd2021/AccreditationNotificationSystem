@@ -4,6 +4,7 @@ using ANS.Model.Jobs;
 using ANS.Model.Jobs.BANDES;
 using ANS.Model.Jobs.BBVA;
 using ANS.Model.Jobs.ENVIO_MASIVO;
+using ANS.Model.Jobs.HERITAGE;
 using ANS.Model.Jobs.HSBC;
 using ANS.Model.Jobs.ITAU;
 using ANS.Model.Jobs.SANTANDER;
@@ -135,6 +136,7 @@ namespace ANS
             await crearJobsScotiabank(_scheduler);
             await crearJobsHSBC(_scheduler);
             await crearJobsBandes(_scheduler);
+            await crearJobsHeritage(_scheduler);
             await crearJobsItau(_scheduler);
             await crearJobsEnviosMasivos(_scheduler);
 
@@ -353,6 +355,37 @@ namespace ANS
 
             await _scheduler.ScheduleJob(jobEnviarExcelBandes, triggerEnviarExcelBandes);
         }
+        private async Task crearJobsHeritage(IScheduler scheduler)
+        {
+            //Tarea 1: Acreditar dia a dia HERITAGE  (16:35:20)
+            #region TAREA_ACREDITAR_DXD
+            IJobDetail jobAcreditarHeritage = JobBuilder.Create<AcreditarPorBancoHERITAGE>()
+            .WithIdentity("HeritageJobAcreditar", "GrupoTrabajoHERITAGE")
+            .Build();
+
+            ITrigger triggerAcreditarHeritage = TriggerBuilder.Create()
+            .WithIdentity("HeritageTriggerAcreditar", "GrupoTrabajoHERITAGE")
+            .WithCronSchedule("20 35 16 ? * MON-FRI")
+            .Build();
+            #endregion
+
+            //Tarea 2: Enviar excel dia a dia HERITAGE  (16:36:20)
+            #region TAREA_ENVIAR_EXCEL_DXD
+            IJobDetail jobEnviarExcelHeritage = JobBuilder.Create<EnviarExcelHeritage>()
+            .WithIdentity("HeritageJobEnviarExcel", "GrupoTrabajoHERITAGE")
+            .UsingJobData("tarea", "DiaADia")
+            .Build();
+
+            ITrigger triggerEnviarExcelHeritage = TriggerBuilder.Create()
+            .WithIdentity("HeritageTriggerEnviarExcel", "GrupoTrabajoHERITAGE")
+            .WithCronSchedule("20 36 16 ? * MON-FRI")
+            .Build();
+            #endregion
+
+            await _scheduler.ScheduleJob(jobAcreditarHeritage, triggerAcreditarHeritage);
+
+            await _scheduler.ScheduleJob(jobEnviarExcelHeritage, triggerEnviarExcelHeritage);
+        }
         private async Task crearJobEnviosNiveles(IScheduler scheduler)
         {
             #region Tarea 1: ENVIO NIVELES  ( STARTS 9:10:00 ENDS 22:00:00)
@@ -505,7 +538,6 @@ namespace ANS
                 .Build();
 
             #endregion
-
             #region Tarea 5: ENVIO SEMANAL FROG (viernes 16:30)
 
             IJobDetail jobEnvioSemanalFrog = JobBuilder.Create<EnvioSemanalFrog>()
@@ -531,7 +563,6 @@ namespace ANS
                 .WithCronSchedule("0 55 14 ? * MON-FRI")
                 .Build();
             #endregion
-
             #region Tarea 3: ENVIO MASIVO 3 (17:03:00)
 
             IJobDetail jobEnvioMasivo3 = JobBuilder.Create<EnvioMasivo>()
@@ -545,7 +576,6 @@ namespace ANS
                 .Build();
 
             #endregion
-
             #region Tarea 4: ENVIO MASIVO 4 (19:40:0)
 
             IJobDetail jobEnvioMasivo4 = JobBuilder.Create<EnvioMasivo>()
@@ -559,7 +589,6 @@ namespace ANS
                 .Build();
 
             #endregion
-
             try
             {
 

@@ -134,7 +134,14 @@ namespace ANS.ViewModel
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                // No tragarse el error en silencio: dejar rastro en el log y avisar al usuario.
+                ServicioLog.instancia.WriteLog(e, "Todos", "Envío 1a1 (manual) - Fallido");
+                System.Windows.MessageBox.Show(
+                    $"No se pudo completar el envío manual del buzón " +
+                    $"{buzonSelected?.NC} ({buzonSelected?.NN}).\n\nDetalle: {e.Message}",
+                    "Envío manual",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
             finally
             {

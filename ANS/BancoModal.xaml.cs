@@ -39,6 +39,8 @@ namespace ANS
                     BankOperationsContent.Content = new HsbcOperationControl(); break;
                 case "Bandes":
                     BankOperationsContent.Content = new BandesOperationControl(); break;
+                case "Heritage":
+                    BankOperationsContent.Content = new HeritageOperationControl(); break;
                 case "EnvioMasivo":
                     BankOperationsContent.Content = new EnvioMasivoOperationControl(); break;
                 case "EnvioManual":
