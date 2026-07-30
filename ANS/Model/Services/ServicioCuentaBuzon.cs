@@ -415,8 +415,9 @@ namespace ANS.Model.Services
 
                     if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                     {
-                        // Excluir Nike (ID 998) y Mans SRL (ID 1016) porque se acreditan en sus jobs específicos
-                        // (Nike a su hora dedicada, Mans a las 14:15). Si no se excluyen, el job genérico de las 17:00
+                        // Excluir Nike (ID 998), Mans SRL (ID 1016), ROBLEFUERTE (ID 976) y RUTADOCE (ID 997)
+                        // porque se acreditan en sus jobs específicos (Nike a su hora dedicada, Mans a las 14:15,
+                        // ROBLEFUERTE y RUTADOCE a su hora dedicada). Si no se excluyen, el job genérico de las 17:00
                         // los volvería a acreditar.
                         query = @"select distinct c.NC,
                             cb.BANCO,
@@ -439,7 +440,7 @@ namespace ANS.Model.Services
                             inner join cc c on cb.idcliente = c.IDCLIENTE
                             and c.nc = config.nc
                             where cb.BANCO = @bank
-                            and cb.IDCLIENTE NOT IN (998, 1016)
+                            and cb.IDCLIENTE NOT IN (998, 1016, 976, 977)
                             and config.TipoAcreditacion = @tipoAcreditacion;";
 
                     }
@@ -1409,11 +1410,6 @@ namespace ANS.Model.Services
                         // ✅ Usar la hora de cierre del buzón individual si horaCierreActual es TimeSpan.Zero
                         // Si el buzón tiene hora de cierre, usarla; si no, usar horaCierreActual como fallback
 
-
-                        //APLICAR SOLO PARA NIKE DE PRUEBA, SI ANDA BIEN MAÑANA MARTES 23 DEE DICIEMBRE,ENTONCES APLICAR PARA TODOS.
-                        //URUIMPORTA (1014): usa la hora de cierre de cada buzón (cu.Cierre), no una hora fija.
-                        if (cli.IdCliente == 998 || cli.IdCliente == 1014)
-                        {
                             TimeSpan horaCierreAUsar = horaCierreActual;
 
                             if (horaCierreActual == TimeSpan.Zero && cu.Cierre.HasValue)
@@ -1423,10 +1419,7 @@ namespace ANS.Model.Services
 
                             await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreAUsar);
                         }
-                        else
-                        {
-                            await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
-                        }
+                    
 
                         //eSTO ESTUVO HASTA EL 22 DE DICIEMBRE, NO TOMA LA HORA DE CIERRE DE LOS BUZONES QUE SON ACREDITADOS POR CLIENTE ESPECIFICO Y BANCO.
                         //await ServicioDeposito.getInstancia().asignarDepositosAlBuzon(cu, ultIdOperacion, horaCierreActual);
@@ -1469,7 +1462,7 @@ namespace ANS.Model.Services
 
             }
 
-        }
+        
         //Enviar Excel genérico.
         public async Task enviarExcel(TimeSpan desde, TimeSpan hasta, Cliente cli, Banco bank)
         {

@@ -61,6 +61,19 @@ namespace ANS.Model.Services
                         {
                             query = QueryBuscaDepositoConIgual();
                         }
+
+                        if(buzon.Empresa.ToUpper() == "COMITAN".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
+                        if(buzon.Empresa.ToUpper() == "COMITAN SUC 71".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
+
+                        if (buzon.Empresa.ToUpper() == "NUMMI ANCAP RUTA DOCE".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
+
+
                     }
                     //EXCEPCIONES BBVA
                     if (buzon.Banco.ToUpper() == VariablesGlobales.bbva.ToUpper())
@@ -82,6 +95,11 @@ namespace ANS.Model.Services
                             query = QueryBuscaDepositoConIgual();
                         }
                         if (buzon.Empresa.ToUpper() == "ABITAB BBVA".ToUpper())
+                        {
+                            query = QueryBuscaDepositoConIgual();
+                        }
+
+                        if(buzon.Empresa.ToUpper() == "RUTA DOCE".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
                         }

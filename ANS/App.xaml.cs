@@ -357,7 +357,7 @@ namespace ANS
         }
         private async Task crearJobsHeritage(IScheduler scheduler)
         {
-            //Tarea 1: Acreditar dia a dia HERITAGE  (16:35:20)
+            //Tarea 1: Acreditar dia a dia HERITAGE  (165:35:20)
             #region TAREA_ACREDITAR_DXD
             IJobDetail jobAcreditarHeritage = JobBuilder.Create<AcreditarPorBancoHERITAGE>()
             .WithIdentity("HeritageJobAcreditar", "GrupoTrabajoHERITAGE")
@@ -365,11 +365,11 @@ namespace ANS
 
             ITrigger triggerAcreditarHeritage = TriggerBuilder.Create()
             .WithIdentity("HeritageTriggerAcreditar", "GrupoTrabajoHERITAGE")
-            .WithCronSchedule("20 35 16 ? * MON-FRI")
+            .WithCronSchedule("20 35 15 ? * MON-FRI")
             .Build();
             #endregion
 
-            //Tarea 2: Enviar excel dia a dia HERITAGE  (16:36:20)
+            //Tarea 2: Enviar excel dia a dia HERITAGE  (15:45:20)
             #region TAREA_ENVIAR_EXCEL_DXD
             IJobDetail jobEnviarExcelHeritage = JobBuilder.Create<EnviarExcelHeritage>()
             .WithIdentity("HeritageJobEnviarExcel", "GrupoTrabajoHERITAGE")
@@ -378,7 +378,7 @@ namespace ANS
 
             ITrigger triggerEnviarExcelHeritage = TriggerBuilder.Create()
             .WithIdentity("HeritageTriggerEnviarExcel", "GrupoTrabajoHERITAGE")
-            .WithCronSchedule("20 36 16 ? * MON-FRI")
+            .WithCronSchedule("20 45 15 ? * MON-FRI")
             .Build();
             #endregion
 
@@ -1113,6 +1113,36 @@ namespace ANS
 
             #endregion
 
+            // Tarea 2.3: Acreditar dia a dia ROBLEFUERTE (ID 976). 14:15 (misma hora que Mans SRL).
+            // El límite de acreditación es la hora de cierre de cada buzón (cu.Cierre), no las 14:15.
+            #region TAREA_ACREDITAR_DIAADIA_ROBLEFUERTE
+
+            IJobDetail jobBBVADiaADiaRobleFuerte = JobBuilder.Create<AcreditarDiaADiaBBVARobleFuerte>()
+                .WithIdentity("BBVAJobDADRobleFuerte", "GrupoTrabajoBBVA")
+                .Build();
+
+            ITrigger triggerBBVADiaADiaRobleFuerte = TriggerBuilder.Create()
+                .WithIdentity("BBVATriggerDADRobleFuerte", "GrupoTrabajoBBVA")
+                .WithCronSchedule("0 15 14 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
+            // Tarea 2.4: Acreditar dia a dia RUTADOCE (ID 997). 14:15 (misma hora que Mans SRL).
+            // El límite de acreditación es la hora de cierre de cada buzón (cu.Cierre), no las 14:15.
+            #region TAREA_ACREDITAR_DIAADIA_RUTADOCE
+
+            IJobDetail jobBBVADiaADiaRutaDoce = JobBuilder.Create<AcreditarDiaADiaBBVARutaDoce>()
+                .WithIdentity("BBVAJobDADRutaDoce", "GrupoTrabajoBBVA")
+                .Build();
+
+            ITrigger triggerBBVADiaADiaRutaDoce = TriggerBuilder.Create()
+                .WithIdentity("BBVATriggerDADRutaDoce", "GrupoTrabajoBBVA")
+                .WithCronSchedule("0 15 14 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
             //Tarea 3: Enviar excel resumen punto a punto 21:05
             #region TAREA_EXCEL_RESUMENDIARIO (MONTEVIDEO 20:30)
             IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
@@ -1186,6 +1216,10 @@ namespace ANS
             await _scheduler.ScheduleJob(jobBBVADiaADiaNike, triggerBBVADiaADiaNike);
 
             await _scheduler.ScheduleJob(jobBBVADiaADiaMans, triggerBBVADiaADiaMans);
+
+            await _scheduler.ScheduleJob(jobBBVADiaADiaRobleFuerte, triggerBBVADiaADiaRobleFuerte);
+
+            await _scheduler.ScheduleJob(jobBBVADiaADiaRutaDoce, triggerBBVADiaADiaRutaDoce);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 
