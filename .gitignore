@@ -25,3 +25,6 @@ v17/
 .claude/
 **/.claude/
 HORARIOS_DINAMICOS_PROPUESTA.md
+
+# Estado local de la UI de Obsidian (posicion de ventanas) - cambia solo, no aporta
+TAASvault/.obsidian/workspace.json
