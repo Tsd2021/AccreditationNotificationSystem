@@ -257,7 +257,21 @@ namespace ANS.ViewModel
 
             try
             {
-                await _servicioCuentaBuzon.enviarExcelConsolidadoDedicadosBBVA("ConsolidadoDedicados", null, "MONTEVIDEO");
+                // Task.Run es obligatorio, no cosmético: enviarExcelConsolidadoDedicadosBBVA
+                // corre sincrónicamente y adentro ServicioEmail.enviarExcelPorMail hace
+                // enviarExcelPorMailAsync(...).GetAwaiter().GetResult().
+                //
+                // Ese GetResult() bloquea el hilo que lo llama mientras el método async de
+                // adentro intenta volver a ese mismo hilo para continuar tras sus await. Si
+                // el hilo es el de UI (el del click), se esperan mutuamente y la app queda
+                // colgada sin excepción. Task.Run saca la ejecución del SynchronizationContext
+                // de WPF y el deadlock desaparece.
+                //
+                // Es el mismo motivo por el que ejecutarExcelDiaADia y los DXD usan Task.Run.
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.enviarExcelConsolidadoDedicadosBBVA("ConsolidadoDedicados", null, "MONTEVIDEO");
+                });
             }
             catch (Exception e)
             {
