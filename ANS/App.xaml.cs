@@ -1113,8 +1113,14 @@ namespace ANS
 
             #endregion
 
-            // Tarea 2.3: Acreditar dia a dia ROBLEFUERTE (ID 976). 14:15 (misma hora que Mans SRL).
-            // El límite de acreditación es la hora de cierre de cada buzón (cu.Cierre), no las 14:15.
+            // Tarea 2.3: Acreditar dia a dia ROBLEFUERTE (ID 976). 14:17.
+            // El límite de acreditación es la hora de cierre de cada buzón (cu.Cierre), no las 14:17.
+            //
+            // 2026-08-04: escalonado de 14:15 a 14:17. Los tres jobs de las 14:15:00 corrían en
+            // paralelo ([DisallowConcurrentExecution] es por CLASE, no serializa entre clases
+            // distintas) y dos reservaron el mismo correlativo de archivo: Mans y RutaDoce
+            // escribieron REME20260804027.txt y el segundo pisó al primero. Se perdieron $408.210
+            // de ROBLEFUERTE, que quedaron acreditados en la tabla pero nunca llegaron al banco.
             #region TAREA_ACREDITAR_DIAADIA_ROBLEFUERTE
 
             IJobDetail jobBBVADiaADiaRobleFuerte = JobBuilder.Create<AcreditarDiaADiaBBVARobleFuerte>()
@@ -1123,13 +1129,14 @@ namespace ANS
 
             ITrigger triggerBBVADiaADiaRobleFuerte = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerDADRobleFuerte", "GrupoTrabajoBBVA")
-                .WithCronSchedule("0 15 14 ? * MON-FRI")
+                .WithCronSchedule("0 17 14 ? * MON-FRI")
                 .Build();
 
             #endregion
 
-            // Tarea 2.4: Acreditar dia a dia RUTADOCE (ID 997). 14:15 (misma hora que Mans SRL).
-            // El límite de acreditación es la hora de cierre de cada buzón (cu.Cierre), no las 14:15.
+            // Tarea 2.4: Acreditar dia a dia RUTADOCE (ID 977). 14:19.
+            // El límite de acreditación es la hora de cierre de cada buzón (cu.Cierre), no las 14:19.
+            // Escalonado de 14:15 a 14:19 por el mismo motivo que ROBLEFUERTE (ver arriba).
             #region TAREA_ACREDITAR_DIAADIA_RUTADOCE
 
             IJobDetail jobBBVADiaADiaRutaDoce = JobBuilder.Create<AcreditarDiaADiaBBVARutaDoce>()
@@ -1138,7 +1145,7 @@ namespace ANS
 
             ITrigger triggerBBVADiaADiaRutaDoce = TriggerBuilder.Create()
                 .WithIdentity("BBVATriggerDADRutaDoce", "GrupoTrabajoBBVA")
-                .WithCronSchedule("0 15 14 ? * MON-FRI")
+                .WithCronSchedule("0 19 14 ? * MON-FRI")
                 .Build();
 
             #endregion

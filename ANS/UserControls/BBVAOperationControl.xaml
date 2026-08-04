@@ -144,6 +144,9 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
@@ -185,13 +188,46 @@
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarDiaADiaNikeTXTCommand}"/>
 
-                        <!-- Test PROD -->
+                        <!-- Día a Día Mans SRL (1016) -->
                         <TextBlock Grid.Row="4" Grid.Column="0"
-                                   Text="Test PROD (TXT)"
+                                   Text="Acreditar día a día Mans SRL (TXT)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,0"/>
                         <Button Grid.Row="4" Grid.Column="1"
+                                Content="TXT DXD MANS"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarDiaADiaMansTXTCommand}"/>
+
+                        <!-- Día a Día ROBLEFUERTE (976) -->
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                   Text="Acreditar día a día ROBLEFUERTE (TXT)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="5" Grid.Column="1"
+                                Content="TXT DXD ROBLEFUERTE"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarDiaADiaRobleFuerteTXTCommand}"/>
+
+                        <!-- Día a Día RUTADOCE (977) -->
+                        <TextBlock Grid.Row="6" Grid.Column="0"
+                                   Text="Acreditar día a día RUTADOCE (TXT)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="6" Grid.Column="1"
+                                Content="TXT DXD RUTADOCE"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarDiaADiaRutaDoceTXTCommand}"/>
+
+                        <!-- Test PROD -->
+                        <TextBlock Grid.Row="7" Grid.Column="0"
+                                   Text="Test PROD (TXT)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="7" Grid.Column="1"
                                 Content="TXT TEST"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarTxtTest}"/>

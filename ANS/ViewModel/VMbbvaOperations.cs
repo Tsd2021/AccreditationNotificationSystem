@@ -27,6 +27,9 @@ namespace ANS.ViewModel
         public ICommand EjecutarPuntoAPuntoTXTCommand { get; }
         public ICommand EjecutarDiaADiaTXTCommand { get; }
         public ICommand EjecutarDiaADiaNikeTXTCommand { get; }
+        public ICommand EjecutarDiaADiaMansTXTCommand { get; }
+        public ICommand EjecutarDiaADiaRobleFuerteTXTCommand { get; }
+        public ICommand EjecutarDiaADiaRutaDoceTXTCommand { get; }
         public ICommand EjecutarExcelTataMvdCommand { get; }
         public ICommand EjecutarExcelTataMldCommand { get; }
         public ICommand EjecutarExcelDiaADiaMvdCommand { get; }
@@ -47,6 +50,12 @@ namespace ANS.ViewModel
             EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaTXT());
 
             EjecutarDiaADiaNikeTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaNikeTXT());
+
+            EjecutarDiaADiaMansTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaMansTXT());
+
+            EjecutarDiaADiaRobleFuerteTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaRobleFuerteTXT());
+
+            EjecutarDiaADiaRutaDoceTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaRutaDoceTXT());
 
             EjecutarExcelTataMvdCommand = new RelayCommand(async () => await ejecutarExcelTata("MONTEVIDEO"));
 
@@ -184,6 +193,52 @@ namespace ANS.ViewModel
                 IsLoading = false;
             }
         }
+
+        /// <summary>
+        /// Acreditación manual día a día por cliente dedicado de BBVA.
+        /// Replica exactamente lo que hace el job Quartz correspondiente:
+        /// getById(idCliente) + acreditarDiaADiaPorCliente(..., TimeSpan.Zero).
+        ///
+        /// TimeSpan.Zero NO significa "sin corte": hace que acreditarDiaADiaPorCliente
+        /// use la hora de cierre de CADA buzón (cu.Cierre, ServicioCuentaBuzon.cs:1415-1418).
+        /// Es la misma semántica que usan los 4 jobs dedicados de BBVA.
+        /// </summary>
+        private async Task ejecutarDiaADiaPorClienteDedicado(int idCliente, string nombreParaLog)
+        {
+            IsLoading = true;
+
+            try
+            {
+                Cliente cli = ServicioCliente.getInstancia().getById(idCliente);
+
+                if (cli == null)
+                    throw new Exception($"No se encontró el cliente {idCliente} ({nombreParaLog}).");
+
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.acreditarDiaADiaPorCliente(cli, banco, TimeSpan.Zero);
+                });
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Hubo un error: " + e.Message);
+                ServicioLog.instancia.WriteLog(e, "BBVA", $"[MANUAL] Ejecutar DXD TXT {nombreParaLog}");
+                throw;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // Mismos IdCliente que los jobs: AcreditarDiaADiaBBVAMans.cs:47,
+        // AcreditarDiaADiaBBVARobleFuerte.cs:47 y AcreditarDiaADiaBBVARutaDoce.cs:47.
+        private Task ejecutarDiaADiaMansTXT() => ejecutarDiaADiaPorClienteDedicado(1016, "MANS SRL");
+
+        private Task ejecutarDiaADiaRobleFuerteTXT() => ejecutarDiaADiaPorClienteDedicado(976, "ROBLEFUERTE");
+
+        private Task ejecutarDiaADiaRutaDoceTXT() => ejecutarDiaADiaPorClienteDedicado(977, "RUTADOCE");
+
         private async Task ejecutarExcelTata(string soloCiudad)
         {
             IsLoading = true;
