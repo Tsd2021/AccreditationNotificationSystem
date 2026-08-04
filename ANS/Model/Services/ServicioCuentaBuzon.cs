@@ -2244,8 +2244,8 @@ namespace ANS.Model.Services
             {
                 _emailService.enviarExcelPorMail(
                     ruta,
-                    $"Acreditaciones clientes dedicados - BBVA - {fechaDia:dd/MM/yyyy}",
-                    "Consolidado de las acreditaciones día a día de los clientes con horario dedicado de BBVA.",
+                    $"Acreditaciones Buzones Inteligentes [Cuenta BBVA TECNISEGUR] - BBVA - {fechaDia:dd/MM/yyyy}",
+                    "Consolidado de las acreditaciones día a día de los clientes que acreditan en la cuenta de TECNISEGUR.",
                     null, bbva, tarea, ciudad);
             }
             catch (Exception e)
