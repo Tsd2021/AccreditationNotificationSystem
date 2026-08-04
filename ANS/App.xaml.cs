@@ -1150,6 +1150,25 @@ namespace ANS
 
             #endregion
 
+            // Tarea 2.5: Acreditar dia a dia AROCENA SRL (ID 732). 14:21.
+            // El límite de acreditación es la hora de cierre de cada buzón (cu.Cierre = 14:00).
+            // Escalonado 2 min después de RUTADOCE, mismo criterio que el resto (ver 2.3).
+            //
+            // AROCENA venía acreditando por el job P2P cada 30 min y quedaba repartido en
+            // varios REME del día. Al pasarlo a DiaADia sale en un solo archivo diario.
+            #region TAREA_ACREDITAR_DIAADIA_AROCENA
+
+            IJobDetail jobBBVADiaADiaArocena = JobBuilder.Create<AcreditarDiaADiaBBVAArocena>()
+                .WithIdentity("BBVAJobDADArocena", "GrupoTrabajoBBVA")
+                .Build();
+
+            ITrigger triggerBBVADiaADiaArocena = TriggerBuilder.Create()
+                .WithIdentity("BBVATriggerDADArocena", "GrupoTrabajoBBVA")
+                .WithCronSchedule("0 21 14 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
             //Tarea 3: Enviar excel resumen punto a punto 21:05
             #region TAREA_EXCEL_RESUMENDIARIO (MONTEVIDEO 20:30)
             IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
@@ -1227,6 +1246,8 @@ namespace ANS
             await _scheduler.ScheduleJob(jobBBVADiaADiaRobleFuerte, triggerBBVADiaADiaRobleFuerte);
 
             await _scheduler.ScheduleJob(jobBBVADiaADiaRutaDoce, triggerBBVADiaADiaRutaDoce);
+
+            await _scheduler.ScheduleJob(jobBBVADiaADiaArocena, triggerBBVADiaADiaArocena);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 

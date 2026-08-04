@@ -147,6 +147,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
@@ -221,13 +222,24 @@
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarDiaADiaRutaDoceTXTCommand}"/>
 
-                        <!-- Test PROD -->
+                        <!-- Día a Día AROCENA (732) -->
                         <TextBlock Grid.Row="7" Grid.Column="0"
-                                   Text="Test PROD (TXT)"
+                                   Text="Acreditar día a día AROCENA (TXT)"
                                    Foreground="{StaticResource Brush.TextSecondary}"
                                    VerticalAlignment="Center"
                                    Margin="0,4,16,0"/>
                         <Button Grid.Row="7" Grid.Column="1"
+                                Content="TXT DXD AROCENA"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarDiaADiaArocenaTXTCommand}"/>
+
+                        <!-- Test PROD -->
+                        <TextBlock Grid.Row="8" Grid.Column="0"
+                                   Text="Test PROD (TXT)"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="8" Grid.Column="1"
                                 Content="TXT TEST"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarTxtTest}"/>

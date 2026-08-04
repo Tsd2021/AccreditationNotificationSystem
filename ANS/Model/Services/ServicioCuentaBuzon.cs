@@ -355,6 +355,10 @@ namespace ANS.Model.Services
 
             string query = "";
 
+            // true cuando la query usa el NOT IN de clientes con job dedicado, para saber
+            // si hay que bindear los @cliDedN.
+            bool clientesDedicadosEnQuery = false;
+
             using (SqlConnection conn = new SqlConnection(_conexionTSD))
             {
 
@@ -415,11 +419,16 @@ namespace ANS.Model.Services
 
                     if (banco.NombreBanco.ToUpper() == VariablesGlobales.bbva.ToUpper())
                     {
-                        // Excluir Nike (ID 998), Mans SRL (ID 1016), ROBLEFUERTE (ID 976) y RUTADOCE (ID 997)
-                        // porque se acreditan en sus jobs específicos (Nike a su hora dedicada, Mans a las 14:15,
-                        // ROBLEFUERTE y RUTADOCE a su hora dedicada). Si no se excluyen, el job genérico de las 17:00
-                        // los volvería a acreditar.
-                        query = @"select distinct c.NC,
+                        // Excluye del run genérico de las 17:00:45 a los clientes que tienen job
+                        // día a día dedicado. Si alguno faltara acá, se acreditaría DOS VECES.
+                        //
+                        // La lista sale de VariablesGlobales.clientesDxDDedicadosBBVA, que es la
+                        // única fuente de verdad y la comparte el Excel consolidado de dedicados.
+                        // Se arma parametrizada (@cliDed0, @cliDed1, ...), sin concatenar valores.
+                        string paramsClientesDedicados = string.Join(", ",
+                            VariablesGlobales.clientesDxDDedicadosBBVA.Select((_, i) => "@cliDed" + i));
+
+                        query = $@"select distinct c.NC,
                             cb.BANCO,
                             c.BANCO as BANCOBUZON,
                             c.CIERRE,
@@ -440,9 +449,10 @@ namespace ANS.Model.Services
                             inner join cc c on cb.idcliente = c.IDCLIENTE
                             and c.nc = config.nc
                             where cb.BANCO = @bank
-                            and cb.IDCLIENTE NOT IN (998, 1016, 976, 977)
+                            and cb.IDCLIENTE NOT IN ({paramsClientesDedicados})
                             and config.TipoAcreditacion = @tipoAcreditacion;";
 
+                        clientesDedicadosEnQuery = true;
                     }
                 }
 
@@ -489,6 +499,12 @@ namespace ANS.Model.Services
                 cmd.Parameters.AddWithValue("@bank", banco.NombreBanco);
                 // Alias legado para tolerar la BD sin migrar (BTG PACTUAL <-> HSBC). Para el resto de bancos == @bank (IN inocuo).
                 cmd.Parameters.AddWithValue("@bankAlias", IdentidadBanco.AliasLegado(banco.NombreBanco));
+
+                if (clientesDedicadosEnQuery)
+                {
+                    for (int i = 0; i < VariablesGlobales.clientesDxDDedicadosBBVA.Length; i++)
+                        cmd.Parameters.AddWithValue("@cliDed" + i, VariablesGlobales.clientesDxDDedicadosBBVA[i]);
+                }
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {

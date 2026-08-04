@@ -38,8 +38,28 @@ namespace ANS.Model
         // ─────────────────────────────────────────────────────────────────────
        
 
+        // ── Clientes BBVA con job DÍA A DÍA dedicado ─────────────────────────
+        // Acreditan a su propia hora, NO en el run genérico de las 17:00:45.
+        //
+        // ESTA LISTA ES LA ÚNICA FUENTE DE VERDAD. La usan:
+        //   1. ServicioCuentaBuzon.getAllByTipoAcreditacionYBanco → el NOT IN que
+        //      los excluye del run genérico. Si un cliente con job propio NO está
+        //      acá, se acredita DOS VECES.
+        //   2. El Excel consolidado de dedicados (ServicioCuentaBuzon).
+        //
+        // Al agregar un cliente nuevo alcanza con sumarlo acá; antes había que
+        // acordarse de tocar los dos lugares por separado.
+        //
+        //   998  Nike
+        //   1016 Mans SRL
+        //   976  ROBLEFUERTE  (ANCAP Rosario)
+        //   977  RUTADOCE     (ANCAP Nueva Palmira)
+        //   732  AROCENA SRL  (ANCAP Arocena)
+        public static readonly int[] clientesDxDDedicadosBBVA = { 998, 1016, 976, 977, 732 };
+        // ─────────────────────────────────────────────────────────────────────
+
         // SANTANDER //
-        public static TimeSpan horaCierreSantander_TXT = new TimeSpan(15,30, 0); // no debe incluir Henderson ni de la sierra 
+        public static TimeSpan horaCierreSantander_TXT = new TimeSpan(15,30, 0); // no debe incluir Henderson ni de la sierra
         public static TimeSpan horaCierreSantander_EXCEL = new TimeSpan(15, 35, 0); // incluye todo
         public static TimeSpan horaFinPuntoAPuntoSantander = new TimeSpan(15, 30, 0);
         /////////////////////////////////////////////////////////////////////////////////////////////////////////

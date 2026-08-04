@@ -30,6 +30,7 @@ namespace ANS.ViewModel
         public ICommand EjecutarDiaADiaMansTXTCommand { get; }
         public ICommand EjecutarDiaADiaRobleFuerteTXTCommand { get; }
         public ICommand EjecutarDiaADiaRutaDoceTXTCommand { get; }
+        public ICommand EjecutarDiaADiaArocenaTXTCommand { get; }
         public ICommand EjecutarExcelTataMvdCommand { get; }
         public ICommand EjecutarExcelTataMldCommand { get; }
         public ICommand EjecutarExcelDiaADiaMvdCommand { get; }
@@ -56,6 +57,8 @@ namespace ANS.ViewModel
             EjecutarDiaADiaRobleFuerteTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaRobleFuerteTXT());
 
             EjecutarDiaADiaRutaDoceTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaRutaDoceTXT());
+
+            EjecutarDiaADiaArocenaTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaArocenaTXT());
 
             EjecutarExcelTataMvdCommand = new RelayCommand(async () => await ejecutarExcelTata("MONTEVIDEO"));
 
@@ -238,6 +241,8 @@ namespace ANS.ViewModel
         private Task ejecutarDiaADiaRobleFuerteTXT() => ejecutarDiaADiaPorClienteDedicado(976, "ROBLEFUERTE");
 
         private Task ejecutarDiaADiaRutaDoceTXT() => ejecutarDiaADiaPorClienteDedicado(977, "RUTADOCE");
+
+        private Task ejecutarDiaADiaArocenaTXT() => ejecutarDiaADiaPorClienteDedicado(732, "AROCENA");
 
         private async Task ejecutarExcelTata(string soloCiudad)
         {
