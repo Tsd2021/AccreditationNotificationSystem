@@ -35,6 +35,7 @@ namespace ANS.ViewModel
         public ICommand EjecutarExcelTataMldCommand { get; }
         public ICommand EjecutarExcelDiaADiaMvdCommand { get; }
         public ICommand EjecutarExcelDiaADiaMldCommand { get; }
+        public ICommand EjecutarExcelDedicadosCommand { get; }
         public ICommand EjecutarAltaEmailDestinoCommand { get; }
         public ICommand EjecutarTxtTest { get; }
         #endregion
@@ -67,6 +68,8 @@ namespace ANS.ViewModel
             EjecutarExcelDiaADiaMvdCommand = new RelayCommand(async () => await ejecutarExcelDiaADia("MONTEVIDEO"));
 
             EjecutarExcelDiaADiaMldCommand = new RelayCommand(async () => await ejecutarExcelDiaADia("MALDONADO"));
+
+            EjecutarExcelDedicadosCommand = new RelayCommand(async () => await ejecutarExcelDedicados());
 
             EjecutarAltaEmailDestinoCommand = new RelayCommand(async () => await ejecutarAltaEmailDestino());
 
@@ -243,6 +246,30 @@ namespace ANS.ViewModel
         private Task ejecutarDiaADiaRutaDoceTXT() => ejecutarDiaADiaPorClienteDedicado(977, "RUTADOCE");
 
         private Task ejecutarDiaADiaArocenaTXT() => ejecutarDiaADiaPorClienteDedicado(732, "AROCENA");
+
+        /// <summary>
+        /// Excel consolidado de los clientes con job día a día dedicado de BBVA.
+        /// Mismos parámetros que el job de las 14:25 (tarea 'ConsolidadoDedicados').
+        /// </summary>
+        private async Task ejecutarExcelDedicados()
+        {
+            IsLoading = true;
+
+            try
+            {
+                await _servicioCuentaBuzon.enviarExcelConsolidadoDedicadosBBVA("ConsolidadoDedicados", null, "MONTEVIDEO");
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Hubo un error: " + e.Message);
+                ServicioLog.instancia.WriteLog(e, "BBVA", "[MANUAL] Excel consolidado dedicados");
+                throw;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
 
         private async Task ejecutarExcelTata(string soloCiudad)
         {

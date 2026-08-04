@@ -482,7 +482,8 @@ namespace ANS
                 TareasEmail = new List<string>
             {
                 "ExcelTata",
-                "ReporteDiario"
+                "ReporteDiario",
+                "ConsolidadoDedicados"
             }
             };
             Banco heritage = new Banco(5, VariablesGlobales.heritage.ToUpper())
@@ -1169,6 +1170,24 @@ namespace ANS
 
             #endregion
 
+            // Tarea 2.6: Excel consolidado de los clientes con job dia a dia dedicado. 14:25.
+            // Corre despues del ultimo dedicado (AROCENA 14:21) con margen para que termine.
+            // Una fila por cliente con el monto acreditado en el dia, pesos y dolares.
+            #region TAREA_EXCEL_DEDICADOS_BBVA
+
+            IJobDetail jobBBVAExcelDedicados = JobBuilder.Create<ExcelBBVADedicados>()
+                .WithIdentity("BBVAJobExcelDedicados", "GrupoTrabajoBBVA")
+                .UsingJobData("tarea", "ConsolidadoDedicados")
+                .UsingJobData("ciudad", "MONTEVIDEO")
+                .Build();
+
+            ITrigger triggerBBVAExcelDedicados = TriggerBuilder.Create()
+                .WithIdentity("BBVATriggerExcelDedicados", "GrupoTrabajoBBVA")
+                .WithCronSchedule("0 25 14 ? * MON-FRI")
+                .Build();
+
+            #endregion
+
             //Tarea 3: Enviar excel resumen punto a punto 21:05
             #region TAREA_EXCEL_RESUMENDIARIO (MONTEVIDEO 20:30)
             IJobDetail jobBBVAEnviarExcelResumen = JobBuilder.Create<ExcelBBVAReporteDiario>()
@@ -1248,6 +1267,8 @@ namespace ANS
             await _scheduler.ScheduleJob(jobBBVADiaADiaRutaDoce, triggerBBVADiaADiaRutaDoce);
 
             await _scheduler.ScheduleJob(jobBBVADiaADiaArocena, triggerBBVADiaADiaArocena);
+
+            await _scheduler.ScheduleJob(jobBBVAExcelDedicados, triggerBBVAExcelDedicados);
 
             await _scheduler.ScheduleJob(jobBBVAEnviarExcelTata, triggerBBVAEnviarExcelTata);
 

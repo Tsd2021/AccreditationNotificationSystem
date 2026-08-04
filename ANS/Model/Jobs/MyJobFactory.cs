@@ -86,6 +86,11 @@ namespace ANS.Model.Jobs
             {
                 return new ExcelBBVATata(_servicioCuentaBuzon);
             }
+
+            if (jobType == typeof(ExcelBBVADedicados))
+            {
+                return new ExcelBBVADedicados(_servicioCuentaBuzon);
+            }
             #endregion
             #endregion
             #region SANTANDER_JOBS

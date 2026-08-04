@@ -255,6 +255,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
@@ -306,6 +307,17 @@
                                 Content="Excel TATA MLD"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarExcelTataMldCommand}"/>
+
+                        <!-- Excel consolidado de clientes con horario dedicado -->
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                   Text="Excel consolidado clientes dedicados"
+                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,16,0"/>
+                        <Button Grid.Row="5" Grid.Column="1"
+                                Content="Excel DEDICADOS"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarExcelDedicadosCommand}"/>
                     </Grid>
                 </Border>
             </Grid>

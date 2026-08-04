@@ -2114,6 +2114,186 @@ namespace ANS.Model.Services
         }
 
 
+        /// <summary>
+        /// Trae lo acreditado hoy en BBVA por los clientes con job día a día dedicado,
+        /// agrupado por cliente y moneda.
+        ///
+        /// La lista de clientes sale de VariablesGlobales.clientesDxDDedicadosBBVA, la misma
+        /// que usa el NOT IN de getAllByTipoAcreditacionYBanco. Un cliente agregado allí
+        /// aparece acá automáticamente.
+        /// </summary>
+        private List<DtoAcreditacionesPorEmpresa> getAcreditacionesDedicadosBBVA(DateTime? diaOperativo = null)
+        {
+            List<DtoAcreditacionesPorEmpresa> retorno = new List<DtoAcreditacionesPorEmpresa>();
+
+            var tableName = TableNameResolver.AcreditacionDeposito;
+            TableNameResolver.ValidateTableName(tableName, "ServicioCuentaBuzon.getAcreditacionesDedicadosBBVA");
+
+            string paramsClientes = string.Join(", ",
+                VariablesGlobales.clientesDxDDedicadosBBVA.Select((_, i) => "@cliDed" + i));
+
+            string query = $@"
+                SELECT cb.IDCLIENTE,
+                       cb.EMPRESA,
+                       acc.MONEDA,
+                       SUM(acc.MONTO) AS TotalMonto
+                FROM {tableName} acc
+                INNER JOIN CUENTASBUZONES cb ON cb.ID = acc.IDCUENTA
+                WHERE UPPER(LTRIM(RTRIM(cb.BANCO))) = 'BBVA'
+                  AND acc.FECHA >= @diaDesde
+                  AND acc.FECHA <  DATEADD(day, 1, @diaDesde)
+                  AND cb.IDCLIENTE IN ({paramsClientes})
+                GROUP BY cb.IDCLIENTE, cb.EMPRESA, acc.MONEDA
+                ORDER BY cb.EMPRESA ASC;";
+
+            using (SqlConnection conn = new SqlConnection(_conexionTSD))
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.Add("@diaDesde", SqlDbType.DateTime).Value = (diaOperativo ?? DateTime.Today).Date;
+
+                    for (int i = 0; i < VariablesGlobales.clientesDxDDedicadosBBVA.Length; i++)
+                        cmd.Parameters.AddWithValue("@cliDed" + i, VariablesGlobales.clientesDxDDedicadosBBVA[i]);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        int idClienteOrdinal = reader.GetOrdinal("IDCLIENTE");
+                        int empresaOrdinal = reader.GetOrdinal("EMPRESA");
+                        int monedaOrdinal = reader.GetOrdinal("MONEDA");
+                        int totalOrdinal = reader.GetOrdinal("TotalMonto");
+
+                        while (reader.Read())
+                        {
+                            DtoAcreditacionesPorEmpresa dto = new DtoAcreditacionesPorEmpresa();
+                            dto.IdCliente = reader.GetInt32(idClienteOrdinal);
+                            dto.Empresa = reader.IsDBNull(empresaOrdinal) ? "" : reader.GetString(empresaOrdinal);
+                            dto.Divisa = reader.GetInt32(monedaOrdinal);
+                            dto.Monto = reader.GetDouble(totalOrdinal);
+                            dto.setMoneda();
+                            retorno.Add(dto);
+                        }
+                    }
+                }
+            }
+
+            return retorno;
+        }
+
+        /// <summary>
+        /// Excel consolidado de los clientes BBVA con job día a día dedicado: una fila por
+        /// cliente con el monto acreditado en el día, separado en pesos y dólares.
+        ///
+        /// Corre después del último job dedicado. Los destinatarios salen de Email_Tarea
+        /// por (Banco='BBVA', Tarea, Ciudad).
+        /// </summary>
+        public async Task enviarExcelConsolidadoDedicadosBBVA(string tarea, DateTime? diaOperativo = null, string ciudad = "MONTEVIDEO")
+        {
+            Banco bbva = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.bbva);
+
+            List<DtoAcreditacionesPorEmpresa> acreditaciones = getAcreditacionesDedicadosBBVA(diaOperativo);
+
+            if (acreditaciones.Count == 0)
+            {
+                ServicioLog.instancia.WriteInfo(
+                    $"No hay acreditaciones de clientes dedicados BBVA para el día " +
+                    $"{(diaOperativo ?? DateTime.Today):yyyy-MM-dd}. No se genera el Excel consolidado.",
+                    "ServicioCuentaBuzon | enviarExcelConsolidadoDedicadosBBVA");
+                return;
+            }
+
+            var pesos = acreditaciones.Where(a => a.Divisa == 1).OrderBy(a => a.Empresa).ToList();
+            var dolares = acreditaciones.Where(a => a.Divisa != 1).OrderBy(a => a.Empresa).ToList();
+
+            var servicioCliente = ServicioCliente.getInstancia();
+            if (servicioCliente.ListaClientes == null || servicioCliente.ListaClientes.Count == 0)
+                servicioCliente.getAllClientes();
+
+            var fechaDia = (diaOperativo ?? DateTime.Today);
+
+            var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Dedicados BBVA");
+
+            int row = 1;
+            InsertarLogoDesdeRecurso(ws, ref row);
+
+            ws.Cell(row, 1).Value = "Fecha Acreditación :";
+            ws.Cell(row, 2).Value = fechaDia.ToString("dd - MM - yy");
+            row += 2;
+
+            double totalPesos = EscribirBloqueDedicados(ws, ref row, "PESOS", pesos);
+            row += 1;
+            double totalDolares = EscribirBloqueDedicados(ws, ref row, "DOLARES", dolares);
+
+            ws.Columns().AdjustToContents();
+
+            string nombreArchivo = $"ConsolidadoDedicadosBBVA_{fechaDia:yyyyMMdd}_{DateTime.Now:HHmmss}.xlsx";
+            string ruta = Path.Combine(ConfiguracionGlobal.Rutas.BaseExcel, nombreArchivo);
+            ruta = AplicarGuardiaYPrefijoRuta(ruta, "ServicioCuentaBuzon | enviarExcelConsolidadoDedicadosBBVA");
+
+            workbook.SaveAs(ruta);
+
+            ServicioLog.instancia.WriteInfo(
+                $"Excel consolidado dedicados BBVA generado | Ruta: {ruta} | " +
+                $"Clientes en pesos: {pesos.Count} (total {totalPesos:F2}) | " +
+                $"Clientes en dólares: {dolares.Count} (total {totalDolares:F2})",
+                "ServicioCuentaBuzon | enviarExcelConsolidadoDedicadosBBVA");
+
+            try
+            {
+                _emailService.enviarExcelPorMail(
+                    ruta,
+                    $"Acreditaciones clientes dedicados - BBVA - {fechaDia:dd/MM/yyyy}",
+                    "Consolidado de las acreditaciones día a día de los clientes con horario dedicado de BBVA.",
+                    null, bbva, tarea, ciudad);
+            }
+            catch (Exception e)
+            {
+                ServicioLog.instancia.WriteLog(e, "BBVA", $"Envío Excel consolidado dedicados | Tarea: {tarea}");
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Escribe una tabla (encabezado + filas + total) del consolidado de dedicados.
+        /// Devuelve el total de la moneda. Mismos colores que GenerarExcelFormatoDiaADia.
+        /// </summary>
+        private double EscribirBloqueDedicados(IXLWorksheet ws, ref int row, string titulo, List<DtoAcreditacionesPorEmpresa> lista)
+        {
+            ws.Cell(row, 1).Value = "CLIENTE";
+            ws.Cell(row, 2).Value = "EMPRESA";
+            ws.Cell(row, 3).Value = "MONEDA";
+            ws.Cell(row, 4).Value = "MONTO";
+            ws.Range(row, 1, row, 4).Style.Fill.BackgroundColor = XLColor.FromHtml("#FFF9C4");
+            row++;
+
+            double total = 0;
+
+            foreach (var item in lista)
+            {
+                var cliente = ServicioCliente.getInstancia().getById(item.IdCliente);
+                string nombreCliente = !string.IsNullOrWhiteSpace(cliente?.Nombre)
+                    ? cliente.Nombre
+                    : $"(IdCliente {item.IdCliente})";
+
+                ws.Cell(row, 1).Value = nombreCliente;
+                ws.Cell(row, 2).Value = item.Empresa;
+                ws.Cell(row, 3).Value = item.Moneda;
+                ws.Cell(row, 4).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(item.Monto);
+                total += item.Monto;
+                row++;
+            }
+
+            ws.Cell(row, 3).Value = titulo;
+            ws.Cell(row, 4).Value = ServicioUtilidad.getInstancia().FormatearDoubleConPuntosYComas(total);
+            ws.Range(row, 3, row, 4).Style.Fill.BackgroundColor = XLColor.FromHtml("#B3E5FC");
+            row++;
+
+            return total;
+        }
+
         public async Task enviarExcelDiaADiaPorBanco(Banco banco, ConfiguracionAcreditacion tipoAcreditacion, string tarea, DateTime? diaOperativo = null, string soloCiudad = null)
         {
 
