@@ -57,6 +57,7 @@ namespace ANS.Model.Services
 
                         if (buzon.Empresa.ToUpper() == "PONILOR SAS".ToUpper())
                             query = QueryBuscaDepositoConIgual();
+
                         if (buzon.Empresa.ToUpper() == "ABITAB".ToUpper())
                         {
                             query = QueryBuscaDepositoConIgual();
@@ -72,6 +73,12 @@ namespace ANS.Model.Services
                         if (buzon.Empresa.ToUpper() == "NUMMI ANCAP RUTA DOCE".ToUpper())
                             query = QueryBuscaDepositoConIgual();
 
+
+                        if(buzon.Empresa.ToUpper() == "RECACELA".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
+
+                        if (buzon.Empresa.ToUpper() == "PONILORRECACELA".ToUpper())
+                            query = QueryBuscaDepositoConIgual();
 
 
                     }
