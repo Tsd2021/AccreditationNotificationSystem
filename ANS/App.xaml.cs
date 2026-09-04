@@ -727,30 +727,44 @@ namespace ANS
                     .WithCronSchedule("0 06 17 ? * MON-FRI")
                     .Build();
                 #endregion
-                #region Tarea 8: COMBINAR TXT MONTEVIDEO POR DIVISA (17:10:00)
-                // Debe correr DESPUÉS de Acreditar DXD (17:01:36) y los Excel: el
-                // combinado consume el TXT día a día generado por la acreditación.
+                #region Tareas 8 y 9: COMBINAR TXT MONTEVIDEO / MALDONADO POR DIVISA (17:10) - DESACTIVADAS
+                // DESACTIVADO 2026-09-02: el combinado de TXT de Scotiabank dejó de ser automático.
+                // Ahora lo hace una persona desde el TSD, con el formulario Drag & Drop
+                // (turno mañana y turno tarde), que escribe en su propia carpeta y manda el
+                // archivo al banco por mail. ANS ya no combina.
+                //
+                // NO borrar: queda comentado para poder volver atrás rápido. Para reactivar hay
+                // que descomentar ESTE bloque Y las dos llamadas a scheduler.ScheduleJob de más abajo.
+                //
+                // OJO: el banco acepta varios archivos por ciudad/divisa/día, así que si esto se
+                // reactiva mientras el TSD sigue combinando, se acredita DOS VECES sin que nada avise.
+                //
+                // Los jobs que GENERAN los TXT (07:02, 07:03, 07:06, 14:52, 17:01:36) siguen activos:
+                // además de generar el archivo, acreditan en la base.
 
-                IJobDetail jobCombinarTxtScotiabankMontevideo = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMontevideo>()
-                    .WithIdentity("ScotiabankJobCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
-                    .Build();
+                //// Tarea 8: COMBINAR TXT MONTEVIDEO POR DIVISA (17:10:00)
+                //// Debe correr DESPUÉS de Acreditar DXD (17:01:36) y los Excel: el
+                //// combinado consume el TXT día a día generado por la acreditación.
 
-                ITrigger triggerCombinarTxtScotiabankMontevideo = TriggerBuilder.Create()
-                    .WithIdentity("ScotiabankTriggerCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("0 10 17 ? * MON-FRI")
-                    .Build();
-                #endregion
-                // Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (17:10:10)
-                #region Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (17:10:10)
+                //IJobDetail jobCombinarTxtScotiabankMontevideo = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMontevideo>()
+                //    .WithIdentity("ScotiabankJobCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
+                //    .Build();
 
-                IJobDetail jobCombinarTxtScotiabankMaldonado = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMaldonado>()
-                    .WithIdentity("ScotiabankJobCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
-                    .Build();
+                //ITrigger triggerCombinarTxtScotiabankMontevideo = TriggerBuilder.Create()
+                //    .WithIdentity("ScotiabankTriggerCombinarTxtMontevideo", "GrupoTrabajoScotiabank")
+                //    .WithCronSchedule("0 10 17 ? * MON-FRI")
+                //    .Build();
 
-                ITrigger triggerCombinarTxtScotiabankMaldonado = TriggerBuilder.Create()
-                    .WithIdentity("ScotiabankTriggerCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
-                    .WithCronSchedule("10 10 17 ? * MON-FRI")
-                    .Build();
+                //// Tarea 9: COMBINAR TXT MALDONADO POR DIVISA (17:10:10)
+
+                //IJobDetail jobCombinarTxtScotiabankMaldonado = JobBuilder.Create<CombinarTxtScotiabankPorDivisaMaldonado>()
+                //    .WithIdentity("ScotiabankJobCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
+                //    .Build();
+
+                //ITrigger triggerCombinarTxtScotiabankMaldonado = TriggerBuilder.Create()
+                //    .WithIdentity("ScotiabankTriggerCombinarTxtMaldonado", "GrupoTrabajoScotiabank")
+                //    .WithCronSchedule("10 10 17 ? * MON-FRI")
+                //    .Build();
                 #endregion
 
                 //TODO: falta correo del cierre con todos los buzones incluidos reporte diario SOLO PARA TESORERIA 16HS MVD-MAL
@@ -779,9 +793,11 @@ namespace ANS
 
                     await scheduler.ScheduleJob(jobExcelCashScotiabank, triggerExcelCashScotiabank);
 
-                    await scheduler.ScheduleJob(jobCombinarTxtScotiabankMontevideo, triggerCombinarTxtScotiabankMontevideo);
+                    // DESACTIVADO 2026-09-02: el combinado lo hace el TSD a mano.
+                    // Ver la región "Tareas 8 y 9 ... DESACTIVADAS" más arriba.
+                    //await scheduler.ScheduleJob(jobCombinarTxtScotiabankMontevideo, triggerCombinarTxtScotiabankMontevideo);
 
-                    await scheduler.ScheduleJob(jobCombinarTxtScotiabankMaldonado, triggerCombinarTxtScotiabankMaldonado);
+                    //await scheduler.ScheduleJob(jobCombinarTxtScotiabankMaldonado, triggerCombinarTxtScotiabankMaldonado);
 
                 }
                 catch (Exception ex)
