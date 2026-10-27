@@ -28,8 +28,6 @@ namespace ANS.ViewModel
         public ICommand EjecutarTanda2HendersonTXTCommand { get; }
         public ICommand EjecutarTanda1HendersonExcelCommand { get; }
         public ICommand EjecutarTanda2HendersonExcelCommand { get; }
-        public ICommand EjecutarTanda1B2BExcelCommand { get; }
-        public ICommand EjecutarTanda2B2BExcelCommand { get; }
         public ICommand EjecutarTanda1ExcelTesoreriaCommand { get; }
         public ICommand EjecutarTanda2ExcelTesoreriaCommand { get; }
         public ICommand EjecutarDeLasSierrasTXTCommand { get; }
@@ -52,10 +50,6 @@ namespace ANS.ViewModel
             EjecutarTanda1HendersonExcelCommand = new RelayCommand(async () => await ejecutarTanda1HendersonExcel());
 
             EjecutarTanda2HendersonExcelCommand = new RelayCommand(async () => await ejecutarTanda2HendersonExcel());
-
-            EjecutarTanda1B2BExcelCommand = new RelayCommand(async () => await ejecutarTanda1B2BExcel());
-
-            EjecutarTanda2B2BExcelCommand = new RelayCommand(async () => await ejecutarTanda2B2BExcel());
 
             EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarDiaADiaTXT());
 
@@ -236,65 +230,6 @@ namespace ANS.ViewModel
             }
         }
 
-        private async Task ejecutarTanda1B2BExcel()
-        {
-            IsLoading = true;
-            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
-
-            TimeSpan desde = new TimeSpan(7, 0, 0);
-            TimeSpan hasta = new TimeSpan(7, 2, 0);
-
-            Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
-            int numTanda = 1;
-            string tarea = "Tanda1B2B";
-
-            try
-            {
-                await Task.Run(async () =>
-                {
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda, tarea, diaOperativo);
-                });
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Tanda 1 B2B");
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        private async Task ejecutarTanda2B2BExcel()
-        {
-            IsLoading = true;
-            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
-
-            TimeSpan desde = new TimeSpan(14, 30, 0);
-            TimeSpan hasta = new TimeSpan(14, 32, 0);
-
-            Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
-            int numTanda = 2;
-            string tarea = "Tanda2B2B";
-
-            try
-            {
-                await Task.Run(async () =>
-                {
-                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, _banco, "MONTEVIDEO", numTanda, tarea, diaOperativo);
-                });
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                ServicioLog.instancia.WriteLog(e, "Santander", "[MANUAL] Enviar Excel Tanda 2 B2B");
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
         private async Task ejecutarDeLasSierrasTXT()
         {
             IsLoading = true;

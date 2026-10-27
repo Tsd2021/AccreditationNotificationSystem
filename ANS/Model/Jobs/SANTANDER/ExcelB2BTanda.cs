@@ -49,7 +49,7 @@ public class ExcelB2BTanda : IJob
                 main.MostrarAviso($"Ejecutando Tarea: Envío Excel Tanda {_numTanda} B2B", System.Windows.Media.Color.FromRgb(255, 102, 102));
 
             });
-            Banco santander = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.santander);
+            Banco scotiabank = ServicioBanco.getInstancia().getByNombre(VariablesGlobales.scotiabank);
 
 
             TimeSpan desde = new TimeSpan();
@@ -72,7 +72,7 @@ public class ExcelB2BTanda : IJob
 
             Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
 
-            await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, santander, _city, _numTanda, _tarea);
+            await _servicioCuentaBuzon.enviarExcelFormatoTanda(desde, hasta, henderson, scotiabank, _city, _numTanda, _tarea);
 
         }
         catch (Exception ex)
@@ -80,7 +80,7 @@ public class ExcelB2BTanda : IJob
             e = ex;
             Console.WriteLine($"Error al ejecutar Envío Excel Tanda {_numTanda} B2B: {ex.Message}");
             //ACA GUARDAR EN UN LOG.
-            ServicioLog.instancia.WriteLog(ex, "Santander", $"Excel B2B Tanda {_numTanda}");
+            ServicioLog.instancia.WriteLog(ex, "Scotiabank", $"Excel B2B Tanda {_numTanda}");
 
         }
         finally
@@ -90,7 +90,7 @@ public class ExcelB2BTanda : IJob
 
             mensaje.Color = System.Windows.Media.Color.FromRgb(255, 102, 102);
 
-            mensaje.Banco = "Santander";
+            mensaje.Banco = "Scotiabank";
 
             mensaje.Tipo = $"Envío Excel Tanda {_numTanda} B2B" + _city;
 

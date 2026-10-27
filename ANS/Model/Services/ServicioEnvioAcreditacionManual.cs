@@ -296,7 +296,8 @@ namespace ANS.Model.Services
         // Destinos fijos para el envío "Excel SOLO B2B" (buzones HENDERSON)
         // (mismo formato que en ServicioEnvioMasivo: lista separada por ',' o ';')
         private const string B2B_MAIL_DESTINO =
-            "sectorbancos@tiendainglesa.com.uy, sdeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy, pepper@tiendainglesa.com.uy";
+            "ixmesa@indumex.com, contaduria@indumex.com, apino@indumex.com";
+        //"sectorbancos@tiendainglesa.com.uy, sdeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy, pepper@tiendainglesa.com.uy";
 
         // Para pruebas en TEST: simulamos "B2B" usando esta empresa
         private const string TEST_EMPRESA_B2B_SIMULADA = "FARMACIA TIENDA INGLESA";

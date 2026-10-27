@@ -11,7 +11,7 @@ namespace ANS.Runtime
     /// </summary>
     public static class LocalConfigLoader
     {
-        private const string DefaultTestRoot = @"C:\Users\dchiquiar.ABUDIL\Desktop\TAAS TEST";
+        private const string DefaultTestRoot = @"C:\Users\adeleon\Desktop\Tass";
         private const string ConfigKey = "TestBasePath";
         private static bool _loggingEnabled = false;
 

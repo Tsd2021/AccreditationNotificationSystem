@@ -12,6 +12,14 @@ namespace ANS.ViewModel
 
         public Banco banco { get; set; }
 
+        private DateTime? _fechaSeleccionada = DateTime.Today;
+
+        public DateTime? FechaSeleccionada
+        {
+            get => _fechaSeleccionada;
+            set => Set(ref _fechaSeleccionada, value);
+        }
+
         private bool _isLoading;
 
         private ServicioCuentaBuzon _servicioCuentaBuzon;
@@ -30,6 +38,10 @@ namespace ANS.ViewModel
 
             EjecutarTanda2HendersonExcelCommand = new RelayCommand(async () => await ejecutarTanda2HendersonExcel());
 
+            EjecutarTanda1B2BExcelCommand = new RelayCommand(async () => await ejecutarTanda1B2BExcel());
+
+            EjecutarTanda2B2BExcelCommand = new RelayCommand(async () => await ejecutarTanda2B2BExcel());
+
             EjecutarDiaADiaTXTCommand = new RelayCommand(async () => await ejecutarAcreditacionDiaADia());
 
             EjecutarDiaADiaExcelCommand = new RelayCommand(async () => await ejecutarExcelDiAADia());
@@ -39,6 +51,7 @@ namespace ANS.ViewModel
             EjecutarDiaADiaFarmashopTXTCommand = new RelayCommand(async () => await ejecutarTXTFarmashop());
 
             EjecutarCombinarTxtMaldonadoCommand = new RelayCommand(async () => await ejecutarCombinarTxtMaldonado());
+
             EjecutarCombinarTxtMontevideoCommand = new RelayCommand(async () => await ejecutarCombinarTxtMontevideo());
         }
 
@@ -201,6 +214,93 @@ namespace ANS.ViewModel
             }
         }
 
+        private async Task ejecutarTanda1B2BExcel()
+        {
+            IsLoading = true;
+
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
+
+            TimeSpan desde = new TimeSpan(7, 0, 0);
+            TimeSpan hasta = new TimeSpan(7, 2, 0);
+
+            Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
+
+            int numTanda = 1;
+            string tarea = "Tanda1B2B";
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(
+                        desde,
+                        hasta,
+                        henderson,
+                        banco,
+                        "MONTEVIDEO",
+                        numTanda,
+                        tarea,
+                        diaOperativo);
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+
+                ServicioLog.instancia.WriteLog(
+                    e,
+                    "Scotiabank",
+                    "[MANUAL] Enviar Excel Tanda 1 B2B");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task ejecutarTanda2B2BExcel()
+        {
+            IsLoading = true;
+
+            var diaOperativo = FechaSeleccionada?.Date ?? DateTime.Today;
+
+            TimeSpan desde = new TimeSpan(14, 30, 0);
+            TimeSpan hasta = new TimeSpan(14, 32, 0);
+
+            Cliente henderson = ServicioCliente.getInstancia().getByNombre("hender");
+
+            int numTanda = 2;
+            string tarea = "Tanda2B2B";
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await _servicioCuentaBuzon.enviarExcelFormatoTanda(
+                        desde,
+                        hasta,
+                        henderson,
+                        banco,
+                        "MONTEVIDEO",
+                        numTanda,
+                        tarea,
+                        diaOperativo);
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+
+                ServicioLog.instancia.WriteLog(
+                    e,
+                    "Scotiabank",
+                    "[MANUAL] Enviar Excel Tanda 2 B2B");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
 
         private async Task ejecutarAcreditacionDiaADia()
         {
@@ -263,7 +363,8 @@ namespace ANS.ViewModel
         public ICommand EjecutarDiaADiaFarmashopTXTCommand { get; }
         public ICommand EjecutarCombinarTxtMaldonadoCommand { get; }
         public ICommand EjecutarCombinarTxtMontevideoCommand { get; }
-
+        public ICommand EjecutarTanda1B2BExcelCommand { get; }
+        public ICommand EjecutarTanda2B2BExcelCommand { get; }
 
         #endregion
 

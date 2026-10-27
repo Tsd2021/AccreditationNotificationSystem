@@ -208,6 +208,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" SharedSizeGroup="ColLabel"/>
@@ -276,6 +278,30 @@
                                 Content="Combinar TXT"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding EjecutarCombinarTxtMontevideoCommand}"/>
+                        
+                        <!-- Tanda 1 B2B -->
+                        <TextBlock Grid.Row="7" Grid.Column="0"
+                                    Text="Tanda 1 (B2B)"
+                                    Foreground="{StaticResource Brush.TextSecondary}"
+                                    VerticalAlignment="Center"
+                                    Margin="0,4,16,4"/>
+
+                        <Button Grid.Row="7" Grid.Column="1"
+                                Content="Generar Excel T1 B2B"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda1B2BExcelCommand}"/>
+
+                        <!-- Tanda 2 B2B -->
+                        <TextBlock Grid.Row="8" Grid.Column="0"
+                                Text="Tanda 2 (B2B)"
+                                Foreground="{StaticResource Brush.TextSecondary}"
+                                VerticalAlignment="Center"
+                                Margin="0,4,16,4"/>
+
+                        <Button Grid.Row="8" Grid.Column="1"
+                                Content="Generar Excel T2 B2B"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding EjecutarTanda2B2BExcelCommand}"/>
                     </Grid>
                 </Border>
             </Grid>

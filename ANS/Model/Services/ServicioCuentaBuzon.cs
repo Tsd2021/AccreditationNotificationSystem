@@ -1517,7 +1517,8 @@ namespace ANS.Model.Services
                 List<DtoAcreditacionesPorEmpresa> acreditacionesFound = await ServicioAcreditacion.getInstancia().getAcreditacionesByFechaBancoClienteYTipoAcreditacion(fechaDesde, fechaHasta, cli, bank, config).ConfigureAwait(false);
 
 
-                if (bank.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper())
+                if (bank.NombreBanco.ToUpper() == VariablesGlobales.santander.ToUpper() ||
+                    bank.NombreBanco.ToUpper() == VariablesGlobales.scotiabank.ToUpper())
                 {
                     bool esB2B = tarea.Contains("B2B", StringComparison.OrdinalIgnoreCase);
 

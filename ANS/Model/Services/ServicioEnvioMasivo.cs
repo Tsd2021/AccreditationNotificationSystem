@@ -42,8 +42,10 @@ namespace ANS.Model.Services
         // TODO: confirmar destino real para B2B antes de producción.
         // Mientras no se confirme, el mail B2B se omitirá.
         // Se acepta lista separada por ',' o ';' (ej: "it@... , tienda@...")
+        //private const string B2B_MAIL_DESTINO =
+        //    "sectorbancos@tiendainglesa.com.uy, sdeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy, pepper@tiendainglesa.com.uy";
         private const string B2B_MAIL_DESTINO =
-            "sectorbancos@tiendainglesa.com.uy, sdeliotti@tiendainglesa.com.uy, agomez@tiendainglesa.com.uy, pepper@tiendainglesa.com.uy";
+            "ixmesa@indumex.com, contaduria@indumex.com, apino@indumex.com";
         //private const string B2B_MAIL_DESTINO = "PENDIENTE_DESTINO_B2B";
 
         // Para pruebas en TEST, cuando aún no existen acreditaciones reales de empresa "B2B",
