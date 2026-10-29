@@ -17,7 +17,7 @@
 	  <!-- Publica siempre como self-contained y single-file -->
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <SelfContained>true</SelfContained>
-	  <PublishSingleFile>true</PublishSingleFile>
+	  <PublishSingleFile>false</PublishSingleFile>
 
 	 
   </PropertyGroup>

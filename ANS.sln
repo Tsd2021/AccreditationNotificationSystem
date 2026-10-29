@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ANS.Web", "ANS.Web\ANS.Web.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ANS.Tests", "ANS.Tests\ANS.Tests.csproj", "{93E679A8-634A-499A-90F5-DED5DF67A202}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TAAS.ReportTest", "TAAS.ReportTest\TAAS.ReportTest.csproj", "{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{93E679A8-634A-499A-90F5-DED5DF67A202}.Release|x64.Build.0 = Release|Any CPU
 		{93E679A8-634A-499A-90F5-DED5DF67A202}.Release|x86.ActiveCfg = Release|Any CPU
 		{93E679A8-634A-499A-90F5-DED5DF67A202}.Release|x86.Build.0 = Release|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Debug|x64.Build.0 = Debug|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Debug|x86.Build.0 = Debug|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Release|x64.ActiveCfg = Release|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Release|x64.Build.0 = Release|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Release|x86.ActiveCfg = Release|Any CPU
+		{8DE79A9F-8D8B-4DC2-9A44-0F1C6BEA2A7C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
