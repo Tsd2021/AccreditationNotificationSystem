@@ -1401,7 +1401,8 @@ namespace ANS.Model.Services
                 return false;
             }
 
-            if (string.Equals(emp, "B2B", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(emp, "B2B", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(emp, "0-B2B", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
