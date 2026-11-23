@@ -14,8 +14,8 @@ namespace ANS.Runtime
 
         /// <summary>
         /// Nombre de la tabla de acreditaciones según el modo
-        /// PRODUCTION: "AcreditacionDepositoDiegoTest"
-        /// TEST: "AcreditacionDepositoDiegoTest_Replica"
+        /// PRODUCTION: "AcreditacionDepositoBuzon"
+        /// TEST: "AcreditacionDepositoBuzonTest_Replica"
         /// </summary>
         public static string AcreditacionDeposito
         {
@@ -23,8 +23,8 @@ namespace ANS.Runtime
             {
                 EnsureInitialized();
                 return AppRuntime.IsTest 
-                    ? "AcreditacionDepositoDiegoTest_Replica"
-                    : "AcreditacionDepositoDiegoTest";
+                    ? "AcreditacionDepositoBuzonTest_Replica"
+                    : "AcreditacionDepositoBuzon";
             }
         }
 
@@ -56,10 +56,10 @@ namespace ANS.Runtime
             if (AppRuntime.IsTest)
             {
                 // En TEST, bloquear uso de tabla de PRODUCCIÓN
-                if (tableNameUsed.Equals("AcreditacionDepositoDiegoTest", StringComparison.OrdinalIgnoreCase))
+                if (tableNameUsed.Equals("AcreditacionDepositoBuzon", StringComparison.OrdinalIgnoreCase))
                 {
-                    var msg = $"ERROR CRÍTICO DE SEGURIDAD: En modo TEST se intentó usar la tabla de PRODUCCIÓN 'AcreditacionDepositoDiegoTest'. " +
-                             $"En TEST debe usarse 'AcreditacionDepositoDiegoTest_Replica'. " +
+                    var msg = $"ERROR CRÍTICO DE SEGURIDAD: En modo TEST se intentó usar la tabla de PRODUCCIÓN 'AcreditacionDepositoBuzon'. " +
+                             $"En TEST debe usarse 'AcreditacionDepositoBuzonTest_Replica'. " +
                              $"Contexto: {context}. " +
                              $"Use TableNameResolver.AcreditacionDeposito en lugar de hardcodear el nombre.";
                     ServicioLog.instancia.WriteError(msg, "TableNameResolver | ValidateTableName");
@@ -77,11 +77,10 @@ namespace ANS.Runtime
             else
             {
                 // En PRODUCTION, validar que se use la tabla correcta (opcional, pero útil para detectar bugs)
-                if (tableNameUsed.Equals("AcreditacionDepositoDiegoTest_Replica", StringComparison.OrdinalIgnoreCase) ||
-                    tableNameUsed.Equals("AcreditacionDepositoDiegoTest_replica", StringComparison.OrdinalIgnoreCase))
+                if (tableNameUsed.Equals("AcreditacionDepositoBuzonTest_Replica", StringComparison.OrdinalIgnoreCase))
                 {
                     ServicioLog.instancia.WriteWarning(
-                        $"ADVERTENCIA: En modo PRODUCTION se está usando tabla de TEST 'AcreditacionDepositoDiegoTest_Replica'. " +
+                        $"ADVERTENCIA: En modo PRODUCTION se está usando tabla de TEST 'AcreditacionDepositoBuzonTest_Replica'. " +
                         $"Contexto: {context}. " +
                         $"Verificar que se use TableNameResolver.AcreditacionDeposito.",
                         "TableNameResolver | ValidateTableName");
@@ -128,8 +127,8 @@ namespace ANS.Runtime
                         }
                         
                         var tableName = AppRuntime.IsTest 
-                            ? "AcreditacionDepositoDiegoTest_Replica"
-                            : "AcreditacionDepositoDiegoTest";
+                            ? "AcreditacionDepositoBuzonTest_Replica"
+                            : "AcreditacionDepositoBuzon";
                         
                         ServicioLog.instancia.WriteInfo(
                             $"TableNameResolver inicializado | Modo: {AppRuntime.Mode} | " +

@@ -50,7 +50,7 @@ Connected Services/ # WCF service references (TensStdr for Santander)
   - `conexionTSD` / `conexionTSDTest` — main business database
   - `conexionWebBuzones` / `conexionWebBuzonesTest` — mailbox operations
   - `conexionENCUESTA` / `conexionENCUESTATest` — surveys
-- **Acreditation table name** — never hardcode `AcreditacionDepositoDiegoTest`; always use `TableNameResolver.AcreditacionDeposito` so it resolves to the correct table per runtime mode
+- **Acreditation table name** — never hardcode `AcreditacionDepositoBuzon`; always use `TableNameResolver.AcreditacionDeposito` so it resolves to the correct table per runtime mode
 - **Bank file generators** — `GeneradorArchivoPorBanco/` uses a Factory pattern; each bank has its own generator class
 - **Quartz jobs** — each bank has a job under `Model/Jobs/{BankName}/`; SQLite stores run history (`QuartzRuns.db`)
 
@@ -78,7 +78,7 @@ The app has a strict environment isolation layer in `Runtime/`. **Default is TES
 ### TEST Mode Guarantees
 
 - Uses `*Test` connection strings (mandatory — app fails to start if missing)
-- Accreditation table = `AcreditacionDepositoDiegoTest_Replica` (guard throws if PROD table is accessed)
+- Accreditation table = `AcreditacionDepositoBuzonTest_Replica` (guard throws if PROD table is accessed)
 - All file output goes to `TestBasePath` (default: `C:\Users\dchiquiar.ABUDIL\Desktop\TAAS TEST`), configurable via `App.config` key `TestBasePath`
 - All generated files prefixed with `TEST_`
 - WebServices (Santander WCF) always blocked — throws controlled exception
@@ -158,4 +158,4 @@ Un cliente puntual puede acreditarse a su propia hora con un job Quartz dedicado
 `Scripts/` contiene scripts SQL de migración (se corren **manualmente** contra la base):
 - `AddNombreArchivoOriginalAcreditacionesConError.sql`
 - `CreateAcreditacionDepositoSantanderPendiente.sql`
-- `AddNsuAcreditaciones.sql` — agrega `NSU INT NULL` a `AcreditacionDepositoDiegoTest` y `_Replica` (lado acreditaciones). El `ALTER` de `Depositos.NSU` (WebBuzones) lo corre otro equipo. La columna `NOMBRE_ARCHIVO` se agregó manualmente en ambas tablas (sin script en el repo).
+- `AddNsuAcreditaciones.sql` — agrega `NSU INT NULL` a `AcreditacionDepositoBuzon` y `AcreditacionDepositoBuzonTest_Replica` (lado acreditaciones). El `ALTER` de `Depositos.NSU` (WebBuzones) lo corre otro equipo. La columna `NOMBRE_ARCHIVO` se agregó manualmente en ambas tablas (sin script en el repo).

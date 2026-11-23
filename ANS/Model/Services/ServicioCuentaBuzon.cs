@@ -2757,7 +2757,7 @@ namespace ANS.Model.Services
                 //FROM ConfiguracionAcreditacion AS config 
                 //INNER JOIN CUENTASBUZONES AS cb ON config.CuentasBuzonesId = cb.ID 
                 //INNER JOIN cc ON cb.IDCLIENTE = cc.IDCLIENTE AND config.NC = cc.NC 
-                //INNER JOIN ACREDITACIONDEPOSITODIEGOTEST AS acc  
+                //INNER JOIN AcreditacionDepositoBuzon AS acc  
                 //ON acc.IDBUZON = config.NC AND acc.IDCUENTA = cb.ID 
                 //WHERE config.TipoAcreditacion = @tipoAcreditacion 
                 //AND cb.BANCO = @banco 
@@ -3100,7 +3100,7 @@ namespace ANS.Model.Services
         //                {
 
         //                    query = "select * " +
-        //                            "from acreditaciondepositodiegotest " +
+        //                            "from AcreditacionDepositoBuzon " +
         //                            "where idbuzon = @accNC " +
         //                            "and convert(date,fecha) = convert(date,getdate()) " +
         //                            "and fecha >= @desde " +

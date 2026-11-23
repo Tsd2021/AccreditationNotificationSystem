@@ -105,7 +105,7 @@
 
 
 //                            SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA
-//                            FROM    AcreditacionDepositoDiegoTest a
+//                            FROM    AcreditacionDepositoBuzon a
 //                            JOIN    cc c
 //                                    ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
 //                            WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))
@@ -473,7 +473,7 @@ namespace ANS.Model.Services
 
             //var sql = @"
             //    SELECT  a.IDBUZON, a.IDOPERACION, a.IDCUENTA, a.MONEDA, a.MONTO, a.FECHA, a.IDBANCO 
-            //    FROM    AcreditacionDepositoDiegoTest a
+            //    FROM    AcreditacionDepositoBuzon a
             //    JOIN    cc c
             //            ON LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(c.nc))
             //    WHERE   LTRIM(RTRIM(a.IDBUZON)) = LTRIM(RTRIM(@NC))

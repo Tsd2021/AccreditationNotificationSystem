@@ -8,28 +8,28 @@
 --     "Invalid column name 'NSU'".
 --
 -- Nombres reales (ver TableNameResolver.AcreditacionDeposito):
---     PRODUCTION -> AcreditacionDepositoDiegoTest          (singular)
---     TEST       -> AcreditacionDepositoDiegoTest_Replica
+--     PRODUCTION -> AcreditacionDepositoBuzon          (singular)
+--     TEST       -> AcreditacionDepositoBuzonTest_Replica
 -- Ejecutar el ALTER que corresponda al/los ambiente(s) donde vayas a probar.
 -- ============================================================================
 
 -- Tabla principal (PRODUCTION)
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
-    WHERE object_id = OBJECT_ID('AcreditacionDepositoDiegoTest') AND name = 'NSU'
+    WHERE object_id = OBJECT_ID('AcreditacionDepositoBuzon') AND name = 'NSU'
 )
 BEGIN
-    ALTER TABLE AcreditacionDepositoDiegoTest ADD NSU INT NULL;
+    ALTER TABLE AcreditacionDepositoBuzon ADD NSU INT NULL;
 END
 GO
 
 -- Rplica de TEST
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
-    WHERE object_id = OBJECT_ID('AcreditacionDepositoDiegoTest_Replica') AND name = 'NSU'
+    WHERE object_id = OBJECT_ID('AcreditacionDepositoBuzonTest_Replica') AND name = 'NSU'
 )
 BEGIN
-    ALTER TABLE AcreditacionDepositoDiegoTest_Replica ADD NSU INT NULL;
+    ALTER TABLE AcreditacionDepositoBuzonTest_Replica ADD NSU INT NULL;
 END
 GO
 
